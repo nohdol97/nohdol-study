@@ -28,7 +28,7 @@
 
 | 검토 | 판정 |
 |---|---|
-| [2026-07-25-phase2c-pilot-status](reviews/2026-07-25-phase2c-pilot-status.md) | 실행 불가·대기 | PaperQA2는 provider·corpus 부재로 불가, basic-memory는 corpus 지정 대기, 파일럿 하네스 선구현 |
+| [2026-07-25-phase2c-pilot-status](reviews/2026-07-25-phase2c-pilot-status.md) | PaperQA2 불가·basic-memory 미채택 | 색인이 노트 frontmatter를 수정해 읽기 전용 전제를 충족 못 함. 검색은 유효, 외부 전송 없음 |
 | [NotebookLM CLI·Understand Anything 보안 검토](reviews/2026-07-25-notebooklm-understand-anything-security.md) | notebooklm-py 조건부 채택·v0.7.3 설치 보류, Understand Anything 9종 project-local 안전 어댑터 채택 |
 | [추가 도구 도입 검토](reviews/2026-07-25-additional-tools-review.md) | basic-memory 제한 파일럿, PaperQA2 조건부, Obsidian 4종 채택; memory server 계열 보류 |
 

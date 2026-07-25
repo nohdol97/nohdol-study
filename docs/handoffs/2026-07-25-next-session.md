@@ -4,10 +4,12 @@
 - 기준 브랜치: `main`
 - 현재 상태: Phase 1·2·2b 전체와 Phase 3 구현 완료. 남은 것은 Phase 2c
   파일럿과, 아래 "남은 콘텐츠 작업"뿐이다.
-- 다음 시작점: **Phase 2c는 파일럿 하네스까지 구현하고 대기 중이다.**
-  실측 결과 PaperQA2는 provider 키와 논문 corpus가 둘 다 없어 실행 불가이고,
-  basic-memory는 색인 대상 corpus를 사용자가 정해야 한다. 상세와 재개 절차는
-  [2c 현황](../reviews/2026-07-25-phase2c-pilot-status.md)에 있다.
+- **계획된 구현은 모두 끝났다.** Phase 2c까지 포함해 남은 미결은 판정이 아니라
+  사용자 결정 대기다 — basic-memory는 색인이 노트를 수정한다는 대가를 받아들일지,
+  PaperQA2는 논문 corpus와 provider를 갖출지. 상세는
+  [2c 현황](../reviews/2026-07-25-phase2c-pilot-status.md).
+- 다음 시작점: 정해진 다음 구현은 없다. 실제로 자료를 쌓아 쓰면서 부족한 곳을
+  찾는 단계이고, 아래 "남은 콘텐츠 작업"이 유일하게 대기 중인 실제 작업이다.
 - 결정 원본:
   - [방향 제안](../proposals/2026-07-25-nohdol-study-direction.md)
   - [ADR 003](../adr/003-cli-learning-integrations.md)
