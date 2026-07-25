@@ -31,13 +31,14 @@ Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything adapter 9종),
 - **구현됨(2b-A)** — 미추적 `.tools/` 루트에 upstream 정확 commit을 내려받아
   tree hash가 일치할 때만 배치하는 설치기. 전역 스킬 디렉터리와 vault는
   건드리지 않고, 소스만 놓을 뿐 의존성 설치나 코드 실행은 하지 않는다.
-- **구현됨(2b-B)** — `understand`, `understand-chat`, `understand-dashboard`,
-  `understand-diff`, `understand-domain`, `understand-explain`,
-  `understand-figma`, `understand-knowledge`, `understand-onboard` adapter.
-  공통 경계는 `.agents/skills/understand/references/adapter-contract.md`
-  하나가 운반한다 — 그래프는 탐색 수단이지 근거가 아니며 사실 답변은 소스
-  파일 확인 뒤에만 완료하고, vault 분석 산출물은 `_workspace/`로 돌리며,
-  dashboard와 Figma는 실행별 명시 요청·승인 대상이다.
+- **구현됨(2b-B)** — `understand` 스킬 하나가 9개 entry point(그래프 생성·
+  위치 찾기·설명·온보딩·변경 영향·도메인·지식 베이스·dashboard·Figma)를
+  내부 라우팅한다. 공통 경계는
+  `.agents/skills/understand/references/adapter-contract.md` 하나가
+  운반한다 — 그래프는 탐색 수단이지 근거가 아니며 사실 답변은 소스 파일
+  확인 뒤에만 완료하고, vault 분석 산출물은 `_workspace/`로 돌리며,
+  dashboard와 Figma는 실행별 명시 요청·승인 대상이다. mode별 절차는
+  `references/modes.md`에 있다.
 - **구현됨(2b-C)** — article·topic·source 타입 그래프. 노트가 1개여도
   주제 분류와 인용 출처로 유효한 그래프가 나오고, 노트 본문은 그래프에
   담기지 않는다. 모델이 추론한 entity·claim은 `--semantic`으로만 들어오며
@@ -45,8 +46,8 @@ Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything adapter 9종),
 - **남음** — Obsidian Markdown·Bases·JSON Canvas·공식 CLI 스킬 4종(2b-D),
   검증 export packet만 올리는 선택적 NotebookLM CLI bridge(2b-E)
 
-adapter는 런타임 계층이 서로 다르다. `understand-knowledge`만 `python3`로
-바로 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프를 필요로 하며,
+mode마다 런타임 계층이 다르다. `understand-knowledge`만 `python3`로 바로
+돌고, 그래프 소비형 5종은 먼저 만들어진 그래프를 필요로 하며,
 `understand`·`understand-figma`·`understand-dashboard`는 빌드된 의존성이
 필요해 별도 승인 전까지 `unavailable`로 보고한다.
 
@@ -144,19 +145,12 @@ token, MCP/server는 기본 경로에서 허용하지 않는다.
 ├── paper-search/        # 공개 논문 검색·다운로드·검증
 ├── study-install/       # 설치처 bootstrap과 도구 점검
 ├── study-video/         # transcript-first 2-pass 영상 학습
-├── understand/          # 코드 그래프 생성 + adapter 공통 계약
-├── understand-chat/     # 그래프로 좁히고 파일로 확인하는 코드 질의
-├── understand-dashboard/# loopback 그래프 뷰어 (명시 요청 전용)
-├── understand-diff/     # 변경 영향 오버레이
-├── understand-domain/   # 코드 근거 있는 도메인 관점
-├── understand-explain/  # source-first 개념·흐름 설명
-├── understand-figma/    # 승인된 Figma 파일 분석 (실행별 승인)
-├── understand-knowledge/# Markdown 지식 베이스 typed 추출
-├── understand-onboard/  # 의존성 순서 학습 경로
+├── understand/          # Understand Anything 9개 mode 내부 라우팅
 └── using-study/         # 지식 우선 세션 운영
 ```
 
-Understand Anything 9개는 모두 adapter로 노출돼 있다. upstream의 main-pulling
+Understand Anything 9개 entry point는 `understand` 스킬 하나가 내부 라우팅으로
+모두 제공한다. upstream의 main-pulling
 전역 installer는 쓰지 않고, source를 project-local로 고정·검증해 두고
 dependency 설치는 감사 통과 전까지 막는다. `knowledge-graph`는 이제
 article/topic/source schema와 근거가 있는 암묵 관계를 갖췄다.

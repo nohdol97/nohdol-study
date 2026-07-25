@@ -53,6 +53,10 @@ upstream fixture를 유지하고 로컬 변경은 patch 목록과 테스트로 �
 graph consumer가 답을 생성할 때 관련 source file을 직접 열지 않았다면
 완료로 처리하지 않는다.
 
+9개는 `understand` 스킬 하나가 내부 라우팅으로 제공한다(사용자 결정
+2026-07-25). 요구는 entry point 제공이지 스킬 개수가 아니며, 공통 경계를
+아홉 번 반복하면 서로 어긋나기 때문이다.
+
 ## R3. Node dependency gate
 
 `study-install --check`는 Node 22+와 pnpm 10+를 관찰한다. 설치 시
