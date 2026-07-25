@@ -31,15 +31,26 @@ touch -t 202001010000 "$test_root/knowledge/index.md" "$test_root/knowledge/log.
 printf '%s\n' '# note' >"$test_root/knowledge/wiki/new-note.md"
 touch -t 202101010000 "$test_root/knowledge/wiki/new-note.md"
 
-codex_output=$("$test_root/.agents/hooks/study-wrapup.sh")
-printf '%s' "$codex_output" | grep -F '"continue":false' >/dev/null
+codex_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+printf '%s' "$codex_output" | grep -F '"decision":"block"' >/dev/null
 
-claude_output=$(CLAUDE_PROJECT_DIR="$test_root" "$test_root/.agents/hooks/study-wrapup.sh")
+claude_output=$(CLAUDE_PROJECT_DIR="$test_root" "$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 printf '%s' "$claude_output" | grep -F '"decision":"block"' >/dev/null
+
+# A hook-forced continuation must not block again, or the Stop hook loops.
+active_output=$(printf '%s' '{"stop_hook_active": true}' |
+  "$test_root/.agents/hooks/study-wrapup.sh")
+[ -z "$active_output" ]
+
+# An inactive flag still blocks, and another true field must not be
+# mistaken for the guard.
+inactive_output=$(printf '%s' '{"stop_hook_active": false, "other": true}' |
+  "$test_root/.agents/hooks/study-wrapup.sh")
+printf '%s' "$inactive_output" | grep -F '"decision":"block"' >/dev/null
 
 # Refreshing all three derived files clears the reminder.
 touch -t 202201010000 "$test_root/knowledge/index.md" "$test_root/knowledge/log.md" "$test_root/knowledge/hot.md"
-fresh_output=$("$test_root/.agents/hooks/study-wrapup.sh")
+fresh_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 [ -z "$fresh_output" ]
 
 printf 'hook tests: PASS\n'

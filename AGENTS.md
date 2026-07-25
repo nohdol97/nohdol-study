@@ -64,6 +64,7 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 - The installation profile describes local data policy. `corporate` forbids optional third-party transmission by default; `personal` still requires care for sensitive material.
 - Do not modify legacy vault notes during installation or normalization unless the user explicitly requests a migration.
 - Destructive changes to knowledge, link replacement, mass migration, or vault Git history require explicit user confirmation.
+- When `REGISTRY.md` records a cloud-synced knowledge root, treat the sync as a second writer. Modification times can be rewritten by the sync client, so a freshness signal derived from them is a hint, not proof. A sync conflict can also duplicate a file whose contract is append-only. Before rewriting `index.md`, `log.md`, or `hot.md`, check for conflict copies and preserve existing entries.
 
 ## 6. Multi-CLI compatibility
 

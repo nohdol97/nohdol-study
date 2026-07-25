@@ -1,6 +1,6 @@
 ---
 name: context7
-description: Retrieve current, version-specific library and framework documentation before answering API, configuration, migration, or debugging questions. Use for current SDK and library docs; use official vendor documentation as fallback when Context7 is unavailable.
+description: Retrieve current, version-specific library and framework documentation before answering API, configuration, migration, or debugging questions. Use for current SDK and library docs; use official vendor documentation as fallback when Context7 is unavailable. Do NOT use for Anthropic or Claude model IDs, pricing, and API questions, for reading one specific user-provided URL, or for general programming concepts and business-logic debugging.
 ---
 
 # context7 — Current library documentation

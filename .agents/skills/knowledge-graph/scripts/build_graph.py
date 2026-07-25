@@ -9,11 +9,13 @@ from pathlib import Path
 import re
 import sys
 from typing import Any
+import unicodedata
 
 
 WIKILINK = re.compile(r"\[\[([^\[\]\n]+)\]\]")
 H1 = re.compile(r"^#\s+(.+?)\s*$")
 FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+INLINE_CODE = re.compile(r"(`+)[^\n]*?\1")
 
 
 def parse_scalar(value: str) -> Any:
@@ -78,7 +80,7 @@ def content_without_fences(body: str) -> str:
                 fence_marker = None
             continue
         if fence_marker is None:
-            kept.append(line)
+            kept.append(INLINE_CODE.sub("", line))
     return "\n".join(kept)
 
 
@@ -99,13 +101,17 @@ def note_title(body: str, path: Path) -> str:
 
 
 def identity(value: str) -> str:
-    return value.strip().casefold()
+    # macOS returns filenames in NFD, while note bodies are usually typed in
+    # NFC. Without normalization a Korean [[링크]] silently fails to resolve
+    # against a file of the same visible name.
+    return unicodedata.normalize("NFC", value).strip().casefold()
 
 
 def build(wiki: Path) -> dict[str, Any]:
     files = sorted(path for path in wiki.rglob("*.md") if path.is_file())
     notes: list[dict[str, Any]] = []
     title_map: dict[str, dict[str, Any]] = {}
+    stem_owners: dict[str, list[dict[str, Any]]] = {}
 
     for path in files:
         text = path.read_text(encoding="utf-8")
@@ -125,36 +131,56 @@ def build(wiki: Path) -> dict[str, Any]:
             "_body": body,
         }
         title_map[key] = note
+        stem_owners.setdefault(identity(path.stem), []).append(note)
         notes.append(note)
 
+    # Obsidian resolves [[target]] by filename while this graph names notes by
+    # their H1. Both keys must resolve, or a note whose filename differs from
+    # its heading is reported broken here and fine in Obsidian. A filename
+    # shared by several notes stays unresolved rather than picking one.
+    stem_map = {
+        stem: owners[0] for stem, owners in stem_owners.items() if len(owners) == 1
+    }
+
     backlinks: dict[str, set[str]] = {key: set() for key in title_map}
-    missing: dict[str, set[str]] = {}
+    missing: dict[str, dict[str, Any]] = {}
     nodes: list[dict[str, Any]] = []
 
     for note in notes:
-        source_key = identity(note["title"])
         raw_links = WIKILINK.findall(content_without_fences(note.pop("_body")))
+        # Link variants that differ only by case or Unicode form are one edge.
+        seen_targets: dict[str, str] = {}
+        for raw in raw_links:
+            target = normalized_target(raw)
+            if target:
+                seen_targets.setdefault(identity(Path(target).name), target)
         targets = sorted(
-            {normalized_target(raw) for raw in raw_links if normalized_target(raw)},
-            key=lambda item: (item.casefold(), item),
+            seen_targets.values(), key=lambda item: (item.casefold(), item)
         )
-        resolved: list[str] = []
+        # Filename and title spellings of the same note are one edge.
+        resolved: dict[str, str] = {}
         unresolved: list[str] = []
         for target in targets:
             target_key = identity(Path(target).name)
-            target_note = title_map.get(target_key)
+            target_note = title_map.get(target_key) or stem_map.get(target_key)
             if target_note is None:
                 unresolved.append(target)
-                missing.setdefault(target, set()).add(note["title"])
+                entry = missing.setdefault(
+                    target_key, {"target": target, "referenced_by": set()}
+                )
+                entry["referenced_by"].add(note["title"])
             else:
-                resolved.append(target_note["title"])
-                backlinks[target_key].add(note["title"])
+                target_title = target_note["title"]
+                resolved.setdefault(identity(target_title), target_title)
+                backlinks[identity(target_title)].add(note["title"])
         nodes.append(
             {
                 "title": note["title"],
                 "path": note["path"],
                 "frontmatter": note["frontmatter"],
-                "links": sorted(resolved, key=lambda item: (item.casefold(), item)),
+                "links": sorted(
+                    resolved.values(), key=lambda item: (item.casefold(), item)
+                ),
                 "missing_links": unresolved,
             }
         )
@@ -176,13 +202,14 @@ def build(wiki: Path) -> dict[str, Any]:
     )
     missing_targets = [
         {
-            "target": target,
+            "target": entry["target"],
             "referenced_by": sorted(
-                sources, key=lambda item: (item.casefold(), item)
+                entry["referenced_by"], key=lambda item: (item.casefold(), item)
             ),
         }
-        for target, sources in sorted(
-            missing.items(), key=lambda item: (item[0].casefold(), item[0])
+        for entry in sorted(
+            missing.values(),
+            key=lambda item: (item["target"].casefold(), item["target"]),
         )
     ]
 

@@ -36,8 +36,16 @@ consumer web UI or claim continuous sync.
   vault/raw/relevant-source.pdf
 ```
 
+   The script refuses a note whose frontmatter still says `unverified`. That
+   refusal is the evidence gate, not an obstacle: resolve the claim or drop the
+   note. `--include-unverified` exists only for a corpus the user explicitly
+   asked to export while unresolved, and the packet then carries that status.
+   Never add the flag on your own to make a failed export succeed.
+
 7. Review `00-manifest.md`, then upload the files under `sources/` to
-   NotebookLM. The manifest should be uploaded too.
+   NotebookLM. The manifest should be uploaded too. Upload the packet as
+   produced; if a file must be renamed or flattened for the upload UI, record
+   that in the manifest rather than creating an undocumented copy.
 8. In NotebookLM, generate quizzes, flashcards, infographics, mind maps, study
    guides, or use source-grounded chat.
 9. Treat every generated artifact as unverified derived material. Before

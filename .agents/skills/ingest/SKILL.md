@@ -1,6 +1,6 @@
 ---
 name: ingest
-description: Route a study source into the correct immutable-capture and verified-note workflow: web pages through defuddle, academic papers through paper-search, and videos through study-video. Use when the user wants to import, clip, archive, summarize into the vault, 논문 저장, 웹 문서 노트화, 영상 공부, 자료 ingest, or 지식으로 쌓기.
+description: Route a study source into the correct immutable-capture and verified-note workflow - web pages through defuddle, academic papers through paper-search, and videos through study-video. Use when the user wants to import, clip, archive, summarize into the vault, 논문 저장, 웹 문서 노트화, 영상 공부, 자료 ingest, or 지식으로 쌓기.
 ---
 
 # ingest — Source-to-knowledge router

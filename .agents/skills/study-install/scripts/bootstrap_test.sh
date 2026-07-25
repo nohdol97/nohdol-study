@@ -54,6 +54,16 @@ printf '\nPRESERVE-ME\n' >>"$vault_one/index.md"
 assert_file_contains "$vault_one/index.md" "PRESERVE-ME"
 assert_file_contains "$harness_one/REGISTRY.md" "profile: corporate"
 assert_file_contains "$harness_one/REGISTRY.md" "sync: other"
+# An omitted policy flag keeps the recorded choice instead of resetting it.
+assert_file_contains "$harness_one/REGISTRY.md" "NotebookLM: consumer"
+"$harness_one/.agents/skills/study-install/scripts/bootstrap.sh" \
+  --vault "$vault_one" --profile corporate >/dev/null
+assert_file_contains "$harness_one/REGISTRY.md" "NotebookLM: consumer"
+assert_file_contains "$harness_one/REGISTRY.md" "sync: other"
+# An explicit flag still changes the recorded choice.
+"$harness_one/.agents/skills/study-install/scripts/bootstrap.sh" \
+  --vault "$vault_one" --profile corporate --notebooklm off >/dev/null
+assert_file_contains "$harness_one/REGISTRY.md" "NotebookLM: off"
 
 # Existing Obsidian metadata is detected.
 harness_two="$test_root/harness-two"

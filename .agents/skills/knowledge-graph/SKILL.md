@@ -25,12 +25,22 @@ The parser uses only the Python standard library. It:
 
 - reads YAML frontmatter conservatively without requiring a YAML package;
 - uses the H1 as title, falling back to the filename stem;
-- ignores wikilinks inside fenced code blocks;
-- normalizes aliases, headings, and block references to their note targets;
+- resolves a link by title or by filename, because Obsidian resolves filenames
+  and this graph names notes by their H1; a filename shared by several notes
+  stays unresolved instead of being guessed;
+- normalizes Unicode to NFC before matching, so a decomposed Korean filename
+  still matches a composed link;
+- ignores wikilinks inside fenced code blocks and inline code spans;
+- normalizes aliases, headings, and block references to their note targets, and
+  counts case or spelling variants of one note as a single edge;
 - calculates backlinks, missing targets, and notes with no links in either
   direction;
 - sorts every emitted collection and writes stable JSON;
 - fails on duplicate normalized titles rather than guessing a target.
+
+Edges come from wikilinks in the note body only. A relationship recorded solely
+in the `related` frontmatter field is not an edge, so such a note can still be
+reported as an orphan. Indented four-space code blocks are not stripped.
 
 ## Review
 

@@ -51,29 +51,29 @@ if [ "$mode" = check ]; then
   exit 0
 fi
 
+# A package manager can exit 0 while its bin directory stays off PATH, so
+# every install is judged by observing the tool afterwards, never by the
+# installer's exit status alone.
 if ! command -v defuddle >/dev/null 2>&1; then
   if ! command -v npm >/dev/null 2>&1; then
     printf 'phase2 tools: npm is required for defuddle\n' >&2
     failed=1
-  elif ! npm install -g defuddle &&
-    ! command -v defuddle >/dev/null 2>&1; then
-    printf 'phase2 tools: failed to install defuddle\n' >&2
-    failed=1
+  else
+    npm install -g defuddle || true
+    if ! command -v defuddle >/dev/null 2>&1; then
+      printf 'phase2 tools: defuddle is not on PATH after install\n' >&2
+      failed=1
+    fi
   fi
 fi
 
 for media_tool in yt-dlp ffmpeg; do
   if ! command -v "$media_tool" >/dev/null 2>&1; then
     if [ "$(uname -s)" = Darwin ] && command -v brew >/dev/null 2>&1; then
-      if ! brew install "$media_tool"; then
-        command -v "$media_tool" >/dev/null 2>&1 || {
-          printf 'phase2 tools: failed to install %s\n' "$media_tool" >&2
-          failed=1
-        }
-        if command -v "$media_tool" >/dev/null 2>&1; then
-          printf 'phase2 tools: %s is available despite package-manager warnings\n' \
-            "$media_tool" >&2
-        fi
+      brew install "$media_tool" || true
+      if ! command -v "$media_tool" >/dev/null 2>&1; then
+        printf 'phase2 tools: %s is not on PATH after install\n' "$media_tool" >&2
+        failed=1
       fi
     else
       printf 'phase2 tools: install %s with the system package manager\n' "$media_tool" >&2
@@ -86,10 +86,12 @@ if ! command -v paper-search >/dev/null 2>&1; then
   if ! command -v uv >/dev/null 2>&1; then
     printf 'phase2 tools: uv is required for paper-search\n' >&2
     failed=1
-  elif ! uv tool install git+https://github.com/openags/paper-search-mcp.git &&
-    ! command -v paper-search >/dev/null 2>&1; then
-    printf 'phase2 tools: failed to install paper-search\n' >&2
-    failed=1
+  else
+    uv tool install git+https://github.com/openags/paper-search-mcp.git || true
+    if ! command -v paper-search >/dev/null 2>&1; then
+      printf 'phase2 tools: paper-search is not on PATH after install\n' >&2
+      failed=1
+    fi
   fi
 fi
 
@@ -97,10 +99,13 @@ if ! has_watch; then
   if ! command -v npx >/dev/null 2>&1; then
     printf 'phase2 tools: npx is required for watch\n' >&2
     failed=1
-  elif ! npx -y skills add bradautomates/claude-video -g \
-    --skill watch --agent claude-code codex gemini-cli -y; then
-    printf 'phase2 tools: failed to install watch\n' >&2
-    failed=1
+  else
+    npx -y skills add bradautomates/claude-video -g \
+      --skill watch --agent claude-code codex gemini-cli -y || true
+    if ! has_watch; then
+      printf 'phase2 tools: watch skill was not found after install\n' >&2
+      failed=1
+    fi
   fi
 fi
 

@@ -15,8 +15,12 @@ case "$source_url" in
   http://*|https://*) ;;
   *) fail "URL must start with http:// or https://" ;;
 esac
-printf '%s' "$slug" | grep -E '^[A-Za-z0-9][A-Za-z0-9._-]*$' >/dev/null 2>&1 ||
-  fail "slug must be ASCII letters, numbers, dot, underscore, or hyphen"
+# grep matches per line, so a slug whose first line is clean would pass
+# even with an embedded newline. case tests the whole value at once.
+case "$slug" in
+  ''|[!A-Za-z0-9]*|*[!A-Za-z0-9._-]*)
+    fail "slug must be ASCII letters, numbers, dot, underscore, or hyphen" ;;
+esac
 command -v defuddle >/dev/null 2>&1 || fail "defuddle is not installed"
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)

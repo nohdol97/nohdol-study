@@ -101,8 +101,8 @@ write_generated() {
 
 vault_input=
 profile=
-sync_method=local
-notebooklm_mode=off
+sync_method=
+notebooklm_mode=
 replace_link=0
 
 while [ "$#" -gt 0 ]; do
@@ -144,6 +144,21 @@ done
 [ -n "$vault_input" ] || fail "--vault is required"
 [ -n "$profile" ] || fail "--profile is required"
 
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+study_root=$(CDPATH= cd -- "$script_dir/../../../.." && pwd -P)
+
+# Re-running to fix one thing must not silently downgrade a policy the user
+# already chose, so an omitted flag keeps the recorded value instead of
+# falling back to the first-install default.
+recorded_field() {
+  [ -f "$study_root/REGISTRY.md" ] || return 1
+  sed -n "s/^- $1: //p" "$study_root/REGISTRY.md" | head -n 1 | grep . || return 1
+}
+
+[ -n "$sync_method" ] || sync_method=$(recorded_field sync || printf 'local')
+[ -n "$notebooklm_mode" ] ||
+  notebooklm_mode=$(recorded_field NotebookLM || printf 'off')
+
 case "$profile" in
   personal|corporate) ;;
   *) fail "--profile must be personal or corporate" ;;
@@ -163,9 +178,6 @@ case "$vault_input" in
   /*) ;;
   *) fail "--vault must be an absolute path" ;;
 esac
-
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
-study_root=$(CDPATH= cd -- "$script_dir/../../../.." && pwd -P)
 
 case "$notebooklm_mode" in
   off)

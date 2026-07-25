@@ -10,7 +10,9 @@ description: Extract clean Markdown with metadata from a public web page for stu
 Navigation and page chrome obscure the study source, but extraction alone says
 nothing about truth. This skill separates clean capture from later verification.
 
-1. Check `command -v defuddle`.
+1. Check `command -v defuddle`. When it is absent, do not install it during
+   study work; retrieve the official page with the agent's own web retrieval
+   and continue. Tool absence never blocks reading a source.
 2. For a one-off read, run `defuddle parse URL --md`.
 3. For an immutable study capture, use `ingest/scripts/web-capture.sh`, which
    runs `defuddle parse URL --md -f -o FILE`.

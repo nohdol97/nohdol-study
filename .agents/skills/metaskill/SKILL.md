@@ -1,6 +1,6 @@
 ---
 name: metaskill
-description: Improve and evolve the nohdol-study harness itself: AGENTS rules, shared skills, hooks, installers, ADRs, specs, and user-facing skill documentation. Use when the user says metaskill, 하네스 개선, 스킬 만들어, 스킬 보강, 규칙 바꿔, or asks to bring a harness pattern into this repository. Do NOT use for ordinary knowledge notes or source ingestion.
+description: Improve and evolve the nohdol-study harness itself - AGENTS rules, shared skills, hooks, installers, ADRs, specs, and user-facing skill documentation. Use when the user says metaskill, 하네스 개선, 스킬 만들어, 스킬 보강, 규칙 바꿔, or asks to bring a harness pattern into this repository. Do NOT use for ordinary knowledge notes or source ingestion.
 ---
 
 # metaskill — Build and evolve the study harness
