@@ -8,7 +8,8 @@
 |---|---|---|---|
 | [001](adr/001-initial-study-harness.md) | 2026-07-25 | 활성 | 파일 기반 공부 하네스 Phase 1 구조 |
 | [002](adr/002-phase2-derived-workflows.md) | 2026-07-25 | 활성 | Phase 2 수집·NotebookLM·그래프 파생 워크플로 |
-| [003](adr/003-cli-learning-integrations.md) | 2026-07-25 | 활성 | Understand Anything 전체 스킬과 선택적 학습 연동의 project-local 채택 |
+| [003](adr/003-cli-learning-integrations.md) | 2026-07-25 | 부분 대체(→004) | Understand Anything 전체 스킬과 선택적 학습 연동의 project-local 채택 |
+| [004](adr/004-remove-notebooklm-export.md) | 2026-07-25 | 활성 | NotebookLM export 스킬 제거 — 회수 0건, 763줄 유지 비용 대비 무효 |
 
 ## 스펙
 
@@ -16,7 +17,7 @@
 |---|---|---|
 | [2026-07-25-phase1-study-harness](specs/2026-07-25-phase1-study-harness.md) | 구현됨 | 설치기, 지식 구조, 공용 스킬, 세션 훅 |
 | [2026-07-25-phase2-ingest-notebooklm-graph](specs/2026-07-25-phase2-ingest-notebooklm-graph.md) | 구현됨 | 웹·논문·영상 ingest, NotebookLM export, 그래프 기준 파서 |
-| [2026-07-25-phase2b-cli-learning-integrations](specs/2026-07-25-phase2b-cli-learning-integrations.md) | 2b-A~2b-E 구현(2b-E는 게이트 차단으로 전송 미개방) | Understand Anything 9종, Obsidian 4종, NotebookLM CLI bridge |
+| [2026-07-25-phase2b-cli-learning-integrations](specs/2026-07-25-phase2b-cli-learning-integrations.md) | 2b-A~2b-D 구현, 2b-E는 ADR 004로 철회 | Understand Anything 9종, Obsidian 4종, NotebookLM CLI bridge |
 
 ## 제안
 

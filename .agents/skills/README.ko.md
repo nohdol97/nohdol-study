@@ -66,16 +66,6 @@
 - **핵심 절차**: 기존 노트 검색 → 개선/신규 원자 노트 선택 → 필요 원문 `raw/` 보존 → 근거 프로토콜 적용 → `wiki/` 작성·양방향 링크 → index/log/hot 갱신 → 스키마·출처 재검사.
 - **완료 기준**: 중요한 주장마다 확인한 근거 또는 명시적 미확인·추론·가설·논쟁 상태가 있고, 존재하지 않는 인용이나 관계가 없다.
 
-## notebooklm-export
-
-- **한 줄 역할**: NotebookLM 학습용으로 선택한 주제 파일만 해시·검증 상태·확인일 manifest와 함께 미추적 스냅샷으로 만든다.
-- **언제 쓰나**: NotebookLM 퀴즈·플래시카드·인포그래픽·마인드맵·스터디 가이드·소스 기반 Q&A를 만들고 싶을 때.
-- **언제 안 쓰나**: vault 전체 상시 동기화, 소비자 NotebookLM 비공식 UI 자동화, 생성 답변을 자동으로 확정 지식에 병합.
-- **핵심 절차**: 좁은 학습 목표 정의 → 관련 검증 노트와 원 출처만 선택 → `export.sh --name ...` → manifest 검토 → 수동 업로드 → 생성물은 원 출처 대조 후에만 다시 노트화.
-- **주요 산출물**: `_workspace/notebooklm/<주제>-<시각>/`의 `sources/`와 `00-manifest.md`; 기본값은 `unverified` 노트 내보내기를 거부한다.
-- **업로드 전 검증**: `verify-packet.sh`가 packet을 manifest와 다시 대조한다 — 해시 재계산, 심링크는 따라 읽지 않고 거부, manifest에 없는 파일이 `sources/`에 있으면 거부, `unverified` 노트 거부. 규약 밖 형제 디렉터리는 실패가 아니라 경고로 드러낸다.
-- **CLI bridge는 차단됨**: `bridge-gate.sh`가 릴리스만 읽어 판정한다(설치·인증·전송 없음, API 미도달 시 fail-closed). 2026-07-25 실측 — 최신 안정 릴리스 `v0.7.3`에 download redirect 수정이 없어(가드 모듈 부재) **설치·인증·전송 모두 금지**. 수정은 `v0.8.0` 프리릴리스에만 있다.
-
 ## obsidian
 
 - **한 줄 역할**: Obsidian 고유 형식(Markdown 확장·Bases·JSON Canvas)을 작성·검증하고, 실행 중인 vault를 공식 CLI로 조작한다. 4개 mode를 내부 라우팅한다.
@@ -105,10 +95,10 @@
 
 ## study-install
 
-- **한 줄 역할**: 컴퓨터마다 다른 지식 루트·프로필·동기화·NotebookLM 모드를 선택하고 vault 심링크와 로컬 도구 상태를 안전하게 초기화한다.
+- **한 줄 역할**: 컴퓨터마다 다른 지식 루트·프로필·동기화 방식을 선택하고 vault 심링크와 로컬 도구 상태를 안전하게 초기화한다.
 - **언제 쓰나**: 첫 설치, `REGISTRY.md`/`vault` 누락, 지식 저장 위치 연결, Obsidian vault 연동, Phase 2·2b 도구 설치·상태 점검.
 - **언제 안 쓰나**: 기존 vault 대량 마이그레이션, vault Git 초기화·원격 설정, 승인 없는 Obsidian·자격증명 설치, upstream 전역 installer 실행.
-- **핵심 절차**: 기존 경로·심링크·충돌 관찰 → 지식 루트/개인·사내/sync/NotebookLM 모드 인터뷰 → create-if-missing bootstrap → Phase 2 도구 check/install → Phase 2b 소스 pin check/install → 심링크·기준 파일·Git 비추적 검증.
+- **핵심 절차**: 기존 경로·심링크·충돌 관찰 → 지식 루트/개인·사내/sync 인터뷰 → create-if-missing bootstrap → Phase 2 도구 check/install → Phase 2b 소스 pin check/install → 심링크·기준 파일·Git 비추적 검증.
 - **완료 기준**: 기존 지식은 보존되고, 설치처 정보는 미추적 `REGISTRY.md`에만 있으며, 누락 도구와 실환경 미검증 항목이 명시된다.
 - **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치한다. 전역 스킬·vault는 건드리지 않고 소스만 놓으며, 의존성 설치와 코드 실행은 하지 않는다. hash 불일치·미충족 runtime·파싱 불가 pin·`python3` 부재는 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. 이동한 tag도 막지만 이는 변조 신호라 API 미도달 시에는 보고 후 진행한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
 

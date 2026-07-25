@@ -1,7 +1,7 @@
 # nohdol-study Phase 2b — project-local 학습 연동 스펙
 
 - 날짜: 2026-07-25
-- 상태: R1~R11·R13(재검증 부분)·R16 구현. R12·R14·R15는 릴리스 게이트가 차단 판정이라 미구현 — 인증·전송·회수는 게이트 통과 후
+- 상태: R1~R10·R16 구현. **R11~R15(NotebookLM bridge)는 [ADR 004](../adr/004-remove-notebooklm-export.md)로 철회** — export 스킬 자체가 제거됐다
 - 관련 결정: [ADR 003](../adr/003-cli-learning-integrations.md)
 - 보안 검토: [NotebookLM·Understand Anything](../reviews/2026-07-25-notebooklm-understand-anything-security.md)
 

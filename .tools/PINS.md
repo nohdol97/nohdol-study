@@ -10,7 +10,7 @@ differs. Release archives can be repackaged, so the authoritative identity is
 the commit plus the tree hash, never the archive bytes.
 
 Nothing here is executed by installing it. Node dependency installation, the
-dashboard, Figma, and the NotebookLM bridge stay out of Phase 2b-A.
+dashboard, and Figma stay out of Phase 2b-A.
 
 ## Record format
 

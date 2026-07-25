@@ -30,7 +30,6 @@
 python3 .agents/skills/knowledge-graph/scripts/build_graph_test.py
 python3 .agents/skills/study-install/scripts/patch-watch-korean_test.py
 .agents/skills/ingest/scripts/web-capture_test.sh
-.agents/skills/notebooklm-export/scripts/export_test.sh
 .agents/skills/study-install/scripts/bootstrap_test.sh
 .agents/skills/study-install/scripts/install-phase2-tools_test.sh
 python3 .agents/skills/metaskill/scripts/verify_harness.py
@@ -191,9 +190,6 @@ project-local skill로 제공한다. 기존 nohdol-study `defuddle`는 유지한
 읽지 않고 거부, manifest에 없는 파일 거부, `unverified` 노트 거부. 규약 밖
 형제 디렉터리(`upload/` 같은)는 실패가 아니라 경고로 드러낸다.
 
-재검토 trigger: `notebooklm-py`가 수정을 포함한 **안정** 릴리스를 내면
-`bridge-gate.sh`가 통과로 바뀐다. 그때도 통과는 허가가 아니다 — 정확한
-extra의 의존성 감사와 사용자가 직접 하는 인증이 남는다.
 
 ### 원래 계획 — Phase 2b-E
 
@@ -201,9 +197,6 @@ extra의 의존성 감사와 사용자가 직접 하는 인증이 남는다.
 충족하는지 다시 감사한 후 진행한다. 충족하지 않으면 installer와 wrapper
 테스트만 구현하고 실제 인증·전송은 계속 차단한다.
 
-- `notebooklm-export` packet manifest/hash를 재검증한다.
-- packet 외 파일, symlink, vault 직접 경로, 미검증 note를 거부한다.
-- 전용 credential profile은 저장소·vault·동기화 폴더 밖에 두고
   `0700`/`0600`을 확인한다.
 - create/upload/generate/download는 실행 계획과 Google 전송 범위를 보여준
   뒤 승인받는다.
@@ -237,20 +230,22 @@ extra의 의존성 감사와 사용자가 직접 하는 인증이 남는다.
 
 각 검사는 뮤테이션으로 유효성을 확인했다.
 
-## 남은 콘텐츠 작업
+## 완료됨 — 콘텐츠 작업 (2026-07-25)
 
-`피지컬 AI - 12살을 위한 안내서`의 본문과 근거 노트는 작성돼 있다.
-사용자가 정한 방향대로 NotebookLM 이미지 생성은 사용하지 않고, Gemini
-또는 사용자가 승인한 이미지 생성 경로로 어린이용 그림을 만든 뒤 다음을
-완료한다.
+`피지컬 AI - 12살을 위한 안내서`에 그림 두 개를 넣어 완성했다. 승인된 이미지
+생성 경로가 없어 생성 이미지 대신 **Mermaid 다이어그램**을 썼다 — 감지–판단–
+행동–피드백 순환(flowchart)과 종이 로봇 실험의 세 역할(sequenceDiagram).
 
-- 생성 이미지라는 provenance와 생성일을 기록한다.
-- 이미지가 사실 근거가 아니라 설명용임을 명시한다.
-- vault의 note-local `assets/`에 저장하고 Obsidian embed를 추가한다.
-- 문서의 감지–판단–행동–피드백 설명과 그림이 모순되지 않는지 확인한다.
+이 선택이 오히려 요구사항에 맞았다. 다이어그램은 그 구조 자체를 그리므로
+본문 설명과 모순될 여지가 없고, Obsidian이 바로 렌더링하며, 소스가 노트 안에
+남아 고칠 수 있고, 외부 서비스도 생성물 출처 문제도 없다.
 
-이미지 생성 서비스로 note나 private source를 보낼 필요는 없다. 장면 설명만
-전송한다.
+「그림에 대하여」 콜아웃으로 **그림이 근거가 아니라 본문 요약임**을 명시했다.
+`diagram`·`obsidian` 검사와 `vault-gardening` 모두 통과하고, index·log·hot도
+갱신했다.
+
+생성 이미지(예: 청소 로봇 장면 삽화)가 필요하면 사용자가 경로를 승인해야
+한다. 그 경우에도 장면 설명만 전송하고, provenance와 생성일을 노트에 기록한다.
 
 ## 보류 중인 후보와 재검토 trigger
 

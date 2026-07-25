@@ -2,6 +2,7 @@
 
 - 날짜: 2026-07-25
 - 상태: 구현됨
+- 부분 철회: NotebookLM export 부분은 [ADR 004](../adr/004-remove-notebooklm-export.md)로 제거됨(2026-07-25). ingest·그래프 부분은 유효
 - 관련 제안: [2026-07-25-nohdol-study-direction](../proposals/2026-07-25-nohdol-study-direction.md)
 
 ## 배경

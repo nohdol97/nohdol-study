@@ -30,23 +30,10 @@ If the user has not already provided them, ask one batched interview:
 1. Exact knowledge-root path. It may be an existing Obsidian vault, a subdirectory in one, or a new/plain directory.
 2. Profile: `personal` or `corporate`.
 3. Sync label: `local`, `google-drive`, `obsidian-sync`, or `other`.
-4. NotebookLM mode: `off`, `consumer`, or `enterprise`.
 
 Explain that Obsidian is optional. When it is absent, prefer creating a plain Obsidian-compatible directory over blocking installation. Do not install Obsidian unless the user separately requests it.
 
 Vault version control is installation-specific. Observe and record whether Git exists, but never run `git init`, add a remote, or change sync configuration unless the user explicitly asks in a separate action.
-
-For NotebookLM:
-
-- `consumer`: configure the local workflow as verified snapshot export and manual upload. Do not claim API sync or inspect browser login.
-- `enterprise`: check for `gcloud` and report that project, location, license, and user authentication are still required. Never copy credentials into the repository.
-- `off`: keep NotebookLM out of the workflow for this installation.
-
-Connection checks are mode-specific. Consumer mode can verify the local export
-workflow but cannot prove the user's NotebookLM login or a live notebook without
-an explicit browser upload. Enterprise mode can verify `gcloud` presence but
-must label project, license, API enablement, and authentication unverified until
-observed.
 
 ### 3. Handle conflicts explicitly
 
@@ -64,8 +51,7 @@ Run:
 .agents/skills/study-install/scripts/bootstrap.sh \
   --vault "/absolute/knowledge/path" \
   --profile personal \
-  --sync local \
-  --notebooklm consumer
+  --sync local
 ```
 
 Substitute the confirmed values. The script creates only missing items:
@@ -122,12 +108,6 @@ Adopting these skills as project skills is Phase 2b-B and 2b-D. Phase 2b-A ends
 once the verified trees are in place and `REGISTRY.md` records what was
 observed.
 
-For `consumer`, also run
-`../notebooklm-export/scripts/export_test.sh`. This verifies the local handoff
-packet, not the Google account connection. For `enterprise`, run `gcloud auth
-list` and relevant project/API checks only when the user has selected that mode
-and authorized the account context.
-
 ### 6. Verify
 
 Run:
@@ -158,5 +138,5 @@ For Codex, explain that project config and exact hook definitions must be truste
 |---|---|---|
 | Portability | Personal paths leak into Git | Local registry and ignored vault link |
 | Existing vault safety | Initialization may overwrite names | Conflict gate and create-if-missing |
-| Optional services | Assumed available | NotebookLM mode and tool status observed |
+| Optional services | Assumed available | Tool status observed and recorded |
 | Reinstallation | Manual, stateful setup | Idempotent bootstrap and explicit replacement |

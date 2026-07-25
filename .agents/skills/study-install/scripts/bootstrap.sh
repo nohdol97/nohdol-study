@@ -7,7 +7,7 @@ usage() {
 Usage:
   bootstrap.sh --vault ABSOLUTE_PATH --profile personal|corporate \
     [--sync local|google-drive|obsidian-sync|other] \
-    [--notebooklm off|consumer|enterprise] [--replace-link]
+    [--replace-link]
 
 The selected path may be an existing Obsidian vault or a plain directory.
 Existing knowledge files are never overwritten.
@@ -102,7 +102,6 @@ write_generated() {
 vault_input=
 profile=
 sync_method=
-notebooklm_mode=
 replace_link=0
 
 while [ "$#" -gt 0 ]; do
@@ -120,11 +119,6 @@ while [ "$#" -gt 0 ]; do
     --sync)
       [ "$#" -ge 2 ] || fail "--sync requires a value"
       sync_method=$2
-      shift 2
-      ;;
-    --notebooklm)
-      [ "$#" -ge 2 ] || fail "--notebooklm requires a value"
-      notebooklm_mode=$2
       shift 2
       ;;
     --replace-link)
@@ -156,8 +150,6 @@ recorded_field() {
 }
 
 [ -n "$sync_method" ] || sync_method=$(recorded_field sync || printf 'local')
-[ -n "$notebooklm_mode" ] ||
-  notebooklm_mode=$(recorded_field NotebookLM || printf 'off')
 
 case "$profile" in
   personal|corporate) ;;
@@ -169,34 +161,9 @@ case "$sync_method" in
   *) fail "--sync must be local, google-drive, obsidian-sync, or other" ;;
 esac
 
-case "$notebooklm_mode" in
-  off|consumer|enterprise) ;;
-  *) fail "--notebooklm must be off, consumer, or enterprise" ;;
-esac
-
 case "$vault_input" in
   /*) ;;
   *) fail "--vault must be an absolute path" ;;
-esac
-
-case "$notebooklm_mode" in
-  off)
-    notebooklm_workflow=disabled
-    ;;
-  consumer)
-    if [ -x "$study_root/.agents/skills/notebooklm-export/scripts/export.sh" ]; then
-      notebooklm_workflow=snapshot-export-ready-account-unverified
-    else
-      notebooklm_workflow=missing-export-script
-    fi
-    ;;
-  enterprise)
-    if command -v gcloud >/dev/null 2>&1; then
-      notebooklm_workflow=gcloud-available-project-auth-unverified
-    else
-      notebooklm_workflow=gcloud-missing
-    fi
-    ;;
 esac
 
 while [ "$vault_input" != "/" ] && [ "${vault_input%/}" != "$vault_input" ]; do
@@ -355,8 +322,6 @@ write_generated "$study_root/REGISTRY.md" <<EOF
 - vault link: \`vault -> $vault_path\`
 - Obsidian metadata: $obsidian_metadata
 - sync: $sync_method
-- NotebookLM: $notebooklm_mode
-- NotebookLM workflow: $notebooklm_workflow
 - vault Git: $vault_git
 - initialized: $today
 
@@ -372,7 +337,6 @@ write_generated "$study_root/REGISTRY.md" <<EOF
 | yt-dlp | $(command_status yt-dlp) | Phase 2 |
 | ffmpeg | $(command_status ffmpeg) | Phase 2 |
 | watch skill | $(watch_status) | Phase 2 video |
-| gcloud | $(command_status gcloud) | NotebookLM Enterprise only |
 | d2 | $(command_status d2) | later diagrams |
 
 ## Local policy
@@ -381,10 +345,7 @@ write_generated "$study_root/REGISTRY.md" <<EOF
 - Existing vault content is not migrated or normalized automatically.
 - Optional external processing requires the data policy in AGENTS.md.
 - Vault version control and synchronization are managed separately for this installation.
-- NotebookLM consumer mode uses explicit snapshot export; enterprise API credentials stay outside this repository.
 EOF
 
 printf 'study-install: connected %s\n' "$vault_path"
 printf 'study-install: Obsidian metadata %s; vault Git %s; sync %s\n' "$obsidian_metadata" "$vault_git" "$sync_method"
-printf 'study-install: NotebookLM %s\n' "$notebooklm_mode"
-printf 'study-install: NotebookLM workflow %s\n' "$notebooklm_workflow"

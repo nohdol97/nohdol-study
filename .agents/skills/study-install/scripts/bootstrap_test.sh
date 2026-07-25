@@ -8,12 +8,9 @@ trap 'rm -rf "$test_root"' EXIT HUP INT TERM
 
 make_harness() {
   harness=$1
-  mkdir -p "$harness/.agents/skills/study-install/scripts" \
-    "$harness/.agents/skills/notebooklm-export/scripts"
+  mkdir -p "$harness/.agents/skills/study-install/scripts"
   cp "$source_script" "$harness/.agents/skills/study-install/scripts/bootstrap.sh"
   chmod +x "$harness/.agents/skills/study-install/scripts/bootstrap.sh"
-  printf '%s\n' '#!/bin/sh' >"$harness/.agents/skills/notebooklm-export/scripts/export.sh"
-  chmod +x "$harness/.agents/skills/notebooklm-export/scripts/export.sh"
 }
 
 canonical_dir() {
@@ -34,7 +31,7 @@ harness_one="$test_root/harness-one"
 vault_one="$test_root/vault-one"
 make_harness "$harness_one"
 "$harness_one/.agents/skills/study-install/scripts/bootstrap.sh" \
-  --vault "$vault_one" --profile personal --sync local --notebooklm consumer >/dev/null
+  --vault "$vault_one" --profile personal --sync local >/dev/null
 
 [ "$(readlink "$harness_one/vault")" = "$(canonical_dir "$vault_one")" ]
 [ -d "$vault_one/raw" ]
@@ -43,9 +40,6 @@ make_harness "$harness_one"
 [ -f "$vault_one/log.md" ]
 [ -f "$vault_one/hot.md" ]
 assert_file_contains "$harness_one/REGISTRY.md" "Obsidian metadata: absent"
-assert_file_contains "$harness_one/REGISTRY.md" "NotebookLM: consumer"
-assert_file_contains "$harness_one/REGISTRY.md" \
-  "NotebookLM workflow: snapshot-export-ready-account-unverified"
 
 # Re-running preserves existing files.
 printf '\nPRESERVE-ME\n' >>"$vault_one/index.md"
@@ -55,15 +49,9 @@ assert_file_contains "$vault_one/index.md" "PRESERVE-ME"
 assert_file_contains "$harness_one/REGISTRY.md" "profile: corporate"
 assert_file_contains "$harness_one/REGISTRY.md" "sync: other"
 # An omitted policy flag keeps the recorded choice instead of resetting it.
-assert_file_contains "$harness_one/REGISTRY.md" "NotebookLM: consumer"
 "$harness_one/.agents/skills/study-install/scripts/bootstrap.sh" \
   --vault "$vault_one" --profile corporate >/dev/null
-assert_file_contains "$harness_one/REGISTRY.md" "NotebookLM: consumer"
 assert_file_contains "$harness_one/REGISTRY.md" "sync: other"
-# An explicit flag still changes the recorded choice.
-"$harness_one/.agents/skills/study-install/scripts/bootstrap.sh" \
-  --vault "$vault_one" --profile corporate --notebooklm off >/dev/null
-assert_file_contains "$harness_one/REGISTRY.md" "NotebookLM: off"
 
 # Existing Obsidian metadata is detected.
 harness_two="$test_root/harness-two"
