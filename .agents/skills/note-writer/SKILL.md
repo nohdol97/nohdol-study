@@ -22,7 +22,9 @@ false memory.
 5. Apply the mandatory evidence-check reference for material factual claims. Inspect the underlying primary or authoritative source rather than trusting a model summary or citation list.
 6. Write the curated note under `vault/wiki/` using the schema. Preserve evidence boundaries: sourced statements, synthesis, inference, hypothesis, and open questions must be distinguishable.
 7. Add meaningful `[[wikilinks]]` in both directions when updating related notes is safe and in scope.
-8. Update `vault/index.md` with a navigational entry, not a duplicate summary.
+8. Update `vault/index.md` as an entry point, not a listing. Follow
+   `references/index-policy.md`: one hub note per topic, atomic notes reached
+   through the hub, and recent-change lines capped because `log.md` is the record.
 9. Append one concise row or bullet to `vault/log.md`; never reorder or rewrite history.
 10. Refresh `vault/hot.md` with only current focus, recent durable learning, open questions, and next actions. Keep it roughly 500 tokens or less.
 11. Verify frontmatter, links, source paths, evidence status, and that no raw file changed unexpectedly.

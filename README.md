@@ -80,7 +80,7 @@ launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 ├── ingest/              # 웹·논문·영상 매체별 수집 및 노트화 라우팅
 ├── knowledge-graph/     # 결정적 지식 그래프 재생성 및 근거 검증
 ├── metaskill/           # 하네스 규칙·스킬·설치기·스펙 자체 개선
-├── note-writer/         # 원자적 검증 노트 작성 및 프론트매터 집행
+├── note-writer/         # 원자적 검증 노트 작성, 프론트매터·index 정책 집행
 ├── obsidian/            # Obsidian 문법·캔버스·Bases 검증 및 CLI 제어
 ├── paper-search/        # 공개 논문 탐색·다운로드·메타데이터 검증
 ├── recall/              # 출처 추적 가능한 간격 반복 복습 카드 제작
@@ -88,7 +88,7 @@ launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 ├── study-session/       # 물어서 가르치는 소크라테스식 학습 대화
 ├── study-video/         # 2-pass 영상 학습 및 타임스탬프 프레임 추출
 ├── understand/          # Understand Anything 9개 모드 내부 라우팅
-├── vault-gardening/     # 지식 루트 드리프트 및 고아/깨진 링크 점검
+├── vault-gardening/     # 지식 루트 드리프트·고아/깨진 링크·index 비대화 점검
 └── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
 ```
 

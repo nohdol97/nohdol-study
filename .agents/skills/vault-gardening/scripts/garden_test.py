@@ -149,6 +149,49 @@ with tempfile.TemporaryDirectory() as temporary:
 with tempfile.TemporaryDirectory() as temporary:
     root = Path(temporary)
     vault = build(root)
+    (vault / "wiki" / "healthy.md").write_text(HEALTHY, encoding="utf-8")
+
+    # An index that names every note grows with the vault, which is what an
+    # entry point must not do. Under the budget it is left alone.
+    listing = "# Index\n\n## Topics\n\n" + "".join(
+        f"- [[Note {n}]]\n" for n in range(12)
+    )
+    (vault / "index.md").write_text(listing, encoding="utf-8")
+    result = run(vault)
+    assert "over the 15 budget" not in result.stdout, result.stdout
+
+    # Past the budget it is reported, and the advice is to add a hub, never to
+    # drop knowledge.
+    listing = "# Index\n\n## Topics\n\n" + "".join(
+        f"- [[Note {n}]]\n" for n in range(30)
+    )
+    (vault / "index.md").write_text(listing, encoding="utf-8")
+    result = run(vault)
+    assert "index.md links 30 notes, over the 15 budget" in result.stdout, result.stdout
+    assert "hub note" in result.stdout
+
+    # The budget is configurable for a vault with genuinely many topics.
+    result = run(vault, "--index-link-budget", "50")
+    assert "over the 50 budget" not in result.stdout
+
+    # Repeating one hub is navigation, not listing: distinct targets are counted.
+    (vault / "index.md").write_text(
+        "# Index\n\n## Topics\n\n" + "- [[Hub]]\n" * 30, encoding="utf-8"
+    )
+    result = run(vault)
+    assert "over the 15 budget" not in result.stdout, result.stdout
+
+    # Embedded assets are not navigation and must not consume the budget.
+    embeds = "# Index\n\n" + "".join(
+        f"![[assets/topic/frame-{n}.jpg]]\n" for n in range(30)
+    )
+    (vault / "index.md").write_text(embeds, encoding="utf-8")
+    result = run(vault)
+    assert "over the 15 budget" not in result.stdout, result.stdout
+
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    vault = build(root)
     # Unrelated content beside the curated layer is common in a real vault and
     # must not be walked or reported.
     legacy = vault / "Legacy Project"

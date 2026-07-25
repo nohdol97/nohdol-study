@@ -1,6 +1,6 @@
 ---
 name: vault-gardening
-description: Report what has drifted in the knowledge root - links pointing at nothing, notes with no link and no category, frontmatter that breaks the note contract, cited sources missing from raw/, and a session cache over budget. Use for vault 점검, 지식 정리, 깨진 링크 찾기, 고아 노트, 노트 상태 점검, and periodic upkeep of the notes. Do NOT use it to add links or edit notes automatically, and do NOT treat an empty report as evidence that the knowledge is correct.
+description: Report what has drifted in the knowledge root - links pointing at nothing, notes with no link and no category, frontmatter that breaks the note contract, cited sources missing from raw/, a session cache over budget, and an index that has grown into a listing. Use for vault 점검, 지식 정리, 깨진 링크 찾기, 고아 노트, 인덱스 비대화, 노트 상태 점검, and periodic upkeep of the notes. Do NOT use it to add links or edit notes automatically, and do NOT treat an empty report as evidence that the knowledge is correct.
 ---
 
 # vault-gardening — Find the drift, decide by hand
@@ -30,8 +30,10 @@ It reports and never edits. Five sections:
   without recording when.
 - **cited sources that are not in raw/** — a note citing a file that is not
   there cannot have its evidence re-examined.
-- **session context** — a missing `index.md`, `log.md`, or `hot.md`, and a
-  hot cache over its byte budget.
+- **session context** — a missing `index.md`, `log.md`, or `hot.md`, a hot
+  cache over its byte budget, and an `index.md` linking more notes than the
+  `--index-link-budget` (default 15), which means it has started listing the
+  vault instead of orienting a reader.
 
 It scans `wiki/`, the three derived files, and `raw/` existence. **It does not
 walk the rest of the knowledge root.** A real vault holds unrelated
@@ -54,6 +56,9 @@ The report is a list of questions, not a task list.
   or lower the note's verification state to match what can still be shown.
 - **An over-budget `hot.md`** is trimmed by deciding what a session actually
   needs, not by deleting the tail.
+- **An over-budget `index.md`** is fixed by giving a topic a hub note and
+  moving that topic's atomic notes behind it, never by deleting entries to get
+  under the number. See `note-writer/references/index-policy.md`.
 
 Record what you changed through `note-writer` so `index.md`, `log.md`, and
 `hot.md` stay consistent. Gardening is a knowledge change like any other.
