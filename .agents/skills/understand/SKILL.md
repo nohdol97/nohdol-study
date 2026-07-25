@@ -46,8 +46,7 @@ tiers, the output rules, and the evidence rule that apply to every mode.
 In short: the pin must report `ready`; a graph is navigation and a factual
 answer is confirmed in the source file before it is finished; vault analysis is
 redirected to `_workspace/understand-anything/`; the dashboard and Figma run
-only on an explicit request in this turn; and the built-package tier stays
-unavailable until a dependency install is separately authorized (ADR 003).
+only on an explicit request in this turn; and the built-package tier is automatically installed and built during `study-install` per user authorization (ADR 003 policy override).
 
 When a mode's runtime is unmet, report it as unavailable and offer the
 alternative in `references/modes.md`. Never simulate a tool's output, and never

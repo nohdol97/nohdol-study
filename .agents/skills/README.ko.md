@@ -100,7 +100,7 @@
 - **언제 안 쓰나**: 기존 vault 대량 마이그레이션, vault Git 초기화·원격 설정, 승인 없는 Obsidian·자격증명 설치, upstream 전역 installer 실행.
 - **핵심 절차**: 기존 경로·심링크·충돌 관찰 → 지식 루트/개인·사내/sync 인터뷰 → create-if-missing bootstrap → Phase 2 도구 check/install → Phase 2b 소스 pin check/install → 심링크·기준 파일·Git 비추적 검증.
 - **완료 기준**: 기존 지식은 보존되고, 설치처 정보는 미추적 `REGISTRY.md`에만 있으며, 누락 도구와 실환경 미검증 항목이 명시된다.
-- **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치한다. 전역 스킬·vault는 건드리지 않고 소스만 놓으며, 의존성 설치와 코드 실행은 하지 않는다. hash 불일치·미충족 runtime·파싱 불가 pin·`python3` 부재는 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. 이동한 tag도 막지만 이는 변조 신호라 API 미도달 시에는 보고 후 진행한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
+- **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치하며, 사용자의 상시 승인 결정에 따라 의존성 설치 및 빌드가 자동 진행된다. 전역 스킬·vault는 건드리지 않는다. hash 불일치·미충족 runtime·파싱 불가 pin·`python3` 부재는 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. 이동한 tag도 막지만 이는 변조 신호라 API 미도달 시에는 보고 후 진행한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
 
 ## study-video
 
@@ -126,7 +126,7 @@
 - **언제 안 쓰나**: 이 vault의 결정적 위키링크 그래프(→ `knowledge-graph`), 소스 파일을 열지 않은 사실 답변, 이번 턴의 명시 요청 없는 dashboard 실행이나 Figma 전송.
 - **라우팅**: 요청 목적으로 mode를 고른다 — `understand`(그래프 생성), `-chat`(위치 찾기), `-explain`(설명), `-onboard`(학습 순서), `-diff`(변경 영향), `-domain`(도메인), `-knowledge`(지식 베이스), `-dashboard`(뷰어), `-figma`(디자인). 모호하면 고른 mode와 이유를 먼저 말하고, 여러 개에 걸치면 답이 되는 가장 싼 것을 돌린다.
 - **공통 경계**: `references/adapter-contract.md` 하나가 운반한다 — 그래프는 탐색 수단이지 근거가 아니라 사실 답변은 소스 파일 확인 뒤에만 완료하고, vault 분석은 `_workspace/understand-anything/`로 돌리며, dashboard·Figma는 실행별 명시 요청·승인 대상이다. mode별 절차는 `references/modes.md`에 있다.
-- **런타임 계층**: `-knowledge`는 `python3`만으로 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프가 필요하며, `understand`·`-figma`·`-dashboard`는 빌드된 의존성이 필요해 별도 승인 전까지 `unavailable`로 보고한다. 런타임이 안 되면 도구 출력을 흉내 내지 않고 대안을 제시한다.
+- **런타임 계층**: `-knowledge`는 `python3`만으로 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프가 필요하며, `understand`·`-figma`·`-dashboard`는 빌드된 의존성이 필요하다. (사용자의 상시 의존성 설치 승인 결정에 따라 `study-install` 시 NPM 의존성이 자동 설치 및 빌드된다.) 런타임이 안 되면 도구 출력을 흉내 내지 않고 대안을 제시한다.
 - **완료 기준**: 고른 mode와 근거가 드러나고, 사실 답변은 연 파일과 줄에 근거하며, 미충족 런타임은 설치 시도 없이 unavailable로 보고된다.
 
 ## vault-gardening

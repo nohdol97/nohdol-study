@@ -2,9 +2,8 @@
 #
 # Place the Phase 2b external source pins under the untracked tool root.
 #
-# This installs source trees only. It never runs upstream installers, never
-# links into a global skill directory, never touches the vault, and never
-# installs Node dependencies. Everything it writes lives under the tool root.
+# This installs source trees and builds local Node dependencies when authorized. It never runs upstream installers, never
+# links into a global skill directory, and never touches the vault. Everything it writes lives under the tool root.
 
 set -u
 
@@ -289,6 +288,14 @@ done <"$pins"
   note "pin ledger has no usable records"
   exit 1
 }
+
+if [ "$mode" = install ] && [ "$node_ok" -eq 1 ] && [ "$pnpm_ok" -eq 1 ] && [ -f "$tools_root/understand-anything/package.json" ]; then
+  note "installing and building understand-anything NPM dependencies (user authorized)..."
+  (cd "$tools_root/understand-anything" && pnpm install --no-frozen-lockfile && pnpm -r build) || {
+    note "understand-anything NPM dependency build failed"
+    failed=1
+  }
+fi
 
 printf '\n'
 "$0" --check

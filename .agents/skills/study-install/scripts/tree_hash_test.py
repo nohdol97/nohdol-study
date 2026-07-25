@@ -77,6 +77,17 @@ with tempfile.TemporaryDirectory() as temporary:
     os.symlink("nested/b.txt", sixth / "link.txt")
     assert run(str(sixth)).stdout.strip() != with_link
 
+    # Build artifacts and dependency cache directories are ignored.
+    seventh = root / "seventh"
+    make_tree(seventh)
+    (seventh / "node_modules").mkdir()
+    (seventh / "node_modules" / "package.json").write_text("{}", encoding="utf-8")
+    (seventh / "dist").mkdir()
+    (seventh / "dist" / "bundle.js").write_text("console.log(1)", encoding="utf-8")
+    (seventh / "test.tsbuildinfo").write_text("data", encoding="utf-8")
+    (seventh / "debug.log").write_text("log", encoding="utf-8")
+    assert run(str(seventh)).stdout.strip() == digest
+
     # A missing directory is an argument error, not a hash.
     assert run(str(root / "absent")).returncode == 2
 

@@ -309,4 +309,19 @@ printf '%s' "$real_output" | grep -q 'understand-anything' ||
 printf '%s' "$real_output" | grep -q 'obsidian-skills' ||
   fail "the tracked ledger did not report obsidian-skills"
 
+# 13. When understand-anything is ready and node/pnpm exist, --install automatically runs npm builds per user authorization.
+root_m=$(new_tools_root tools-m)
+mkdir -p "$root_m/understand-anything"
+printf 'content\n' >"$root_m/understand-anything/file.txt"
+printf '{}\n' >"$root_m/understand-anything/package.json"
+intact_digest_m=$(python3 "$tree_hash" "$root_m/understand-anything")
+write_pins "$root_m" \
+  "understand-anything | commit | main | example/sample | abc123 | $intact_digest_m | MIT | node22-pnpm10"
+write_stub node 'v22.0.0'
+write_stub pnpm '10.0.0'
+run_installer "$root_m" --install >"$test_root/out-m" 2>&1
+grep -q 'user authorized' "$test_root/out-m" ||
+  fail "did not report user authorized npm installation"
+rm -f "$stub_bin/node" "$stub_bin/pnpm"
+
 printf 'phase2b installer tests: PASS\n'

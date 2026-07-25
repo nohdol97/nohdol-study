@@ -2,6 +2,7 @@
 
 | 날짜 | 변경 내용 | 대상 | 이유 |
 |---|---|---|---|
+| 2026-07-25 | Understand Anything NPM 의존성 상시 자동 설치 승인 반영 | `study-install`, `install-phase2b-tools.sh`, `understand` SKILL·adapter-contract, 한글 스킬 안내 | 사용자의 상시 설치 승인 결정에 따라 Node 22+ 및 pnpm 10+ 환경에서 `study-install` 실행 시 `@understand-anything/core` 및 dashboard NPM 의존성이 자동 설치·빌드되도록 규칙 및 스크립트 수정 |
 | 2026-07-25 | Phase 1 파일 기반 공부 하네스 구축 | 저장소 골격, 설치기, 스킬, 훅, 문서 | 설치처별 vault와 Claude Code·Codex를 연결하면서 지식과 하네스를 분리 |
 | 2026-07-25 | 주장 단위 근거 검증 규율 추가 후 상시 규칙으로 통합 | AGENTS, `note-writer` 필수 참조, 노트 스키마 | 선택 스킬 활성화 누락 없이 잘못된 정보의 확정 지식화를 방지 |
 | 2026-07-25 | Phase 2 ingest·NotebookLM·그래프 기준 구현 | 웹 capture, 논문·영상 스킬, 검증 export, 결정적 그래프, 설치 도구 | 다양한 자료를 원문 보존·검증 경계를 유지하며 학습 자산으로 전환 |

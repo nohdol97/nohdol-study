@@ -35,10 +35,10 @@ simulate a tool's output to work around a missing runtime.
 | Graph consumer | an existing graph JSON | `understand-chat`, `understand-explain`, `understand-onboard`, `understand-diff`, `understand-domain` |
 | Built package | Node 22+, pnpm 10+, and a built `@understand-anything/core` | `understand`, `understand-figma`, `understand-dashboard` |
 
-The built-package tier is **not available until a dependency install is
-separately authorized**. The upstream lock reports unresolved high-severity
-advisories, so ADR 003 blocks an automatic `pnpm install`. Report the tier as
-unavailable and offer the alternative rather than installing anything.
+The built-package tier is **automatically installed and built during `study-install`**
+per permanent user authorization. When Node 22+ and pnpm 10+ are available,
+`install-phase2b-tools.sh --install` runs `pnpm install` and `pnpm -r build` inside
+`.tools/understand-anything/` so all nine modes and dashboard work immediately.
 
 ## 3. The graph is navigation, not evidence
 

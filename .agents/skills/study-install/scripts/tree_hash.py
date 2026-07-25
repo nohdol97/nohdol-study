@@ -17,14 +17,38 @@ from pathlib import Path
 import sys
 
 
+IGNORE_DIRS = {
+    "node_modules",
+    "dist",
+    "__pycache__",
+    ".venv",
+    "venv",
+    ".git",
+    ".understand-anything",
+    "coverage",
+    "build",
+    ".astro",
+    ".vite",
+    ".cache",
+    ".next",
+    "out",
+    "target",
+}
+IGNORE_EXTS = {".tsbuildinfo", ".pyc", ".pyo", ".log"}
+IGNORE_NAMES = {".DS_Store", "Thumbs.db"}
+
+
 def entries(root: Path) -> list[tuple[str, str]]:
     """Return sorted (relative path, record) pairs for every tracked entry."""
     collected: list[tuple[str, str]] = []
     for directory, subdirectories, filenames in os.walk(root, followlinks=False):
         # Sorting here only makes the walk predictable; the final sort below
         # is what guarantees the hash is order-independent.
+        subdirectories[:] = [d for d in subdirectories if d not in IGNORE_DIRS]
         subdirectories.sort()
         for name in sorted(filenames) + sorted(subdirectories):
+            if name in IGNORE_NAMES or any(name.endswith(ext) for ext in IGNORE_EXTS):
+                continue
             path = Path(directory) / name
             relative = path.relative_to(root).as_posix()
             if path.is_symlink():
