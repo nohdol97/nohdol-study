@@ -11,6 +11,12 @@ _workspace/
 .tools/*
 !.tools/PINS.md
 
+# Telegram bridge runtime state. Holds chat IDs and per-chat selections, so it
+# is installation-specific and must never be committed.
+examples/telegram_bot/bot_state.json
+examples/telegram_bot/bot.log
+examples/telegram_bot/.venv/
+
 # Local/editor state
 .DS_Store
 *.swp

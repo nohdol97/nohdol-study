@@ -26,4 +26,5 @@
   - `MessageEntity` 기반 100% 무결점 서식 분리 전송 (백슬래시 `\`, 별표 `*` 깨짐 원천 차단)
   - `file://`, `vscode://` 등 로컬 파일 링크 프로토콜 자동 사전 정제 방어
   - 4,000자 초과 대용량 응답의 안전한 코드 청크(Chunk) 분할 전송
-  - 좌측 하단 `[Menu]` 버튼을 통한 스킬(`/skill`), Understand 분석(`/understand`), 모델(`/model`), 추론 강도(`/effort`) 즉시 전환
+  - 좌측 하단 `[Menu]` 버튼을 통한 스킬(`/skill`), 모델(`/model`), 추론 강도(`/effort`) 즉시 전환
+  - `/skill`은 대화를 고정하고 싶은 스킬만 노출한다(`study-session`, `recall`, `paper-search`, `vault-gardening`). 나머지는 요청 문구로 자동 라우팅된다
