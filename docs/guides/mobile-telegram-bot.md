@@ -80,3 +80,19 @@ nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&
 - **지식 연결고리 발견**: *"내 노트들 중에 서로 연관이 깊은데 위키링크로 안 엮인 고아 노트가 있어?"*
 - **복습 과외 (`recall`)**: *"내 볼트 `wiki/`의 노트들을 바탕으로 오늘 풀 수 있는 퀴즈 5문제 내줘"*
 - **외부 웹/논문 캡처**: *"이 논문 다운받아서 노트화해 줘 [arXiv/URL]"*
+
+## 5. 마크다운 렌더링 및 메시지 분할 아키텍처 (Telegram MarkdownV2)
+
+AI CLI(`agy` 또는 `gemini`)가 출력하는 풍부한 마크다운(GitHub Flavored Markdown: `# 제목`, `**굵은 글씨**`, 표, 코드 블록 등)을 텔레그램 채팅창에서 깨짐 없이 깔끔하게 렌더링하기 위해 다음과 같은 포맷팅 엔진과 방어 로직이 내장되어 있다.
+
+1. **`telegramify-markdown` 기반 자동 구문 변환**:
+   - 텔레그램 Bot API(`MarkdownV2`)는 일반 마크다운과 달리 특수문자(`.`, `-`, `(`, `)`, `~`, `>` 등)의 엄격한 이스케이프를 요구한다.
+   - `bot.py`는 CLI 응답 수신 시 `telegramify_markdown.markdownify()`를 호출하여 표준 마크다운을 텔레그램 호환 구문으로 자동 이스케이프 및 변환한다.
+2. **코드 블록 보호 및 안전한 4,000자 분할 (`split_markdownv2`)**:
+   - 텔레그램 1회 전송 제한 길이(4,096 UTF-16 단위)를 초과하는 긴 AI 응답을 단순 문자열 끊기로 분할할 경우 코드 블록(```)이나 마크다운 태그가 중간에 절단되어 API 오류(`BadRequest: can't parse entities`)가 발생한다.
+   - `telegramify_markdown.split_markdownv2(mdv2_text, max_utf16_len=4000)`를 사용해 마크다운 태그와 코드 블록 경계를 보존하면서 안전하게 메시지 청크를 분할한다.
+3. **이중 별표(`**`) 표기 교정 및 평문 폴백(Fallback) 방어**:
+   - 텔레그램 일반 마크다운(`parse_mode="Markdown"`)을 쓰는 안내 메시지(`/start`, `/help`, 콜백 버튼 등)에서는 `**굵은 글씨**` 대신 텔레그램 문법인 단일 별표(`*굵은 글씨*`)를 적용해 파싱 오류를 원천 차단한다.
+   - 만약 예기치 못한 특수 기호로 인해 `MarkdownV2` 전송이 실패할 경우, 메시지 유실을 막기 위해 평문(Plain text) 모드로 자동 전환되어 출력 결과를 끝까지 전송한다.
+4. **의존성 상시 자동 관리**:
+   - `./_workspace/telegram_bot/run_bot.sh` 실행 시 가상환경(`.venv`) 내에 `telegramify-markdown`이 없으면 `uv pip install`로 즉시 자동 탑재되도록 구성되어 있다.

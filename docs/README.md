@@ -6,7 +6,7 @@
 
 | 가이드 | 대상 | 요지 |
 |---|---|---|
-| [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 | 모바일 소크라테스 학습, 인라인 버튼 제어, AGENTS.md 보안 화이트리스트 준수 |
+| [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 | 모바일 소크라테스 학습, 인라인 버튼 제어, MarkdownV2 마크다운 변환 및 안전한 청크 분할, AGENTS.md 보안 화이트리스트 준수 |
 
 ## ADR
 

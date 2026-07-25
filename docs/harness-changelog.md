@@ -2,6 +2,7 @@
 
 | 날짜 | 변경 내용 | 대상 | 이유 |
 |---|---|---|---|
+| 2026-07-25 | 텔레그램 봇 브리지 마크다운 렌더링 고도화 (`telegramify-markdown` 적용) | `_workspace/telegram_bot/bot.py`·`run_bot.sh`, `docs/guides/mobile-telegram-bot.md`, `docs/README.md` | 텔레그램 Bot API의 엄격한 마크다운 규격으로 인해 AI CLI 응답이 평문으로 출력되거나 `**[Menu]**` 등에서 파싱 오류(`BadRequest`)가 발생하던 문제를 해결하기 위해 표준 마크다운을 `MarkdownV2`로 자동 이스케이프 및 안전하게 분할하는 `telegramify-markdown`을 탑재하고 예외 시 평문 폴백 방어 로직을 문서화 및 반영 |
 | 2026-07-25 | Understand Anything NPM 의존성 상시 자동 설치 승인 반영 | `study-install`, `install-phase2b-tools.sh`, `understand` SKILL·adapter-contract, 한글 스킬 안내 | 사용자의 상시 설치 승인 결정에 따라 Node 22+ 및 pnpm 10+ 환경에서 `study-install` 실행 시 `@understand-anything/core` 및 dashboard NPM 의존성이 자동 설치·빌드되도록 규칙 및 스크립트 수정 |
 | 2026-07-25 | Phase 1 파일 기반 공부 하네스 구축 | 저장소 골격, 설치기, 스킬, 훅, 문서 | 설치처별 vault와 Claude Code·Codex를 연결하면서 지식과 하네스를 분리 |
 | 2026-07-25 | 주장 단위 근거 검증 규율 추가 후 상시 규칙으로 통합 | AGENTS, `note-writer` 필수 참조, 노트 스키마 | 선택 스킬 활성화 누락 없이 잘못된 정보의 확정 지식화를 방지 |
