@@ -86,6 +86,6 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 
 ## 8. Phase boundaries
 
-Phase 1 is the portable filesystem harness, installation workflow, note contract, and session context. Phase 2 provides web, paper, and video ingest, verified NotebookLM export, and a deterministic Markdown graph baseline. Basic-memory comparison remains gated until at least 100 curated wiki notes. Phase 3 will add guided study sessions, recall, and gardening. Do not silently pull later-phase dependencies across these boundaries.
+Phase 1 is the portable filesystem harness, installation workflow, note contract, and session context. Phase 2 provides web, paper, and video ingest, verified NotebookLM export, and a deterministic Markdown graph baseline. Phase 2b adds project-local Understand Anything and Obsidian skills plus the gated NotebookLM CLI bridge. Phase 2c may evaluate basic-memory only in an explicitly scoped, read/search-focused corpus with original-file hash checks; there is no arbitrary note-count gate. Phase 3 will add guided study sessions, recall, and gardening. Do not silently pull later-phase dependencies across these boundaries.
 
 History and rationale live in `docs/`; this always-on file contains current operating rules only.

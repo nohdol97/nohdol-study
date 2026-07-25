@@ -146,4 +146,5 @@ schema와 근거가 있는 암묵 관계를 추가할 예정이다.
 - [CLI 학습 연동 ADR](docs/adr/003-cli-learning-integrations.md)
 - [외부 연동 보안 검토](docs/reviews/2026-07-25-notebooklm-understand-anything-security.md)
 - [추가 도구 도입 검토](docs/reviews/2026-07-25-additional-tools-review.md)
+- [다음 세션 작업 인계](docs/handoffs/2026-07-25-next-session.md)
 - [문서 지도](docs/README.md)

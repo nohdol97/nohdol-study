@@ -1,4 +1,4 @@
-<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: 9180c107651f5394c65b582b1805ad761ce69ad9b98ed973083a7857ecb892b3 -->
+<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: 53d350e917033c2e40554b6fde66d34ea4e2a956360639886d8ae2fe2f7a9e35 -->
 
 # nohdol-study 운영 규칙 요약
 
@@ -17,4 +17,5 @@
 - 공용 스킬 원본은 `.agents/skills/`뿐이다. Claude는 심링크, Codex는 네이티브 스킬 발견과 프로젝트 훅을 사용한다.
 - 하네스 규칙·스킬·훅·설치기·ADR·스펙 변경은 `metaskill`로 수행하고 루트 README·한글 스킬 안내·MOC·변경 이력을 함께 맞춘다.
 - Phase 2는 웹·논문·영상 ingest, 검증된 NotebookLM snapshot, 결정적 Markdown 그래프를 제공한다.
-- basic-memory 비교는 정리된 위키 노트 100개 이상에서만 기준 파서와 실측한다.
+- Phase 2b는 project-local Understand Anything·Obsidian 스킬과 보안 게이트가 있는 NotebookLM CLI bridge를 추가한다.
+- Phase 2c의 basic-memory 비교는 임의 노트 수가 아니라 명시된 corpus·read/search 범위·원본 hash 불변 조건으로 제한한다.

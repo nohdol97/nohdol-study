@@ -8,3 +8,4 @@
 | 2026-07-25 | metaskill 규칙 도입과 스킬 문서 보강 | `metaskill`, 루트 README, 한글 스킬 안내, 기존 스킬 | 하네스 변경과 사용자용 라우팅 문서가 함께 검증·동기화되도록 함 |
 | 2026-07-25 | direction 전체 재검토와 Phase 2b 범위 수정 | Understand Anything 9개 스킬, Obsidian 4개 스킬, NotebookLM CLI, ADR 003, 보안 검토, 실행 스펙 | 다른 프로젝트의 판정 대신 nohdol-study의 코드·도메인·설계·지식 학습 목적만으로 평가하고 project-local 설치 경계를 명문화 |
 | 2026-07-25 | 추가 도구 후보 재검토 | basic-memory, PaperQA2, Graphiti, Mem0, Cognee, Kuzu, Obsidian REST/MCP, SR, diagram | 임의 100노트 게이트를 제거하고 실제 효용·source-of-truth·외부 전송·운영 비용에 따라 채택과 재검토 조건을 구분 |
+| 2026-07-25 | 다음 세션 작업 인계와 Phase 경계 정합 수정 | Phase 2b-A~E, Phase 2c·3, Physical AI 이미지, AGENTS 한글 뷰, `knowledge-graph` | 새 세션이 설치처 정보나 외부 전송 경계를 추측하지 않고 바로 이어서 구현하도록 하고 남아 있던 basic-memory 100노트 규칙을 현재 결정과 일치시킴 |

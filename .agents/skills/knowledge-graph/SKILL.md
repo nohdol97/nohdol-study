@@ -1,6 +1,6 @@
 ---
 name: knowledge-graph
-description: Rebuild and inspect a deterministic JSON graph from curated Markdown wikilinks, including frontmatter, outgoing links, backlinks, missing targets, duplicate titles, and orphan notes. Use for 지식 그래프, 백링크 점검, 고아 노트, 깨진 링크, graph rebuild, or graph quality measurement. Do NOT treat the JSON as a knowledge source or run basic-memory comparison below 100 curated notes.
+description: Rebuild and inspect a deterministic JSON graph from curated Markdown wikilinks, including frontmatter, outgoing links, backlinks, missing targets, duplicate titles, and orphan notes. Use for 지식 그래프, 백링크 점검, 고아 노트, 깨진 링크, graph rebuild, or graph quality measurement. Do NOT treat the JSON as a knowledge source or compare another index without an explicitly scoped non-modifying corpus.
 ---
 
 # knowledge-graph — Reproducible Markdown graph
@@ -40,10 +40,11 @@ The parser uses only the Python standard library. It:
    decorative links just to make the count zero.
 4. Regenerate after Markdown changes. Never hand-edit the JSON.
 
-Do not compare or adopt basic-memory until `vault/wiki/` has at least 100
-Markdown notes. At that gate, compare backlink accuracy, missing/orphan
-detection, representative retrieval, runtime cost, source non-modification,
-and server-free portability against this baseline.
+Compare basic-memory or another index only in an explicitly selected corpus.
+Disable formatting, write, and reset operations; record Markdown hashes before
+and after the run. Use predefined retrieval questions to compare backlink
+accuracy, missing/orphan detection, representative retrieval, runtime cost,
+source non-modification, and server-free portability against this baseline.
 
 ## With / without
 

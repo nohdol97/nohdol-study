@@ -31,6 +31,12 @@
 | [NotebookLM CLI·Understand Anything 보안 검토](reviews/2026-07-25-notebooklm-understand-anything-security.md) | notebooklm-py 조건부 채택·v0.7.3 설치 보류, Understand Anything 9종 project-local 안전 어댑터 채택 |
 | [추가 도구 도입 검토](reviews/2026-07-25-additional-tools-review.md) | basic-memory 제한 파일럿, PaperQA2 조건부, Obsidian 4종 채택; memory server 계열 보류 |
 
+## 작업 인계
+
+| 인계 | 시작 작업 |
+|---|---|
+| [2026-07-25 다음 세션](handoffs/2026-07-25-next-session.md) | Phase 2b-A project-local exact-pin 설치 기반 |
+
 ## 변경 이력
 
 - [하네스 변경 이력](harness-changelog.md)
