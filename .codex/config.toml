@@ -1,0 +1,23 @@
+# Project-local Codex settings load only after repository trust.
+# Review and trust the exact hook definitions with /hooks.
+project_doc_max_bytes = 65536
+
+[features]
+hooks = true
+
+[[hooks.SessionStart]]
+matcher = "startup|resume|clear|compact"
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = '"$(git rev-parse --show-toplevel)/.agents/hooks/study-session-start.sh"'
+timeout = 10
+statusMessage = "Loading study context"
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = '"$(git rev-parse --show-toplevel)/.agents/hooks/study-wrapup.sh"'
+timeout = 10
+statusMessage = "Checking study note consistency"

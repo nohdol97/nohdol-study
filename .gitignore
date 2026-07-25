@@ -1,0 +1,11 @@
+# Installation-specific state
+REGISTRY.md
+vault
+_workspace/
+
+# Local/editor state
+.DS_Store
+*.swp
+*.swo
+__pycache__/
+*.pyc
