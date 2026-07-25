@@ -112,19 +112,23 @@ grep -q 'local edit' "$root_c/sample/file.txt" ||
   fail "install overwrote a diverged checkout"
 assert_untouched "hash conflict"
 
-# 4. An unmet runtime fails closed before any download.
+# 4. An unmet runtime is reported, not enforced at install time. Placing
+# source executes nothing, and one tree can hold tools with different needs,
+# so the requirement is carried to the adapter that runs something.
 root_d=$(new_tools_root tools-d)
 write_stub node v18.0.0
 write_stub pnpm 9.0.0
 write_pins "$root_d" \
   'needs-node | commit | main | example/sample | abc123 | '"$(printf '0%.0s' $(seq 64))"' | MIT | node22-pnpm10'
-if run_installer "$root_d" --install >"$test_root/out-d" 2>&1; then
-  fail "install succeeded with an unmet runtime"
+run_installer "$root_d" --check | grep -q 'runtime node22-pnpm10 unmet' ||
+  fail "check did not report the unmet runtime"
+run_installer "$root_d" --install >"$test_root/out-d" 2>&1 || true
+grep -q 'runtime node22-pnpm10 unmet' "$test_root/out-d" ||
+  fail "install did not report the unmet runtime"
+if grep -q 'is not satisfied' "$test_root/out-d"; then
+  fail "an unmet runtime still blocked placement"
 fi
-grep -q 'runtime node22-pnpm10 is not satisfied' "$test_root/out-d" ||
-  fail "the runtime gate was not explained"
-[ ! -d "$root_d/needs-node" ] || fail "an unrunnable checkout was placed"
-assert_untouched "runtime gate"
+assert_untouched "runtime report"
 
 # 5. A satisfied runtime passes the gate and then fails on the download.
 write_stub node v22.1.0

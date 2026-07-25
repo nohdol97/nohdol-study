@@ -21,10 +21,16 @@ commit; a moved tag then fails the install. It is `commit` when the pin is a
 point on a moving branch, where re-pinning is expected and only the tree hash
 is enforced.
 
-`runtime` is the precondition for the pin to be usable at all. `none` means the
-files are readable on their own. `node22-pnpm10` means the tools in that tree
-need Node 22+ and pnpm 10+, so the installer refuses to place a tree the
-machine could not run rather than leaving a dead checkout behind.
+`runtime` is the heaviest requirement among the tools inside the tree. It is
+reported, not enforced at install time: placing source files executes nothing,
+and one tree can hold tools with different needs. This pin is the clearest
+case - its knowledge parsers import only the Python standard library, most of
+its scan scripts need only Node's own modules, and just the dashboard, the
+Figma path, and the graph-clustering scripts need an installed dependency set.
+Gating placement on the heaviest of those would withhold the lightest.
+
+Each adapter skill therefore states what it needs and refuses to run when that
+is missing, rather than the installer refusing to place the files.
 
 <!-- pins:start -->
 ```text

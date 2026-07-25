@@ -25,16 +25,27 @@ Phase 2:
 - 검증 파일만 묶는 NotebookLM 학습 패킷
 - 위키링크·백링크·누락·고아 노트의 결정적 JSON 그래프
 
-Phase 2b-A(외부 소스 pin 설치 기반)는 구현됐고, 그 위의 스킬 노출은 아직
-남아 있다.
+Phase 2b-A(외부 소스 pin 설치 기반)와 2b-B(Understand Anything adapter 9종)는
+구현됐다.
 
-- **구현됨** — 미추적 `.tools/` 루트에 upstream 정확 commit을 내려받아
+- **구현됨(2b-A)** — 미추적 `.tools/` 루트에 upstream 정확 commit을 내려받아
   tree hash가 일치할 때만 배치하는 설치기. 전역 스킬 디렉터리와 vault는
   건드리지 않고, 소스만 놓을 뿐 의존성 설치나 코드 실행은 하지 않는다.
-- **남음** — Understand Anything의 코드·도메인·diff·온보딩·설명·질의·
-  dashboard·Figma·지식 9개 스킬 노출(2b-B), typed 지식 그래프(2b-C),
-  Obsidian Markdown·Bases·JSON Canvas·공식 CLI 스킬 4종(2b-D), 검증 export
-  packet만 올리는 선택적 NotebookLM CLI bridge(2b-E)
+- **구현됨(2b-B)** — `understand`, `understand-chat`, `understand-dashboard`,
+  `understand-diff`, `understand-domain`, `understand-explain`,
+  `understand-figma`, `understand-knowledge`, `understand-onboard` adapter.
+  공통 경계는 `.agents/skills/understand/references/adapter-contract.md`
+  하나가 운반한다 — 그래프는 탐색 수단이지 근거가 아니며 사실 답변은 소스
+  파일 확인 뒤에만 완료하고, vault 분석 산출물은 `_workspace/`로 돌리며,
+  dashboard와 Figma는 실행별 명시 요청·승인 대상이다.
+- **남음** — typed 지식 그래프(2b-C), Obsidian Markdown·Bases·JSON Canvas·
+  공식 CLI 스킬 4종(2b-D), 검증 export packet만 올리는 선택적 NotebookLM CLI
+  bridge(2b-E)
+
+adapter는 런타임 계층이 서로 다르다. `understand-knowledge`만 `python3`로
+바로 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프를 필요로 하며,
+`understand`·`understand-figma`·`understand-dashboard`는 빌드된 의존성이
+필요해 별도 승인 전까지 `unavailable`로 보고한다.
 
 웹 dashboard는 스킬로 제공하되 자동으로 열지 않고 사용자가 요청할 때만
 localhost에서 실행한다. Figma와 NotebookLM 외부 전송도 실행별 승인
@@ -130,13 +141,23 @@ token, MCP/server는 기본 경로에서 허용하지 않는다.
 ├── paper-search/        # 공개 논문 검색·다운로드·검증
 ├── study-install/       # 설치처 bootstrap과 도구 점검
 ├── study-video/         # transcript-first 2-pass 영상 학습
+├── understand/          # 코드 그래프 생성 + adapter 공통 계약
+├── understand-chat/     # 그래프로 좁히고 파일로 확인하는 코드 질의
+├── understand-dashboard/# loopback 그래프 뷰어 (명시 요청 전용)
+├── understand-diff/     # 변경 영향 오버레이
+├── understand-domain/   # 코드 근거 있는 도메인 관점
+├── understand-explain/  # source-first 개념·흐름 설명
+├── understand-figma/    # 승인된 Figma 파일 분석 (실행별 승인)
+├── understand-knowledge/# Markdown 지식 베이스 typed 추출
+├── understand-onboard/  # 의존성 순서 학습 경로
 └── using-study/         # 지식 우선 세션 운영
 ```
 
-Phase 2b는 Understand Anything 9개를 모두 채택한다. upstream의 main-pulling
-전역 installer는 쓰지 않고, 필요한 source와 dependency를 project-local로
-고정·감사한다. `knowledge-graph`는 article/entity/topic/claim/source
-schema와 근거가 있는 암묵 관계를 추가할 예정이다.
+Understand Anything 9개는 모두 adapter로 노출돼 있다. upstream의 main-pulling
+전역 installer는 쓰지 않고, source를 project-local로 고정·검증해 두고
+dependency 설치는 감사 통과 전까지 막는다. `knowledge-graph`는
+article/entity/topic/claim/source schema와 근거가 있는 암묵 관계를 추가할
+예정이다(2b-C).
 
 사용 시점·금지 경계·핵심 절차는
 [한글 스킬 안내](.agents/skills/README.ko.md)에 정리되어 있다.
@@ -149,7 +170,9 @@ schema와 근거가 있는 암묵 관계를 추가할 예정이다.
 - Phase 2 논문: `paper-search`
 - Phase 2 영상: `yt-dlp`, `ffmpeg`, 전역 `watch` 스킬
 - 그래프 기준 파서: Python 표준 라이브러리
-- Phase 2b 코드·그래프: Node 22+, pnpm 10+ (정확 dependency audit 통과 후)
+- Phase 2b `understand-knowledge`: Python 표준 라이브러리만 (지금 동작)
+- Phase 2b `understand`·`understand-figma`·`understand-dashboard`: Node 22+,
+  pnpm 10+와 빌드된 core (정확 dependency audit 통과 후 — 그전까지 unavailable)
 - 선택 Obsidian CLI: Obsidian 1.12.7+ 설치본과 실행 중인 앱
 
 `watch`의 Whisper 경로는 Groq 또는 OpenAI로 오디오를 전송할 수 있으므로

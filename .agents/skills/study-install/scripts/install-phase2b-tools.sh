@@ -231,9 +231,11 @@ while IFS='|' read -r name ref_kind ref repo commit expected license runtime; do
   fi
 
   if ! runtime_satisfied "$runtime"; then
-    note "$name: runtime $runtime is not satisfied (node ${node_version:-missing}, pnpm ${pnpm_version:-missing})"
-    failed=1
-    continue
+    # Placing source executes nothing, and one tree can hold tools with very
+    # different needs, so withholding the whole tree would also withhold the
+    # parts that run on their own. The requirement is reported here and
+    # enforced by the adapter that actually runs something.
+    note "$name: runtime $runtime unmet (node ${node_version:-missing}, pnpm ${pnpm_version:-missing}); placing source, dependent tools stay unavailable"
   fi
 
   if [ "$ref_kind" = tag ] && ! tag_still_points_at "$repo" "$ref" "$commit"; then

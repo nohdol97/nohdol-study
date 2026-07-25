@@ -2,10 +2,10 @@
 
 - 작성일: 2026-07-25
 - 기준 브랜치: `main`
-- 현재 상태: Phase 1·2 및 Phase 2b-A 구현 완료, Phase 2b-B~E·2c·3 미구현
-- 다음 시작점: **Phase 2b-B**(Understand Anything 9개 adapter). 단
-  `understand-anything` pin은 pnpm 10+가 없어 아직 배치되지 않았으므로,
-  adapter 작업 전에 `install-phase2b-tools.sh --check`로 상태를 다시 관찰한다.
+- 현재 상태: Phase 1·2 및 Phase 2b-A·2b-B 구현 완료, Phase 2b-C~E·2c·3 미구현
+- 다음 시작점: **Phase 2b-C**(typed 지식 그래프). 현재
+  `understand-knowledge` adapter는 상류 파서를 그대로 부르므로, 2b-C는 그
+  출력을 이 하네스의 스키마·근거 규율에 맞추는 작업이다.
 - 결정 원본:
   - [방향 제안](../proposals/2026-07-25-nohdol-study-direction.md)
   - [ADR 003](../adr/003-cli-learning-integrations.md)
@@ -91,7 +91,24 @@ dashboard 실행, vault semantic 분석을 하지 않는다.
 
 ## 후속 작업 순서
 
-### Phase 2b-B — Understand Anything 9개 adapter
+### 완료됨 — Phase 2b-B (2026-07-25)
+
+9개 adapter를 project skill로 노출했다. 공통 경계는
+`.agents/skills/understand/references/adapter-contract.md` 하나가 운반한다.
+
+조사에서 드러난 사실 하나가 2b-A의 설계를 고치게 했다: 한 pin 안에 런타임이
+세 계층으로 갈려 있다. `understand-knowledge`의 파서는 Python 표준
+라이브러리만 쓰고, 그래프 소비형 5종은 기존 그래프만 있으면 되며,
+`understand`·`understand-figma`·`understand-dashboard`만 빌드된 의존성을
+요구한다. 소스 배치는 아무것도 실행하지 않으므로 런타임 게이트를 설치
+시점에서 실행 시점(adapter)으로 옮겼다. 그 결과 두 pin 모두 배치됐고,
+의존성 없이 도는 `understand-knowledge` 경로가 열렸다.
+
+미해결로 남은 것: `understand-knowledge`는 상류 파서를 그대로 부르므로
+출력이 아직 이 하네스 스키마가 아니다(2b-C 대상). 현재 vault는 wiki 노트가
+1개라 상류 파서의 입력 조건(`index.md` + Markdown 여러 개)에 미달한다.
+
+### 원래 계획 — Phase 2b-B
 
 `understand`, `understand-chat`, `understand-dashboard`, `understand-diff`,
 `understand-domain`, `understand-explain`, `understand-figma`,
