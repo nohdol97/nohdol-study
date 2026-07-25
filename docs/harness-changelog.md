@@ -2,6 +2,9 @@
 
 | 날짜 | 변경 내용 | 대상 | 이유 |
 |---|---|---|---|
+| 2026-07-25 | 텔레그램 봇 브리지 공식 레퍼런스 템플릿(`examples/telegram_bot/`) 제공 | `examples/telegram_bot/`, `docs/guides/mobile-telegram-bot.md` | 비추적 디렉터리(`_workspace/`)로 인해 깃 복제 시 봇 스크립트가 유실되거나 LLM이 처음부터 코드를 재구성해야 하는 번거로움을 해결하기 위해, 검증된 `bot.py` 및 `run_bot.sh`를 공식 예제 템플릿으로 제공하여 1초 만에 복사하여 실전 구동할 수 있도록 환경 구축 |
+| 2026-07-25 | 텔레그램 봇 맥(macOS) 부팅 시 자동 구동(`launchd` LaunchAgent) 구성 및 문서화 | `~/Library/LaunchAgents/com.nohdol.telegrambot.plist`, `docs/guides/mobile-telegram-bot.md` | 컴퓨터 재부팅 시마다 수동으로 터미널에서 환경변수 및 백그라운드 명령어를 입력해야 하는 번거로움을 해결하고, 예기치 못한 종료 시에도 OS가 즉시 재구동(`KeepAlive`)하도록 `launchd` 자동 시작을 구성 (보안 계율 RULE 5 준수를 위해 토큰 설정은 프로젝트 외부의 사용자 개인 계정 경로에 안전하게 격리) |
+| 2026-07-25 | 텔레그램 봇 브리지 MessageEntity 기반 렌더링 및 로컬 URL 정제 탑재 | `_workspace/telegram_bot/bot.py`, `docs/guides/mobile-telegram-bot.md` | `MarkdownV2` 문자열 파싱 시 클라이언트 환경에 따라 백슬래시(`\`)나 별표(`*`)가 노출되거나 API가 `file://` 링크를 미지원 프로토콜로 거부하는 문제를 완벽 해결하기 위해, 순수 텍스트와 스타일 속성 배열(`MessageEntity`)을 분리 전송하는 모드로 전면 개편하고 웹 외 URL을 인라인 코드로 사전 정제하는 방어 로직 탑재 |
 | 2026-07-25 | 텔레그램 봇 브리지 마크다운 렌더링 고도화 (`telegramify-markdown` 적용) | `_workspace/telegram_bot/bot.py`·`run_bot.sh`, `docs/guides/mobile-telegram-bot.md`, `docs/README.md` | 텔레그램 Bot API의 엄격한 마크다운 규격으로 인해 AI CLI 응답이 평문으로 출력되거나 `**[Menu]**` 등에서 파싱 오류(`BadRequest`)가 발생하던 문제를 해결하기 위해 표준 마크다운을 `MarkdownV2`로 자동 이스케이프 및 안전하게 분할하는 `telegramify-markdown`을 탑재하고 예외 시 평문 폴백 방어 로직을 문서화 및 반영 |
 | 2026-07-25 | Understand Anything NPM 의존성 상시 자동 설치 승인 반영 | `study-install`, `install-phase2b-tools.sh`, `understand` SKILL·adapter-contract, 한글 스킬 안내 | 사용자의 상시 설치 승인 결정에 따라 Node 22+ 및 pnpm 10+ 환경에서 `study-install` 실행 시 `@understand-anything/core` 및 dashboard NPM 의존성이 자동 설치·빌드되도록 규칙 및 스크립트 수정 |
 | 2026-07-25 | Phase 1 파일 기반 공부 하네스 구축 | 저장소 골격, 설치기, 스킬, 훅, 문서 | 설치처별 vault와 Claude Code·Codex를 연결하면서 지식과 하네스를 분리 |

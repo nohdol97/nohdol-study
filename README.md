@@ -29,6 +29,8 @@
 - **이동 중 소크라테스식 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 AI와 문답하고, Mac 백그라운드 엔진이 지식 볼트에 노트를 직접 기록
 - **클라우드 실시간 동기화**: Mac에서 생성·수정된 노트는 Google Drive를 통해 스마트폰 Obsidian 앱에 즉시 동기화
 - **인라인 버튼 및 메뉴 제어**: 좌측 하단 `[Menu]` 버튼과 터치 버튼으로 AI 모델(`Gemini 3.1 Pro` ↔ `2.5 Flash`) 및 추론 강도(`High/Med/Low`) 즉시 전환
+- **무결점 서식 렌더링 (`MessageEntity`)**: 마크다운 기호(`\`, `*`, `` ` ``) 노출 없이 스타일 속성 배열만 분리 전송하고 로컬 경로(`file://`)를 정제하는 방어 아키텍처 탑재
+- **맥 OS 부팅 시 자동 구동 (`launchd`)**: 재부팅 후에도 명령어 입력 없이 상시 구동되며 프로세스 종료 시 자동 복구(`KeepAlive`)
 - **AGENTS.md Rule 5 보안 준수**: 환경 변수 주입 방식 및 Chat ID 화이트리스트 차단 기능으로 완벽한 보안 격리
 
 ---
@@ -56,10 +58,13 @@ AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거�
 export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHI..."
 export TELEGRAM_ALLOWED_CHAT_ID="내_CHAT_ID_숫자"
 
-# 봇 상시 가동
+# 봇 상시 가동 (nohup 방식)
 nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&1 &
+
+# 또는 맥 부팅 시 자동 시작 (launchd 방식 - 추천)
+launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 ```
-> 📖 **상세 세팅 가이드**: [모바일 텔레그램 스터디 브리지 가이드](docs/guides/mobile-telegram-bot.md) 참조
+> 📖 **상세 세팅 및 자동 시작 가이드**: [모바일 텔레그램 스터디 브리지 가이드](docs/guides/mobile-telegram-bot.md) 참조
 
 ---
 

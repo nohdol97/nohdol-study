@@ -41,8 +41,13 @@
 
 ### 2단계: 내 Chat ID 알아내기 (최초 1회)
 1. 텔레그램에서 생성한 봇에게 아무 메시지나 보낸다 (예: `/start` 또는 `안녕`).
-2. Mac 터미널에서 토큰만 주입하여 봇을 임시 실행한다:
+2. 저장소의 공식 레퍼런스 템플릿(`examples/telegram_bot/`)을 로컬 작업 디렉터리로 복사한 뒤, 토큰만 주입하여 봇을 임시 실행한다:
    ```bash
+   # 공식 템플릿 복사 (최초 1회)
+   mkdir -p _workspace/telegram_bot
+   cp -p examples/telegram_bot/* _workspace/telegram_bot/
+
+   # 임시 실행
    TELEGRAM_BOT_TOKEN="발급받은토큰" ./_workspace/telegram_bot/run_bot.sh
    ```
 3. 봇이 텔레그램으로 **"🚨 접근 권한이 없습니다. 당신의 Chat ID: `12345678`"** 라고 내 ID 숫자를 알려주면 해당 번호를 복사하고 터미널에서 `Ctrl+C`로 종료한다.
@@ -57,9 +62,22 @@ export TELEGRAM_ALLOWED_CHAT_ID="내_CHAT_ID_숫자"
 # CLI 엔진을 gemini로 변경하려면 아래 주석 해제 (기본값: agy)
 # export STUDY_CLI_CMD="gemini"
 
-# 백그라운드 상시 구동 (nohup 활용 추천)
+# 백그라운드 상시 구동 (nohup 활용)
 nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&1 &
 ```
+
+#### 💡 [고급] 맥(macOS) 부팅 시 자동 시작 (`launchd` LaunchAgent 등록)
+매번 컴퓨터 재부팅 시 터미널 명령어를 입력하지 않고 **맥이 부팅되자마자 알아서 백그라운드 구동되도록** 하려면, macOS 공식 부팅 서비스 관리자인 `launchd`를 활용할 수 있다.
+보안 계율(RULE 5)에 따라 비밀 토큰은 프로젝트 및 `_workspace/` 내부에 절대 저장하지 않으므로, 사용자 계정 전용 경로인 `~/Library/LaunchAgents/com.nohdol.telegrambot.plist`에 아래와 같이 환경변수 주입 설정을 생성하고 등록한다:
+
+```bash
+# 1. launchctl 등록 및 실행
+launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
+
+# 2. 구동 상태 확인 (PID 출력 확인)
+launchctl list | grep telegrambot
+```
+* **이점**: 재부팅 후에도 자동 구동되며, 예기치 못한 예외로 프로세스가 종료되더라도 macOS가 즉시(`KeepAlive`) 재구동시킨다.
 
 ## 4. 텔레그램 메뉴 및 명령어 사용법
 
@@ -81,18 +99,63 @@ nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&
 - **복습 과외 (`recall`)**: *"내 볼트 `wiki/`의 노트들을 바탕으로 오늘 풀 수 있는 퀴즈 5문제 내줘"*
 - **외부 웹/논문 캡처**: *"이 논문 다운받아서 노트화해 줘 [arXiv/URL]"*
 
-## 5. 마크다운 렌더링 및 메시지 분할 아키텍처 (Telegram MarkdownV2)
+## 5. 마크다운 렌더링 및 메시지 분할 아키텍처 (Telegram MessageEntity 기반)
 
 AI CLI(`agy` 또는 `gemini`)가 출력하는 풍부한 마크다운(GitHub Flavored Markdown: `# 제목`, `**굵은 글씨**`, 표, 코드 블록 등)을 텔레그램 채팅창에서 깨짐 없이 깔끔하게 렌더링하기 위해 다음과 같은 포맷팅 엔진과 방어 로직이 내장되어 있다.
 
-1. **`telegramify-markdown` 기반 자동 구문 변환**:
-   - 텔레그램 Bot API(`MarkdownV2`)는 일반 마크다운과 달리 특수문자(`.`, `-`, `(`, `)`, `~`, `>` 등)의 엄격한 이스케이프를 요구한다.
-   - `bot.py`는 CLI 응답 수신 시 `telegramify_markdown.markdownify()`를 호출하여 표준 마크다운을 텔레그램 호환 구문으로 자동 이스케이프 및 변환한다.
-2. **코드 블록 보호 및 안전한 4,000자 분할 (`split_markdownv2`)**:
-   - 텔레그램 1회 전송 제한 길이(4,096 UTF-16 단위)를 초과하는 긴 AI 응답을 단순 문자열 끊기로 분할할 경우 코드 블록(```)이나 마크다운 태그가 중간에 절단되어 API 오류(`BadRequest: can't parse entities`)가 발생한다.
-   - `telegramify_markdown.split_markdownv2(mdv2_text, max_utf16_len=4000)`를 사용해 마크다운 태그와 코드 블록 경계를 보존하면서 안전하게 메시지 청크를 분할한다.
-3. **이중 별표(`**`) 표기 교정 및 평문 폴백(Fallback) 방어**:
+1. **`telegramify-markdown` 및 `MessageEntity` 기반 구문 변환**:
+   - 텔레그램 Bot API의 `parse_mode="MarkdownV2"`는 문자열 기반 파싱을 수행하므로 이스케이프 기호(`.`, `-`, `(` 등)가 조금만 어긋나도 오류를 내거나 화면에 백슬래시(`\`), 별표(`*`), 백틱(`` ` ``)을 그대로 노출하는 한계가 있다.
+   - 이를 원천 차단하기 위해 `bot.py`는 `telegramify_markdown.telegramify()`를 호출하여 마크다운 기호가 전혀 없는 100% 순수 텍스트(`item.text`)와 스타일 속성 객체 배열(`MessageEntity`)을 분리 생성한다. 이로써 텍스트 자체에 백슬래시나 별표가 전혀 포함되지 않아 깨짐이나 노출을 완벽하게 방지한다.
+2. **코드 블록 보호 및 안전한 4,000자 분할**:
+   - `telegramify()` 호출 시 `max_message_length=4000`, `min_file_lines=999999` 파라미터를 지정하여 코드 블록이 파일 첨부로 변환되는 것을 막고, 텔레그램 전송 제한 길이를 초과하지 않도록 안전하게 분할한다.
+3. **로컬 파일 링크(`file://`, `vscode://`) 프로토콜 정제 방어**:
+   - AI CLI 모델이 응답 중 로컬 경로(`[CLAUDE.md](file:///...)`)를 마크다운 링크로 출력할 경우, 텔레그램 Bot API는 미지원 프로토콜(`BadRequest: Entity url ... is invalid: unsupported url protocol`)로 간주하여 전송을 차단하고 예외를 발생시킨다.
+   - 이를 방지하기 위해 마크다운 변환 전 전처리 단계에서 정규식(`re.sub`)을 통해 웹 URL(`http://`, `https://`, `tg://` 등)을 제외한 모든 로컬 프로토콜 링크를 인라인 코드 formatting(예: `` `CLAUDE.md` ``)으로 변환하여 API 거부를 100% 방지한다.
+4. **이중 별표(`**`) 표기 교정 및 평문 폴백(Fallback) 방어**:
    - 텔레그램 일반 마크다운(`parse_mode="Markdown"`)을 쓰는 안내 메시지(`/start`, `/help`, 콜백 버튼 등)에서는 `**굵은 글씨**` 대신 텔레그램 문법인 단일 별표(`*굵은 글씨*`)를 적용해 파싱 오류를 원천 차단한다.
-   - 만약 예기치 못한 특수 기호로 인해 `MarkdownV2` 전송이 실패할 경우, 메시지 유실을 막기 위해 평문(Plain text) 모드로 자동 전환되어 출력 결과를 끝까지 전송한다.
-4. **의존성 상시 자동 관리**:
+   - 만약 예기치 못한 특수 기호로 인해 엔티티 전송이 실패할 경우, 메시지 유실을 막기 위해 평문(Plain text) 모드로 자동 전환되어 출력 결과를 끝까지 전송한다.
+5. **의존성 상시 자동 관리**:
    - `./_workspace/telegram_bot/run_bot.sh` 실행 시 가상환경(`.venv`) 내에 `telegramify-markdown`이 없으면 `uv pip install`로 즉시 자동 탑재되도록 구성되어 있다.
+
+## 6. 트러블슈팅 및 운영 FAQ (Troubleshooting & Maintenance)
+
+### Q1. 봇이 응답하지 않거나 `409 Conflict` 오류가 로그에 찍힐 때
+- **원인**: 텔레그램 Bot API는 동일한 토큰으로 2개 이상의 프로세스가 동시에 `getUpdates` 폴링을 수행하는 것을 금지한다. 수동 실행(`nohup`)과 자동 시작(`launchd`)이 중복되었거나 백그라운드 프로세스가 2개 이상 떠 있을 때 발생한다.
+- **해결 방안**:
+  ```bash
+  # 1. 모든 봇 프로세스 강제 종료
+  ps aux | grep "[b]ot.py" | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+
+  # 2. launchd로 정상 단일 구동 재개
+  launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
+  ```
+
+### Q2. 봇 구동 상태 및 실시간 로그를 확인하고 싶을 때
+- **구동 상태 확인**:
+  ```bash
+  launchctl list | grep telegrambot
+  # 또는
+  ps aux | grep "[b]ot.py"
+  ```
+- **실시간 실행 로그 조회**:
+  ```bash
+  tail -f _workspace/telegram_bot/bot.log
+  ```
+
+### Q3. 봇을 일시 정지하거나 완전히 중단시키고 싶을 때
+- `launchd`에 등록된 경우 일반 `kill` 명령어로 죽여도 즉시 다시 살아나므로(`KeepAlive`), 아래와 같이 서비스 언로드(Unload) 명령을 실행해야 한다:
+  ```bash
+  # 서비스 일시 정지 및 언로드
+  launchctl unload -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
+  ```
+
+## 7. 부록: LLM 원클릭 구현 및 공식 템플릿 안내 (Reference Implementation Appendix)
+
+이 문서의 스펙만으로도 AI 모델이 봇 코드를 생성할 수 있지만, 가장 확실하고 검증된 코드를 즉시 적용할 수 있도록 **저장소 자체에 공식 레퍼런스 스크립트(`examples/telegram_bot/`)를 제공**한다.
+
+1. **공식 레퍼런스 파일 구성 (`examples/telegram_bot/`)**:
+   - `bot.py`: `python-telegram-bot` 및 `telegramify-markdown` 기반 비동기 브리지 핵심 로직 (정제 방어 및 `MessageEntity` 변환 100% 탑재)
+   - `run_bot.sh`: 가상환경(`.venv`) 자동 생성 및 의존성 탑재를 보장하는 실행 부트스트래퍼
+2. **LLM 활용 시 프롬프트 팁**:
+   - 다른 사람이나 다른 세션에서 AI CLI에게 봇을 띄워달라고 할 때는 아래 한 문장만 요청하면 된다:
+   > *"이 저장소의 `examples/telegram_bot/`에 있는 봇 레퍼런스 템플릿을 `_workspace/telegram_bot/`으로 복사하고, 내 토큰(`...`)과 Chat ID(`...`)로 백그라운드 구동해 줘."*

@@ -2,6 +2,8 @@
 REGISTRY.md
 vault
 _workspace/
+.ua
+.understand-anything/
 
 # Third-party checkouts placed by install-phase2b-tools.sh. Ignore the
 # contents rather than the directory itself, so the tracked pin ledger inside
