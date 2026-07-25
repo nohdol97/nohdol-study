@@ -31,11 +31,13 @@
 
 ## knowledge-graph
 
-- **한 줄 역할**: `wiki/` Markdown의 frontmatter와 위키링크에서 결정적 JSON 그래프를 재생성하고 백링크·누락 대상·고아 노트를 찾는다.
-- **언제 쓰나**: 지식 그래프 재생성, 깨진 링크·백링크·고아 노트 점검, 그래프 기준 성능 측정.
+- **한 줄 역할**: `wiki/` Markdown에서 article·topic·source 타입 그래프를 결정적으로 재생성하고, 모델이 추론한 entity·claim은 근거가 실제로 해석될 때만 받아들인다.
+- **언제 쓰나**: 지식 그래프 재생성, 깨진 링크·백링크·고아 노트 점검, 주제 분류 확인, 추론 항목의 근거 검증.
 - **언제 안 쓰나**: JSON을 직접 편집하거나 지식 원본으로 사용, 범위·원본 hash 검사 없이 다른 인덱스와 비교.
-- **핵심 절차**: 표준 라이브러리 파서 실행 → 중복 제목 오류 먼저 해결 → `missing_targets`·`orphans` 검토 → Markdown 수정 후 재생성. 다른 인덱스와 비교할 때는 지정 corpus·사전 질문·write 금지·실행 전후 hash를 사용한다.
-- **주요 산출물**: 미추적 `_workspace/knowledge-graph.json`; 동일 입력은 동일 바이트를 내고 코드 펜스의 위키링크는 제외한다.
+- **핵심 절차**: 표준 라이브러리 파서 실행 → 중복 제목 오류 먼저 해결 → `missing_targets`·`orphans` 검토 → Markdown 수정 후 재생성. 추론 항목은 `--semantic`으로 따로 넣어 검증한다.
+- **타입**: `article`(노트), `topic`(`index.md`의 분류 — 위키링크가 없고 하위에 링크를 가진 최상위 항목만), `source`(frontmatter `sources`, `raw/` 경로는 실재 여부까지). 엣지는 `links_to`·`categorized_under`·`cites`라 노트가 1개여도 유효한 그래프가 나온다.
+- **근거 규율**: 추론 record는 `source_path`·`evidence_anchor`·`extractor`·`confidence`·`verification`이 필수이고, 앵커가 인용 노트에서 해석되지 않으면 낮은 신뢰도로 남기지 않고 **버린다**. `verified`와 `inferred`는 따로 집계한다.
+- **주요 산출물**: 미추적 `_workspace/knowledge-graph.json`; 동일 입력은 동일 바이트를 내고, 노트 본문은 담기지 않으며 근거는 앵커와 excerpt hash로만 남는다.
 
 ## metaskill
 

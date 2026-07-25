@@ -16,7 +16,7 @@
 |---|---|---|
 | [2026-07-25-phase1-study-harness](specs/2026-07-25-phase1-study-harness.md) | 구현됨 | 설치기, 지식 구조, 공용 스킬, 세션 훅 |
 | [2026-07-25-phase2-ingest-notebooklm-graph](specs/2026-07-25-phase2-ingest-notebooklm-graph.md) | 구현됨 | 웹·논문·영상 ingest, NotebookLM export, 그래프 기준 파서 |
-| [2026-07-25-phase2b-cli-learning-integrations](specs/2026-07-25-phase2b-cli-learning-integrations.md) | 2b-A·2b-B 구현, 2b-C~E 미구현 | Understand Anything 9종, Obsidian 4종, NotebookLM CLI bridge |
+| [2026-07-25-phase2b-cli-learning-integrations](specs/2026-07-25-phase2b-cli-learning-integrations.md) | 2b-A~2b-C 구현, 2b-D·2b-E 미구현 | Understand Anything 9종, Obsidian 4종, NotebookLM CLI bridge |
 
 ## 제안
 

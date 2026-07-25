@@ -24,7 +24,7 @@ log.md     append-only knowledge chronology
 hot.md     compact session-start context, target <= 500 tokens
 ```
 
-Markdown and wikilinks are the source of truth. Graph databases, SQLite indexes, canvases, and generated diagrams are derivative artifacts and must be reproducible from the files.
+Markdown and wikilinks are the source of truth. Graph databases, SQLite indexes, canvases, and generated diagrams are derivative artifacts and must be reproducible from the files. A derived graph carries no note body, and a model-inferred entity or claim enters it only with an evidence anchor that resolves in the note it cites; one that does not resolve is dropped rather than kept at low confidence.
 
 ## 3. Knowledge workflow
 
@@ -88,6 +88,6 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 
 ## 8. Phase boundaries
 
-Phase 1 is the portable filesystem harness, installation workflow, note contract, and session context. Phase 2 provides web, paper, and video ingest, verified NotebookLM export, and a deterministic Markdown graph baseline. Phase 2b adds project-local Understand Anything and Obsidian skills plus the gated NotebookLM CLI bridge. The verified source-pin installer and the nine `understand-*` adapters are in place; the typed knowledge graph, the Obsidian format skills, and the NotebookLM bridge are not. A generated graph is navigation, never evidence: confirm a factual answer in the source file before finishing. Running the adapters that need a built dependency set stays blocked until that install is separately authorized. Phase 2c may evaluate basic-memory only in an explicitly scoped, read/search-focused corpus with original-file hash checks; there is no arbitrary note-count gate. Phase 3 will add guided study sessions, recall, and gardening. Do not silently pull later-phase dependencies across these boundaries.
+Phase 1 is the portable filesystem harness, installation workflow, note contract, and session context. Phase 2 provides web, paper, and video ingest, verified NotebookLM export, and a deterministic Markdown graph baseline. Phase 2b adds project-local Understand Anything and Obsidian skills plus the gated NotebookLM CLI bridge. The verified source-pin installer, the nine `understand-*` adapters, and the typed knowledge graph are in place; the Obsidian format skills and the NotebookLM bridge are not. A generated graph is navigation, never evidence: confirm a factual answer in the source file before finishing. Running the adapters that need a built dependency set stays blocked until that install is separately authorized. Phase 2c may evaluate basic-memory only in an explicitly scoped, read/search-focused corpus with original-file hash checks; there is no arbitrary note-count gate. Phase 3 will add guided study sessions, recall, and gardening. Do not silently pull later-phase dependencies across these boundaries.
 
 History and rationale live in `docs/`; this always-on file contains current operating rules only.

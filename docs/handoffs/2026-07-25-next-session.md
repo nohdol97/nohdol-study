@@ -2,10 +2,11 @@
 
 - 작성일: 2026-07-25
 - 기준 브랜치: `main`
-- 현재 상태: Phase 1·2 및 Phase 2b-A·2b-B 구현 완료, Phase 2b-C~E·2c·3 미구현
-- 다음 시작점: **Phase 2b-C**(typed 지식 그래프). 현재
-  `understand-knowledge` adapter는 상류 파서를 그대로 부르므로, 2b-C는 그
-  출력을 이 하네스의 스키마·근거 규율에 맞추는 작업이다.
+- 현재 상태: Phase 1·2 및 Phase 2b-A~2b-C 구현 완료, Phase 2b-D·2b-E·2c·3 미구현
+- 다음 시작점: **Phase 2b-D**(Obsidian 스킬 4종). pin된
+  `kepano/obsidian-skills`의 `obsidian-markdown`·`obsidian-bases`·
+  `json-canvas`·`obsidian-cli`를 adapter로 노출한다. 상류 `defuddle`는
+  기존 nohdol-study `defuddle`를 유지하므로 채택하지 않는다.
 - 결정 원본:
   - [방향 제안](../proposals/2026-07-25-nohdol-study-direction.md)
   - [ADR 003](../adr/003-cli-learning-integrations.md)
@@ -46,8 +47,9 @@ runtime·파싱 불가 pin·`python3` 부재·기존 체크아웃 불일치는 f
 이동한 tag도 막되 API 미도달 시에는 보고 후 진행한다(무결성 관문은 tree
 hash다). 테스트는 curl 스텁으로 다운로드 경로까지 오프라인 커버한다.
 
-`high 취약점 fail-closed`는 이 단계 범위 밖이다 — 2b-A는 의존성을 아예 설치
-하지 않으므로 감사 게이트는 실제 설치를 수행하는 2b-B에서 구현한다.
+`high 취약점 fail-closed`는 이 단계 범위 밖이다 — 여기서는 의존성을 아예
+설치하지 않는다. 2b-B에서도 설치하지 않기로 했으므로(런타임 게이트를 실행
+시점으로 옮김) 감사 게이트는 의존성 설치가 실제로 승인되는 시점에 구현한다.
 
 설치기는 전역 스킬 디렉터리와 vault 경로를 아예 참조하지 않는다. 테스트의
 불변 단언은 그 사실을 지키는 회귀 카나리이지, 위반을 능동적으로 탐지하는
@@ -121,7 +123,21 @@ dashboard 실행, vault semantic 분석을 하지 않는다.
 - 코드 프로젝트 `.ua/`는 target·ignore·write 범위를 확인한다.
 - vault 분석은 `_workspace/understand-anything/`로 리디렉션한다.
 
-### Phase 2b-C — typed knowledge graph
+### 완료됨 — Phase 2b-C (2026-07-25)
+
+결정적 계층을 article·topic·source 타입으로 확장했다. topic은 `index.md`의
+분류에서(위키링크 없이 하위에 링크를 가진 최상위 항목만 — 최근 갱신 목록은
+분류로 오해되지 않는다), source는 노트 frontmatter의 `sources`에서 나오며
+`raw/` 경로는 실재 여부까지 기록한다. 그 결과 노트가 1개인 현재 vault에서도
+1 article·1 topic·5 source·6 edge가 나온다(이전엔 고아 노드 1개뿐).
+
+추론 계층은 `--semantic`으로만 들어온다. record마다 `source_path`·
+`evidence_anchor`·`extractor`·`confidence`·`verification`이 필수이고, 앵커를
+인용 노트 안에서 실제로 해석해 실패하면 **버린다**. 노트 본문은 그래프에
+담기지 않고 근거는 앵커와 excerpt hash로만 남으므로, 노트 안의 지시문 같은
+문장이 그래프를 타고 흐르지 않는다.
+
+### 원래 계획 — Phase 2b-C
 
 - 현재 결정적 wikilink graph를 article/entity/topic/claim/source schema로
   확장한다.
@@ -199,7 +215,7 @@ project-local skill로 제공한다. 기존 nohdol-study `defuddle`는 유지한
 ## 새 세션에 전달할 요청문
 
 ```text
-docs/handoffs/2026-07-25-next-session.md를 읽고 Phase 2b-A부터 진행해줘.
+docs/handoffs/2026-07-25-next-session.md를 읽고 Phase 2b-D부터 진행해줘.
 AGENTS.md와 REGISTRY.md를 먼저 확인하고, upstream 전역 installer는 쓰지 마.
 모호한 설계가 실제 저장 위치나 보안 경계를 바꾼다면 구현 전에 나에게
 질문하고, 완료되면 테스트·문서·커밋을 함께 정리해줘.

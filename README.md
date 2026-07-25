@@ -23,10 +23,10 @@ Phase 2:
 - 공개 학술 소스의 논문 검색·PDF 보존·검증 노트화
 - 한국어·영어 자막 우선의 transcript-first 영상 학습
 - 검증 파일만 묶는 NotebookLM 학습 패킷
-- 위키링크·백링크·누락·고아 노트의 결정적 JSON 그래프
+- article·topic·source 타입의 결정적 JSON 그래프와 근거 검증형 추론 계층
 
-Phase 2b-A(외부 소스 pin 설치 기반)와 2b-B(Understand Anything adapter 9종)는
-구현됐다.
+Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything adapter 9종),
+2b-C(typed 지식 그래프)는 구현됐다.
 
 - **구현됨(2b-A)** — 미추적 `.tools/` 루트에 upstream 정확 commit을 내려받아
   tree hash가 일치할 때만 배치하는 설치기. 전역 스킬 디렉터리와 vault는
@@ -38,9 +38,12 @@ Phase 2b-A(외부 소스 pin 설치 기반)와 2b-B(Understand Anything adapter 
   하나가 운반한다 — 그래프는 탐색 수단이지 근거가 아니며 사실 답변은 소스
   파일 확인 뒤에만 완료하고, vault 분석 산출물은 `_workspace/`로 돌리며,
   dashboard와 Figma는 실행별 명시 요청·승인 대상이다.
-- **남음** — typed 지식 그래프(2b-C), Obsidian Markdown·Bases·JSON Canvas·
-  공식 CLI 스킬 4종(2b-D), 검증 export packet만 올리는 선택적 NotebookLM CLI
-  bridge(2b-E)
+- **구현됨(2b-C)** — article·topic·source 타입 그래프. 노트가 1개여도
+  주제 분류와 인용 출처로 유효한 그래프가 나오고, 노트 본문은 그래프에
+  담기지 않는다. 모델이 추론한 entity·claim은 `--semantic`으로만 들어오며
+  인용 노트에서 근거 앵커가 해석되지 않으면 버려진다.
+- **남음** — Obsidian Markdown·Bases·JSON Canvas·공식 CLI 스킬 4종(2b-D),
+  검증 export packet만 올리는 선택적 NotebookLM CLI bridge(2b-E)
 
 adapter는 런타임 계층이 서로 다르다. `understand-knowledge`만 `python3`로
 바로 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프를 필요로 하며,
@@ -134,7 +137,7 @@ token, MCP/server는 기본 경로에서 허용하지 않는다.
 ├── context7/            # 현재 버전 라이브러리 공식 문서
 ├── defuddle/            # 공개 웹 본문 정리
 ├── ingest/              # 웹·논문·영상 소스 라우팅
-├── knowledge-graph/     # 결정적 위키링크 그래프와 링크 품질
+├── knowledge-graph/     # article·topic·source 타입 그래프와 근거 검증
 ├── metaskill/           # 하네스·스킬·규칙 개선
 ├── note-writer/         # 원자적 검증 노트 작성
 ├── notebooklm-export/   # 검증된 주제별 NotebookLM 패킷
@@ -155,9 +158,8 @@ token, MCP/server는 기본 경로에서 허용하지 않는다.
 
 Understand Anything 9개는 모두 adapter로 노출돼 있다. upstream의 main-pulling
 전역 installer는 쓰지 않고, source를 project-local로 고정·검증해 두고
-dependency 설치는 감사 통과 전까지 막는다. `knowledge-graph`는
-article/entity/topic/claim/source schema와 근거가 있는 암묵 관계를 추가할
-예정이다(2b-C).
+dependency 설치는 감사 통과 전까지 막는다. `knowledge-graph`는 이제
+article/topic/source schema와 근거가 있는 암묵 관계를 갖췄다.
 
 사용 시점·금지 경계·핵심 절차는
 [한글 스킬 안내](.agents/skills/README.ko.md)에 정리되어 있다.
