@@ -30,15 +30,53 @@ Escalate when the check says so, not by taste:
 python3 .agents/skills/diagram/scripts/check.py NOTE.md
 ```
 
-It reports an unknown Mermaid diagram type, unbalanced delimiters, an embedded
-asset that does not exist, and an SVG a failed render left empty. It also
-counts nodes and says when a diagram has outgrown Mermaid. That count is
-advice - the note still renders - but it is the signal to escalate rather than
-adding one more edge to a diagram already too dense.
+It reports an unknown Mermaid diagram type, unbalanced delimiters, the label
+mistakes below, an embedded asset that does not exist, and an SVG a failed
+render left empty. It also counts nodes and says when a diagram has outgrown
+Mermaid. That count is advice - the note still renders - but it is the signal
+to escalate rather than adding one more edge to a diagram already too dense.
 
 The check is a pre-check, not a renderer. Mermaid's parser is JavaScript and
 this repository keeps its scripts dependency-free, so a file that passes may
 still fail to render. Look at the diagram in Obsidian before calling it done.
+
+## Quote every label in a flowchart
+
+`Error parsing Mermaid diagram!` replaces the whole diagram with an error
+block, and the note still looks finished in the source. The cause is almost
+always a label Mermaid could not read, because unquoted it accepts far less
+than the prose suggests.
+
+So in `flowchart` and `graph`, write every label with quotes:
+
+```mermaid
+flowchart LR
+  GPU["NVIDIA Driver 컨테이너 (Kernel Module)"] --> RT["Container Runtime"]
+  subgraph NODE["K8s Worker Node (GPU Operator Managed)"]
+    DCGM["DCGM Exporter"]
+  end
+  RT -->|"Replication (Primary-Secondary)"| DCGM
+```
+
+Unquoted, a parenthesis or a double quote ends the statement - in a node
+label, an edge label, or a `subgraph` title, which has no brackets to make the
+rule visible. A parenthesis is balanced, so no delimiter count catches it.
+Quoting always is one habit instead of a list of exceptions; `&`, `#`, `%`,
+`$`, `:`, `/`, `+`, `<br>`, and Korean text happen to parse bare, but nothing
+is gained by finding out which.
+
+Two further mistakes cost a whole diagram:
+
+- A `subgraph` title is not a node id. Give the subgraph an id and reference
+  that - `subgraph HW["1. Hardware Layer"]` then `HW --> ORCH`. An id holds no
+  space, so `1. Hardware Layer --> 2. Orchestration Layer` cannot parse even
+  though it reads correctly.
+- Every `subgraph` needs its own `end` on a line of its own. A mistyped `end`
+  reads as an ordinary line and the parser fails far from the actual typo.
+
+A `sequenceDiagram` does not share these rules: it takes a parenthesis
+unquoted in a participant or a message. The check applies them only where
+Mermaid does.
 
 ## Rendering to SVG
 

@@ -26,6 +26,17 @@ false memory.
 9. Append one concise row or bullet to `vault/log.md`; never reorder or rewrite history.
 10. Refresh `vault/hot.md` with only current focus, recent durable learning, open questions, and next actions. Keep it roughly 500 tokens or less.
 11. Verify frontmatter, links, source paths, evidence status, and that no raw file changed unexpectedly.
+12. When the note carries a diagram or an embedded asset, run the `diagram`
+    check on it before finishing. A broken diagram renders as
+    `Error parsing Mermaid diagram!` and the source still looks complete, so
+    nothing else in this procedure catches it:
+
+    ```sh
+    python3 .agents/skills/diagram/scripts/check.py "vault/wiki/NOTE.md"
+    ```
+
+    In a `flowchart` or `graph`, quote every node label, edge label, and
+    `subgraph` title - see the `diagram` skill for why bare labels fail.
 
 ## Quality gates
 
@@ -38,6 +49,7 @@ false memory.
 - Time-sensitive claims include a current `checked` date.
 - Agreement between AI systems is not counted as independent corroboration.
 - Existing legacy notes outside the curated layer stay untouched unless the user requests migration.
+- Any diagram in the note passes the `diagram` check, so it renders as a picture rather than an error block.
 
 ## With / without
 

@@ -44,6 +44,25 @@ NOT_NODES = {
     "subgraph", "end", "direction", "style", "classdef", "class", "click",
     "linkstyle", "tb", "td", "bt", "rl", "lr", "href", "call", "callback",
 }
+# Lines that begin with one of these are declarations, not edge statements, so
+# the two-words-where-one-id-belongs rule must not read them.
+STATEMENT_KEYWORDS = {
+    "subgraph", "end", "direction", "style", "classdef", "class", "click",
+    "linkstyle", "acctitle", "accdescr", "flowchart", "graph",
+}
+
+LABEL_OPENERS = "[({"
+LABEL_CLOSERS = "])}"
+# A token made only of link punctuation. `o` and `x` are arrowheads (`--o`,
+# `--x`) and never stand alone, so they count only beside real link characters.
+LINK_TOKEN = re.compile(r"^[-=.<>~&|ox]*[-=.<>~&|][-=.<>~&|ox]*$")
+# A link carrying its text between the delimiters: `A -. note .-> B`. Removing
+# it as a unit keeps the note's words from looking like a node id.
+INLINE_LINK_TEXT = re.compile(
+    r"(?:--|==|-\.)\s+[^-=|\n]+?\s+(?:-{2,}|={2,}|\.-+)[>ox]?"
+)
+QUOTED = re.compile(r'"[^"\n]*"')
+EDGE_LABEL = re.compile(r"\|[^|\n]*\|")
 
 DEFAULT_MAX_NODES = 15
 
@@ -127,6 +146,128 @@ def unbalanced(body: list[str]) -> list[str]:
     return problems
 
 
+def read_label(line: str, start: int, closers: str, found: list[str]) -> int:
+    """Read one label body from `start`, recording it when it is unquoted.
+
+    Returns the index just past the closing delimiter.
+    """
+    index = start
+    while index < len(line) and line[index] == " ":
+        index += 1
+    if index < len(line) and line[index] == '"':
+        # A quoted label may hold anything, including a parenthesis.
+        closing = line.find('"', index + 1)
+        index = len(line) if closing < 0 else closing + 1
+    else:
+        body = index
+        while index < len(line) and line[index] not in closers:
+            index += 1
+        found.append(line[body:index])
+    while index < len(line) and line[index] in closers:
+        index += 1
+    return index
+
+
+def unquoted_labels(line: str) -> list[str]:
+    """Return the text of every node and edge label on the line that is unquoted.
+
+    Mermaid accepts almost anything inside a label, but only while the label is
+    quoted. Unquoted, a parenthesis or a double quote ends the statement and the
+    whole diagram renders as an error block instead of a picture. The
+    parenthesis is balanced, so counting delimiters cannot see it: the label
+    text itself has to be read.
+    """
+    found: list[str] = []
+    index = 0
+    while index < len(line):
+        character = line[index]
+        if character == '"':
+            closing = line.find('"', index + 1)
+            index = len(line) if closing < 0 else closing + 1
+        elif character == "|":
+            index = read_label(line, index + 1, "|", found)
+        elif character in LABEL_OPENERS:
+            # Shapes stack their delimiters: [[ ]], [( )], (( )), {{ }}.
+            while index < len(line) and line[index] in LABEL_OPENERS:
+                index += 1
+            index = read_label(line, index, LABEL_CLOSERS, found)
+        else:
+            index += 1
+    return found
+
+
+def spaced_reference(line: str) -> bool:
+    """True when two words sit where one node id belongs.
+
+    Writing `subgraph One Layer` and then `One Layer --> Two Layer` reads well
+    but is not Mermaid: a subgraph title is not an id, and an id holds no space.
+    """
+    text = QUOTED.sub(" ", line)
+    text = EDGE_LABEL.sub(" | ", text)
+    text = strip_labels(text)
+    text = INLINE_LINK_TEXT.sub(" --> ", text)
+    after_word = False
+    for token in text.split():
+        if LINK_TOKEN.match(token):
+            after_word = False
+            continue
+        # `A[x]:::cls` attaches a class to the id before it. Removing the label
+        # leaves the suffix standing alone, so it is not a second id.
+        if token.startswith(":::"):
+            continue
+        if after_word:
+            return True
+        after_word = True
+    return False
+
+
+def label_problems(body: list[str]) -> list[str]:
+    """Report the flowchart mistakes that a delimiter count cannot see."""
+    problems: list[str] = []
+    opened = 0
+    closed = 0
+    for offset, line in enumerate(body):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("%%"):
+            continue
+        first = stripped.split()[0].lower().rstrip(":;")
+        if first == "subgraph":
+            opened += 1
+            title = QUOTED.sub(" ", stripped[len("subgraph"):])
+            if "(" in title or ")" in title:
+                problems.append(
+                    f"line {offset + 1}: subgraph title holds a parenthesis "
+                    'while unquoted - write subgraph ID["title (detail)"]'
+                )
+        elif stripped.lower() == "end":
+            closed += 1
+
+        for label in unquoted_labels(line):
+            if "(" in label or ")" in label:
+                problems.append(
+                    f"line {offset + 1}: unquoted label {label.strip()!r} holds "
+                    'a parenthesis - quote it as ["...(...)..."]'
+                )
+            elif '"' in label:
+                problems.append(
+                    f"line {offset + 1}: unquoted label {label.strip()!r} holds "
+                    "a double quote - quote the whole label instead"
+                )
+
+        if first not in STATEMENT_KEYWORDS and spaced_reference(line):
+            problems.append(
+                f"line {offset + 1}: {stripped!r} uses a node id containing a "
+                "space - reference the id, not a title"
+            )
+
+    if opened != closed:
+        problems.append(
+            f"{opened} subgraph and {closed} end: every subgraph needs its own "
+            "end on a line of its own"
+        )
+    return problems
+
+
 def check_markdown(
     path: Path, max_nodes: int, problems: list[str], advice: list[str]
 ) -> int:
@@ -154,6 +295,10 @@ def check_markdown(
         for problem in unbalanced(body):
             problems.append(f"{path}:{start}: {problem}")
         if kind in NODE_SHAPED:
+            # Only the node-shaped types restrict labels this way; a
+            # sequenceDiagram takes a parenthesis unquoted without complaint.
+            for problem in label_problems(body):
+                problems.append(f"{path}:{start}: {problem}")
             nodes = count_nodes(body[1:] if body and body[0].strip() else body)
             if nodes > max_nodes:
                 advice.append(
