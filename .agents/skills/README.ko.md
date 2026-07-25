@@ -47,6 +47,7 @@
 - **핵심 절차**: 표준 라이브러리 파서 실행 → 중복 제목 오류 먼저 해결 → `missing_targets`·`orphans` 검토 → Markdown 수정 후 재생성. 추론 항목은 `--semantic`으로 따로 넣어 검증한다.
 - **타입**: `article`(노트), `topic`(`index.md`의 분류 — 위키링크가 없고 하위에 링크를 가진 최상위 항목만), `source`(frontmatter `sources`, `raw/` 경로는 실재 여부까지). 엣지는 `links_to`·`categorized_under`·`cites`라 노트가 1개여도 유효한 그래프가 나온다.
 - **근거 규율**: 추론 record는 `source_path`·`evidence_anchor`·`extractor`·`confidence`·`verification`이 필수이고, 앵커가 인용 노트에서 해석되지 않으면 낮은 신뢰도로 남기지 않고 **버린다**. `verified`와 `inferred`는 따로 집계한다.
+- **다른 인덱스 비교**: `scripts/pilot.py --corpus PATH --candidate '읽기 전용 명령'`이 실행 전후 corpus 해시를 대조해 **하나라도 바뀌면 후보를 실격**시킨다. `write`·`format`·`reset`·`sync` 세그먼트를 가진 명령은 실행 전에 거부한다. 후보 명령은 인자로 받는다 — 설치해 help를 읽지 않은 CLI의 명령줄을 기억으로 적지 않는다.
 - **주요 산출물**: 미추적 `_workspace/knowledge-graph.json`; 동일 입력은 동일 바이트를 내고, 노트 본문은 담기지 않으며 근거는 앵커와 excerpt hash로만 남는다.
 
 ## metaskill

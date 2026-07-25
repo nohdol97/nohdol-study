@@ -105,11 +105,31 @@ An accepted record is still a candidate. Promote it to knowledge through
    decorative links just to make the count zero.
 4. Regenerate after Markdown changes. Never hand-edit the JSON.
 
-Compare basic-memory or another index only in an explicitly selected corpus.
-Disable formatting, write, and reset operations; record Markdown hashes before
-and after the run. Use predefined retrieval questions to compare backlink
-accuracy, missing/orphan detection, representative retrieval, runtime cost,
-source non-modification, and server-free portability against this baseline.
+## Comparing another index
+
+Pointing another tool at the user's notes needs one rule above the
+measurement: the corpus comes back unchanged. The pilot enforces it.
+
+```sh
+python3 .agents/skills/knowledge-graph/scripts/pilot.py \
+  --corpus vault/wiki \
+  --candidate 'the exact read-only command' \
+  --label basic-memory
+```
+
+It hashes every Markdown file before and after, measures the baseline, runs the
+candidate, and **fails when any file was added, removed, or modified** -
+whatever the candidate reported. A command containing a segment like `write`,
+`format`, `reset`, or `sync` is refused before it runs rather than judged
+afterwards.
+
+The candidate command is supplied, never assumed. Do not write an invocation
+for a CLI you have not installed and read the help of; a command line from
+memory is the same unverified claim this harness refuses everywhere else.
+
+Only run this on a corpus the user named. Runtime and counts do not decide it:
+judge retrieval on questions written before the run, and weigh what each option
+costs to keep alive - the baseline has no state to rebuild, an index does.
 
 ## With / without
 
