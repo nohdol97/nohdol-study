@@ -46,6 +46,12 @@ python3 WATCH_SKILL/scripts/watch.py LOCAL_VIDEO \
 6. Save an immutable timestamped transcript snapshot under
    `vault/raw/videos/DATE-SLUG-transcript.md`, including the source URL, title,
    capture date, caption language, and whether transcription was used.
+   YouTube auto-captions roll, so each line repeats in the next cue: drop the
+   repeats and group the remainder into timed paragraphs before saving, or the
+   snapshot is several times its real length. Auto-captions also mistranscribe
+   proper nouns heavily (`epoll`, `Pub/Sub`, `RESP`, `NVMe` all come back
+   wrong). Record the corrections you relied on in a table at the top of the
+   snapshot and leave the transcript text itself unedited - it is raw material.
 7. Copy only pedagogically useful frames to
    `vault/wiki/assets/SLUG/`. Record timestamps in filenames or captions.
 8. Use `note-writer` for the study note. Link timestamps, transcript, and
