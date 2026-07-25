@@ -3,6 +3,12 @@ REGISTRY.md
 vault
 _workspace/
 
+# Third-party checkouts placed by install-phase2b-tools.sh. Ignore the
+# contents rather than the directory itself, so the tracked pin ledger inside
+# it stays visible to git.
+.tools/*
+!.tools/PINS.md
+
 # Local/editor state
 .DS_Store
 *.swp

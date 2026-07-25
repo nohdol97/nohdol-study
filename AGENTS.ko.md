@@ -1,4 +1,4 @@
-<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: 75aaf3ee3dc826f91c1cace6637b564856c0498bb151c63bf075061beb188108 -->
+<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: 05e1819c04dd0fb25bfaba336842c5542fe3559cef798419dff0e924c1b741a5 -->
 
 # nohdol-study 운영 규칙 요약
 
@@ -18,5 +18,6 @@
 - 공용 스킬 원본은 `.agents/skills/`뿐이다. Claude는 심링크, Codex는 네이티브 스킬 발견과 프로젝트 훅을 사용한다.
 - 하네스 규칙·스킬·훅·설치기·ADR·스펙 변경은 `metaskill`로 수행하고 루트 README·한글 스킬 안내·MOC·변경 이력을 함께 맞춘다.
 - Phase 2는 웹·논문·영상 ingest, 검증된 NotebookLM snapshot, 결정적 Markdown 그래프를 제공한다.
-- Phase 2b는 project-local Understand Anything·Obsidian 스킬과 보안 게이트가 있는 NotebookLM CLI bridge를 추가한다.
+- `.tools/`는 pin된 서드파티 소스 트리 자리다. 내용은 미추적이고 pin 원장 `.tools/PINS.md`만 추적하며, 배치는 tree hash를 검증하는 Phase 2b 설치기로만 한다. upstream installer 실행·전역 스킬 링크·의존성 설치는 하지 않는다.
+- Phase 2b는 project-local Understand Anything·Obsidian 스킬과 보안 게이트가 있는 NotebookLM CLI bridge를 추가한다. 첫 단계인 검증 pin 설치기는 구현됐고 upstream 스킬 노출은 아직이다.
 - Phase 2c의 basic-memory 비교는 임의 노트 수가 아니라 명시된 corpus·read/search 범위·원본 hash 불변 조건으로 제한한다.

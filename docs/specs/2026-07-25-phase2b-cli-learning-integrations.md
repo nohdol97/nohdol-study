@@ -1,7 +1,7 @@
 # nohdol-study Phase 2b — project-local 학습 연동 스펙
 
 - 날짜: 2026-07-25
-- 상태: 채택·미구현
+- 상태: R1·R3·R10(설치 관측 부분)·R16(pin 상태 부분) 구현, 나머지 미구현
 - 관련 결정: [ADR 003](../adr/003-cli-learning-integrations.md)
 - 보안 검토: [NotebookLM·Understand Anything](../reviews/2026-07-25-notebooklm-understand-anything-security.md)
 

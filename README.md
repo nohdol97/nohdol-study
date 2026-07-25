@@ -25,13 +25,16 @@ Phase 2:
 - 검증 파일만 묶는 NotebookLM 학습 패킷
 - 위키링크·백링크·누락·고아 노트의 결정적 JSON 그래프
 
-Phase 2b는 채택됐지만 아직 구현 전이다.
+Phase 2b-A(외부 소스 pin 설치 기반)는 구현됐고, 그 위의 스킬 노출은 아직
+남아 있다.
 
-- Understand Anything의 코드·도메인·diff·온보딩·설명·질의·dashboard·
-  Figma·지식 9개 스킬을 project-local exact pin으로 제공
-- Obsidian Markdown·Bases·JSON Canvas·공식 CLI 스킬 4종
-- 검증 export packet만 올리고 학습 산출물을 회수하는 선택적 NotebookLM CLI
-  bridge
+- **구현됨** — 미추적 `.tools/` 루트에 upstream 정확 commit을 내려받아
+  tree hash가 일치할 때만 배치하는 설치기. 전역 스킬 디렉터리와 vault는
+  건드리지 않고, 소스만 놓을 뿐 의존성 설치나 코드 실행은 하지 않는다.
+- **남음** — Understand Anything의 코드·도메인·diff·온보딩·설명·질의·
+  dashboard·Figma·지식 9개 스킬 노출(2b-B), typed 지식 그래프(2b-C),
+  Obsidian Markdown·Bases·JSON Canvas·공식 CLI 스킬 4종(2b-D), 검증 export
+  packet만 올리는 선택적 NotebookLM CLI bridge(2b-E)
 
 웹 dashboard는 스킬로 제공하되 자동으로 열지 않고 사용자가 요청할 때만
 localhost에서 실행한다. Figma와 NotebookLM 외부 전송도 실행별 승인
@@ -66,6 +69,21 @@ Phase 2 도구는 상태 확인과 설치를 분리한다.
 .agents/skills/study-install/scripts/install-phase2-tools.sh --check
 .agents/skills/study-install/scripts/install-phase2-tools.sh --install
 ```
+
+Phase 2b 외부 소스도 같은 방식으로 나뉜다. `--check`는 네트워크에 접근하지
+않고 Node·pnpm·Obsidian과 각 pin 상태만 관찰한다.
+
+```sh
+.agents/skills/study-install/scripts/install-phase2b-tools.sh --check
+.agents/skills/study-install/scripts/install-phase2b-tools.sh --install
+```
+
+pin 원장은 추적되는 `.tools/PINS.md` 하나뿐이고 나머지 `.tools/` 내용은
+미추적이다. `--install`은 원장의 정확한 commit을 받아 tree hash를 다시
+계산하고, 일치할 때만 트리를 배치한다. hash 불일치, 이동한 tag, 미충족
+runtime, 잘못된 pin은 모두 설치를 중단시킨다. 이미 있는 체크아웃이 원장과
+다르면 덮어쓰지 않고 보고한다. Obsidian이 없어도 설치는 실패하지 않으며
+공식 CLI만 `unavailable`이 된다.
 
 설치기는 vault에 Git을 초기화하거나 기존 노트를 변경하지 않는다. API 키와
 NotebookLM 로그인도 만들거나 저장하지 않는다.

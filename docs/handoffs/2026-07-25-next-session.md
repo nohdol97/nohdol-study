@@ -2,7 +2,10 @@
 
 - 작성일: 2026-07-25
 - 기준 브랜치: `main`
-- 현재 상태: Phase 1·2 구현 완료, Phase 2b·2c·3 미구현
+- 현재 상태: Phase 1·2 및 Phase 2b-A 구현 완료, Phase 2b-B~E·2c·3 미구현
+- 다음 시작점: **Phase 2b-B**(Understand Anything 9개 adapter). 단
+  `understand-anything` pin은 pnpm 10+가 없어 아직 배치되지 않았으므로,
+  adapter 작업 전에 `install-phase2b-tools.sh --check`로 상태를 다시 관찰한다.
 - 결정 원본:
   - [방향 제안](../proposals/2026-07-25-nohdol-study-direction.md)
   - [ADR 003](../adr/003-cli-learning-integrations.md)
@@ -34,7 +37,18 @@ python3 .agents/skills/metaskill/scripts/verify_harness.py
    `REGISTRY.md`만 갱신한다.
 5. 한 세션에서 아래 작업 묶음 하나를 완료하는 것을 기본으로 한다.
 
-## 다음에 가장 먼저 할 일 — Phase 2b-A
+## 완료됨 — Phase 2b-A (2026-07-25)
+
+`.tools/`(미추적, `PINS.md`만 추적)에 upstream 정확 commit을 받아 tree hash가
+일치할 때만 배치하는 설치기를 구현했다. `install-phase2b-tools.sh --check`는
+네트워크 없이 관측만 하고, `--install`만 내려받는다. hash 불일치·이동한
+tag·미충족 runtime·잘못된 pin·기존 체크아웃 불일치는 모두 fail-closed다.
+전역 스킬 디렉터리와 vault 불변은 테스트가 확인한다.
+
+실측 상태: `obsidian-skills`는 배치 완료, `understand-anything`은 pnpm 10+
+부재로 미배치(설계된 fail-closed). 아래 원래 계획은 기록으로 남긴다.
+
+### 원래 계획 — Phase 2b-A
 
 Understand Anything과 Obsidian skill을 위한 **project-local exact-pin 설치
 기반**을 먼저 구현한다. 이 단계에서는 NotebookLM 인증·업로드, Figma API,

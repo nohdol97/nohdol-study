@@ -9,6 +9,7 @@
 - If `REGISTRY.md` or the `vault` symlink is missing, the installation is incomplete. Use the `study-install` skill before knowledge work.
 - Never place an installation path, personal profile, sync choice, or vault Git policy in tracked harness files.
 - `vault/`, `REGISTRY.md`, and `_workspace/` must remain ignored by this repository.
+- `.tools/` holds pinned third-party source trees. Its contents stay ignored; only `.tools/PINS.md`, the pin ledger, is tracked. Place a checkout there solely through the Phase 2b installer, which verifies the recorded tree hash. Never run an upstream installer, link into a global skill directory, or install dependencies from these trees.
 - The vault may be an existing Obsidian vault, a subdirectory of one, or a plain directory. Obsidian is optional.
 
 ## 2. Knowledge layout
@@ -87,6 +88,6 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 
 ## 8. Phase boundaries
 
-Phase 1 is the portable filesystem harness, installation workflow, note contract, and session context. Phase 2 provides web, paper, and video ingest, verified NotebookLM export, and a deterministic Markdown graph baseline. Phase 2b adds project-local Understand Anything and Obsidian skills plus the gated NotebookLM CLI bridge. Phase 2c may evaluate basic-memory only in an explicitly scoped, read/search-focused corpus with original-file hash checks; there is no arbitrary note-count gate. Phase 3 will add guided study sessions, recall, and gardening. Do not silently pull later-phase dependencies across these boundaries.
+Phase 1 is the portable filesystem harness, installation workflow, note contract, and session context. Phase 2 provides web, paper, and video ingest, verified NotebookLM export, and a deterministic Markdown graph baseline. Phase 2b adds project-local Understand Anything and Obsidian skills plus the gated NotebookLM CLI bridge; its first step, the verified source-pin installer, is in place, and exposing those upstream skills is not. Phase 2c may evaluate basic-memory only in an explicitly scoped, read/search-focused corpus with original-file hash checks; there is no arbitrary note-count gate. Phase 3 will add guided study sessions, recall, and gardening. Do not silently pull later-phase dependencies across these boundaries.
 
 History and rationale live in `docs/`; this always-on file contains current operating rules only.

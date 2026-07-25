@@ -92,6 +92,31 @@ Phase 1 requires no global tool beyond a POSIX shell and one supported agent CLI
 
 Missing optional tools are not installation failures.
 
+For Phase 2b, run `scripts/install-phase2b-tools.sh --check`. It observes Node,
+pnpm, Obsidian, and each pinned source tree without reaching the network and
+without writing anything. Run it again with `--install` only when the user
+asked for Phase 2b setup. That path downloads each pinned upstream commit,
+recomputes the tree hash from `.tools/PINS.md`, and places the tree only when
+the hash matches.
+
+- It writes nothing outside the tool root, links nothing into a global skill
+  directory, and never touches the vault.
+- It installs source trees only. No upstream installer runs, no Node
+  dependency is installed, and nothing in the tree is executed.
+- It fails closed on a hash mismatch, a moved tag, an unmet runtime, and a
+  malformed pin. A checkout that no longer matches its pin is reported rather
+  than overwritten, because overwriting would destroy whatever produced the
+  difference.
+- A pin whose runtime is unmet is skipped with a non-zero exit while other
+  pins still install. Report the partial state instead of retrying.
+- Obsidian absence is recorded as `unavailable` and is never a failure. The
+  Markdown, Bases, and Canvas formats do not need the app; only the official
+  CLI does.
+
+Adopting these skills as project skills is Phase 2b-B and 2b-D. Phase 2b-A ends
+once the verified trees are in place and `REGISTRY.md` records what was
+observed.
+
 For `consumer`, also run
 `../notebooklm-export/scripts/export_test.sh`. This verifies the local handoff
 packet, not the Google account connection. For `enterprise`, run `gcloud auth
