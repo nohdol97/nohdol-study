@@ -1,168 +1,99 @@
-# nohdol-study
+# nohdol-study — AI 에이전트 기반 휴대용 공부 하네스
 
-Claude Code와 Codex가 같은 파일 규약으로 사용하는 공부 하네스다. 원문은
-`raw/`, 검증해 정리한 지식은 `wiki/`에 두며 Markdown과 위키링크가 유일한
-원본이다. Obsidian은 그래프·편집 UI를 제공하는 선택 사항이다.
+`nohdol-study`는 Claude Code, Codex, 그리고 Gemini Antigravity CLI가 동일한 파일 규약으로 사용하는 **휴대용 AI 스터디 하네스(Portable Study Harness)**다. 
+수집한 원문은 `raw/`, 검증해 정리한 원자적 지식은 `wiki/`에 두며 **Markdown과 위키링크(`[[ ]]`)를 유일한 단일 원본(Single Source of Truth)**으로 삼는다.
 
-하네스 저장소는 지식 파일을 추적하지 않는다. 컴퓨터마다 다른 지식 경로,
-`vault/`는 실제 지식 루트를 가리키는 미추적 심링크다.
+> 💡 **설계 철학**: 하네스 저장소 자체는 지식 파일을 추적하지 않는다. 컴퓨터마다 다른 지식 저장소 경로는 실제 지식 루트를 가리키는 미추적 심링크(`vault/`)와 로컬 레지스트리(`REGISTRY.md`)를 통해 안전하게 연결된다.
 
-## 제공 범위
+---
 
-Phase 1:
+## 🌟 제공 기능 및 학습 환경 (Features)
 
-- 설치처별 지식 디렉터리 선택과 안전한 재설치
-- `raw/`, `wiki/`, `index.md`, `log.md`, `hot.md` 구조
-- Claude Code·Codex 공용 스킬과 세션 훅
-- 원자적 노트, flat YAML, 위키링크, 주장별 근거·불확실성 규약
+### 1. 🏗️ Phase 1: 기본 지식 하네스
+- **이식성 높은 설치**: 설치처(개인/사내 프로필, 동기화 방식)별 지식 디렉터리 선택 및 안전한 부트스트랩
+- **표준화된 구조**: `raw/` (불변 소스), `wiki/` (원자적 노트), `index.md` (지도), `log.md` (연대기), `hot.md` (세션 컨텍스트)
+- **노트 계약 (Note Contract)**: Flat YAML 프론트매터, 위키링크, 주장별 출처 및 검증 상태(`unverified` ~ `primary-confirmed`) 엄격 집행
 
-Phase 2:
+### 2. 🔍 Phase 2: 다중 매체 수집 및 지식 그래프
+- **웹 문서 캡처 (`defuddle`)**: 광고·내비게이션을 제거한 깨끗한 마크다운 불변 캡처
+- **학술 논문 탐색 (`paper-search`)**: arXiv·DOI 기반 논문 검색, PDF 다운로드 및 출판 메타데이터 검증
+- **영상 심층 학습 (`study-video`)**: 한국어·영어 자막 우선의 Transcript-first 2-pass 강의 학습 및 핵심 시각 프레임 추출
+- **결정적 지식 그래프 (`knowledge-graph`)**: `article`·`topic`·`source` 타입의 결정적 JSON 그래프 생성 및 모델 추론 근거 검증
 
-- 공개 웹 문서의 defuddle 불변 캡처
-- 공개 학술 소스의 논문 검색·PDF 보존·검증 노트화
-- 한국어·영어 자막 우선의 transcript-first 영상 학습
-- article·topic·source 타입의 결정적 JSON 그래프와 근거 검증형 추론 계층
+### 3. 🧠 Phase 2b: 코드·도메인 분석 및 Obsidian 연동
+- **Understand Anything 9개 모드 라우팅 (`understand`)**: 코드베이스 아키텍처 파악, 기능 위치 탐색, 개념 설명, 온보딩 가이드, 변경 영향 범위, 도메인 분석, 대시보드 뷰어
+- **Obsidian 형식 및 CLI 연동 (`obsidian`)**: 마크다운 확장, Bases(`.base`), JSON Canvas(`.canvas`) 작성 및 Obsidian CLI (4개 모드) 내부 라우팅
+- **안전한 격리 런타임**: 외부 도구 트리는 `.tools/PINS.md`의 tree hash를 검증하여 배치하며, 승인 없는 의존성 설치 및 외부 전송을 철저히 차단
 
-Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything 라우팅),
-2b-C(typed 지식 그래프), 2b-D(Obsidian 형식)는 구현됐다.
+### 4. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
+- **이동 중 소크라테스식 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 AI와 문답하고, Mac 백그라운드 엔진이 지식 볼트에 노트를 직접 기록
+- **클라우드 실시간 동기화**: Mac에서 생성·수정된 노트는 Google Drive를 통해 스마트폰 Obsidian 앱에 즉시 동기화
+- **인라인 버튼 및 메뉴 제어**: 좌측 하단 `[Menu]` 버튼과 터치 버튼으로 AI 모델(`Gemini 3.1 Pro` ↔ `2.5 Flash`) 및 추론 강도(`High/Med/Low`) 즉시 전환
+- **AGENTS.md Rule 5 보안 준수**: 환경 변수 주입 방식 및 Chat ID 화이트리스트 차단 기능으로 완벽한 보안 격리
 
-- **구현됨(2b-A)** — 미추적 `.tools/` 루트에 upstream 정확 commit을 내려받아
-  tree hash가 일치할 때만 배치하는 설치기. 전역 스킬 디렉터리와 vault는
-  건드리지 않고, 소스만 놓을 뿐 의존성 설치나 코드 실행은 하지 않는다.
-- **구현됨(2b-B)** — `understand` 스킬 하나가 9개 entry point(그래프 생성·
-  위치 찾기·설명·온보딩·변경 영향·도메인·지식 베이스·dashboard·Figma)를
-  내부 라우팅한다. 공통 경계는
-  `.agents/skills/understand/references/adapter-contract.md` 하나가
-  운반한다 — 그래프는 탐색 수단이지 근거가 아니며 사실 답변은 소스 파일
-  확인 뒤에만 완료하고, vault 분석 산출물은 `_workspace/`로 돌리며,
-  dashboard와 Figma는 실행별 명시 요청·승인 대상이다. mode별 절차는
-  `references/modes.md`에 있다.
-- **구현됨(2b-C)** — article·topic·source 타입 그래프. 노트가 1개여도
-  주제 분류와 인용 출처로 유효한 그래프가 나오고, 노트 본문은 그래프에
-  담기지 않는다. 모델이 추론한 entity·claim은 `--semantic`으로만 들어오며
-  인용 노트에서 근거 앵커가 해석되지 않으면 버려진다.
-- **구현됨(2b-D)** — `obsidian` 스킬이 Markdown 확장·Bases·JSON Canvas·공식
-  CLI 4개 mode를 내부 라우팅한다. 앞의 셋은 Obsidian 없이 동작하고 CLI만
-  앱 실행을 요구한다. 만든 파일은 `scripts/validate.py`로 검증한다 — 캔버스는
-  JSON Canvas 1.0, Markdown은 위키링크·콜아웃, `.base`는 로드 실패를 부르는
-  구조 오류까지.
+---
 
-mode마다 런타임 계층이 다르다. `understand-knowledge`만 `python3`로 바로
-돌고, 그래프 소비형 5종은 먼저 만들어진 그래프를 필요로 하며,
-`understand`·`understand-figma`·`understand-dashboard`는 빌드된 의존성이
-필요해 별도 승인 전까지 `unavailable`로 보고한다.
+## 🚀 빠른 시작 (Quick Start)
 
-웹 dashboard는 스킬로 제공하되 자동으로 열지 않고 사용자가 요청할 때만
-대상이다. Phase 2c에서는 basic-memory를 지정 corpus의 read/search 제한
-파일럿으로 비교하고 PaperQA2를 논문 심층 질의에 조건부 사용한다.
-
-## 설치
-
-Claude Code나 Codex에서 다음과 같이 요청한다.
-
-```text
-study-install로 이 컴퓨터에 하네스를 설치해줘.
-```
-
-설치 과정은 지식 루트, `personal`/`corporate` 프로필, 동기화 라벨을
-선택한다. 기존 Obsidian
-vault, 새 Obsidian 호환 디렉터리, 일반 디렉터리 모두 가능하다.
-
-직접 초기화할 수도 있다.
+### 1단계: 하네스 설치 및 Vault 연결
+AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거나 셸 스크립트를 직접 실행한다:
 
 ```sh
-.agents/skills/study-install/scripts/bootstrap.sh \
-  --vault "/absolute/path/to/knowledge" \
+# CLI 대화창에서 요청 시
+"study-install로 이 컴퓨터에 하네스를 설치하고 vault를 연결해 줘."
+
+# 직접 부트스트랩 실행 시
+./.agents/skills/study-install/scripts/bootstrap.sh \
+  --vault "/absolute/path/to/my-obsidian-vault" \
   --profile personal \
   --sync google-drive
 ```
 
-Phase 2 도구는 상태 확인과 설치를 분리한다.
+### 2단계: 모바일 텔레그램 스터디 봇 구동 (선택 사항)
+텔레그램의 `@BotFather`에게서 봇 토큰을 발급받은 후, Mac 터미널에서 아래 명령어로 봇을 백그라운드에 구동한다:
 
-```sh
-.agents/skills/study-install/scripts/install-phase2-tools.sh --check
-.agents/skills/study-install/scripts/install-phase2-tools.sh --install
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHI..."
+export TELEGRAM_ALLOWED_CHAT_ID="내_CHAT_ID_숫자"
+
+# 봇 상시 가동
+nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&1 &
 ```
+> 📖 **상세 세팅 가이드**: [모바일 텔레그램 스터디 브리지 가이드](docs/guides/mobile-telegram-bot.md) 참조
 
-Phase 2b 외부 소스도 같은 방식으로 나뉜다. `--check`는 네트워크에 접근하지
-않고 Node·pnpm·Obsidian과 각 pin 상태만 관찰한다.
+---
 
-```sh
-.agents/skills/study-install/scripts/install-phase2b-tools.sh --check
-.agents/skills/study-install/scripts/install-phase2b-tools.sh --install
-```
+## 🧩 스킬 구성 (Skills Map)
 
-pin 원장은 추적되는 `.tools/PINS.md` 하나뿐이고 나머지 `.tools/` 내용은
-미추적이다. `--install`은 원장의 정확한 commit을 받아 tree hash를 다시
-계산하고, 일치할 때만 트리를 배치한다. hash 불일치, 미충족 runtime, 파싱되지
-않는 pin, `python3` 부재는 모두 설치를 중단시킨다. 이미 있는 체크아웃이
-원장과 다르면 덮어쓰지 않고 보고한다. tag pin은 upstream ref와도 대조해
-이동한 tag를 막지만, 이는 무결성 장치가 아니라 변조 신호다 — API에 닿지
-못하면 보고만 하고 진행한다. 다운로드가 commit 주소로 이뤄지고 실제 관문은
-tree hash이기 때문이다. Obsidian이 없어도 설치는 실패하지 않으며 공식 CLI만
-`unavailable`이 된다.
-
-설치기는 vault에 Git을 초기화하거나 기존 노트를 변경하지 않는다. API 키와
-
-## 스킬 구성
+모든 스킬은 `.agents/skills/` 디렉터리에 위치하며, 세부 사용법과 경계는 [한글 스킬 안내(.agents/skills/README.ko.md)](.agents/skills/README.ko.md)에서 확인할 수 있다.
 
 ```text
 .agents/skills/
-├── context7/            # 현재 버전 라이브러리 공식 문서
-├── defuddle/            # 공개 웹 본문 정리
-├── diagram/             # 구조에 맞는 다이어그램 도구 선택·검사
-├── ingest/              # 웹·논문·영상 소스 라우팅
-├── knowledge-graph/     # article·topic·source 타입 그래프와 근거 검증
-├── metaskill/           # 하네스·스킬·규칙 개선
-├── note-writer/         # 원자적 검증 노트 작성
-├── obsidian/            # Obsidian 형식 작성·검증 + vault CLI (4 mode)
-├── paper-search/        # 공개 논문 검색·다운로드·검증
-├── recall/              # 출처 추적 가능한 복습 카드
-├── study-install/       # 설치처 bootstrap과 도구 점검
-├── study-session/       # 물어서 가르치는 학습 대화
-├── study-video/         # transcript-first 2-pass 영상 학습
-├── understand/          # Understand Anything 9개 mode 내부 라우팅
-├── vault-gardening/     # 지식 루트 드리프트 점검(보고 전용)
-└── using-study/         # 지식 우선 세션 운영
+├── context7/            # 최신 버전 라이브러리 공식 문서 조회
+├── defuddle/            # 공개 웹 페이지 본문 마크다운 추출
+├── diagram/             # 구조별 다이어그램 도구 선택 (Mermaid / D2 / Canvas)
+├── ingest/              # 웹·논문·영상 매체별 수집 및 노트화 라우팅
+├── knowledge-graph/     # 결정적 지식 그래프 재생성 및 근거 검증
+├── metaskill/           # 하네스 규칙·스킬·설치기·스펙 자체 개선
+├── note-writer/         # 원자적 검증 노트 작성 및 프론트매터 집행
+├── obsidian/            # Obsidian 문법·캔버스·Bases 검증 및 CLI 제어
+├── paper-search/        # 공개 논문 탐색·다운로드·메타데이터 검증
+├── recall/              # 출처 추적 가능한 간격 반복 복습 카드 제작
+├── study-install/       # 설치처 부트스트랩 및 로컬 환경 검사
+├── study-session/       # 물어서 가르치는 소크라테스식 학습 대화
+├── study-video/         # 2-pass 영상 학습 및 타임스탬프 프레임 추출
+├── understand/          # Understand Anything 9개 모드 내부 라우팅
+├── vault-gardening/     # 지식 루트 드리프트 및 고아/깨진 링크 점검
+└── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
 ```
 
-Understand Anything 9개 entry point는 `understand` 스킬 하나가 내부 라우팅으로
-모두 제공한다. upstream의 main-pulling
-전역 installer는 쓰지 않고, source를 project-local로 고정·검증해 두고
-dependency 설치는 감사 통과 전까지 막는다. `knowledge-graph`는 이제
-article/topic/source schema와 근거가 있는 암묵 관계를 갖췄다.
+---
 
-사용 시점·금지 경계·핵심 절차는
-[한글 스킬 안내](.agents/skills/README.ko.md)에 정리되어 있다.
+## 📚 문서 지도 (Documentation Architecture)
 
-## 의존성
+이 프로젝트의 세부 아키텍처 결정(ADR), 단계별 구현 스펙(Specs), 보안 검토 보고서는 모두 `docs/` 디렉터리에 체계적으로 정리되어 있다.
 
-- 필수: POSIX 셸과 Claude Code 또는 Codex 중 하나
-- 선택 UI: Obsidian
-- Phase 2 웹: `defuddle`
-- Phase 2 논문: `paper-search`
-- Phase 2 영상: `yt-dlp`, `ffmpeg`, 전역 `watch` 스킬
-- 그래프 기준 파서: Python 표준 라이브러리
-- Phase 2b `understand-knowledge`: Python 표준 라이브러리만 (지금 동작)
-- Phase 2b `understand`·`understand-figma`·`understand-dashboard`: Node 22+,
-  pnpm 10+와 빌드된 core (정확 dependency audit 통과 후 — 그전까지 unavailable)
-- Phase 2b Obsidian 형식(Markdown·Bases·Canvas): 없음 (앱 불필요)
-- 선택 Obsidian CLI: Obsidian 1.12.7+ 설치본과 실행 중인 앱
-
-`watch`의 Whisper 경로는 Groq 또는 OpenAI로 오디오를 전송할 수 있으므로
-기본 공부 워크플로는 항상 `--no-whisper`를 사용한다. 사용자가 해당 영상의
-외부 전사를 명시 승인한 경우에만 활성화한다.
-
-## 문서
-
-- [방향 제안](docs/proposals/2026-07-25-nohdol-study-direction.md)
-- [Phase 1 스펙](docs/specs/2026-07-25-phase1-study-harness.md)
-- [Phase 2 스펙](docs/specs/2026-07-25-phase2-ingest-notebooklm-graph.md)
-- [Phase 2b 스펙](docs/specs/2026-07-25-phase2b-cli-learning-integrations.md)
-- [초기 구조 ADR](docs/adr/001-initial-study-harness.md)
-- [Phase 2 파생 도구 ADR](docs/adr/002-phase2-derived-workflows.md)
-- [CLI 학습 연동 ADR](docs/adr/003-cli-learning-integrations.md)
-- [외부 연동 보안 검토](docs/reviews/2026-07-25-notebooklm-understand-anything-security.md)
-- [추가 도구 도입 검토](docs/reviews/2026-07-25-additional-tools-review.md)
-- [다음 세션 작업 인계](docs/handoffs/2026-07-25-next-session.md)
-- [문서 지도](docs/README.md)
+- **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
+- **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드
+- **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록
+- **운영 규칙 원본**: [AGENTS.md](AGENTS.md) (모든 AI 에이전트 및 CLI가 세션 시작 시 우선 준수하는 불변 규칙)

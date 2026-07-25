@@ -1,6 +1,12 @@
-# docs/ — 결정·스펙·제안 지도
+# docs/ — 결정·스펙·제안·가이드 지도
 
 이 디렉터리는 nohdol-study의 결정과 구현 기준을 연결하는 MOC(Map of Content)다. 현재 운영 규칙의 단일 원본은 [AGENTS.md](../AGENTS.md)다.
+
+## 가이드 (Guides)
+
+| 가이드 | 대상 | 요지 |
+|---|---|---|
+| [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 | 모바일 소크라테스 학습, 인라인 버튼 제어, AGENTS.md 보안 화이트리스트 준수 |
 
 ## ADR
 
