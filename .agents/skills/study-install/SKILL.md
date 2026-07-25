@@ -103,10 +103,15 @@ the hash matches.
   directory, and never touches the vault.
 - It installs source trees only. No upstream installer runs, no Node
   dependency is installed, and nothing in the tree is executed.
-- It fails closed on a hash mismatch, a moved tag, an unmet runtime, and a
-  malformed pin. A checkout that no longer matches its pin is reported rather
-  than overwritten, because overwriting would destroy whatever produced the
-  difference.
+- It fails closed on a hash mismatch, an unmet runtime, a malformed or
+  unparsable pin, and a missing `python3`. A checkout that no longer matches
+  its pin is reported rather than overwritten, because overwriting would
+  destroy whatever produced the difference.
+- A tag pin is also checked against the upstream ref, and a tag that moved
+  blocks the install. This check is a tamper signal, not the integrity
+  mechanism: when the API is unreachable or rate-limited it reports and
+  continues, because the download is addressed by commit and the tree hash is
+  what actually gates placement.
 - A pin whose runtime is unmet is skipped with a non-zero exit while other
   pins still install. Report the partial state instead of retrying.
 - Obsidian absence is recorded as `unavailable` and is never a failure. The

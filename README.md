@@ -80,10 +80,13 @@ Phase 2b 외부 소스도 같은 방식으로 나뉜다. `--check`는 네트워�
 
 pin 원장은 추적되는 `.tools/PINS.md` 하나뿐이고 나머지 `.tools/` 내용은
 미추적이다. `--install`은 원장의 정확한 commit을 받아 tree hash를 다시
-계산하고, 일치할 때만 트리를 배치한다. hash 불일치, 이동한 tag, 미충족
-runtime, 잘못된 pin은 모두 설치를 중단시킨다. 이미 있는 체크아웃이 원장과
-다르면 덮어쓰지 않고 보고한다. Obsidian이 없어도 설치는 실패하지 않으며
-공식 CLI만 `unavailable`이 된다.
+계산하고, 일치할 때만 트리를 배치한다. hash 불일치, 미충족 runtime, 파싱되지
+않는 pin, `python3` 부재는 모두 설치를 중단시킨다. 이미 있는 체크아웃이
+원장과 다르면 덮어쓰지 않고 보고한다. tag pin은 upstream ref와도 대조해
+이동한 tag를 막지만, 이는 무결성 장치가 아니라 변조 신호다 — API에 닿지
+못하면 보고만 하고 진행한다. 다운로드가 commit 주소로 이뤄지고 실제 관문은
+tree hash이기 때문이다. Obsidian이 없어도 설치는 실패하지 않으며 공식 CLI만
+`unavailable`이 된다.
 
 설치기는 vault에 Git을 초기화하거나 기존 노트를 변경하지 않는다. API 키와
 NotebookLM 로그인도 만들거나 저장하지 않는다.

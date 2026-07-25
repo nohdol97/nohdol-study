@@ -42,6 +42,12 @@ Edges come from wikilinks in the note body only. A relationship recorded solely
 in the `related` frontmatter field is not an edge, so such a note can still be
 reported as an orphan. Indented four-space code blocks are not stripped.
 
+Two link shapes are outside what it resolves. A wikilink whose text contains a
+code span is dropped with that span, so link by filename instead. A path-style
+link matches on the final name only, so `[[wrong/dir/note]]` still resolves to
+`note` while Obsidian reports it broken. Embeds (`![[note]]`) count as links,
+matching the Obsidian graph.
+
 ## Review
 
 1. Fix duplicate titles first; no graph is emitted for ambiguous identity.

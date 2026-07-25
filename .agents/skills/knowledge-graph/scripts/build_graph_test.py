@@ -113,4 +113,28 @@ Inline `[[NotALink]]` is code, not a link.
     assert missing == {"shared"}, missing
     assert "Shared One" in nodes and "Shared Two" in nodes
 
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    wiki = root / "wiki"
+    wiki.mkdir()
+
+    # Inline code is stripped for link scanning only. Titles keep their
+    # backticked words, so two notes differing only inside a code span stay
+    # distinct instead of colliding as one duplicate title.
+    (wiki / "rg.md").write_text(
+        "# Using `rg` for search\n\nSee [[fd]], not `[[NotALink]]`.\n",
+        encoding="utf-8",
+    )
+    (wiki / "fd.md").write_text("# Using `fd` for search\n", encoding="utf-8")
+
+    output = root / "graph.json"
+    result = run(wiki, output)
+    assert result.returncode == 0, result.stderr
+    graph = json.loads(output.read_text(encoding="utf-8"))
+    titles = sorted(node["title"] for node in graph["nodes"])
+    assert titles == ["Using `fd` for search", "Using `rg` for search"], titles
+    nodes = {node["title"]: node for node in graph["nodes"]}
+    assert nodes["Using `fd` for search"]["backlinks"] == ["Using `rg` for search"]
+    assert graph["missing_targets"] == []
+
 print("knowledge graph tests: PASS")

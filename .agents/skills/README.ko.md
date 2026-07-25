@@ -76,7 +76,7 @@
 - **언제 안 쓰나**: 기존 vault 대량 마이그레이션, vault Git 초기화·원격 설정, 승인 없는 Obsidian·자격증명 설치, upstream 전역 installer 실행.
 - **핵심 절차**: 기존 경로·심링크·충돌 관찰 → 지식 루트/개인·사내/sync/NotebookLM 모드 인터뷰 → create-if-missing bootstrap → Phase 2 도구 check/install → Phase 2b 소스 pin check/install → 심링크·기준 파일·Git 비추적 검증.
 - **완료 기준**: 기존 지식은 보존되고, 설치처 정보는 미추적 `REGISTRY.md`에만 있으며, 누락 도구와 실환경 미검증 항목이 명시된다.
-- **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치한다. 전역 스킬·vault는 건드리지 않고 소스만 놓으며, 의존성 설치와 코드 실행은 하지 않는다. hash 불일치·이동한 tag·미충족 runtime·잘못된 pin은 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
+- **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치한다. 전역 스킬·vault는 건드리지 않고 소스만 놓으며, 의존성 설치와 코드 실행은 하지 않는다. hash 불일치·미충족 runtime·파싱 불가 pin·`python3` 부재는 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. 이동한 tag도 막지만 이는 변조 신호라 API 미도달 시에는 보고 후 진행한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
 
 ## study-video
 

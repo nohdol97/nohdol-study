@@ -157,7 +157,148 @@ grep -q '64 hex characters' "$test_root/out-f" ||
   fail "the malformed pin was not explained"
 assert_untouched "malformed pin"
 
-# 7. The tracked ledger of this repository parses and reports every pin.
+# 7. Records wrapped in Markdown table pipes still parse. Without this the
+# leading pipe empties the first field and every pin is skipped as blank,
+# so the installer would report success having installed nothing.
+root_g=$(new_tools_root tools-g)
+mkdir -p "$root_g/sample"
+printf 'content\n' >"$root_g/sample/file.txt"
+digest=$(python3 "$tree_hash" "$root_g/sample")
+write_pins "$root_g" \
+  "| sample | commit | main | example/sample | abc123 | $digest | MIT | none |"
+run_installer "$root_g" --check | grep -q 'sample .*ready' ||
+  fail "a table-formatted record was not parsed"
+
+# A ledger with no record at all is an error.
+root_h=$(new_tools_root tools-h)
+printf '<!-- pins:start -->\n```text\n```\n<!-- pins:end -->\n' >"$root_h/PINS.md"
+if run_installer "$root_h" --install >"$test_root/out-h" 2>&1; then
+  fail "install reported success for an empty ledger"
+fi
+
+# So is a ledger whose lines survive extraction but carry no usable name.
+# Skipping those silently would install nothing and still report success.
+root_h2=$(new_tools_root tools-h2)
+write_pins "$root_h2" '  |  |  |  |  |  |  |  '
+if run_installer "$root_h2" --install >"$test_root/out-h2" 2>&1; then
+  fail "install reported success for a ledger with no usable record"
+fi
+grep -q 'no usable records' "$test_root/out-h2" ||
+  fail "the unusable ledger was not explained"
+if run_installer "$root_h2" --check >"$test_root/out-h3" 2>&1; then
+  fail "check reported success for a ledger with no usable record"
+fi
+
+# The remaining cases need a download. A stub curl keeps them offline: the
+# archive comes from a local fixture and the tag lookup returns a chosen sha.
+fixture="$test_root/fixture"
+mkdir -p "$fixture/root/nested"
+printf 'pinned content\n' >"$fixture/root/nested/file.txt"
+tar -czf "$fixture/source.tar.gz" -C "$fixture" root
+mkdir -p "$fixture/expected"
+tar -xzf "$fixture/source.tar.gz" -C "$fixture/expected" --strip-components=1
+fixture_digest=$(python3 "$tree_hash" "$fixture/expected")
+
+cat >"$stub_bin/curl" <<STUB
+#!/bin/sh
+# Serve the tag lookup from a file and every download from the fixture.
+target=
+for argument in "\$@"; do
+  case "\$argument" in
+    *api.github.com*)
+      cat "$test_root/tag-response.json" 2>/dev/null || exit 22
+      exit 0
+      ;;
+  esac
+done
+previous=
+for argument in "\$@"; do
+  [ "\$previous" = "-o" ] && target=\$argument
+  previous=\$argument
+done
+[ -n "\$target" ] || exit 22
+cp "$fixture/source.tar.gz" "\$target"
+STUB
+chmod +x "$stub_bin/curl"
+
+# 8. A download whose tree hash differs from the pin installs nothing.
+root_i=$(new_tools_root tools-i)
+write_pins "$root_i" \
+  'sample | commit | main | example/sample | abc123 | '"$(printf 'b%.0s' $(seq 64))"' | MIT | none'
+if run_installer "$root_i" --install >"$test_root/out-i" 2>&1; then
+  fail "install accepted a tree whose hash differs from the pin"
+fi
+grep -q 'source hash does not match' "$test_root/out-i" ||
+  fail "the source hash mismatch was not explained"
+[ ! -d "$root_i/sample" ] || fail "a mismatched tree was placed"
+if find "$root_i" -maxdepth 1 -name '.staging.*' | grep -q .; then
+  fail "a rejected download left staging files"
+fi
+assert_untouched "source hash mismatch"
+
+# 9. A matching download is placed, and re-running changes nothing.
+root_j=$(new_tools_root tools-j)
+write_pins "$root_j" \
+  "sample | commit | main | example/sample | abc123 | $fixture_digest | MIT | none"
+run_installer "$root_j" --install >"$test_root/out-j" 2>&1 ||
+  fail "install rejected a matching download"
+grep -q 'sample .*installed' "$test_root/out-j" ||
+  fail "the placement was not reported"
+[ -f "$root_j/sample/nested/file.txt" ] || fail "the verified tree was not placed"
+if find "$root_j" -maxdepth 1 -name '.staging.*' | grep -q .; then
+  fail "a successful install left staging files"
+fi
+run_installer "$root_j" --install >"$test_root/out-j2" 2>&1 ||
+  fail "the second install run failed"
+grep -q 'ready (unchanged)' "$test_root/out-j2" ||
+  fail "the second run did not recognize the existing tree"
+assert_untouched "successful install"
+
+# 10. A tag that no longer resolves to the pinned commit blocks the install.
+root_k=$(new_tools_root tools-k)
+printf '{\n  "sha": "%s"\n}\n' "$(printf 'c%.0s' $(seq 40))" \
+  >"$test_root/tag-response.json"
+write_pins "$root_k" \
+  "sample | tag | v1.0.0 | example/sample | $(printf 'd%.0s' $(seq 40)) | $fixture_digest | MIT | none"
+if run_installer "$root_k" --install >"$test_root/out-k" 2>&1; then
+  fail "install accepted a moved tag"
+fi
+grep -q 'moved to' "$test_root/out-k" || fail "the moved tag was not explained"
+[ ! -d "$root_k/sample" ] || fail "a moved tag still placed a tree"
+
+# The same pin installs once the tag resolves to the pinned commit.
+pinned_commit=$(printf 'd%.0s' $(seq 40))
+printf '{\n  "sha": "%s"\n}\n' "$pinned_commit" >"$test_root/tag-response.json"
+run_installer "$root_k" --install >"$test_root/out-k2" 2>&1 ||
+  fail "install rejected a tag that still matches"
+[ -f "$root_k/sample/nested/file.txt" ] || fail "the verified tree was not placed"
+assert_untouched "tag verification"
+
+rm -f "$stub_bin/curl"
+
+# 11. Without a working python3 nothing can be verified. The installer must
+# say so rather than let a failed check read as a hash mismatch, which would
+# advise deleting an intact checkout.
+root_l=$(new_tools_root tools-l)
+mkdir -p "$root_l/sample"
+printf 'content\n' >"$root_l/sample/file.txt"
+intact_digest=$(python3 "$tree_hash" "$root_l/sample")
+write_pins "$root_l" \
+  "sample | commit | main | example/sample | abc123 | $intact_digest | MIT | none"
+printf '#!/bin/sh\nexit 127\n' >"$stub_bin/python3"
+chmod +x "$stub_bin/python3"
+if run_installer "$root_l" --install >"$test_root/out-l" 2>&1; then
+  fail "install continued without a usable python3"
+fi
+grep -q 'python3 is required' "$test_root/out-l" ||
+  fail "the missing interpreter was not explained"
+if grep -q 'remove' "$test_root/out-l"; then
+  fail "an intact checkout was reported as a hash conflict"
+fi
+rm -f "$stub_bin/python3"
+[ -f "$root_l/sample/file.txt" ] || fail "the intact checkout was disturbed"
+
+# 12. The tracked ledger of this repository parses and reports every pin.
 real_output=$("$installer" --check)
 printf '%s' "$real_output" | grep -q 'understand-anything' ||
   fail "the tracked ledger did not report understand-anything"

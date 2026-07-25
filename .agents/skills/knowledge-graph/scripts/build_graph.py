@@ -66,7 +66,7 @@ def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     return result, "\n".join(lines[closing + 1 :])
 
 
-def content_without_fences(body: str) -> str:
+def content_without_fences(body: str, strip_inline_code: bool = True) -> str:
     kept: list[str] = []
     fence_marker: str | None = None
     for line in body.splitlines():
@@ -80,7 +80,7 @@ def content_without_fences(body: str) -> str:
                 fence_marker = None
             continue
         if fence_marker is None:
-            kept.append(INLINE_CODE.sub("", line))
+            kept.append(INLINE_CODE.sub("", line) if strip_inline_code else line)
     return "\n".join(kept)
 
 
@@ -93,7 +93,11 @@ def normalized_target(raw: str) -> str:
 
 
 def note_title(body: str, path: Path) -> str:
-    for line in content_without_fences(body).splitlines():
+    # Inline code is dropped for link scanning only. A title like
+    # "# Using `rg` for search" must keep its backticked words, or two notes
+    # differing only inside code spans collapse into one name and the whole
+    # graph fails as a duplicate title.
+    for line in content_without_fences(body, strip_inline_code=False).splitlines():
         match = H1.match(line)
         if match:
             return match.group(1).strip()

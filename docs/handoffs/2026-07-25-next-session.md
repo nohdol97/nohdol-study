@@ -41,9 +41,17 @@ python3 .agents/skills/metaskill/scripts/verify_harness.py
 
 `.tools/`(미추적, `PINS.md`만 추적)에 upstream 정확 commit을 받아 tree hash가
 일치할 때만 배치하는 설치기를 구현했다. `install-phase2b-tools.sh --check`는
-네트워크 없이 관측만 하고, `--install`만 내려받는다. hash 불일치·이동한
-tag·미충족 runtime·잘못된 pin·기존 체크아웃 불일치는 모두 fail-closed다.
-전역 스킬 디렉터리와 vault 불변은 테스트가 확인한다.
+네트워크 없이 관측만 하고, `--install`만 내려받는다. hash 불일치·미충족
+runtime·파싱 불가 pin·`python3` 부재·기존 체크아웃 불일치는 fail-closed이고,
+이동한 tag도 막되 API 미도달 시에는 보고 후 진행한다(무결성 관문은 tree
+hash다). 테스트는 curl 스텁으로 다운로드 경로까지 오프라인 커버한다.
+
+`high 취약점 fail-closed`는 이 단계 범위 밖이다 — 2b-A는 의존성을 아예 설치
+하지 않으므로 감사 게이트는 실제 설치를 수행하는 2b-B에서 구현한다.
+
+설치기는 전역 스킬 디렉터리와 vault 경로를 아예 참조하지 않는다. 테스트의
+불변 단언은 그 사실을 지키는 회귀 카나리이지, 위반을 능동적으로 탐지하는
+장치가 아니다.
 
 실측 상태: `obsidian-skills`는 배치 완료, `understand-anything`은 pnpm 10+
 부재로 미배치(설계된 fail-closed). 아래 원래 계획은 기록으로 남긴다.

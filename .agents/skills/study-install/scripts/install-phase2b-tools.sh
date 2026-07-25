@@ -43,6 +43,13 @@ note() { printf 'phase2b: %s\n' "$*" >&2; }
   note "tree hash helper not found: $tree_hash_script"
   exit 1
 }
+# Every integrity decision runs through python3. Without this gate a missing
+# interpreter is indistinguishable from a hash mismatch, and the script would
+# tell the user to delete a checkout that is actually intact.
+if ! command -v python3 >/dev/null 2>&1 || ! python3 -c '' >/dev/null 2>&1; then
+  note "python3 is required to verify source hashes"
+  exit 1
+fi
 
 # --- runtime observation ---------------------------------------------------
 
@@ -93,8 +100,13 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
+# Records may be written with the surrounding pipes of a Markdown table. Those
+# would otherwise leave the first field empty and make every pin look like a
+# blank line to skip, so the installer would report success having installed
+# nothing.
 sed -n '/^<!-- pins:start -->$/,/^<!-- pins:end -->$/p' "$pins_file" |
-  grep '|' | grep -v '^<!--' >"$pins"
+  grep '|' | grep -v '^<!--' |
+  sed 's/^[[:space:]]*|//; s/|[[:space:]]*$//' >"$pins"
 [ -s "$pins" ] || {
   note "pin ledger has no records"
   exit 1
@@ -117,9 +129,11 @@ runtime_satisfied() {
 
 if [ "$mode" = check ]; then
   runtime_report
+  records=0
   while IFS='|' read -r name ref_kind ref repo commit expected license runtime; do
     name=$(trim "${name:-}")
     [ -n "$name" ] || continue
+    records=$((records + 1))
     expected=$(trim "${expected:-}")
     runtime=$(trim "${runtime:-}")
     target="$tools_root/$name"
@@ -136,6 +150,10 @@ if [ "$mode" = check ]; then
       printf '%-22s %s (runtime %s unmet)\n' "$name" "$state" "$runtime"
     fi
   done <"$pins"
+  [ "$records" -gt 0 ] || {
+    note "pin ledger has no usable records"
+    exit 1
+  }
   exit 0
 fi
 
@@ -151,26 +169,33 @@ mkdir -p "$tools_root" || exit 1
 tag_still_points_at() {
   # Verifying the tag is a tamper signal, not the integrity mechanism: the
   # download is addressed by commit and the tree hash is what actually gates
-  # placement. An unreachable API therefore reports and continues.
-  repo=$1
-  ref=$2
-  commit=$3
-  api="https://api.github.com/repos/$repo/git/ref/tags/$ref"
-  resolved=$(curl -fsSL "$api" 2>/dev/null |
-    sed -n 's/.*"sha"[[:space:]]*:[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' |
+  # placement. An unreachable API therefore reports and continues, which also
+  # keeps an offline machine and an anonymous rate limit from blocking a
+  # install whose integrity is already guaranteed by the hash.
+  #
+  # The commits endpoint is used rather than the tag ref because it resolves
+  # an annotated tag to its commit; the ref endpoint would return the tag
+  # object's own id and report a correct pin as moved.
+  _repo=$1
+  _ref=$2
+  _commit=$3
+  _resolved=$(curl -fsSL "https://api.github.com/repos/$_repo/commits/$_ref" 2>/dev/null |
+    sed -n 's/^[[:space:]]*"sha"[[:space:]]*:[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' |
     head -n 1)
-  if [ -z "$resolved" ]; then
-    note "could not verify tag $ref for $repo; continuing on the pinned commit"
+  if [ -z "$_resolved" ]; then
+    note "could not verify tag $_ref for $_repo; continuing on the pinned commit"
     return 0
   fi
-  [ "$resolved" = "$commit" ] && return 0
-  note "tag $ref for $repo moved to $resolved, expected $commit"
+  [ "$_resolved" = "$_commit" ] && return 0
+  note "tag $_ref for $_repo moved to $_resolved, expected $_commit"
   return 1
 }
 
+records=0
 while IFS='|' read -r name ref_kind ref repo commit expected license runtime; do
   name=$(trim "${name:-}")
   [ -n "$name" ] || continue
+  records=$((records + 1))
   ref_kind=$(trim "${ref_kind:-}")
   ref=$(trim "${ref:-}")
   repo=$(trim "${repo:-}")
@@ -257,6 +282,11 @@ while IFS='|' read -r name ref_kind ref repo commit expected license runtime; do
   staging=
   printf '%-22s installed (%s@%s)\n' "$name" "$ref" "$commit"
 done <"$pins"
+
+[ "$records" -gt 0 ] || {
+  note "pin ledger has no usable records"
+  exit 1
+}
 
 printf '\n'
 "$0" --check
