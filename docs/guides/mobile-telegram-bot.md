@@ -67,9 +67,11 @@ nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&
 
 | 명령어 | 메뉴 설명 | 주요 기능 및 인라인 버튼 |
 |---|---|---|
+| **`/skill`** | 🧩 핵심 공부 스킬 선택 | • `[ 🧠 소크라테스 문답 (study-session) ]`<br>• `[ 🃏 복습 플래시카드 (recall) ]`<br>• `[ 📝 원자적 노트 저장 (note-writer) ]`<br>• `[ 🕸️ 지식 그래프 점검 (knowledge-graph) ]`<br>• `[ 🔄 스킬 해제 (일반 자유 대화) ]` |
+| **`/understand`** | 🔬 Understand 심층 분석 | • `[ 🔍 구조/아키텍처 파악 (understand) ]`<br>• `[ 💬 기능/코드 위치 찾기 (-chat) ]`<br>• `[ 📖 개념/흐름 깊이 설명 (-explain) ]`<br>• `[ 🗺️ 온보딩 학습 가이드 (-onboard) ]`<br>• `[ 🕸️ 지식 베이스 분석 (-knowledge) ]`<br>• `[ ❌ Understand 모드 해제 ]` |
 | **`/model`** | 🤖 AI 모델 선택 | • `[ 🤖 Gemini 3.1 Pro ]` (최상위 심층 학습/추론/아키텍처 분석)<br>• `[ ⚡ Gemini 2.5 Flash ]` (초고속 일상 메모/요약)<br>• `[ 🔄 기본값 ]` (초기화) |
 | **`/effort`** | 🧠 추론 강도 선택 | • `[ 🔥 High ]` (가장 깊은 사고 및 엄격한 출처 검증 - 권장)<br>• `[ ⚖️ Medium ]` (균형 잡힌 속도와 지능)<br>• `[ ⚡ Low ]` (빠른 즉답) |
-| **`/status`** | ⚙️ 상태 확인 | 현재 작동 중인 모델, 추론 강도, Vault 연결 경로, CLI 엔진, Git 상태 출력 |
+| **`/status`** | ⚙️ 상태 확인 | 현재 작동 중인 모델, 추론 강도, 활성 스킬, Vault 연결 경로, CLI 엔진, Git 상태 출력 |
 | **`/new`** | 🔄 새 대화 시작 | 이전 세션 기억을 초기화하고 새로운 대화 시작 |
 | **`/help`** | 📚 도움말 | 사용법 및 소크라테스식 학습 프롬프트 예시 안내 |
 
