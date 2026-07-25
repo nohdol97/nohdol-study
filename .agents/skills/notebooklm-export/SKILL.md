@@ -42,15 +42,52 @@ consumer web UI or claim continuous sync.
    asked to export while unresolved, and the packet then carries that status.
    Never add the flag on your own to make a failed export succeed.
 
-7. Review `00-manifest.md`, then upload the files under `sources/` to
+7. Verify the packet still matches its own manifest before anything leaves
+   the machine:
+
+```sh
+.agents/skills/notebooklm-export/scripts/verify-packet.sh \
+  _workspace/notebooklm/<topic>-<timestamp>
+```
+
+   It re-hashes every listed file, refuses symlinks without reading through
+   them, refuses a file in `sources/` the manifest never listed, and refuses
+   an `unverified` note. A packet that fails is not uploaded. An entry beside
+   `00-manifest.md` and `sources/` is surfaced as a note, not a failure, so a
+   flattened upload copy is visible rather than silent.
+
+8. Review `00-manifest.md`, then upload the files under `sources/` to
    NotebookLM. The manifest should be uploaded too. Upload the packet as
    produced; if a file must be renamed or flattened for the upload UI, record
    that in the manifest rather than creating an undocumented copy.
-8. In NotebookLM, generate quizzes, flashcards, infographics, mind maps, study
+9. In NotebookLM, generate quizzes, flashcards, infographics, mind maps, study
    guides, or use source-grounded chat.
-9. Treat every generated artifact as unverified derived material. Before
+10. Treat every generated artifact as unverified derived material. Before
    bringing a conclusion back into `wiki/`, inspect the cited source passage
    and apply the note-writer evidence protocol.
+
+## The optional CLI bridge is blocked
+
+Uploading is manual on purpose. A CLI bridge (`notebooklm-py`) would remove
+that step, and ADR 003 allows it only once the latest stable release contains
+the audited download-redirect fix. Check where that stands:
+
+```sh
+.agents/skills/notebooklm-export/scripts/bridge-gate.sh
+```
+
+It reads release metadata and nothing else - it never installs, never
+authenticates, and never sends vault content. It fails closed: an unreachable
+API blocks, because "I could not tell" is not permission when the risk is a
+known unfixed vulnerability. Pre-releases do not count as stable.
+
+Measured 2026-07-25: the latest stable release is `v0.7.3`, which does not
+contain the fix - the guard module is absent from that tree and the download
+path still follows redirects without re-validating each hop. The fix ships
+only in `v0.8.0` pre-releases. **Do not install the CLI, do not authenticate,
+and do not attempt a transfer.** Passing the release gate would still not be
+permission on its own: a dependency audit of the exact extras and a separate
+user-run authentication step come after it.
 
 ## Refresh
 

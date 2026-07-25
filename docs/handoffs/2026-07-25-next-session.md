@@ -2,12 +2,10 @@
 
 - 작성일: 2026-07-25
 - 기준 브랜치: `main`
-- 현재 상태: Phase 1·2 및 Phase 2b-A~2b-D 구현 완료, Phase 2b-E·2c·3 미구현
-- 다음 시작점: **Phase 2b-E**(NotebookLM CLI bridge). 진행 전에
-  `notebooklm-py` 최신 안정 릴리스가 redirect 수정 commit
-  `0a6e28a0522b3542695e6666054e88060ef3de48` 이후 코드를 포함하는지 다시
-  감사한다. 충족하지 않으면 installer와 wrapper 테스트만 만들고 실제
-  인증·전송은 계속 차단한다.
+- 현재 상태: Phase 1·2 및 Phase 2b 전체(A~E) 구현 완료, Phase 2c·3 미구현
+- 다음 시작점: **Phase 3**(diagram → study-session → vault-gardening →
+  recall). 외부 의존성이 없어 게이트에 막히지 않는다. Phase 2c(basic-memory·
+  PaperQA2 파일럿)는 사용자가 corpus와 provider를 지정할 때 진행한다.
 - 결정 원본:
   - [방향 제안](../proposals/2026-07-25-nohdol-study-direction.md)
   - [ADR 003](../adr/003-cli-learning-integrations.md)
@@ -175,7 +173,25 @@ project-local skill로 제공한다. 기존 nohdol-study `defuddle`는 유지한
 - CLI는 공식 요구 조건이 충족된 설치처에서만 available이다.
 - `.base`와 `.canvas` fixture, wikilink·embed·callout 회귀 테스트를 둔다.
 
-### Phase 2b-E — NotebookLM CLI bridge
+### 완료됨 — Phase 2b-E (2026-07-25)
+
+재감사 결과 **게이트가 차단 판정**이라 CLI 설치·인증·전송을 열지 않았다.
+코드로 직접 확인한 사실: 최신 안정 릴리스는 `v0.7.3`이고 그 트리에
+`_redirect_guard.py`가 없으며(HTTP 404) `downloads.py`가 hop 재검증 없이
+`follow_redirects=True`를 쓴다. 수정은 `v0.8.0` 프리릴리스에만 있다.
+
+구현한 것은 판정을 결정적으로 재현하는 `bridge-gate.sh`(릴리스 메타데이터만
+읽고 설치·인증·전송 없음, 프리릴리스 제외, API 미도달 시 fail-closed)와,
+게이트와 무관하게 **수동 업로드에도 당장 쓸모 있는** `verify-packet.sh`다.
+후자는 packet을 자기 manifest와 다시 대조한다 — 해시 재계산, 심링크는 따라
+읽지 않고 거부, manifest에 없는 파일 거부, `unverified` 노트 거부. 규약 밖
+형제 디렉터리(`upload/` 같은)는 실패가 아니라 경고로 드러낸다.
+
+재검토 trigger: `notebooklm-py`가 수정을 포함한 **안정** 릴리스를 내면
+`bridge-gate.sh`가 통과로 바뀐다. 그때도 통과는 허가가 아니다 — 정확한
+extra의 의존성 감사와 사용자가 직접 하는 인증이 남는다.
+
+### 원래 계획 — Phase 2b-E
 
 현재 안정 릴리스가 redirect 수정과 안전한 exact dependency set을
 충족하는지 다시 감사한 후 진행한다. 충족하지 않으면 installer와 wrapper

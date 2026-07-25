@@ -1,4 +1,4 @@
-<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: a5648a913fa5880975d59fec72e1077bfce9ce3bfa39397cb1504260360c8738 -->
+<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: 7b7f57a1967c7adf3dcc0bf0410e5e67ab7cd9e998909ef8962cc6d508eea300 -->
 
 # nohdol-study 운영 규칙 요약
 
@@ -20,6 +20,6 @@
 - 하네스 규칙·스킬·훅·설치기·ADR·스펙 변경은 `metaskill`로 수행하고 루트 README·한글 스킬 안내·MOC·변경 이력을 함께 맞춘다.
 - Phase 2는 웹·논문·영상 ingest, 검증된 NotebookLM snapshot, 결정적 Markdown 그래프를 제공한다.
 - `.tools/`는 pin된 서드파티 소스 트리 자리다. 내용은 미추적이고 pin 원장 `.tools/PINS.md`만 추적하며, 배치는 tree hash를 검증하는 Phase 2b 설치기로만 한다. upstream installer 실행·전역 스킬 링크·의존성 설치는 하지 않는다.
-- Phase 2b는 project-local Understand Anything·Obsidian 스킬과 보안 게이트가 있는 NotebookLM CLI bridge를 추가한다. 검증 pin 설치기·9개 entry point를 내부 라우팅하는 `understand` 스킬·typed 지식 그래프·`obsidian` 형식/CLI 스킬은 구현됐고, NotebookLM bridge는 아직이다.
+- Phase 2b는 project-local Understand Anything·Obsidian 스킬과 보안 게이트가 있는 NotebookLM CLI bridge를 추가한다. 검증 pin 설치기·9개 entry point를 내부 라우팅하는 `understand` 스킬·typed 지식 그래프·`obsidian` 형식/CLI 스킬·NotebookLM 릴리스 게이트는 구현됐다. CLI bridge 자체는 닫혀 있다 — 최신 안정 릴리스에 감사한 download redirect 수정이 없어, 게이트가 통과하기 전까지 설치·인증·전송을 허용하지 않는다.
 - 생성된 그래프는 탐색 수단이지 근거가 아니다. 사실 답변은 소스 파일에서 확인한 뒤에만 완료하며, 빌드된 의존성이 필요한 adapter 실행은 별도 승인 전까지 막힌다.
 - Phase 2c의 basic-memory 비교는 임의 노트 수가 아니라 명시된 corpus·read/search 범위·원본 hash 불변 조건으로 제한한다.

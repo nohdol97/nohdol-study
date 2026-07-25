@@ -51,8 +51,11 @@ while [ "$#" -gt 0 ]; do
 done
 
 [ -n "$name" ] || fail "--name is required"
-printf '%s' "$name" | grep -E '^[A-Za-z0-9][A-Za-z0-9._-]*$' >/dev/null 2>&1 ||
-  fail "--name must be an ASCII slug"
+# grep matches per line, so a name whose first line is clean would pass even
+# with an embedded newline. case tests the whole value at once.
+case "$name" in
+  ''|[!A-Za-z0-9]*|*[!A-Za-z0-9._-]*) fail "--name must be an ASCII slug" ;;
+esac
 [ "$#" -gt 0 ] || fail "select at least one vault file"
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)

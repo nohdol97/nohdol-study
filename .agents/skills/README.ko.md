@@ -62,6 +62,8 @@
 - **언제 안 쓰나**: vault 전체 상시 동기화, 소비자 NotebookLM 비공식 UI 자동화, 생성 답변을 자동으로 확정 지식에 병합.
 - **핵심 절차**: 좁은 학습 목표 정의 → 관련 검증 노트와 원 출처만 선택 → `export.sh --name ...` → manifest 검토 → 수동 업로드 → 생성물은 원 출처 대조 후에만 다시 노트화.
 - **주요 산출물**: `_workspace/notebooklm/<주제>-<시각>/`의 `sources/`와 `00-manifest.md`; 기본값은 `unverified` 노트 내보내기를 거부한다.
+- **업로드 전 검증**: `verify-packet.sh`가 packet을 manifest와 다시 대조한다 — 해시 재계산, 심링크는 따라 읽지 않고 거부, manifest에 없는 파일이 `sources/`에 있으면 거부, `unverified` 노트 거부. 규약 밖 형제 디렉터리는 실패가 아니라 경고로 드러낸다.
+- **CLI bridge는 차단됨**: `bridge-gate.sh`가 릴리스만 읽어 판정한다(설치·인증·전송 없음, API 미도달 시 fail-closed). 2026-07-25 실측 — 최신 안정 릴리스 `v0.7.3`에 download redirect 수정이 없어(가드 모듈 부재) **설치·인증·전송 모두 금지**. 수정은 `v0.8.0` 프리릴리스에만 있다.
 
 ## obsidian
 

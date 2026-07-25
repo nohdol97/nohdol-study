@@ -48,7 +48,8 @@ Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything 라우팅),
   앱 실행을 요구한다. 만든 파일은 `scripts/validate.py`로 검증한다 — 캔버스는
   JSON Canvas 1.0, Markdown은 위키링크·콜아웃, `.base`는 로드 실패를 부르는
   구조 오류까지.
-- **남음** — 검증 export packet만 올리는 선택적 NotebookLM CLI bridge(2b-E)
+- **구현됨(2b-E)** — 릴리스 감사 게이트와 업로드 전 packet 검증기. 게이트가
+  실제로 차단 판정을 냈으므로 CLI 설치·인증·전송은 열지 않았다.
 
 mode마다 런타임 계층이 다르다. `understand-knowledge`만 `python3`로 바로
 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프를 필요로 하며,
@@ -126,10 +127,17 @@ NotebookLM 로그인도 만들거나 저장하지 않는다.
 기록된다. 퀴즈·플래시카드·인포그래픽·마인드맵·답변은 학습용 파생물이며,
 다시 지식으로 저장하려면 인용된 원문을 직접 확인해야 한다.
 
-현재 수동 업로드 경로는 구현돼 있다. 웹 UI 없이 사용하는 선택적
-`notebooklm-py` bridge는 보안 게이트를 통과한 릴리스만 설치하도록 Phase
-2b에서 구현한다. bearer cookie, public share, vault 전체 upload, master
-token, MCP/server는 기본 경로에서 허용하지 않는다.
+업로드 전에는 `verify-packet.sh`로 packet이 자기 manifest와 여전히 일치하는지
+확인한다 — 해시 재계산, 심링크 거부(따라 읽지 않음), manifest에 없는 파일
+거부, `unverified` 노트 거부.
+
+웹 UI 없이 쓰는 선택적 `notebooklm-py` bridge는 **현재 차단 상태**다.
+`bridge-gate.sh`가 릴리스만 읽어 판정하며(설치·인증·전송 없음, API 미도달 시
+fail-closed), 2026-07-25 실측 결과 최신 안정 릴리스 `v0.7.3`에 download
+redirect 수정이 없다(가드 모듈 부재, `follow_redirects=True`에 hop 재검증
+없음). 수정은 `v0.8.0` 프리릴리스에만 있어 안정 릴리스 조건을 만족하지
+못한다. bearer cookie, public share, vault 전체 upload, master token,
+MCP/server는 기본 경로에서 허용하지 않는다.
 
 `enterprise`는 공식 API 후보지만 별도 Google Cloud 프로젝트·라이선스·API
 활성화·사용자 인증이 필요하다. `study-install`은 준비 상태만 관찰하고
