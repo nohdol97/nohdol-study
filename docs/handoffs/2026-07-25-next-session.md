@@ -2,11 +2,12 @@
 
 - 작성일: 2026-07-25
 - 기준 브랜치: `main`
-- 현재 상태: Phase 1·2 및 Phase 2b-A~2b-C 구현 완료, Phase 2b-D·2b-E·2c·3 미구현
-- 다음 시작점: **Phase 2b-D**(Obsidian 스킬 4종). pin된
-  `kepano/obsidian-skills`의 `obsidian-markdown`·`obsidian-bases`·
-  `json-canvas`·`obsidian-cli`를 adapter로 노출한다. 상류 `defuddle`는
-  기존 nohdol-study `defuddle`를 유지하므로 채택하지 않는다.
+- 현재 상태: Phase 1·2 및 Phase 2b-A~2b-D 구현 완료, Phase 2b-E·2c·3 미구현
+- 다음 시작점: **Phase 2b-E**(NotebookLM CLI bridge). 진행 전에
+  `notebooklm-py` 최신 안정 릴리스가 redirect 수정 commit
+  `0a6e28a0522b3542695e6666054e88060ef3de48` 이후 코드를 포함하는지 다시
+  감사한다. 충족하지 않으면 installer와 wrapper 테스트만 만들고 실제
+  인증·전송은 계속 차단한다.
 - 결정 원본:
   - [방향 제안](../proposals/2026-07-25-nohdol-study-direction.md)
   - [ADR 003](../adr/003-cli-learning-integrations.md)
@@ -148,7 +149,24 @@ dashboard 실행, vault semantic 분석을 하지 않는다.
   verification을 강제한다.
 - prompt-like note fixture와 vault 원본 hash 불변 테스트를 추가한다.
 
-### Phase 2b-D — Obsidian skill 4종
+### 완료됨 — Phase 2b-D (2026-07-25)
+
+`obsidian` 스킬 하나가 `obsidian-markdown`·`obsidian-bases`·`json-canvas`·
+`obsidian-cli` 4개 mode를 내부 라우팅한다(2b-B와 같은 방침). 앞의 셋은
+Obsidian 없이 동작하고 CLI만 앱 실행을 요구해 없으면 `unavailable`이다.
+상류 `defuddle`는 채택하지 않았고, 라우팅 테스트가 그 결정을 고정한다.
+
+`scripts/validate.py`가 만든 파일을 검증한다 — 캔버스는 JSON Canvas 1.0(노드
+타입·좌표·id 중복·엣지가 실제 노드를 가리키는지), Markdown은 미닫힘·빈
+위키링크와 미지의 콜아웃 타입, `.base`는 로드 실패를 부르는 구조 오류.
+콜아웃 목록은 pin된 참조에서 읽어 상류와 동기화된다. 각 검사는 뮤테이션으로
+유효성을 확인했고, 실제 vault 파일 4개에도 통과한다.
+
+한계로 남긴 것: 무의존 원칙상 `.base`는 YAML 검증이 아니라 구조 사전
+점검이다. 스킬 문서와 한글 안내가 이를 "명백히 깨지지는 않았다"로 보고하라고
+명시한다.
+
+### 원래 계획 — Phase 2b-D
 
 `obsidian-markdown`, `obsidian-bases`, `json-canvas`, `obsidian-cli`를
 project-local skill로 제공한다. 기존 nohdol-study `defuddle`는 유지한다.

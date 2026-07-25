@@ -63,6 +63,16 @@
 - **핵심 절차**: 좁은 학습 목표 정의 → 관련 검증 노트와 원 출처만 선택 → `export.sh --name ...` → manifest 검토 → 수동 업로드 → 생성물은 원 출처 대조 후에만 다시 노트화.
 - **주요 산출물**: `_workspace/notebooklm/<주제>-<시각>/`의 `sources/`와 `00-manifest.md`; 기본값은 `unverified` 노트 내보내기를 거부한다.
 
+## obsidian
+
+- **한 줄 역할**: Obsidian 고유 형식(Markdown 확장·Bases·JSON Canvas)을 작성·검증하고, 실행 중인 vault를 공식 CLI로 조작한다. 4개 mode를 내부 라우팅한다.
+- **언제 쓰나**: 위키링크·콜아웃·임베드·프론트매터 속성 작성, 캔버스·마인드맵·지식 맵 제작, `.base` 테이블·카드 뷰와 필터, Obsidian CLI로 vault 읽기·변경.
+- **언제 안 쓰나**: 노트 내용의 사실성 판단(→ `note-writer`와 근거 규칙), 지식 그래프 재생성(→ `knowledge-graph`), 무엇이 바뀌는지 말하지 않은 CLI 쓰기.
+- **라우팅**: `obsidian-markdown`(노트 문법), `obsidian-bases`(뷰), `json-canvas`(캔버스)는 **Obsidian 없이도 동작**하고, `obsidian-cli`만 앱 실행이 필요해 없으면 `unavailable`로 보고한다. mode별 절차는 `references/modes.md`에 있다.
+- **핵심 절차**: pin 상태 확인 → mode 선택 → 상류 워크플로를 경계 안에서 수행 → `scripts/validate.py`로 검증 후 완료.
+- **검증 범위**: 캔버스는 JSON Canvas 1.0(노드 타입·좌표·id 중복·엣지가 실제 노드를 가리키는지), Markdown은 미닫힘·빈 위키링크와 미지의 콜아웃 타입(목록은 pin된 참조에서 읽어 상류와 동기), `.base`는 로드 실패를 부르는 구조 오류. **base 검사는 YAML 검증기가 아니라 구조 사전 점검**이므로 "명백히 깨지지는 않았다"로 보고한다.
+- **완료 기준**: 만든 파일이 검증을 통과하고, 상시 노트를 형식에 맞추려 임의로 고치지 않으며, CLI 쓰기 전에 대상 vault와 파일을 밝힌다.
+
 ## paper-search
 
 - **한 줄 역할**: 공개 학술 소스에서 논문을 검색·다운로드·텍스트 추출하고 출판 상태·버전·정정·철회 여부까지 확인해 노트로 연결한다.

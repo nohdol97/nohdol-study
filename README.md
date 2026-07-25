@@ -25,8 +25,8 @@ Phase 2:
 - 검증 파일만 묶는 NotebookLM 학습 패킷
 - article·topic·source 타입의 결정적 JSON 그래프와 근거 검증형 추론 계층
 
-Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything adapter 9종),
-2b-C(typed 지식 그래프)는 구현됐다.
+Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything 라우팅),
+2b-C(typed 지식 그래프), 2b-D(Obsidian 형식)는 구현됐다.
 
 - **구현됨(2b-A)** — 미추적 `.tools/` 루트에 upstream 정확 commit을 내려받아
   tree hash가 일치할 때만 배치하는 설치기. 전역 스킬 디렉터리와 vault는
@@ -43,8 +43,12 @@ Phase 2b-A(외부 소스 pin), 2b-B(Understand Anything adapter 9종),
   주제 분류와 인용 출처로 유효한 그래프가 나오고, 노트 본문은 그래프에
   담기지 않는다. 모델이 추론한 entity·claim은 `--semantic`으로만 들어오며
   인용 노트에서 근거 앵커가 해석되지 않으면 버려진다.
-- **남음** — Obsidian Markdown·Bases·JSON Canvas·공식 CLI 스킬 4종(2b-D),
-  검증 export packet만 올리는 선택적 NotebookLM CLI bridge(2b-E)
+- **구현됨(2b-D)** — `obsidian` 스킬이 Markdown 확장·Bases·JSON Canvas·공식
+  CLI 4개 mode를 내부 라우팅한다. 앞의 셋은 Obsidian 없이 동작하고 CLI만
+  앱 실행을 요구한다. 만든 파일은 `scripts/validate.py`로 검증한다 — 캔버스는
+  JSON Canvas 1.0, Markdown은 위키링크·콜아웃, `.base`는 로드 실패를 부르는
+  구조 오류까지.
+- **남음** — 검증 export packet만 올리는 선택적 NotebookLM CLI bridge(2b-E)
 
 mode마다 런타임 계층이 다르다. `understand-knowledge`만 `python3`로 바로
 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프를 필요로 하며,
@@ -141,6 +145,7 @@ token, MCP/server는 기본 경로에서 허용하지 않는다.
 ├── knowledge-graph/     # article·topic·source 타입 그래프와 근거 검증
 ├── metaskill/           # 하네스·스킬·규칙 개선
 ├── note-writer/         # 원자적 검증 노트 작성
+├── obsidian/            # Obsidian 형식 작성·검증 + vault CLI (4 mode)
 ├── notebooklm-export/   # 검증된 주제별 NotebookLM 패킷
 ├── paper-search/        # 공개 논문 검색·다운로드·검증
 ├── study-install/       # 설치처 bootstrap과 도구 점검
@@ -169,6 +174,7 @@ article/topic/source schema와 근거가 있는 암묵 관계를 갖췄다.
 - Phase 2b `understand-knowledge`: Python 표준 라이브러리만 (지금 동작)
 - Phase 2b `understand`·`understand-figma`·`understand-dashboard`: Node 22+,
   pnpm 10+와 빌드된 core (정확 dependency audit 통과 후 — 그전까지 unavailable)
+- Phase 2b Obsidian 형식(Markdown·Bases·Canvas): 없음 (앱 불필요)
 - 선택 Obsidian CLI: Obsidian 1.12.7+ 설치본과 실행 중인 앱
 
 `watch`의 Whisper 경로는 Groq 또는 OpenAI로 오디오를 전송할 수 있으므로
