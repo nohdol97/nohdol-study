@@ -2,10 +2,11 @@
 
 - 작성일: 2026-07-25
 - 기준 브랜치: `main`
-- 현재 상태: Phase 1·2 및 Phase 2b 전체(A~E) 구현 완료, Phase 2c·3 미구현
-- 다음 시작점: **Phase 3**(diagram → study-session → vault-gardening →
-  recall). 외부 의존성이 없어 게이트에 막히지 않는다. Phase 2c(basic-memory·
-  PaperQA2 파일럿)는 사용자가 corpus와 provider를 지정할 때 진행한다.
+- 현재 상태: Phase 1·2·2b 전체와 Phase 3 구현 완료. 남은 것은 Phase 2c
+  파일럿과, 아래 "남은 콘텐츠 작업"뿐이다.
+- 다음 시작점: **Phase 2c**는 사용자가 corpus와 provider를 지정할 때만
+  진행한다(basic-memory는 read/search 한정 비교, PaperQA2는 외부 전송 승인
+  후). 지정 없이 시작하지 않는다.
 - 결정 원본:
   - [방향 제안](../proposals/2026-07-25-nohdol-study-direction.md)
   - [ADR 003](../adr/003-cli-learning-integrations.md)
@@ -213,14 +214,25 @@ extra의 의존성 감사와 사용자가 직접 하는 인증이 남는다.
 2. PaperQA2는 사용자가 지정한 논문 corpus와 provider가 있을 때만 실행한다.
    외부 model·embedding 전송을 승인받고 citation을 원 PDF에서 재검증한다.
 
-### Phase 3 — 학습 루프
+### 완료됨 — Phase 3 (2026-07-25)
 
-다음 순서로 각각 별도 구현한다.
+네 스킬 모두 구현했다. 판정 가능한 부분은 전부 스크립트로 옮겨 규칙이
+말로만 남지 않게 했다.
 
-1. `diagram`: Mermaid 기본, D2→SVG, JSON Canvas, matplotlib→SVG
-2. `study-session`: 소크라테스식 질문과 이해 확인
-3. `vault-gardening`: 깨진 링크·고아·중복·index/log/hot 점검
-4. `recall`: 근거 검증 가능한 Markdown 카드와 spaced repetition
+- `diagram` — Mermaid 기본, `check.py`가 노드를 세어 약 15개 초과면 D2→SVG
+  승급을 권고한다(승급 기준이 감이 아니라 계수). 미지의 Mermaid 타입·불균형
+  괄호·없는 임베드 에셋·빈 SVG도 잡는다. Mermaid 파서는 JS라 **사전 점검일
+  뿐**이며 렌더링 확인은 사람이 한다.
+- `study-session` — 스크립트 없음. 한 질문씩, 유창한 재진술을 이해로 인정하지
+  않기, 채점 못 할 질문 금지, 사용자가 언제든 멈출 수 있음.
+- `vault-gardening` — `garden.py`가 5개 절로 보고하고 **아무것도 고치지
+  않는다**. 큐레이션 계층만 훑는다(구현 중 실측: 지식 루트에 레거시
+  디렉터리가 많아 전체 순회는 클라우드에서 멈춘다).
+- `recall` — 카드마다 `<!-- from: 노트.md#앵커 -->`가 필수이고, `cards.py`가
+  지식 그래프와 **같은 앵커 규칙**(importlib로 로드해 드리프트 방지)으로
+  해석해 실패하면 거부한다.
+
+각 검사는 뮤테이션으로 유효성을 확인했다.
 
 ## 남은 콘텐츠 작업
 

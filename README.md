@@ -149,6 +149,7 @@ MCP/server는 기본 경로에서 허용하지 않는다.
 .agents/skills/
 ├── context7/            # 현재 버전 라이브러리 공식 문서
 ├── defuddle/            # 공개 웹 본문 정리
+├── diagram/             # 구조에 맞는 다이어그램 도구 선택·검사
 ├── ingest/              # 웹·논문·영상 소스 라우팅
 ├── knowledge-graph/     # article·topic·source 타입 그래프와 근거 검증
 ├── metaskill/           # 하네스·스킬·규칙 개선
@@ -156,9 +157,12 @@ MCP/server는 기본 경로에서 허용하지 않는다.
 ├── obsidian/            # Obsidian 형식 작성·검증 + vault CLI (4 mode)
 ├── notebooklm-export/   # 검증된 주제별 NotebookLM 패킷
 ├── paper-search/        # 공개 논문 검색·다운로드·검증
+├── recall/              # 출처 추적 가능한 복습 카드
 ├── study-install/       # 설치처 bootstrap과 도구 점검
+├── study-session/       # 물어서 가르치는 학습 대화
 ├── study-video/         # transcript-first 2-pass 영상 학습
 ├── understand/          # Understand Anything 9개 mode 내부 라우팅
+├── vault-gardening/     # 지식 루트 드리프트 점검(보고 전용)
 └── using-study/         # 지식 우선 세션 운영
 ```
 
