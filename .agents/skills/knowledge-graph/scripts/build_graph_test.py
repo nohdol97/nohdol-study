@@ -96,6 +96,39 @@ See [[Beta|the second note]], [[Missing#Section]], and [[Beta]].
 with tempfile.TemporaryDirectory() as temporary:
     root = Path(temporary)
     wiki = root / "wiki"
+    (wiki / "assets" / "topic").mkdir(parents=True)
+    # An embedded figure is an illustration inside the note, not an edge to
+    # another note. Reporting it as a link with no target would flag every
+    # note that shows a frame, for a file that is sitting right there.
+    (wiki / "assets" / "topic" / "frame.jpg").write_bytes(b"")
+    (wiki / "illustrated.md").write_text(
+        """---
+type: concept
+status: seed
+---
+# Illustrated
+
+![[assets/topic/frame.jpg]]
+![[assets/topic/absent.png]]
+See also [[Plain]].
+""",
+        encoding="utf-8",
+    )
+    (wiki / "plain.md").write_text("# Plain\n", encoding="utf-8")
+
+    out = root / "graph.json"
+    assert run(wiki, out).returncode == 0
+    graph = json.loads(out.read_text(encoding="utf-8"))
+    missing = {item["target"] for item in graph["missing_targets"]}
+    # Neither the present nor the absent asset becomes a knowledge-graph edge:
+    # media has no note body to reach.
+    assert missing == set(), missing
+    assert articles(graph)["Illustrated"]["links"] == ["Plain"]
+    assert articles(graph)["Illustrated"]["missing_links"] == []
+
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    wiki = root / "wiki"
     (wiki / "nested").mkdir(parents=True)
 
     # Filename and H1 differ, so Obsidian resolves the filename while this
