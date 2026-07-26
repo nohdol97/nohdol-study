@@ -17,11 +17,17 @@ fi
 # A failure in the first source route must not prevent later checks.
 grep -F 'npm is required for defuddle' "$test_root/stderr" >/dev/null
 grep -F 'install yt-dlp with the system package manager' "$test_root/stderr" >/dev/null
+# d2 shares the package-manager route with the media tools. It is reported
+# per tool, so a missing d2 must be named rather than folded into yt-dlp's line.
+grep -F 'install d2 with the system package manager' "$test_root/stderr" >/dev/null
 grep -F 'uv is required for paper-search' "$test_root/stderr" >/dev/null
 grep -F 'npx is required for watch' "$test_root/stderr" >/dev/null
 grep -F 'watch installed but download.py was not found' "$test_root/stderr" >/dev/null
 grep -F 'defuddle' "$test_root/stdout" >/dev/null
 grep -F 'paper-search' "$test_root/stdout" >/dev/null
 grep -F 'watch' "$test_root/stdout" >/dev/null
+# The closing --check must report d2 alongside the rest, or a missing renderer
+# stays invisible until a diagram fails to build.
+grep -F 'd2' "$test_root/stdout" >/dev/null
 
 printf 'phase2 tool installer tests: PASS\n'

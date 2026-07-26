@@ -43,6 +43,7 @@ if [ "$mode" = check ]; then
   status_line paper-search paper-search
   status_line yt-dlp yt-dlp
   status_line ffmpeg ffmpeg
+  status_line d2 d2
   if has_watch; then
     printf '%-14s available\n' watch
   else
@@ -67,16 +68,19 @@ if ! command -v defuddle >/dev/null 2>&1; then
   fi
 fi
 
-for media_tool in yt-dlp ffmpeg; do
-  if ! command -v "$media_tool" >/dev/null 2>&1; then
+# yt-dlp and ffmpeg serve video ingest; d2 renders a diagram that has outgrown
+# Mermaid. All three are single binaries the system package manager carries, so
+# they share one install path.
+for brew_tool in yt-dlp ffmpeg d2; do
+  if ! command -v "$brew_tool" >/dev/null 2>&1; then
     if [ "$(uname -s)" = Darwin ] && command -v brew >/dev/null 2>&1; then
-      brew install "$media_tool" || true
-      if ! command -v "$media_tool" >/dev/null 2>&1; then
-        printf 'phase2 tools: %s is not on PATH after install\n' "$media_tool" >&2
+      brew install "$brew_tool" || true
+      if ! command -v "$brew_tool" >/dev/null 2>&1; then
+        printf 'phase2 tools: %s is not on PATH after install\n' "$brew_tool" >&2
         failed=1
       fi
     else
-      printf 'phase2 tools: install %s with the system package manager\n' "$media_tool" >&2
+      printf 'phase2 tools: install %s with the system package manager\n' "$brew_tool" >&2
       failed=1
     fi
   fi
