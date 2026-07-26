@@ -58,8 +58,14 @@ if [ -z "$message" ]; then
   IFS='
 '
   for note in $candidates; do
-    # Scraped collection documents are queues of headlines, not knowledge, and
-    # nothing in index.md or log.md is meant to name them individually.
+    # Generated listings are skipped. `index` is a month archive index and `moc`
+    # is a topic or per-source queue; the scraper rewrites both every run, and
+    # neither is something index.md is meant to name item by item. Hand-written
+    # maps use `topic` or `source`, so they are still checked. A dated capture
+    # is `article`, so it is matched by its tag instead.
+    if head -n 20 "$note" | grep -qE '^type: (index|moc)$'; then
+      continue
+    fi
     if head -n 20 "$note" | grep -qE '^  - (feed|daily-scrap)$'; then
       continue
     fi

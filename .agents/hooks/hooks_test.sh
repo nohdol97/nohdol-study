@@ -89,6 +89,31 @@ touch -t 202301010000 "$test_root/knowledge/wiki/Some Feed.md"
 feed_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 [ -z "$feed_output" ]
 
+# Generated listings are skipped by type. The scraper rewrites the month
+# archive index and the topic queues on every run, and naming each one in
+# index.md would turn the entry point into a mirror of the archive.
+printf '%s\n' '---' 'type: index' 'tags:' '  - Archive' '---' \
+  >"$test_root/knowledge/wiki/2026.7 인덱스.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/2026.7 인덱스.md"
+index_type_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+[ -z "$index_type_output" ]
+
+printf '%s\n' '---' 'type: moc' 'tags:' '  - curation' '---' \
+  >"$test_root/knowledge/wiki/어떤 주제.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/어떤 주제.md"
+moc_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+[ -z "$moc_output" ]
+
+# A hand-written map is not generated, so it must still be caught. `topic` and
+# `source` are what the note contract uses for those.
+printf '%s\n' '---' 'type: topic' '---' \
+  >"$test_root/knowledge/wiki/손으로 쓴 허브.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/손으로 쓴 허브.md"
+hub_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+printf '%s' "$hub_output" | grep -F '"decision":"block"' >/dev/null
+printf '%s' "$hub_output" | grep -F '손으로 쓴 허브' >/dev/null
+rm "$test_root/knowledge/wiki/손으로 쓴 허브.md"
+
 # hot.md carries no note list, so it is judged by the dates inside the files:
 # a cache older than the newest log entry is behind its own record.
 printf '%s\n' '# log' '| 2026-07-26 | newer entry | [[logged note]] |' \
