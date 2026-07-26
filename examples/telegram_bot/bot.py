@@ -37,6 +37,39 @@ logging.basicConfig(
 )
 logger = logging.getLogger("NohdolStudyBot")
 
+# 텔레그램 API는 토큰을 URL 경로에 담는데(`/bot<TOKEN>/getUpdates`), httpx는
+# 요청 URL을 그대로 INFO로 남긴다. 폴링이 몇 초마다 도므로 로그 파일이
+# 토큰 사본으로 채워지고, 그 파일을 누군가에게 보내는 순간 토큰이 함께 나간다.
+# 레벨을 올려 정상 요청 로그를 막는다.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+class RedactToken(logging.Filter):
+    """로그 문자열에 남은 봇 토큰을 가린다.
+
+    위의 레벨 조정이 정상 경로를 막지만, 예외 메시지나 다른 라이브러리를 통해
+    URL이 다시 새어 나올 수 있다. 마지막 방어선이라 레벨과 함께 둔다.
+    """
+
+    def filter(self, record):
+        token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+        if not token:
+            return True
+        if isinstance(record.msg, str) and token in record.msg:
+            record.msg = record.msg.replace(token, "<TOKEN>")
+        if record.args:
+            record.args = tuple(
+                arg.replace(token, "<TOKEN>") if isinstance(arg, str) else arg
+                for arg in record.args
+            )
+        return True
+
+
+# 로거가 아니라 핸들러에 붙인다. 로거에 붙이면 그 로거를 거치는 기록만 걸러지고,
+# 다른 라이브러리가 자기 로거로 남기는 것은 그대로 나간다.
+for _handler in logging.getLogger().handlers:
+    _handler.addFilter(RedactToken())
+
 
 def find_study_root():
     """`vault` 심링크를 가진 하네스 루트를 위로 올라가며 찾는다.
