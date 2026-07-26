@@ -25,7 +25,8 @@ false memory.
 8. Update `vault/index.md` as an entry point, not a listing. Follow
    `references/index-policy.md`: one hub note per topic, atomic notes reached
    through the hub, and recent-change lines capped because `log.md` is the record.
-9. Append one concise row or bullet to `vault/log.md`; never reorder or rewrite history.
+9. Add one concise row at the top of `vault/log.md` so the newest work reads
+   first; never change or remove an entry already written.
 10. Refresh `vault/hot.md` with only current focus, recent durable learning, open questions, and next actions. Keep it roughly 500 tokens or less.
 11. Verify frontmatter, links, source paths, evidence status, and that no raw file changed unexpectedly.
 12. When the note carries a diagram or an embedded asset, run the `diagram`
