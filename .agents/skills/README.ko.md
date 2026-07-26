@@ -104,6 +104,7 @@
 - **핵심 절차**: 기존 경로·심링크·충돌 관찰 → 지식 루트/개인·사내/sync 인터뷰 → create-if-missing bootstrap → Phase 2 도구 check/install → Phase 2b 소스 pin check/install → 심링크·기준 파일·Git 비추적 검증.
 - **완료 기준**: 기존 지식은 보존되고, 설치처 정보는 미추적 `REGISTRY.md`에만 있으며, 누락 도구와 실환경 미검증 항목이 명시된다.
 - **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치하며, 사용자의 상시 승인 결정에 따라 의존성 설치 및 빌드가 자동 진행된다. 전역 스킬·vault는 건드리지 않는다. hash 불일치·미충족 runtime·파싱 불가 pin·`python3` 부재는 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. 이동한 tag도 막지만 이는 변조 신호라 API 미도달 시에는 보고 후 진행한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
+- **선택적 로컬 자동화**: `examples/` 아래 레퍼런스 구현(`feed_scraper`, `telegram_bot`)을 안내만 하고 기본 설치하지 않는다. 요청이 있을 때만 `_workspace/`로 복사해 구성하며, 이 설치처가 실제로 돌리는 자동화는 `REGISTRY.md`에 기록한다. 피드 스크래퍼는 소스 카탈로그만 추적하고 어떤 소스를 켤지는 비추적 `sources.local.toml`이 정한다.
 
 ## study-video
 

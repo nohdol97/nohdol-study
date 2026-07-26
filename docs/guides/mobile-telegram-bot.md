@@ -11,7 +11,7 @@
        ↕ (비동기 CLI 호출: agy / gemini)
 [🤖 AI 모델 (Gemini 3.1 Pro / 2.5 Flash)]
        ↕ (노트 검색, 근거 대조, 작성 및 정합성 관리)
-[📁 지식 저장소 (`/Users/nohdol/.../Obsidian Vault`)]
+[📁 지식 저장소 (`vault/` 심링크가 가리키는 곳)]
        ↕ (Google Drive 실시간 동기화)
 [📱 스마트폰 (Obsidian 앱에서 방금 생성된 마크다운 노트 확인!)]
 ```

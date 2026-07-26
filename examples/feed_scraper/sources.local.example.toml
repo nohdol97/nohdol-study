@@ -1,0 +1,23 @@
+# 이 컴퓨터에서 수집할 소스 (설치별 설정)
+#
+# `scrape.py`의 SOURCES가 카탈로그이고, 이 파일이 선택입니다. 카탈로그에 있어도
+# 여기 적지 않으면 수집되지 않습니다. 컴퓨터마다 관심사가 다르므로 이 파일은
+# 추적되지 않습니다 — `sources.local.toml`이라는 이름으로 복사해 쓰세요.
+#
+#   cp sources.local.example.toml sources.local.toml
+#
+# 일평균은 2026-07-26 실측값입니다. 소스를 더할 때는 다시 재세요.
+
+enabled = [
+  # "geeknews",         # 점수 5P 게이트 + 요약·분류. GEMINI_API_KEY 필요
+  # "ieee-robotics",    # 일 0.4건. 로봇 전반, 편집 품질 높음
+  # "the-robot-report", # 일 3.7건. 산업·투자·물류 자동화
+  # "ros-discourse",    # 일 6.7건. ROS 실무 포럼, 질문과 잡담이 섞임
+  # "robohub",          # 일 0.4건. 걸러진 연구 소식
+  # "nvidia-robotics",  # 일 0.2건. 피지컬 AI 스택. 벤더 홍보가 섞임
+  # "huggingface-robotics", # 월 1~2건. LeRobot 릴리스 등. 제목 필터로 2.8%만 받음
+]
+
+# 하네스 루트는 보통 자동으로 찾습니다(위로 올라가며 `vault` 심링크를 가진
+# 디렉터리를 찾습니다). 표준 배치를 벗어난 곳에서 실행할 때만 적으세요.
+# study_root = "/Users/you/nohdol-study"

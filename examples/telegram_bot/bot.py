@@ -9,7 +9,7 @@ Environment Variables:
   TELEGRAM_BOT_TOKEN       : Required. Telegram Bot API token from @BotFather.
   TELEGRAM_ALLOWED_CHAT_ID : Optional but recommended. If set, only this chat ID can use the bot.
   STUDY_CLI_CMD            : CLI command to run (default: "agy", can be "gemini").
-  STUDY_ROOT               : Path to nohdol-study root (default: "/Users/nohdol/nohdol-study").
+  STUDY_ROOT               : Path to nohdol-study root. Found automatically when unset.
   STUDY_RUN_TIMEOUT        : Optional. Seconds before a run is abandoned (default: 1200).
 """
 
@@ -37,10 +37,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger("NohdolStudyBot")
 
+
+def find_study_root():
+    """`vault` 심링크를 가진 하네스 루트를 위로 올라가며 찾는다.
+
+    설치 경로를 이 파일에 적지 않기 위해서다. 하네스는 vault를 심링크로 걸어
+    두므로 그것을 찾으면 설치와 무관하게 루트를 얻는다. `examples/telegram_bot/`
+    에서든 `_workspace/telegram_bot/`에서든 같은 깊이라 그대로 동작한다.
+    """
+    path = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(5):
+        path = os.path.dirname(path)
+        if os.path.islink(os.path.join(path, "vault")):
+            return path
+    return ""
+
+
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 ALLOWED_CHAT_ID = os.environ.get("TELEGRAM_ALLOWED_CHAT_ID", "").strip()
 STUDY_CLI = os.environ.get("STUDY_CLI_CMD", "agy").strip()
-STUDY_ROOT = os.environ.get("STUDY_ROOT", "/Users/nohdol/nohdol-study").strip()
+STUDY_ROOT = (os.environ.get("STUDY_ROOT") or find_study_root()).strip()
 RUN_TIMEOUT = int(os.environ.get("STUDY_RUN_TIMEOUT", "1200"))
 
 # The status message is edited, never re-sent: editMessageText raises no
@@ -561,6 +577,15 @@ def main():
         logger.error("Error: TELEGRAM_BOT_TOKEN environment variable is not set.")
         print("🚨 오류: TELEGRAM_BOT_TOKEN 환경 변수가 설정되지 않았습니다.", file=sys.stderr)
         print("실행 방법: TELEGRAM_BOT_TOKEN='당신의_토큰' ./run_bot.sh", file=sys.stderr)
+        sys.exit(1)
+
+    # 루트를 못 찾으면 CLI를 빈 cwd로 띄우게 되고, 그 실패는 봇이 답을 못 하는
+    # 증상으로만 보여 원인을 찾기 어렵다. 여기서 멈추고 이유를 말한다.
+    if not STUDY_ROOT or not os.path.isdir(STUDY_ROOT):
+        logger.error("Study root not found: %r", STUDY_ROOT)
+        print("🚨 오류: 하네스 루트를 찾지 못했습니다.", file=sys.stderr)
+        print("  이 스크립트는 위로 올라가며 `vault` 심링크가 있는 디렉터리를 찾습니다.", file=sys.stderr)
+        print("  표준 배치를 벗어났다면 STUDY_ROOT 환경 변수로 지정하세요.", file=sys.stderr)
         sys.exit(1)
 
     print(f"🚀 nohdol-study 텔레그램 봇 시작 중... (CLI: {STUDY_CLI}, Root: {STUDY_ROOT})")

@@ -108,6 +108,22 @@ Adopting these skills as project skills is Phase 2b-B and 2b-D. Phase 2b-A ends
 once the verified trees are in place and `REGISTRY.md` records what was
 observed.
 
+Optional local automations live under `examples/` as reference implementations.
+Mention them, install none by default, and set one up only when the user asks:
+
+- `examples/feed_scraper/` — collects RSS sources into the vault. Which sources
+  run is a per-machine choice, so the catalogue is tracked in `scrape.py` while
+  the selection lives in an untracked `sources.local.toml`. Copy the directory
+  to `_workspace/feed_scraper/`, create the venv, copy
+  `sources.local.example.toml`, and enable only the sources this machine wants.
+  A source using the `geeknews` pipeline additionally needs a `.env` API key;
+  `feed` sources need none. See `docs/guides/feed-scraper.md`.
+- `examples/telegram_bot/` — mobile bridge. See
+  `docs/guides/mobile-telegram-bot.md`.
+
+Record in `REGISTRY.md` which automations this installation actually runs, since
+that differs per machine and nothing in the tracked harness can state it.
+
 ### 6. Verify
 
 Run:
