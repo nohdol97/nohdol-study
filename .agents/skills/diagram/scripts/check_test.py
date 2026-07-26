@@ -140,9 +140,72 @@ sequenceDiagram
 
     # A subgraph title needs no quotes for a space, an ampersand, a number, or
     # Korean text - only for a parenthesis.
-    for title in ["Client Layer", "Security & Guard Layer", "4. App Layer", "클라이언트 계층"]:
+    for title in ["Client Layer", "Security & Guard Layer", "4 · App Layer", "클라이언트 계층"]:
         result = run(str(write(root, "safe-sub.md", f"```mermaid\nflowchart LR\n  subgraph {title}\n    A[x]\n  end\n```\n")))
         assert result.returncode == 0, f"{title}: {result.stderr}"
+
+    # A label Mermaid parses but cannot render as markdown. Quoting does not
+    # help: the label text is handed to a markdown lexer either way, and the
+    # reader gets "Unsupported markdown: list" where the label should be.
+    # Every case here was confirmed against Obsidian's bundled markdown handler.
+    for label, kind in [("1. 루프 & 하네스", "list"), ("1) 루프", "list"),
+                        ("01. 루프", "list"), ("- 항목", "list"),
+                        ("* 항목", "list"), ("+ 항목", "list"),
+                        ("# 제목", "heading"), ("> 인용", "blockquote"),
+                        ("2026. 07. 26 기준", "list")]:
+        result = run(str(write(root, "md-label.md", f'```mermaid\nflowchart LR\n  A["{label}"] --> B[ok]\n```\n')))
+        assert result.returncode == 1, f"{label}: {result.stdout}"
+        assert f'"Unsupported markdown: {kind}"' in result.stderr, f"{label}: {result.stderr}"
+
+    # Written without quotes the label still fails, whichever rule sees it first.
+    result = run(str(write(root, "md-label-bare.md", "```mermaid\nflowchart LR\n  A[1. 루프] --> B[ok]\n```\n")))
+    assert result.returncode == 1
+    assert "Unsupported markdown: list" in result.stderr, result.stderr
+
+    # An edge label and a subgraph title go through the same renderer.
+    result = run(str(write(root, "md-edge.md", '```mermaid\nflowchart LR\n  A -->|"1. 전달"| B\n```\n')))
+    assert result.returncode == 1
+    assert "Unsupported markdown: list" in result.stderr, result.stderr
+
+    result = run(str(write(root, "md-sub.md", '```mermaid\nflowchart LR\n  subgraph L1["1. Hardware Layer"]\n    A[x]\n  end\n```\n')))
+    assert result.returncode == 1
+    assert "Unsupported markdown: list" in result.stderr, result.stderr
+
+    result = run(str(write(root, "md-sub-bare.md", "```mermaid\nflowchart LR\n  subgraph 1. Hardware Layer\n    A[x]\n  end\n```\n")))
+    assert result.returncode == 1
+    assert "Unsupported markdown: list" in result.stderr, result.stderr
+
+    # A line after <br/> starts a markdown block in the SVG-label renderer.
+    result = run(str(write(root, "md-break.md", '```mermaid\nflowchart LR\n  A["제목<br/>- 항목"] --> B[ok]\n```\n')))
+    assert result.returncode == 1
+    assert "Unsupported markdown: list" in result.stderr, result.stderr
+
+    # A markdown label treats \n as two characters, not a line break.
+    result = run(str(write(root, "md-newline.md", '```mermaid\nflowchart LR\n  A["창발성\\n임계점 돌파"] --> B[ok]\n```\n')))
+    assert result.returncode == 1
+    assert "holds a literal \\n" in result.stderr, result.stderr
+
+    result = run(str(write(root, "md-newline-ok.md", '```mermaid\nflowchart LR\n  A["창발성<br/>임계점 돌파"] --> B[ok]\n```\n')))
+    assert result.returncode == 0, result.stderr
+
+    # Text that carries no markdown meaning must not be reported: a numbered
+    # label written the safe way, a decimal, a leading arrow, a bare hyphen, a
+    # heading mark inside the text, and an underscore in an identifier.
+    for label in ["1 · 루프", "① 루프", "STEP 1: 루프", "3.5B 파라미터", "-1 오프셋",
+                  "->  다음 단계", "req #1029 검토", "a_b_c 식별자",
+                  "가중치 2 * 3", "구간 A - B"]:
+        result = run(str(write(root, "md-safe.md", f'```mermaid\nflowchart LR\n  A["{label}"] --> B[ok]\n```\n')))
+        assert result.returncode == 0, f"{label}: {result.stderr}"
+
+    # A style or click line carries strings that are never rendered as a label.
+    for statement in ['click A "https://example.com/a-b" _blank', "style A fill:#f9f"]:
+        result = run(str(write(root, "md-nonlabel.md", f"```mermaid\nflowchart LR\n  A[x] --> B[y]\n  {statement}\n```\n")))
+        assert result.returncode == 0, f"{statement}: {result.stderr}"
+
+    # The markdown rules belong to the node-shaped types. A sequenceDiagram
+    # message is drawn by a different code path that keeps \n as a line break.
+    result = run(str(write(root, "md-seq.md", "```mermaid\nsequenceDiagram\n  A->>B: 1. 준비\\n2. 실행\n```\n")))
+    assert result.returncode == 0, result.stderr
 
     # A sequenceDiagram takes a parenthesis unquoted, so the rule must not
     # reach it.

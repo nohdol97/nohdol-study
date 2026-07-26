@@ -36,6 +36,10 @@ render left empty. It also counts nodes and says when a diagram has outgrown
 Mermaid. That count is advice - the note still renders - but it is the signal
 to escalate rather than adding one more edge to a diagram already too dense.
 
+A label can fail twice over, and the two failures look nothing alike: the
+parser refuses the diagram, or the parser accepts it and the renderer prints
+something else. Both sections below are needed.
+
 The check is a pre-check, not a renderer. Mermaid's parser is JavaScript and
 this repository keeps its scripts dependency-free, so a file that passes may
 still fail to render. Look at the diagram in Obsidian before calling it done.
@@ -77,6 +81,40 @@ Two further mistakes cost a whole diagram:
 A `sequenceDiagram` does not share these rules: it takes a parenthesis
 unquoted in a participant or a message. The check applies them only where
 Mermaid does.
+
+## A flowchart label is markdown, so write it as prose
+
+Quoting makes a label parse. It does nothing to how the label is rendered,
+because Mermaid hands the text to a markdown lexer either way and supports
+only paragraph, text, `**bold**`, `*italic*`, and inline HTML. Anything else
+the lexer produces is thrown away, and the version Obsidian bundles puts the
+literal words `Unsupported markdown: list` in the box where the label was. The
+diagram parses, so no rule in the section above can see it.
+
+The trap is numbering, because a diagram of layers or phases invites it:
+
+```mermaid
+flowchart TB
+  subgraph L1["① Hardware Layer"]
+    GPU["GPU 노드<br/>NVLink 상호연결"]
+  end
+```
+
+- `1. ` and `1) ` and `01. ` are all ordered-list markers, so renumbering the
+  punctuation does not help. Write `①` or `1 · `. The backslash escape `1\. `
+  survives the HTML renderer and is dropped by the SVG one, so it is not a fix.
+- `- `, `* `, `+ ` at the front of a label are bullets; `# ` is a heading; `> `
+  is a blockquote; a label that is only `---` is a horizontal rule.
+- A backtick pair is inline code and a `[text](url)` is a link. Both vanish.
+- The rule applies to a node label, an edge label, and a `subgraph` title
+  alike - they all go through the same renderer.
+
+Break a line with `<br/>`, never `\n`. A markdown label renders `\n` as the two
+characters a backslash and an `n`; only the older non-markdown path ever turned
+it into a line break. `<br/>` is inline HTML, which both renderers accept.
+
+These are the node-shaped types only. A `sequenceDiagram` message is drawn by a
+different code path that still treats `\n` as a line break.
 
 ## Rendering to SVG
 

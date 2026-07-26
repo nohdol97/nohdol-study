@@ -31,7 +31,8 @@ false memory.
 11. Verify frontmatter, links, source paths, evidence status, and that no raw file changed unexpectedly.
 12. When the note carries a diagram or an embedded asset, run the `diagram`
     check on it before finishing. A broken diagram renders as
-    `Error parsing Mermaid diagram!` and the source still looks complete, so
+    `Error parsing Mermaid diagram!`, or prints `Unsupported markdown: list`
+    where a label should be, and the source still looks complete either way, so
     nothing else in this procedure catches it:
 
     ```sh
@@ -39,7 +40,8 @@ false memory.
     ```
 
     In a `flowchart` or `graph`, quote every node label, edge label, and
-    `subgraph` title - see the `diagram` skill for why bare labels fail.
+    `subgraph` title, start no label with `1. `, `- `, or `# `, and break lines
+    with `<br/>` rather than `\n` - see the `diagram` skill for why.
 
 ## Quality gates
 
