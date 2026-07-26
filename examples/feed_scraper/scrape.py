@@ -700,6 +700,74 @@ def save_to_markdown(posts, date_obj):
     print(f"Saved {len(posts)} posts to {filename}")
 
 
+def refresh_month_index(date_obj):
+    """그 달의 아카이브 인덱스를 폴더 목록에서 다시 만든다.
+
+    스크래퍼가 날짜 파일만 쓰고 인덱스를 손대지 않아, 새로 수집한 날이 그래프에서
+    고립됐다 - 실측에서 `2026-07-25`가 인바운드 0으로 고아 노트로 잡혔다. 다른
+    달은 일괄 정리 때 인덱스가 함께 만들어져 온전했으므로, 매일 새로 생기는
+    파일만 빠지는 구조였다.
+
+    한 줄을 덧붙이는 대신 목록 전체를 폴더에서 다시 만든다. 인덱스는 파일에서
+    재생산되는 파생물이므로 그래야 과거에 빠진 것도 함께 메워지고, 손으로 지운
+    줄이 조용히 남지도 않는다. 내용이 같으면 쓰지 않아 실행마다 mtime을
+    건드리지 않는다.
+    """
+    month = f"{date_obj.year}.{date_obj.month}"
+    folder = os.path.join(VAULT_DIR, month)
+    if not os.path.isdir(folder):
+        return
+
+    dates = sorted(
+        os.path.splitext(name)[0]
+        for name in os.listdir(folder)
+        if name.endswith(".md")
+    )
+    if not dates:
+        return
+
+    path = os.path.join(VAULT_DIR, f"{month} 인덱스.md")
+    today_str = kst_now().strftime('%Y-%m-%d')
+
+    # `created`는 처음 만든 날이므로 보존한다.
+    created = today_str
+    previous = ""
+    if os.path.exists(path):
+        with open(path, encoding='utf-8') as f:
+            previous = f.read()
+        found = re.search(r"^created: (\S+)", previous, re.M)
+        if found:
+            created = found.group(1)
+
+    listing = "\n".join(f"- [[{date}]]" for date in dates)
+    text = (
+        "---\n"
+        "type: index\n"
+        "status: evergreen\n"
+        f"created: {created}\n"
+        f"updated: {today_str}\n"
+        "tags:\n  - GeekNews\n  - Archive\n"
+        'related:\n  - "[[GeekNews 큐레이션 허브]]"\n'
+        "sources: []\n"
+        "---\n\n"
+        f"# 📰 GeekNews {month} 아카이브 인덱스\n\n"
+        "> [!NOTE]\n"
+        f"> {month} 월에 자동 수집된 GeekNews 일일 리포트 {len(dates)}개의"
+        " 전체 목차 및 링크 인덱스입니다.\n\n"
+        "## 일일 뉴스 리포트 목록\n\n"
+        f"{listing}\n"
+    )
+
+    # `updated` 한 줄만 다른 경우까지 새로 쓰면 인덱스가 매 실행 갱신된다.
+    if previous:
+        strip = lambda s: re.sub(r"^updated: .*$", "", s, count=1, flags=re.M)
+        if strip(previous) == strip(text):
+            return
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(text)
+    print(f"  {month} 인덱스 {len(dates)}건 갱신")
+
+
 def topic_note_header(name, today_str):
     """주제 문서를 처음 만들 때의 머리말.
 
@@ -954,6 +1022,9 @@ def run_geeknews():
     if posts:
         print("Filing into topic notes...")
         file_into_topics(posts, date_obj)
+    # 파일을 새로 쓰지 않은 실행에서도 부른다. 인덱스가 폴더와 어긋나 있을 수
+    # 있고, 같으면 아무것도 쓰지 않으므로 비용이 없다.
+    refresh_month_index(date_obj)
 
 
 if __name__ == "__main__":

@@ -140,6 +140,37 @@ def main():
         check("관련 없는 글은 빠진다", "tokenizer" in ftext, False)
         check("대소문자를 가리지 않는다", "LeRobot v1.0" in ftext, True)
 
+        # 월 인덱스 — 폴더에서 다시 만들어 고아 노트를 막는다.
+        print("\nrefresh_month_index")
+        import datetime
+        month_dir = os.path.join(m.VAULT_DIR, "2026.7")
+        os.makedirs(month_dir, exist_ok=True)
+        for day in ("2026-07-24", "2026-07-25"):
+            with open(os.path.join(month_dir, f"{day}.md"), "w",
+                      encoding="utf-8") as f:
+                f.write(f"# {day}\n")
+        index_path = os.path.join(m.VAULT_DIR, "2026.7 인덱스.md")
+        # 하루가 빠진 인덱스를 만들어 둔다. 실제로 이런 상태였다.
+        with open(index_path, "w", encoding="utf-8") as f:
+            f.write("---\ncreated: 2026-07-01\nupdated: 2026-07-01\n---\n\n"
+                    "# 📰 GeekNews 2026.7 아카이브 인덱스\n\n- [[2026-07-24]]\n")
+
+        m.refresh_month_index(datetime.datetime(2026, 7, 26))
+        index = open(index_path, encoding="utf-8").read()
+        check("빠졌던 날짜가 메워진다", "[[2026-07-25]]" in index, True)
+        check("기존 날짜도 남는다", "[[2026-07-24]]" in index, True)
+        check("개수 안내가 실제와 맞는다", "리포트 2개의" in index, True)
+        check("created는 보존된다", "created: 2026-07-01" in index, True)
+        check("허브를 related로 가리킨다",
+              '- "[[GeekNews 큐레이션 허브]]"' in index, True)
+
+        # 두 번째 호출은 아무것도 바꾸지 않아야 한다. 매 실행 mtime을 건드리면
+        # 파일 시각에 기대는 도구가 헛돌고 클라우드 sync도 매번 올린다.
+        before = os.stat(index_path).st_mtime_ns
+        m.refresh_month_index(datetime.datetime(2026, 7, 26))
+        check("내용이 같으면 다시 쓰지 않는다",
+              os.stat(index_path).st_mtime_ns, before)
+
         # 카탈로그가 파이프라인이 요구하는 항목을 갖췄는지. 소스를 더할 때
         # 키를 빠뜨리면 그 소스만 조용히 죽으므로 여기서 잡는다.
         print("\nSOURCES 카탈로그")
