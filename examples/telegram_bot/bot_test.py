@@ -8,6 +8,7 @@
 탐색만 확인한다 — 둘 다 실패해도 조용해서 눈으로는 알아채기 어려운 것들이다.
 """
 
+import ast
 import importlib.util
 import io
 import logging
@@ -110,6 +111,39 @@ def main():
               os.path.isdir(m.find_study_root()), True)
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
+
+    print("\n표면 표시")
+    # 이 봇은 승인 프롬프트를 끈 채로 CLI를 띄우므로, PreToolUse 가드가 유일한
+    # 게이트다. 표시가 빠지면 가드가 통째로 잠들고 증상은 아무 데도 안 보인다.
+    # 주석이나 문서 문구로는 통과할 수 없도록 실제 호출 인자를 본다.
+    with open(os.path.join(HERE, "bot.py"), encoding="utf-8") as handle:
+        tree = ast.parse(handle.read())
+
+    spawn_env = None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and getattr(node.func, "attr", "") == "create_subprocess_exec":
+            for keyword in node.keywords:
+                if keyword.arg == "env":
+                    spawn_env = keyword.value
+    check("CLI 실행에 env를 넘긴다", spawn_env is not None, True)
+    check("환경을 손대지 않고 그대로 넘기지 않는다", isinstance(spawn_env, ast.Name), True)
+
+    marks = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Subscript)
+            and getattr(target.slice, "value", None) == "STUDY_SURFACE"
+            for target in node.targets
+        )
+    ]
+    check("표면을 telegram으로 표시한다", [node.value.value for node in marks], ["telegram"])
+    check(
+        "표시한 환경을 그대로 CLI에 넘긴다",
+        getattr(spawn_env, "id", None),
+        marks[0].targets[0].value.id if marks else None,
+    )
 
     print()
     if failures:

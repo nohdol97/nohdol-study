@@ -32,6 +32,15 @@
    - 외부 텔레그램 메신저 특성상 누구나 봇에게 접근할 수 있는 위험을 방지하기 위해, 사용자 본인의 텔레그램 Chat ID(`TELEGRAM_ALLOWED_CHAT_ID`)를 설정한다.
    - 허용되지 않은 Chat ID에서 온 메시지는 **🚨 접근 권한이 없습니다** 안내와 함께 100% 차단된다.
 
+3. **도구 게이트 (PreToolUse Guard)**:
+   - 이 봇은 `--dangerously-skip-permissions`로 CLI를 띄운다. 키보드 앞에 사람이 없어 승인할 수 없기 때문인데, 그래서 **도구 호출을 막는 게이트가 하나도 없다.** 실제로 "문서화해줘" 한 마디가 `find ~ -maxdepth 3`으로 번져 `~/Library/Reminders`를 건드렸고, macOS가 "python3.11이 미리 알림에 접근하려고 합니다"를 띄웠다. 다이얼로그가 CLI가 아니라 봇을 지목한 이유는 TCC가 자식을 띄운 **책임 프로세스**에 권한 요청을 귀속시키기 때문이다.
+   - 그 자리를 `.agents/hooks/study-tool-guard.py`가 메운다. 봇이 주입하는 `STUDY_SURFACE=telegram`을 보고 깨어나며, 다른 세션에는 관여하지 않는다.
+     - 쓰기는 `vault/`·`_workspace/`·임시 디렉터리로 제한한다. 하네스 저장소 자체는 제외 — 추적 파일 변경은 `metaskill`과 사람이 있는 세션의 일이다.
+     - 홈 디렉터리 스윕, TCC 보호 폴더 접근, 개인정보 앱 AppleScript를 차단한다.
+     - `wiki/`에 새로 쓰는 노트는 note-writer 계약(프론트매터 8개 필드·`status`·`verification`·ISO 날짜·H1과 파일명 일치)을 만족해야 한다. 어긋나면 사유와 함께 `note-writer` 스킬로 돌려보낸다.
+   - **등록은 CLI마다 다르고 저장소에 추적되지 않는다.** 봇이 부르는 `agy`(Antigravity CLI)는 전역 `~/.gemini/config/hooks.json`만 읽는다 — 프로젝트 로컬 `.agents/hooks.json`은 1.1.7에서 로드되지 않았다. 등록 절차와 검증 명령은 `study-install` 스킬 6단계에 있다.
+   - 셸 명령은 패턴만으로 완전히 가둘 수 없다(`python3 -c "open(...)"` 같은 우회). 실질 방어선은 쓰기 도구의 경로 검사이며, 셸 검사는 실제로 관찰된 스윕과 리다이렉션을 잡는 보조선이다.
+
 ## 3. 빠른 세팅 및 실행 가이드 (5분 컷)
 
 ### 1단계: 텔레그램 봇 토큰 발급

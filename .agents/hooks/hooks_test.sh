@@ -134,4 +134,8 @@ rm "$test_root/knowledge/index.md"
 missing_index_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 printf '%s' "$missing_index_output" | grep -F 'missing index.md' >/dev/null
 
+# The PreToolUse guard is a Python hook with executable tests of its own.
+# Running them here keeps one command covering every hook in this directory.
+python3 "$source_dir/study-tool-guard_test.py" >/dev/null
+
 printf 'hook tests: PASS\n'

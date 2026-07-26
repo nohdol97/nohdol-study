@@ -469,6 +469,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logger.info(f"Executing for chat {chat_id}: {' '.join(cmd)}")
 
+    # Nobody is at a keyboard here, so the CLI runs with permission prompts
+    # off and nothing stands between a tool call and the filesystem. Marking
+    # the surface lets the PreToolUse guard (.agents/hooks/study-tool-guard.py)
+    # be that gate instead: writes stay inside the vault, the home directory is
+    # not swept, and curated notes must satisfy the note-writer contract.
+    run_env = os.environ.copy()
+    run_env["STUDY_SURFACE"] = "telegram"
+
     started = time.monotonic()
     try:
         process = await asyncio.create_subprocess_exec(
@@ -476,7 +484,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             cwd=STUDY_ROOT,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=os.environ.copy()
+            env=run_env
         )
     except Exception as e:
         await status_msg.edit_text(f"❌ *실행 중 오류 발생*:\n`{e}`", parse_mode="Markdown")

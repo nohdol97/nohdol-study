@@ -28,3 +28,4 @@
   - 4,000자 초과 대용량 응답의 안전한 코드 청크(Chunk) 분할 전송
   - 좌측 하단 `[Menu]` 버튼을 통한 스킬(`/skill`), 모델(`/model`), 추론 강도(`/effort`) 즉시 전환
   - `/skill`은 대화를 고정하고 싶은 스킬만 노출한다(`study-session`, `recall`, `paper-search`, `vault-gardening`). 나머지는 요청 문구로 자동 라우팅된다
+  - 승인 프롬프트 없이 도는 표면이므로 `STUDY_SURFACE=telegram`을 주입해 `.agents/hooks/study-tool-guard.py` 게이트를 켠다. 쓰기는 vault로 제한되고, 홈 디렉터리 스윕과 계약 없는 노트가 차단된다. **등록은 저장소가 아니라 CLI 전역 설정에서 하며**, 절차는 `study-install` 6단계에 있다
