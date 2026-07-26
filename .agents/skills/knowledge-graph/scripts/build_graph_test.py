@@ -54,6 +54,10 @@ related:
 
 See [[Beta|the second note]], [[Missing#Section]], and [[Beta]].
 
+| 항목 | 링크 |
+| :--- | :--- |
+| 표 안에서는 파이프를 이스케이프한다 | [[Beta\\|별칭]] |
+
 ```md
 [[Hidden]]
 ```
@@ -76,6 +80,11 @@ See [[Beta|the second note]], [[Missing#Section]], and [[Beta]].
     nodes = articles(graph)
     assert nodes["Alpha"]["links"] == ["Beta"]
     assert nodes["Alpha"]["missing_links"] == ["Missing"]
+    # A table escapes the alias pipe as `\|`. Obsidian still reads it as the
+    # alias separator, so the target is Beta - not `Beta\`, which would both
+    # lose the edge and invent a broken link out of a note that renders fine.
+    assert all(item["target"] != "Beta\\" for item in graph["missing_targets"])
+    assert "Beta\\" not in nodes["Alpha"]["missing_links"]
     assert nodes["Beta"]["backlinks"] == ["Alpha"]
     assert graph["missing_targets"] == [
         {"target": "Missing", "referenced_by": ["Alpha"]}

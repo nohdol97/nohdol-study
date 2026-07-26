@@ -151,15 +151,28 @@ def main() -> int:
     ]
     sections.append(("links pointing at nothing", broken))
 
-    # An orphan reachable from the index is filed, not lost, so only notes
-    # with neither a link nor a category are reported.
+    # What makes a note reachable is that something points AT it — a backlink,
+    # or a category in the index. Its own outgoing links say nothing about
+    # whether anyone can find it.
+    #
+    # The earlier check reported `graph["orphans"]`, which requires a note to
+    # have no links AND no backlinks. That let the worst case through: a note
+    # citing six others while nobody cites it is invisible in the vault yet
+    # counts as connected. One shipped exactly that way, reachable only from
+    # the index's "recent" list, which keeps five entries and drops the rest.
+    # Being listed there is not a category edge, so it is correctly not
+    # counted here.
     categorized = {
         edge["from"] for edge in graph["edges"] if edge["type"] == "categorized_under"
     }
-    sections.append((
-        "notes with no link and no category",
-        [title for title in graph["orphans"] if f"article:{title}" not in categorized],
-    ))
+    unreachable = sorted(
+        node["title"]
+        for node in graph["nodes"]
+        if node.get("type") == "article"
+        and not node.get("backlinks")
+        and node["id"] not in categorized
+    )
+    sections.append(("notes nothing points to", unreachable))
 
     sections.append(("frontmatter that breaks the note contract", check_frontmatter(graph)))
 

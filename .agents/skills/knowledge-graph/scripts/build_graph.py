@@ -118,7 +118,12 @@ def content_without_fences(body: str, strip_inline_code: bool = True) -> str:
 
 
 def normalized_target(raw: str) -> str:
-    target = raw.split("|", 1)[0].strip()
+    # Inside a Markdown table the alias pipe must be escaped - `[[Note\|alias]]` -
+    # because a bare `|` would end the cell. Obsidian still reads it as the alias
+    # separator, so splitting on the bare pipe leaves a trailing backslash: the
+    # edge is lost and the note is reported as a broken link while it renders
+    # perfectly. Unescape first, then split.
+    target = raw.replace("\\|", "|").split("|", 1)[0].strip()
     target = target.split("#", 1)[0].split("^", 1)[0].strip()
     # An asset embed carries no note body, so it is not an edge in a knowledge
     # graph and must not be reported as a link with no target.

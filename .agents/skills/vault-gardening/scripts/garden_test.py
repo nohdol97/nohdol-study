@@ -58,7 +58,7 @@ with tempfile.TemporaryDirectory() as temporary:
     assert not (vault / ".garden-graph.json").exists(), "the temporary graph was left behind"
 
     # A note the index groups is filed, not lost, even with no wikilinks.
-    assert "notes with no link and no category (0)" in result.stdout
+    assert "notes nothing points to (0)" in result.stdout
 
 with tempfile.TemporaryDirectory() as temporary:
     root = Path(temporary)
@@ -113,8 +113,12 @@ sources:
 
     # A link with no target is reported with who pointed at it.
     assert "Nowhere (referenced by Broken)" in out, out
-    # A note with neither a link nor a category is surfaced.
+    # A note nothing points to is surfaced.
     assert "- Bare" in out, out
+    # Broken sends a link out. That says nothing about whether anyone can find
+    # it, so it must be reported too — this is the case the old "no link and no
+    # category" rule let through.
+    assert "- Broken" in out, out
     # Contract violations are named per note and field.
     assert "status 'unusual' is not one of" in out
     assert "verification 'probably' is not a recognized state" in out
@@ -212,5 +216,37 @@ with tempfile.TemporaryDirectory() as temporary:
     result = run(root / "absent-vault")
     assert result.returncode == 2
     assert "wiki directory not found" in result.stderr
+
+# Reachability is decided by what points AT a note, and by nothing else. The
+# three notes below separate the ways that can happen.
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    vault = build(root)
+
+    def note(title: str, body: str) -> str:
+        return (
+            "---\ntype: concept\nstatus: seed\ncreated: 2026-07-01\n"
+            f"updated: 2026-07-01\nverification: source-backed\n---\n# {title}\n\n{body}\n"
+        )
+
+    # Cites two notes; nobody cites it, and the index does not file it.
+    (vault / "wiki" / "loud.md").write_text(
+        note("Loud", "Points at [[Quiet]] and [[Filed]]."), encoding="utf-8"
+    )
+    # Cites nobody, but Loud points at it.
+    (vault / "wiki" / "quiet.md").write_text(note("Quiet", "Body."), encoding="utf-8")
+    # Cited and filed under a topic.
+    (vault / "wiki" / "filed.md").write_text(note("Filed", "Body."), encoding="utf-8")
+    (vault / "index.md").write_text(
+        "# Index\n\n## Topics\n\n- Things\n  - [[Filed]]\n", encoding="utf-8"
+    )
+
+    out = run(vault).stdout
+    section = out.split("notes nothing points to")[1].split("##")[0]
+    assert "- Loud" in section, section
+    # An inbound link is enough; a category is not required.
+    assert "- Quiet" not in section, section
+    # A category is enough; an inbound link is not required.
+    assert "- Filed" not in section, section
 
 print("vault gardening tests: PASS")

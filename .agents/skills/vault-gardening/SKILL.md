@@ -1,6 +1,6 @@
 ---
 name: vault-gardening
-description: Report what has drifted in the knowledge root - links pointing at nothing, notes with no link and no category, frontmatter that breaks the note contract, cited sources missing from raw/, a session cache over budget, and an index that has grown into a listing. Use for vault 점검, 지식 정리, 깨진 링크 찾기, 고아 노트, 인덱스 비대화, 노트 상태 점검, and periodic upkeep of the notes. Do NOT use it to add links or edit notes automatically, and do NOT treat an empty report as evidence that the knowledge is correct.
+description: Report what has drifted in the knowledge root - links pointing at nothing, notes nothing points to, frontmatter that breaks the note contract, cited sources missing from raw/, a session cache over budget, and an index that has grown into a listing. Use for vault 점검, 지식 정리, 깨진 링크 찾기, 고아 노트, 인덱스 비대화, 노트 상태 점검, and periodic upkeep of the notes. Do NOT use it to add links or edit notes automatically, and do NOT treat an empty report as evidence that the knowledge is correct.
 ---
 
 # vault-gardening — Find the drift, decide by hand
@@ -22,7 +22,12 @@ It reports and never edits. Five sections:
 
 - **links pointing at nothing** — with who pointed at them, so the fix is
   either the link or the missing note, decided per case.
-- **notes with no link and no category** — a note the index groups is filed,
+- **notes nothing points to** — reachability is decided by what points AT a
+  note: a backlink, or a category in the index. A note's own outgoing links do
+  not make it findable, so a note citing six others while nobody cites it is
+  reported. Being listed in the index's "recent" section does not count either;
+  that list keeps a handful of entries and drops the rest. A note the index
+  groups under a topic is filed,
   not lost, so only the genuinely unreachable are listed.
 - **frontmatter that breaks the note contract** — missing required fields,
   a status or verification state outside the contract, a non-ISO date, an
