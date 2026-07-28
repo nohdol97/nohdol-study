@@ -10,8 +10,9 @@ diagrams nobody redraws, so the threshold is counted here instead.
 This is a pre-check, not a renderer. Mermaid's own parser is JavaScript and
 this repository keeps its scripts dependency-free, so what is checked is the
 set of mistakes that are decidable from the text: an unknown diagram type,
-unbalanced delimiters, and embedded assets that do not exist. A file that
-passes may still fail to render.
+unbalanced delimiters, labels Mermaid cannot parse or cannot render as
+markdown, and embedded assets that do not exist. A file that passes may still
+fail to render.
 
 Usage: check.py [--max-nodes N] PATH [PATH ...]
 """
@@ -44,6 +45,25 @@ NOT_NODES = {
     "subgraph", "end", "direction", "style", "classdef", "class", "click",
     "linkstyle", "tb", "td", "bt", "rl", "lr", "href", "call", "callback",
 }
+# Lines that begin with one of these are declarations, not edge statements, so
+# the two-words-where-one-id-belongs rule must not read them.
+STATEMENT_KEYWORDS = {
+    "subgraph", "end", "direction", "style", "classdef", "class", "click",
+    "linkstyle", "acctitle", "accdescr", "flowchart", "graph",
+}
+
+LABEL_OPENERS = "[({"
+LABEL_CLOSERS = "])}"
+# A token made only of link punctuation. `o` and `x` are arrowheads (`--o`,
+# `--x`) and never stand alone, so they count only beside real link characters.
+LINK_TOKEN = re.compile(r"^[-=.<>~&|ox]*[-=.<>~&|][-=.<>~&|ox]*$")
+# A link carrying its text between the delimiters: `A -. note .-> B`. Removing
+# it as a unit keeps the note's words from looking like a node id.
+INLINE_LINK_TEXT = re.compile(
+    r"(?:--|==|-\.)\s+[^-=|\n]+?\s+(?:-{2,}|={2,}|\.-+)[>ox]?"
+)
+QUOTED = re.compile(r'"[^"\n]*"')
+EDGE_LABEL = re.compile(r"\|[^|\n]*\|")
 
 DEFAULT_MAX_NODES = 15
 
@@ -127,6 +147,222 @@ def unbalanced(body: list[str]) -> list[str]:
     return problems
 
 
+def read_label(line: str, start: int, closers: str, found: list[tuple[str, bool]]) -> int:
+    """Read one label body from `start`, recording it as (text, quoted).
+
+    Returns the index just past the closing delimiter.
+    """
+    index = start
+    while index < len(line) and line[index] == " ":
+        index += 1
+    if index < len(line) and line[index] == '"':
+        # A quoted label may hold anything, including a parenthesis.
+        closing = line.find('"', index + 1)
+        if closing < 0:
+            found.append((line[index + 1:], True))
+            index = len(line)
+        else:
+            found.append((line[index + 1:closing], True))
+            index = closing + 1
+    else:
+        body = index
+        while index < len(line) and line[index] not in closers:
+            index += 1
+        found.append((line[body:index], False))
+    while index < len(line) and line[index] in closers:
+        index += 1
+    return index
+
+
+def scan_labels(line: str) -> list[tuple[str, bool]]:
+    """Return (text, quoted) for every node label, edge label, and bare string.
+
+    Mermaid accepts almost anything inside a label, but only while the label is
+    quoted. Unquoted, a parenthesis or a double quote ends the statement and the
+    whole diagram renders as an error block instead of a picture. The
+    parenthesis is balanced, so counting delimiters cannot see it: the label
+    text itself has to be read. Quoting fixes the parser, not the renderer, so
+    quoted labels are recorded too - the markdown rules below apply to both.
+    """
+    found: list[tuple[str, bool]] = []
+    index = 0
+    while index < len(line):
+        character = line[index]
+        if character == '"':
+            closing = line.find('"', index + 1)
+            if closing < 0:
+                found.append((line[index + 1:], True))
+                index = len(line)
+            else:
+                found.append((line[index + 1:closing], True))
+                index = closing + 1
+        elif character == "|":
+            index = read_label(line, index + 1, "|", found)
+        elif character in LABEL_OPENERS:
+            # Shapes stack their delimiters: [[ ]], [( )], (( )), {{ }}.
+            while index < len(line) and line[index] in LABEL_OPENERS:
+                index += 1
+            index = read_label(line, index, LABEL_CLOSERS, found)
+        else:
+            index += 1
+    return found
+
+
+def unquoted_labels(line: str) -> list[str]:
+    """Return the text of every label on the line that is written unquoted."""
+    return [text for text, quoted in scan_labels(line) if not quoted]
+
+
+# Mermaid renders a flowchart label as markdown, and its markdown handler
+# supports only paragraph, text, strong, em, html, and escape. Anything else
+# the lexer produces is replaced - in the version Obsidian bundles, by the
+# literal text `Unsupported markdown: <type>`, which is what the reader sees
+# instead of the label. The diagram parses, so no delimiter or label rule above
+# can see it. Each pattern below was confirmed against Obsidian's own bundled
+# `markdownToHTML` driven by `marked`.
+MARKDOWN_LABEL_RULES = (
+    (re.compile(r"^\d{1,9}[.)](\s|$)"), "list",
+     "starts with an ordered-list marker - write '①' or '1 ·' instead; "
+     "'1)' is a list marker too, and the backslash escape '1\\.' is dropped "
+     "by the other label renderer"),
+    (re.compile(r"^[-*+](\s|$)"), "list",
+     "starts with a bullet-list marker - drop it or write '·'"),
+    (re.compile(r"^#{1,6}(\s|$)"), "heading",
+     "starts with a heading marker - drop the '#' or move it off the front"),
+    (re.compile(r"^>"), "blockquote",
+     "starts with a blockquote marker - write '&gt;' or move it off the front"),
+    (re.compile(r"^(?:-{3,}|\*{3,}|_{3,})$"), "hr",
+     "is a horizontal rule - use a different separator"),
+    (re.compile(r"`[^`]*`"), "codespan",
+     "holds a backtick pair - drop the backticks"),
+    (re.compile(r"!?\[[^\]]*\]\([^)]*\)"), "link",
+     "holds a markdown link - write the text and the target separately"),
+)
+# A markdown label breaks its lines on <br/>, not on a literal \n.
+LINE_BREAK = re.compile(r"<br\s*/?>")
+# Lines whose quoted strings are not rendered as a label.
+NOT_LABEL_STATEMENTS = {"style", "classdef", "class", "click", "linkstyle"}
+
+
+def markdown_label_problems(offset: int, line: str) -> list[str]:
+    """Report label text Mermaid parses but cannot render as markdown.
+
+    Quoting is what makes a label parse; it does nothing here, because the
+    label text is handed to a markdown lexer either way. A label reading
+    `1. Hardware Layer` becomes an ordered list, and the list is dropped.
+    """
+    problems: list[str] = []
+    first = line.strip().split()[0].lower().rstrip(":;") if line.strip() else ""
+    if first in NOT_LABEL_STATEMENTS:
+        return problems
+
+    texts = [text for text, _ in scan_labels(line)]
+    if first == "subgraph":
+        # `subgraph 1. Hardware Layer` carries its title with no delimiters, so
+        # the label scanner never sees it.
+        title = line.strip()[len("subgraph"):].strip()
+        if title and "[" not in title and '"' not in title:
+            texts.append(title)
+
+    for text in texts:
+        if "\\n" in text:
+            problems.append(
+                f"line {offset + 1}: label {text.strip()!r} holds a literal "
+                "\\n - a markdown label renders it as two characters; "
+                "use <br/> for the line break"
+            )
+        # The renderer that keeps HTML labels breaks a markdown block only at
+        # the front of the label; the one that draws SVG text breaks it at
+        # every <br/>. Checking each segment covers both.
+        for segment in LINE_BREAK.split(text):
+            segment = segment.strip()
+            if not segment:
+                continue
+            for pattern, kind, advice in MARKDOWN_LABEL_RULES:
+                if pattern.search(segment):
+                    problems.append(
+                        f"line {offset + 1}: label {segment!r} {advice} - "
+                        f'Mermaid renders "Unsupported markdown: {kind}" '
+                        "in place of the label"
+                    )
+                    break
+    return problems
+
+
+def spaced_reference(line: str) -> bool:
+    """True when two words sit where one node id belongs.
+
+    Writing `subgraph One Layer` and then `One Layer --> Two Layer` reads well
+    but is not Mermaid: a subgraph title is not an id, and an id holds no space.
+    """
+    text = QUOTED.sub(" ", line)
+    text = EDGE_LABEL.sub(" | ", text)
+    text = strip_labels(text)
+    text = INLINE_LINK_TEXT.sub(" --> ", text)
+    after_word = False
+    for token in text.split():
+        if LINK_TOKEN.match(token):
+            after_word = False
+            continue
+        # `A[x]:::cls` attaches a class to the id before it. Removing the label
+        # leaves the suffix standing alone, so it is not a second id.
+        if token.startswith(":::"):
+            continue
+        if after_word:
+            return True
+        after_word = True
+    return False
+
+
+def label_problems(body: list[str]) -> list[str]:
+    """Report the flowchart mistakes that a delimiter count cannot see."""
+    problems: list[str] = []
+    opened = 0
+    closed = 0
+    for offset, line in enumerate(body):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("%%"):
+            continue
+        first = stripped.split()[0].lower().rstrip(":;")
+        if first == "subgraph":
+            opened += 1
+            title = QUOTED.sub(" ", stripped[len("subgraph"):])
+            if "(" in title or ")" in title:
+                problems.append(
+                    f"line {offset + 1}: subgraph title holds a parenthesis "
+                    'while unquoted - write subgraph ID["title (detail)"]'
+                )
+        elif stripped.lower() == "end":
+            closed += 1
+
+        for label in unquoted_labels(line):
+            if "(" in label or ")" in label:
+                problems.append(
+                    f"line {offset + 1}: unquoted label {label.strip()!r} holds "
+                    'a parenthesis - quote it as ["...(...)..."]'
+                )
+            elif '"' in label:
+                problems.append(
+                    f"line {offset + 1}: unquoted label {label.strip()!r} holds "
+                    "a double quote - quote the whole label instead"
+                )
+
+        problems.extend(markdown_label_problems(offset, line))
+
+        if first not in STATEMENT_KEYWORDS and spaced_reference(line):
+            problems.append(
+                f"line {offset + 1}: {stripped!r} uses a node id containing a "
+                "space - reference the id, not a title"
+            )
+
+    if opened != closed:
+        problems.append(
+            f"{opened} subgraph and {closed} end: every subgraph needs its own "
+            "end on a line of its own"
+        )
+    return problems
+
+
 def check_markdown(
     path: Path, max_nodes: int, problems: list[str], advice: list[str]
 ) -> int:
@@ -154,6 +390,10 @@ def check_markdown(
         for problem in unbalanced(body):
             problems.append(f"{path}:{start}: {problem}")
         if kind in NODE_SHAPED:
+            # Only the node-shaped types restrict labels this way; a
+            # sequenceDiagram takes a parenthesis unquoted without complaint.
+            for problem in label_problems(body):
+                problems.append(f"{path}:{start}: {problem}")
             nodes = count_nodes(body[1:] if body and body[0].strip() else body)
             if nodes > max_nodes:
                 advice.append(

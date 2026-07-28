@@ -51,6 +51,11 @@ Explain one concept or claim in the user's working language.
 
 ## Field rules
 
+The H1 must match the filename exactly. A title containing `/` cannot, because
+the filesystem reads it as a path separator: write the filename, H1, and every
+`[[wikilink]]` with a space instead (`Redis Pub Sub와 Streams 메시징`) and state
+the real spelling in the first line of the body.
+
 - `type`: one lowercase label. Prefer `concept`, `claim`, `method`, `topic`, `source`, or `question`; introduce another stable label only when these are misleading.
 - `status`: `seed` for a first useful capture, `developing` for connected but incomplete understanding, `mature` for well-supported coverage, `evergreen` for stable and maintained knowledge.
 - `created`: never change after creation.

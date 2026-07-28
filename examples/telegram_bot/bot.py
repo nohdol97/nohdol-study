@@ -9,15 +9,19 @@ Environment Variables:
   TELEGRAM_BOT_TOKEN       : Required. Telegram Bot API token from @BotFather.
   TELEGRAM_ALLOWED_CHAT_ID : Optional but recommended. If set, only this chat ID can use the bot.
   STUDY_CLI_CMD            : CLI command to run (default: "agy", can be "gemini").
-  STUDY_ROOT               : Path to nohdol-study root (default: "/Users/nohdol/nohdol-study").
+  STUDY_ROOT               : Path to nohdol-study root. Found automatically when unset.
+  STUDY_RUN_TIMEOUT        : Optional. Seconds before a run is abandoned (default: 1200).
 """
 
 import os
 import sys
 import re
+import json
+import time
 import asyncio
 import logging
 import subprocess
+from pathlib import Path
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand, MessageEntity
 from telegram.ext import (
     Application,
@@ -33,17 +37,121 @@ logging.basicConfig(
 )
 logger = logging.getLogger("NohdolStudyBot")
 
+# 텔레그램 API는 토큰을 URL 경로에 담는데(`/bot<TOKEN>/getUpdates`), httpx는
+# 요청 URL을 그대로 INFO로 남긴다. 폴링이 몇 초마다 도므로 로그 파일이
+# 토큰 사본으로 채워지고, 그 파일을 누군가에게 보내는 순간 토큰이 함께 나간다.
+# 레벨을 올려 정상 요청 로그를 막는다.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+class RedactToken(logging.Filter):
+    """로그 문자열에 남은 봇 토큰을 가린다.
+
+    위의 레벨 조정이 정상 경로를 막지만, 예외 메시지나 다른 라이브러리를 통해
+    URL이 다시 새어 나올 수 있다. 마지막 방어선이라 레벨과 함께 둔다.
+    """
+
+    def filter(self, record):
+        token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+        if not token:
+            return True
+        if isinstance(record.msg, str) and token in record.msg:
+            record.msg = record.msg.replace(token, "<TOKEN>")
+        if record.args:
+            record.args = tuple(
+                arg.replace(token, "<TOKEN>") if isinstance(arg, str) else arg
+                for arg in record.args
+            )
+        return True
+
+
+# 로거가 아니라 핸들러에 붙인다. 로거에 붙이면 그 로거를 거치는 기록만 걸러지고,
+# 다른 라이브러리가 자기 로거로 남기는 것은 그대로 나간다.
+for _handler in logging.getLogger().handlers:
+    _handler.addFilter(RedactToken())
+
+
+def find_study_root():
+    """`vault` 심링크를 가진 하네스 루트를 위로 올라가며 찾는다.
+
+    설치 경로를 이 파일에 적지 않기 위해서다. 하네스는 vault를 심링크로 걸어
+    두므로 그것을 찾으면 설치와 무관하게 루트를 얻는다. `examples/telegram_bot/`
+    에서든 `_workspace/telegram_bot/`에서든 같은 깊이라 그대로 동작한다.
+    """
+    path = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(5):
+        path = os.path.dirname(path)
+        if os.path.islink(os.path.join(path, "vault")):
+            return path
+    return ""
+
+
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 ALLOWED_CHAT_ID = os.environ.get("TELEGRAM_ALLOWED_CHAT_ID", "").strip()
 STUDY_CLI = os.environ.get("STUDY_CLI_CMD", "agy").strip()
-STUDY_ROOT = os.environ.get("STUDY_ROOT", "/Users/nohdol/nohdol-study").strip()
+STUDY_ROOT = (os.environ.get("STUDY_ROOT") or find_study_root()).strip()
+RUN_TIMEOUT = int(os.environ.get("STUDY_RUN_TIMEOUT", "1200"))
+
+# The status message is edited, never re-sent: editMessageText raises no
+# notification, so a long run stays visible without buzzing the phone. The
+# floor keeps a multi-minute run well under Telegram's edit rate limit.
+PROGRESS_INTERVAL = 5
+# Telegram clears a chat action after ~5s, so it needs refreshing or the
+# typing indicator disappears while the CLI is still working.
+CHAT_ACTION_INTERVAL = 4
+
+# launchd restarts this bot on its own (KeepAlive), and an in-memory mode was
+# lost silently: the user kept answering a Socratic session that had already
+# reverted to plain chat. The CLI conversation itself survives via --continue,
+# so only these selections need persisting.
+STATE_FILE = Path(__file__).resolve().parent / "bot_state.json"
 
 # Per-chat session state
 user_fresh_session = {}
 user_current_model = {}      # e.g., {chat_id: "gemini-3.1-pro-preview"}
 user_current_effort = {}     # e.g., {chat_id: "high"}
 user_current_skill = {}      # e.g., {chat_id: "study-session"}
-user_current_understand = {} # e.g., {chat_id: "understand-explain"}
+running_processes = {}       # e.g., {chat_id: asyncio subprocess}
+
+
+def save_state():
+    try:
+        STATE_FILE.write_text(json.dumps({
+            "model": {str(k): v for k, v in user_current_model.items()},
+            "effort": {str(k): v for k, v in user_current_effort.items()},
+            "skill": {str(k): v for k, v in user_current_skill.items()},
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError as exc:
+        logger.warning(f"Could not persist bot state: {exc}")
+
+
+def load_state() -> dict:
+    """Restore selections and report which chats had a skill active."""
+    if not STATE_FILE.is_file():
+        return {}
+    try:
+        data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        logger.warning(f"Ignoring unreadable bot state: {exc}")
+        return {}
+    for key, target in (
+        ("model", user_current_model),
+        ("effort", user_current_effort),
+        ("skill", user_current_skill),
+    ):
+        for chat_id, value in (data.get(key) or {}).items():
+            try:
+                target[int(chat_id)] = value
+            except ValueError:
+                continue
+    return {chat: skill for chat, skill in user_current_skill.items()}
+
+
+def format_elapsed(seconds: float) -> str:
+    total = int(seconds)
+    if total < 60:
+        return f"{total}초"
+    return f"{total // 60}분 {total % 60}초"
 
 # Human readable model aliases
 MODEL_ALIASES = {
@@ -68,10 +176,10 @@ async def unauthorized_reply(update: Update):
     )
 
 async def post_init(application: Application):
-    """Register Telegram [Menu] commands automatically on startup."""
+    """Register [Menu] commands and restore selections from the last run."""
     commands = [
-        BotCommand("skill", "🧩 공부 스킬 선택 (소크라테스 문답, 복습, 노트화)"),
-        BotCommand("understand", "🔬 Understand 심층 분석 (구조, 위치, 설명)"),
+        BotCommand("skill", "🧩 공부 스킬 선택 (문답, 복습, 논문, vault 점검)"),
+        BotCommand("cancel", "⏹ 실행 중인 작업 취소"),
         BotCommand("status", "⚙️ 로컬 하네스 및 현재 모델/스킬 상태 확인"),
         BotCommand("model", "🤖 AI 모델 선택 (Pro ↔ Flash 버튼)"),
         BotCommand("effort", "🧠 추론 강도 선택 (High/Med/Low 버튼)"),
@@ -80,6 +188,22 @@ async def post_init(application: Application):
     ]
     await application.bot.set_my_commands(commands)
     logger.info("Telegram [Menu] commands registered successfully.")
+
+    # launchd revives this process on its own. Silently dropping an active
+    # mode is the failure worth avoiding: the user keeps answering a Socratic
+    # session that already reverted to plain chat.
+    restored = load_state()
+    for chat_id, skill in restored.items():
+        logger.info(f"Restored skill for chat {chat_id}: {skill}")
+        try:
+            await application.bot.send_message(
+                chat_id,
+                f"♻️ 봇이 재시작되었습니다.\n\n🧩 활성 스킬 *`{skill}`* 을 복원했습니다. "
+                f"대화 이력은 CLI 쪽에 남아 있으므로 그대로 이어가시면 됩니다.",
+                parse_mode="Markdown",
+            )
+        except Exception as exc:
+            logger.warning(f"Could not notify chat {chat_id} about restart: {exc}")
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -93,7 +217,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"• *Chat ID*: `{chat_id}`\n"
         f"• *CLI 엔진*: `{STUDY_CLI}`\n"
         f"• *스터디 하네스*: `{STUDY_ROOT}`\n\n"
-        f"📌 화면 좌측 하단의 *[Menu] (메뉴)* 버튼을 누르시면 모델 선택뿐만 아니라 */skill* 및 */understand* 명령어로 원하는 전문 AI 스킬을 버튼 원클릭으로 활성화할 수 있습니다!\n\n"
+        f"📌 화면 좌측 하단의 *[Menu] (메뉴)* 버튼을 누르시면 모델 선택과 */skill* 명령어로 명시적으로 켜야 하는 스킬을 원클릭으로 활성화할 수 있습니다!\n\n"
         f"이제 편하게 질문하거나 학습할 내용을 입력해 보세요!",
         parse_mode="Markdown"
     )
@@ -107,8 +231,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📚 *도움말 및 사용 가이드*\n\n"
         "이 봇은 메시지를 보낼 때마다 Mac의 `nohdol-study` 하네스에서 AI를 백그라운드로 실행합니다.\n\n"
         "✨ *핵심 버튼 메뉴 활용법*:\n"
-        "• */skill* : 소크라테스식 문답(`study-session`), 복습 플래시카드(`recall`), 원자적 노트 저장(`note-writer`), 지식 그래프 점검(`knowledge-graph`) 중 원하는 모드를 터치로 켜고 끄기\n"
-        "• */understand* : Understand Anything의 아키텍처 파악, 기능 위치 탐색, 개념 심층 설명, 온보딩 학습 가이드를 터치로 선택\n\n"
+        "• */skill* : 소크라테스식 문답(`study-session`), 복습 플래시카드(`recall`), 논문 탐색(`paper-search`), vault 점검(`vault-gardening`) 중 원하는 모드를 터치로 켜고 끄기\n"
+        "• 노트화·지식 그래프·자료 수집 등 나머지 스킬은 *그냥 말하면 자동으로 선택*됩니다. \"기록해\", \"깨진 링크 찾아줘\"처럼 하고 싶은 것을 쓰세요\n\n"
+        "⏳ *오래 걸리는 작업*: 진행 중에는 경과 시간이 5초마다 갱신됩니다(알림은 오지 않습니다). "
+        "멈추고 싶으면 메시지의 *[⏹ 취소]* 버튼이나 */cancel* 을 쓰세요. 응답이 없으면 자동으로 중단됩니다.\n\n"
+        "♻️ 모델·강도·스킬 선택은 저장되어 봇이 재시작되어도 유지됩니다.\n\n"
         "🎯 좌측 하단 *[Menu]* 버튼을 통해 모델 변경, 추론 강도 변경, 대화 초기화를 직관적으로 진행할 수 있습니다.",
         parse_mode="Markdown"
     )
@@ -124,8 +251,8 @@ async def skill_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🧠 소크라테스 문답 학습 (study-session)", callback_data="skill|study-session")],
         [InlineKeyboardButton("🃏 복습 플래시카드 퀴즈 (recall)", callback_data="skill|recall")],
-        [InlineKeyboardButton("📝 원자적 노트 보존 저장 (note-writer)", callback_data="skill|note-writer")],
-        [InlineKeyboardButton("🕸️ 지식 그래프 및 고아 노트 점검 (knowledge-graph)", callback_data="skill|knowledge-graph")],
+        [InlineKeyboardButton("📄 논문 탐색·검증 (paper-search)", callback_data="skill|paper-search")],
+        [InlineKeyboardButton("🌿 vault 드리프트 점검 (vault-gardening)", callback_data="skill|vault-gardening")],
         [InlineKeyboardButton("🔄 스킬 해제 (일반 자유 대화로 복귀)", callback_data="skill|reset")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -134,32 +261,6 @@ async def skill_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🧩 *핵심 공부 스킬 선택 메뉴*\n\n"
         f"• *현재 활성 스킬*: `{curr_skill}`\n\n"
         f"원하시는 스킬을 선택하면 다음 메시지부터 해당 스킬 규칙이 우선 적용됩니다:",
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
-    )
-
-async def understand_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_authorized(update):
-        await unauthorized_reply(update)
-        return
-
-    chat_id = update.effective_chat.id
-    curr_mode = user_current_understand.get(chat_id, "없음 (기본값)")
-
-    keyboard = [
-        [InlineKeyboardButton("🔍 구조/아키텍처 파악 (understand)", callback_data="under|understand")],
-        [InlineKeyboardButton("💬 기능/코드 위치 찾기 (-chat)", callback_data="under|understand-chat")],
-        [InlineKeyboardButton("📖 개념/흐름 깊이 설명 (-explain)", callback_data="under|understand-explain")],
-        [InlineKeyboardButton("🗺️ 온보딩 학습 가이드 (-onboard)", callback_data="under|understand-onboard")],
-        [InlineKeyboardButton("🕸️ 지식 베이스 분석 (-knowledge)", callback_data="under|understand-knowledge")],
-        [InlineKeyboardButton("❌ Understand 모드 해제", callback_data="under|reset")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await update.message.reply_text(
-        f"🔬 *Understand Anything 심층 분석 모드 선택*\n\n"
-        f"• *현재 활성 모드*: `{curr_mode}`\n\n"
-        f"원하시는 분석 모드를 선택하세요:",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
@@ -229,12 +330,14 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             model_id, desc = MODEL_ALIASES[choice]
             user_current_model[chat_id] = model_id
             await query.edit_message_text(f"✅ AI 모델이 변경되었습니다!\n\n🤖 *{desc}*\n(`{model_id}`)", parse_mode="Markdown")
+        save_state()
 
     elif data.startswith("effort|"):
         choice = data.split("|")[1]
         if choice in ["low", "medium", "high"]:
             user_current_effort[chat_id] = choice
             await query.edit_message_text(f"✅ 추론 강도가 변경되었습니다!\n\n🧠 *`{choice.upper()}`*", parse_mode="Markdown")
+            save_state()
 
     elif data.startswith("skill|"):
         choice = data.split("|")[1]
@@ -243,18 +346,33 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text("✅ 활성 스킬을 해제하고 *일반 자유 대화 모드*로 복귀했습니다.", parse_mode="Markdown")
         else:
             user_current_skill[chat_id] = choice
-            user_current_understand.pop(chat_id, None)  # 상호 배타적 적용
             await query.edit_message_text(f"✅ 스킬이 활성화되었습니다!\n\n🧩 *`{choice}`*\n\n이제 질문이나 학습할 내용을 입력하시면 해당 스킬을 우선 적용하여 답변합니다.", parse_mode="Markdown")
+        save_state()
 
-    elif data.startswith("under|"):
-        choice = data.split("|")[1]
-        if choice == "reset":
-            user_current_understand.pop(chat_id, None)
-            await query.edit_message_text("✅ Understand 분석 모드를 해제했습니다.", parse_mode="Markdown")
-        else:
-            user_current_understand[chat_id] = choice
-            user_current_skill.pop(chat_id, None)  # 상호 배타적 적용
-            await query.edit_message_text(f"✅ Understand 분석 모드가 활성화되었습니다!\n\n🔬 *`{choice}`*\n\n분석할 대상(개념, 파일, 기능)이나 질문을 입력해 주세요.", parse_mode="Markdown")
+    elif data == "run|cancel":
+        stop_running(chat_id)
+
+
+def stop_running(chat_id) -> bool:
+    """Kill this chat's run, if any. The run loop reports the cancellation."""
+    process = running_processes.get(chat_id)
+    if process is None or process.returncode is not None:
+        return False
+    try:
+        process._study_cancelled = True
+        process.kill()
+    except ProcessLookupError:
+        return False
+    return True
+
+
+async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_authorized(update):
+        await unauthorized_reply(update)
+        return
+    if not stop_running(update.effective_chat.id):
+        await update.message.reply_text("ℹ️ 지금 실행 중인 작업이 없습니다.")
+
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_authorized(update):
@@ -274,14 +392,13 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     curr_model = user_current_model.get(chat_id, "Gemini 3.1 Pro (기본값)")
     curr_effort = user_current_effort.get(chat_id, "high (기본값)")
     curr_skill = user_current_skill.get(chat_id, "일반 (해제됨)")
-    curr_under = user_current_understand.get(chat_id, "없음 (해제됨)")
 
     await update.message.reply_text(
         f"⚙️ *로컬 스터디 하네스 및 챗봇 상태*\n\n"
         f"🤖 *AI 모델*: `{curr_model}`\n"
         f"🧠 *추론 강도*: `{curr_effort}`\n"
         f"🧩 *활성 스킬*: `{curr_skill}`\n"
-        f"🔬 *Understand 모드*: `{curr_under}`\n"
+        f"⏳ *실행 중인 작업*: `{'있음 (/cancel 로 중단)' if running_processes.get(chat_id) is not None and running_processes[chat_id].returncode is None else '없음'}`\n"
         f"📁 *Vault 연결*: `{vault_link}`\n"
         f"🔧 *CLI 엔진*: `{STUDY_CLI}`\n"
         f"🌱 *Git 상태*: {git_msg}\n",
@@ -312,7 +429,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     chat_id = update.effective_chat.id
     await update.message.reply_chat_action(action="typing")
-    
+
+    previous = running_processes.get(chat_id)
+    if previous is not None and previous.returncode is None:
+        await update.message.reply_text(
+            "⚠️ 앞선 작업이 아직 실행 중입니다. 둘이 같은 세션 이력을 함께 쓰므로 "
+            "답변이 섞일 수 있습니다. 앞 작업을 멈추려면 /cancel 을 보내세요."
+        )
+
     status_msg = await update.message.reply_text("⏳ *생각 중...* (Mac에서 스터디 하네스 구동 중)", parse_mode="Markdown")
 
     is_fresh = user_fresh_session.pop(chat_id, False)
@@ -322,14 +446,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     model_pref = user_current_model.get(chat_id)
     effort_pref = user_current_effort.get(chat_id)
     active_skill = user_current_skill.get(chat_id)
-    active_under = user_current_understand.get(chat_id)
 
     # 문자열 프롬프트 접두사에 활성 스킬/모드 명시적 주입
     prompt_text = user_text
     if active_skill:
         prompt_text = f"[{active_skill} 스킬 활성화 및 규칙 우선 적용] {user_text}"
-    elif active_under:
-        prompt_text = f"[{active_under} 스킬 모드 활성화 및 규칙 우선 적용] {user_text}"
 
     if "gemini" in STUDY_CLI.lower():
         if not is_fresh:
@@ -348,20 +469,79 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logger.info(f"Executing for chat {chat_id}: {' '.join(cmd)}")
 
+    # Nobody is at a keyboard here, so the CLI runs with permission prompts
+    # off and nothing stands between a tool call and the filesystem. Marking
+    # the surface lets the PreToolUse guard (.agents/hooks/study-tool-guard.py)
+    # be that gate instead: writes stay inside the vault, the home directory is
+    # not swept, and curated notes must satisfy the note-writer contract.
+    run_env = os.environ.copy()
+    run_env["STUDY_SURFACE"] = "telegram"
+
+    started = time.monotonic()
     try:
         process = await asyncio.create_subprocess_exec(
             *cmd,
             cwd=STUDY_ROOT,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=os.environ.copy()
+            env=run_env
         )
-        stdout, stderr = await process.communicate()
-        out_text = stdout.decode("utf-8", errors="replace").strip()
-        err_text = stderr.decode("utf-8", errors="replace").strip()
     except Exception as e:
         await status_msg.edit_text(f"❌ *실행 중 오류 발생*:\n`{e}`", parse_mode="Markdown")
         return
+
+    running_processes[chat_id] = process
+    cancel_markup = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("⏹ 취소", callback_data="run|cancel")]]
+    )
+    context_line = " · ".join(
+        part for part in (
+            f"🧩 {active_skill}" if active_skill else "",
+            f"🤖 {model_pref.split('-')[0].title()}" if model_pref else "",
+        ) if part
+    )
+
+    async def show_progress():
+        """Keep the run visible without notifying: edits are silent in Telegram."""
+        while True:
+            await asyncio.sleep(PROGRESS_INTERVAL)
+            elapsed = format_elapsed(time.monotonic() - started)
+            body = f"⏳ *생각 중...* ({elapsed})"
+            if context_line:
+                body += f"\n{context_line}"
+            try:
+                await status_msg.edit_text(
+                    body, parse_mode="Markdown", reply_markup=cancel_markup
+                )
+            except Exception:
+                pass  # An unchanged-text or rate-limit error must not kill the run.
+
+    async def keep_typing():
+        while True:
+            try:
+                await update.message.reply_chat_action(action="typing")
+            except Exception:
+                pass
+            await asyncio.sleep(CHAT_ACTION_INTERVAL)
+
+    progress_task = asyncio.create_task(show_progress())
+    typing_task = asyncio.create_task(keep_typing())
+    timed_out = False
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=RUN_TIMEOUT)
+    except asyncio.TimeoutError:
+        timed_out = True
+        process.kill()
+        stdout, stderr = await process.communicate()
+    finally:
+        progress_task.cancel()
+        typing_task.cancel()
+        running_processes.pop(chat_id, None)
+
+    out_text = stdout.decode("utf-8", errors="replace").strip()
+    err_text = stderr.decode("utf-8", errors="replace").strip()
+    elapsed_text = format_elapsed(time.monotonic() - started)
+    cancelled = getattr(process, "_study_cancelled", False)
 
     try:
         await status_msg.delete()
@@ -369,7 +549,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         pass
 
     final_reply = out_text
-    if not final_reply and err_text:
+    if timed_out:
+        header = f"⏱ *{format_elapsed(RUN_TIMEOUT)}을 넘겨 중단했습니다.*"
+        final_reply = f"{header}\n\n{out_text}" if out_text else (
+            f"{header} 출력이 없었습니다. 맥에서 `{STUDY_CLI}`가 멈춰 있는지 확인해 주세요."
+        )
+    elif cancelled:
+        header = f"⏹ *취소했습니다.* ({elapsed_text} 경과)"
+        final_reply = f"{header}\n\n{out_text}" if out_text else f"{header} 부분 출력은 없었습니다."
+    elif not final_reply and err_text:
         final_reply = f"ℹ️ *출력 결과 없음 (stderr)*:\n{err_text}"
     elif not final_reply:
         final_reply = "✅ 작업이 백그라운드에서 완료되었습니다. (출력 메시지 없음)"
@@ -432,6 +620,15 @@ def main():
         print("실행 방법: TELEGRAM_BOT_TOKEN='당신의_토큰' ./run_bot.sh", file=sys.stderr)
         sys.exit(1)
 
+    # 루트를 못 찾으면 CLI를 빈 cwd로 띄우게 되고, 그 실패는 봇이 답을 못 하는
+    # 증상으로만 보여 원인을 찾기 어렵다. 여기서 멈추고 이유를 말한다.
+    if not STUDY_ROOT or not os.path.isdir(STUDY_ROOT):
+        logger.error("Study root not found: %r", STUDY_ROOT)
+        print("🚨 오류: 하네스 루트를 찾지 못했습니다.", file=sys.stderr)
+        print("  이 스크립트는 위로 올라가며 `vault` 심링크가 있는 디렉터리를 찾습니다.", file=sys.stderr)
+        print("  표준 배치를 벗어났다면 STUDY_ROOT 환경 변수로 지정하세요.", file=sys.stderr)
+        sys.exit(1)
+
     print(f"🚀 nohdol-study 텔레그램 봇 시작 중... (CLI: {STUDY_CLI}, Root: {STUDY_ROOT})")
     if ALLOWED_CHAT_ID:
         print(f"🔒 보안 모드: Chat ID [{ALLOWED_CHAT_ID}] 허용됨")
@@ -446,7 +643,7 @@ def main():
     app.add_handler(CommandHandler("model", model_command))
     app.add_handler(CommandHandler("effort", effort_command))
     app.add_handler(CommandHandler("skill", skill_command))
-    app.add_handler(CommandHandler("understand", understand_command))
+    app.add_handler(CommandHandler("cancel", cancel_command))
     app.add_handler(CommandHandler("new", new_command))
     app.add_handler(CallbackQueryHandler(handle_callback_query))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

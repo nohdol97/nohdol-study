@@ -1,0 +1,9 @@
+# 모든 소스에 필요
+feedparser>=6.0
+html2text>=2025.4
+pytz>=2026.1
+python-dotenv>=1.0
+
+# `geeknews` 파이프라인(요약·분류)에만 필요. 제목·링크만 쌓는 `feed` 소스만
+# 쓴다면 설치하지 않아도 된다.
+google-genai>=2.14

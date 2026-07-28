@@ -66,6 +66,23 @@ launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 ```
 > 📖 **상세 세팅 및 자동 시작 가이드**: [모바일 텔레그램 스터디 브리지 가이드](docs/guides/mobile-telegram-bot.md) 참조
 
+### 3단계: 피드 스크래퍼 구동 (선택 사항)
+RSS 소스를 vault로 자동 수집한다. **어느 소스를 켤지는 컴퓨터마다 다르므로**, 코드(카탈로그)는 추적하고 선택은 비추적 설정 파일에 둔다:
+
+```bash
+mkdir -p _workspace/feed_scraper
+cp -p examples/feed_scraper/* _workspace/feed_scraper/
+cd _workspace/feed_scraper
+
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
+
+./run_scraper.sh
+```
+`feed` 소스(제목·링크만 수집)는 외부 API를 쓰지 않으므로 키가 필요 없다. `geeknews`만 Gemini 키를 `.env`에 넣어야 한다.
+
+> 📖 **소스 추가 및 운영 가이드**: [피드 스크래퍼 가이드](docs/guides/feed-scraper.md) 참조
+
 ---
 
 ## 🧩 스킬 구성 (Skills Map)
@@ -80,7 +97,7 @@ launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 ├── ingest/              # 웹·논문·영상 매체별 수집 및 노트화 라우팅
 ├── knowledge-graph/     # 결정적 지식 그래프 재생성 및 근거 검증
 ├── metaskill/           # 하네스 규칙·스킬·설치기·스펙 자체 개선
-├── note-writer/         # 원자적 검증 노트 작성 및 프론트매터 집행
+├── note-writer/         # 원자적 검증 노트 작성, 프론트매터·index 정책 집행
 ├── obsidian/            # Obsidian 문법·캔버스·Bases 검증 및 CLI 제어
 ├── paper-search/        # 공개 논문 탐색·다운로드·메타데이터 검증
 ├── recall/              # 출처 추적 가능한 간격 반복 복습 카드 제작
@@ -88,7 +105,7 @@ launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 ├── study-session/       # 물어서 가르치는 소크라테스식 학습 대화
 ├── study-video/         # 2-pass 영상 학습 및 타임스탬프 프레임 추출
 ├── understand/          # Understand Anything 9개 모드 내부 라우팅
-├── vault-gardening/     # 지식 루트 드리프트 및 고아/깨진 링크 점검
+├── vault-gardening/     # 지식 루트 드리프트·고아/깨진 링크·index 비대화 점검
 └── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
 ```
 
@@ -100,5 +117,6 @@ launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 
 - **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
 - **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드
+- **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차
 - **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록
 - **운영 규칙 원본**: [AGENTS.md](AGENTS.md) (모든 AI 에이전트 및 CLI가 세션 시작 시 우선 준수하는 불변 규칙)

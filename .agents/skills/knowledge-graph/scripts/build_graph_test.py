@@ -54,6 +54,10 @@ related:
 
 See [[Beta|the second note]], [[Missing#Section]], and [[Beta]].
 
+| 항목 | 링크 |
+| :--- | :--- |
+| 표 안에서는 파이프를 이스케이프한다 | [[Beta\\|별칭]] |
+
 ```md
 [[Hidden]]
 ```
@@ -76,6 +80,11 @@ See [[Beta|the second note]], [[Missing#Section]], and [[Beta]].
     nodes = articles(graph)
     assert nodes["Alpha"]["links"] == ["Beta"]
     assert nodes["Alpha"]["missing_links"] == ["Missing"]
+    # A table escapes the alias pipe as `\|`. Obsidian still reads it as the
+    # alias separator, so the target is Beta - not `Beta\`, which would both
+    # lose the edge and invent a broken link out of a note that renders fine.
+    assert all(item["target"] != "Beta\\" for item in graph["missing_targets"])
+    assert "Beta\\" not in nodes["Alpha"]["missing_links"]
     assert nodes["Beta"]["backlinks"] == ["Alpha"]
     assert graph["missing_targets"] == [
         {"target": "Missing", "referenced_by": ["Alpha"]}
@@ -92,6 +101,39 @@ See [[Beta|the second note]], [[Missing#Section]], and [[Beta]].
     assert duplicate.returncode != 0
     assert "duplicate note title" in duplicate.stderr
     assert not (root / "duplicate.json").exists()
+
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    wiki = root / "wiki"
+    (wiki / "assets" / "topic").mkdir(parents=True)
+    # An embedded figure is an illustration inside the note, not an edge to
+    # another note. Reporting it as a link with no target would flag every
+    # note that shows a frame, for a file that is sitting right there.
+    (wiki / "assets" / "topic" / "frame.jpg").write_bytes(b"")
+    (wiki / "illustrated.md").write_text(
+        """---
+type: concept
+status: seed
+---
+# Illustrated
+
+![[assets/topic/frame.jpg]]
+![[assets/topic/absent.png]]
+See also [[Plain]].
+""",
+        encoding="utf-8",
+    )
+    (wiki / "plain.md").write_text("# Plain\n", encoding="utf-8")
+
+    out = root / "graph.json"
+    assert run(wiki, out).returncode == 0
+    graph = json.loads(out.read_text(encoding="utf-8"))
+    missing = {item["target"] for item in graph["missing_targets"]}
+    # Neither the present nor the absent asset becomes a knowledge-graph edge:
+    # media has no note body to reach.
+    assert missing == set(), missing
+    assert articles(graph)["Illustrated"]["links"] == ["Plain"]
+    assert articles(graph)["Illustrated"]["missing_links"] == []
 
 with tempfile.TemporaryDirectory() as temporary:
     root = Path(temporary)

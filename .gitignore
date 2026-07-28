@@ -11,6 +11,20 @@ _workspace/
 .tools/*
 !.tools/PINS.md
 
+# Telegram bridge runtime state. Holds chat IDs and per-chat selections, so it
+# is installation-specific and must never be committed.
+examples/telegram_bot/bot_state.json
+examples/telegram_bot/bot.log
+examples/telegram_bot/.venv/
+
+# Feed scraper runtime state. `sources.local.toml` is this machine's choice of
+# sources and `.env` holds the API key, so neither belongs in the harness.
+examples/feed_scraper/sources.local.toml
+examples/feed_scraper/.env
+examples/feed_scraper/.venv/
+examples/feed_scraper/scraper.log*
+examples/feed_scraper/data/
+
 # Local/editor state
 .DS_Store
 *.swp

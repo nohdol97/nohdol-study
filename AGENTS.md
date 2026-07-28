@@ -20,7 +20,7 @@ The selected knowledge root uses:
 raw/       immutable source material
 wiki/      curated atomic knowledge notes
 index.md   master map of content
-log.md     append-only knowledge chronology
+log.md     knowledge chronology, newest entry first
 hot.md     compact session-start context, target <= 500 tokens
 ```
 
@@ -34,7 +34,7 @@ Markdown and wikilinks are the source of truth. Graph databases, SQLite indexes,
 4. Store unchanged source material under `raw/`. Never edit a source to make a conclusion fit.
 5. Write durable understanding under `wiki/` using the `note-writer` skill. Prefer one concept or claim per note.
 6. Link related notes with `[[wikilinks]]`; record uncertainty, contradictions, and gaps explicitly.
-7. After knowledge changes, update `index.md`, append one entry to `log.md`, and refresh `hot.md`. Do not rewrite existing `log.md` history.
+7. After knowledge changes, update `index.md`, add one entry at the top of `log.md`, and refresh `hot.md`. Newest first is a reading order, not permission to edit: never change or remove an entry already written.
 8. `hot.md` is a cache, not authority. Resolve conflicts in favor of the underlying note and source.
 
 Do not create a note for transient chatter, a fact already represented without meaningful improvement, or material the user did not authorize retaining.
@@ -65,7 +65,8 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 - The installation profile describes local data policy. `corporate` forbids optional third-party transmission by default; `personal` still requires care for sensitive material.
 - Do not modify legacy vault notes during installation or normalization unless the user explicitly requests a migration.
 - Destructive changes to knowledge, link replacement, mass migration, or vault Git history require explicit user confirmation.
-- When `REGISTRY.md` records a cloud-synced knowledge root, treat the sync as a second writer. Modification times can be rewritten by the sync client, so a freshness signal derived from them is a hint, not proof. A sync conflict can also duplicate a file whose contract is append-only. Before rewriting `index.md`, `log.md`, or `hot.md`, check for conflict copies and preserve existing entries.
+- A surface that runs the CLI with permission prompts disabled has no gate on what a tool call touches, so it writes only inside the knowledge root and never sweeps the home directory. Register `.agents/hooks/study-tool-guard.py` through `study-install` before driving the harness from such a surface, and have the surface mark itself with `STUDY_SURFACE`.
+- When `REGISTRY.md` records a cloud-synced knowledge root, treat the sync as a second writer. Modification times can be rewritten by the sync client, so a freshness signal derived from them is a hint, not proof. A sync conflict can also duplicate a file whose entries are meant to be preserved rather than rewritten. Before rewriting `index.md`, `log.md`, or `hot.md`, check for conflict copies and preserve existing entries.
 
 ## 6. Multi-CLI compatibility
 

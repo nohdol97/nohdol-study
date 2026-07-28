@@ -22,10 +22,26 @@ false memory.
 5. Apply the mandatory evidence-check reference for material factual claims. Inspect the underlying primary or authoritative source rather than trusting a model summary or citation list.
 6. Write the curated note under `vault/wiki/` using the schema. Preserve evidence boundaries: sourced statements, synthesis, inference, hypothesis, and open questions must be distinguishable.
 7. Add meaningful `[[wikilinks]]` in both directions when updating related notes is safe and in scope.
-8. Update `vault/index.md` with a navigational entry, not a duplicate summary.
-9. Append one concise row or bullet to `vault/log.md`; never reorder or rewrite history.
+8. Update `vault/index.md` as an entry point, not a listing. Follow
+   `references/index-policy.md`: one hub note per topic, atomic notes reached
+   through the hub, and recent-change lines capped because `log.md` is the record.
+9. Add one concise row at the top of `vault/log.md` so the newest work reads
+   first; never change or remove an entry already written.
 10. Refresh `vault/hot.md` with only current focus, recent durable learning, open questions, and next actions. Keep it roughly 500 tokens or less.
 11. Verify frontmatter, links, source paths, evidence status, and that no raw file changed unexpectedly.
+12. When the note carries a diagram or an embedded asset, run the `diagram`
+    check on it before finishing. A broken diagram renders as
+    `Error parsing Mermaid diagram!`, or prints `Unsupported markdown: list`
+    where a label should be, and the source still looks complete either way, so
+    nothing else in this procedure catches it:
+
+    ```sh
+    python3 .agents/skills/diagram/scripts/check.py "vault/wiki/NOTE.md"
+    ```
+
+    In a `flowchart` or `graph`, quote every node label, edge label, and
+    `subgraph` title, start no label with `1. `, `- `, or `# `, and break lines
+    with `<br/>` rather than `\n` - see the `diagram` skill for why.
 
 ## Quality gates
 
@@ -38,6 +54,7 @@ false memory.
 - Time-sensitive claims include a current `checked` date.
 - Agreement between AI systems is not counted as independent corroboration.
 - Existing legacy notes outside the curated layer stay untouched unless the user requests migration.
+- Any diagram in the note passes the `diagram` check, so it renders as a picture rather than an error block.
 
 ## With / without
 

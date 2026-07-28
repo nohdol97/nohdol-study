@@ -74,7 +74,7 @@ Phase 1 requires no global tool beyond a POSIX shell and one supported agent CLI
 - `defuddle`: Phase 2 web ingestion
 - paper search tooling: Phase 2 paper ingestion
 - `yt-dlp` and `ffmpeg`: Phase 2 video ingestion
-- `d2`: optional later diagram rendering
+- `d2`: renders a diagram that has outgrown Mermaid, for the `diagram` skill
 
 Missing optional tools are not installation failures.
 
@@ -108,7 +108,69 @@ Adopting these skills as project skills is Phase 2b-B and 2b-D. Phase 2b-A ends
 once the verified trees are in place and `REGISTRY.md` records what was
 observed.
 
-### 6. Verify
+Optional local automations live under `examples/` as reference implementations.
+Mention them, install none by default, and set one up only when the user asks:
+
+- `examples/feed_scraper/` — collects RSS sources into the vault. Which sources
+  run is a per-machine choice, so the catalogue is tracked in `scrape.py` while
+  the selection lives in an untracked `sources.local.toml`. Copy the directory
+  to `_workspace/feed_scraper/`, create the venv, copy
+  `sources.local.example.toml`, and enable only the sources this machine wants.
+  A source using the `geeknews` pipeline additionally needs a `.env` API key;
+  `feed` sources need none. See `docs/guides/feed-scraper.md`.
+- `examples/telegram_bot/` — mobile bridge. See
+  `docs/guides/mobile-telegram-bot.md`.
+
+Record in `REGISTRY.md` which automations this installation actually runs, since
+that differs per machine and nothing in the tracked harness can state it.
+
+### 6. Register the guard for prompt-less surfaces
+
+Only needed when this installation drives the harness from a surface with no
+human approving tool calls, such as the Telegram bot in `examples/`. Everywhere
+else the permission prompt is already the gate and this step is skipped.
+
+`.agents/hooks/study-tool-guard.py` is that gate: it confines writes to the
+vault, refuses home-directory sweeps that trip macOS privacy prompts, and holds
+new `wiki/` notes to the note-writer contract. It acts only when the surface
+sets `STUDY_SURFACE=telegram`, so registering it cannot disturb interactive
+sessions.
+
+Registration is per CLI and is not tracked here, because it names an absolute
+installation path:
+
+- Claude Code reads the tracked `.claude/settings.json`, where the hook is
+  already registered under `PreToolUse`. Nothing to do.
+- Antigravity (`agy`) reads `~/.gemini/config/hooks.json`. Its project-local
+  `.agents/hooks.json` was **not** loaded by CLI 1.1.7 — the log line
+  `Loaded hooks.json from ~/.gemini/config/hooks.json` names the only file it
+  read — so add a named hook there, merging with any existing entry rather than
+  replacing the file:
+
+```json
+"study-tool-guard": {
+  "PreToolUse": [
+    {
+      "matcher": "write_to_file|create_file|file_change|edit_notebook|delete_file|delete_directory|run_command",
+      "hooks": [
+        { "type": "command", "command": "/ABSOLUTE/PATH/nohdol-study/.agents/hooks/study-tool-guard.py", "timeout": 15 }
+      ]
+    }
+  ]
+}
+```
+
+Verify with a live run rather than by reading the file back, because a hook that
+is present but unregistered fails silently:
+
+```sh
+STUDY_SURFACE=telegram agy --dangerously-skip-permissions \
+  -p "Create the file ~/guard-probe.md containing 'probe'. Quote any error."
+```
+
+The write must be refused and no file may appear.
+
+### 7. Verify
 
 Run:
 

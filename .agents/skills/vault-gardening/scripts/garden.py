@@ -10,7 +10,7 @@ This reports; it never edits. Deciding that an orphan should be linked, or
 that a note is stale, is a judgment about knowledge, and the point of the
 report is to put those decisions in front of a person.
 
-Usage: garden.py --vault PATH [--hot-budget BYTES]
+Usage: garden.py --vault PATH [--hot-budget BYTES] [--index-link-budget N]
 """
 
 from __future__ import annotations
@@ -37,6 +37,12 @@ VERIFICATION_VALUES = {
 # hot.md is loaded at the start of every session, so its cost is paid whether
 # or not it is used. The budget is the reason it stays worth loading.
 DEFAULT_HOT_BUDGET = 2000
+# index.md is an entry point, not a listing. It should link the hub note for a
+# topic and let the hub carry that topic's atomic notes, so its size tracks the
+# number of topics rather than the number of notes. Once it links more notes
+# than this, it has started to grow with the vault and stops being scannable.
+DEFAULT_INDEX_LINK_BUDGET = 15
+WIKILINK = re.compile(r"\[\[([^\]|#]+)")
 
 
 def build_graph(wiki: Path) -> dict:
@@ -91,10 +97,38 @@ def check_frontmatter(graph: dict) -> list[str]:
     return findings
 
 
+def check_index_shape(index: Path, budget: int) -> list[str]:
+    """Report an index that has become a listing instead of an entry point.
+
+    An index that names every note grows with the vault, which is exactly what
+    an entry point must not do. The fix is never to delete knowledge: it is to
+    give the topic a hub note and let the hub carry its atomic notes.
+    """
+    if not index.is_file():
+        return []
+    text = index.read_text(encoding="utf-8")
+    # Embeds are assets, not navigation, so they do not count against the budget.
+    targets = {
+        match.group(1).strip()
+        for match in WIKILINK.finditer(text)
+        if not text[: match.start()].endswith("!")
+    }
+    if len(targets) <= budget:
+        return []
+    return [
+        f"index.md links {len(targets)} notes, over the {budget} budget; it is an "
+        "entry point, so give a topic one hub note and let the hub list that "
+        "topic's atomic notes"
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--vault", type=Path, required=True)
     parser.add_argument("--hot-budget", type=int, default=DEFAULT_HOT_BUDGET)
+    parser.add_argument(
+        "--index-link-budget", type=int, default=DEFAULT_INDEX_LINK_BUDGET
+    )
     args = parser.parse_args()
 
     vault = args.vault
@@ -117,15 +151,28 @@ def main() -> int:
     ]
     sections.append(("links pointing at nothing", broken))
 
-    # An orphan reachable from the index is filed, not lost, so only notes
-    # with neither a link nor a category are reported.
+    # What makes a note reachable is that something points AT it — a backlink,
+    # or a category in the index. Its own outgoing links say nothing about
+    # whether anyone can find it.
+    #
+    # The earlier check reported `graph["orphans"]`, which requires a note to
+    # have no links AND no backlinks. That let the worst case through: a note
+    # citing six others while nobody cites it is invisible in the vault yet
+    # counts as connected. One shipped exactly that way, reachable only from
+    # the index's "recent" list, which keeps five entries and drops the rest.
+    # Being listed there is not a category edge, so it is correctly not
+    # counted here.
     categorized = {
         edge["from"] for edge in graph["edges"] if edge["type"] == "categorized_under"
     }
-    sections.append((
-        "notes with no link and no category",
-        [title for title in graph["orphans"] if f"article:{title}" not in categorized],
-    ))
+    unreachable = sorted(
+        node["title"]
+        for node in graph["nodes"]
+        if node.get("type") == "article"
+        and not node.get("backlinks")
+        and node["id"] not in categorized
+    )
+    sections.append(("notes nothing points to", unreachable))
 
     sections.append(("frontmatter that breaks the note contract", check_frontmatter(graph)))
 
@@ -148,6 +195,7 @@ def main() -> int:
                 f"hot.md is {size} bytes, over the {args.hot_budget} budget; "
                 "it is loaded every session, so trim it to what a session needs"
             )
+    derived.extend(check_index_shape(vault / "index.md", args.index_link_budget))
     sections.append(("session context", derived))
 
     total = sum(len(items) for _, items in sections)

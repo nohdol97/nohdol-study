@@ -30,6 +30,15 @@ INLINE_CODE = re.compile(r"(`+)[^\n]*?\1")
 LIST_ITEM = re.compile(r"^(\s*)[-*+]\s+(.*)$")
 HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*$")
 
+# An embedded image is an illustration inside a note, not a link to another
+# note. Counting one as a wikilink makes every note that shows a figure report
+# a broken link to a file that is sitting right there, which trains a reader to
+# ignore the one section that matters most.
+MEDIA_SUFFIXES = {
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif",
+    ".pdf", ".mp4", ".webm", ".mov", ".mp3", ".wav", ".m4a", ".ogg",
+}
+
 VERIFICATION_STATES = {
     "unverified",
     "source-backed",
@@ -109,8 +118,17 @@ def content_without_fences(body: str, strip_inline_code: bool = True) -> str:
 
 
 def normalized_target(raw: str) -> str:
-    target = raw.split("|", 1)[0].strip()
+    # Inside a Markdown table the alias pipe must be escaped - `[[Note\|alias]]` -
+    # because a bare `|` would end the cell. Obsidian still reads it as the alias
+    # separator, so splitting on the bare pipe leaves a trailing backslash: the
+    # edge is lost and the note is reported as a broken link while it renders
+    # perfectly. Unescape first, then split.
+    target = raw.replace("\\|", "|").split("|", 1)[0].strip()
     target = target.split("#", 1)[0].split("^", 1)[0].strip()
+    # An asset embed carries no note body, so it is not an edge in a knowledge
+    # graph and must not be reported as a link with no target.
+    if Path(target).suffix.lower() in MEDIA_SUFFIXES:
+        return ""
     if target.lower().endswith(".md"):
         target = target[:-3]
     return target
