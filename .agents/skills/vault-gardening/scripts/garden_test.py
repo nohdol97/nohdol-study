@@ -178,6 +178,19 @@ with tempfile.TemporaryDirectory() as temporary:
     result = run(vault, "--index-link-budget", "50")
     assert "over the 50 budget" not in result.stdout
 
+    # Links shown as syntax are not navigation. A code span keeps its line
+    # ending inside it, so the one written across a break must not count either
+    # - otherwise an index explaining the link syntax reports itself as bloated.
+    demo = (
+        "# Index\n\n## Topics\n\n- Things\n  - [[Healthy]]\n\n"
+        "Write `[[Example]]` to link. Long form: `[[Example\n"
+        "Note|alias]]` also works.\n\n"
+        "```md\n" + "".join(f"- [[Fenced {n}]]\n" for n in range(20)) + "```\n"
+    )
+    (vault / "index.md").write_text(demo, encoding="utf-8")
+    result = run(vault, "--index-link-budget", "1")
+    assert "over the 1 budget" not in result.stdout, result.stdout
+
     # Repeating one hub is navigation, not listing: distinct targets are counted.
     (vault / "index.md").write_text(
         "# Index\n\n## Topics\n\n" + "- [[Hub]]\n" * 30, encoding="utf-8"

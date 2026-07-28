@@ -16,6 +16,7 @@ Usage: garden.py --vault PATH [--hot-budget BYTES] [--index-link-budget N]
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -97,6 +98,19 @@ def check_frontmatter(graph: dict) -> list[str]:
     return findings
 
 
+def index_content(text: str) -> str:
+    """Return index.md with its fenced blocks and code spans removed.
+
+    The rule is borrowed from the graph builder rather than written again here.
+    Two readings of what counts as a link drift apart, and then the budget
+    reports links the graph never recorded.
+    """
+    spec = importlib.util.spec_from_file_location("study_build_graph", GRAPH_SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.content_without_fences(text)
+
+
 def check_index_shape(index: Path, budget: int) -> list[str]:
     """Report an index that has become a listing instead of an entry point.
 
@@ -106,7 +120,11 @@ def check_index_shape(index: Path, budget: int) -> list[str]:
     """
     if not index.is_file():
         return []
-    text = index.read_text(encoding="utf-8")
+    # A wikilink shown inside a fence or a code span is an example of the
+    # syntax, not navigation, and a code span carries its line ending inside it.
+    # The graph builder already draws that line, so the budget is counted
+    # against the same text the graph reads rather than a second reading of it.
+    text = index_content(index.read_text(encoding="utf-8"))
     # Embeds are assets, not navigation, so they do not count against the budget.
     targets = {
         match.group(1).strip()

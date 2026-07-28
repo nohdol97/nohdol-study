@@ -105,13 +105,20 @@ flowchart TB
   survives the HTML renderer and is dropped by the SVG one, so it is not a fix.
 - `- `, `* `, `+ ` at the front of a label are bullets; `# ` is a heading; `> `
   is a blockquote; a label that is only `---` is a horizontal rule.
-- A backtick pair is inline code and a `[text](url)` is a link. Both vanish.
+- A backtick pair is inline code and a `[text](url)` is a link. Both vanish,
+  and neither stops at a `<br/>`: the whole label goes to one lexer, so a
+  backtick opened before the break closes after it and takes the label with it.
+  `**bold**` and `*italic*` cross a break safely - they are supported types.
 - The rule applies to a node label, an edge label, and a `subgraph` title
   alike - they all go through the same renderer.
 
 Break a line with `<br/>`, never `\n`. A markdown label renders `\n` as the two
 characters a backslash and an `n`; only the older non-markdown path ever turned
 it into a line break. `<br/>` is inline HTML, which both renderers accept.
+
+The break starts a new markdown block, so the front-of-line rules are read
+again after it - but it starts no new inline scope. A construct opened on one
+side of the break still closes on the other.
 
 These are the node-shaped types only. A `sequenceDiagram` message is drawn by a
 different code path that still treats `\n` as a line break.

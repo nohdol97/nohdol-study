@@ -26,7 +26,13 @@ import unicodedata
 WIKILINK = re.compile(r"\[\[([^\[\]\n]+)\]\]")
 H1 = re.compile(r"^#\s+(.+?)\s*$")
 FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
-INLINE_CODE = re.compile(r"(`+)[^\n]*?\1")
+# A code span does not end at the line ending. CommonMark closes it at the next
+# backtick run of the same length and turns any line ending inside into a space,
+# so `rg --files\n[[Note]]` is code, not a link. Reading one line at a time never
+# sees the closing run, and the wikilink between them is reported as a link
+# pointing at nothing while the note renders exactly as written. A blank line
+# ends the block, so a span cannot reach past one.
+INLINE_CODE = re.compile(r"(`+)(?:(?!\n[ \t]*\n).)*?\1", re.DOTALL)
 LIST_ITEM = re.compile(r"^(\s*)[-*+]\s+(.*)$")
 HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*$")
 
@@ -99,6 +105,12 @@ def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     return result, "\n".join(lines[closing + 1 :])
 
 
+def without_inline_code(text: str) -> str:
+    # One newline is kept for every one the span consumed, so a caller that
+    # reads the result a line at a time still sees the original line structure.
+    return INLINE_CODE.sub(lambda match: "\n" * match.group(0).count("\n"), text)
+
+
 def content_without_fences(body: str, strip_inline_code: bool = True) -> str:
     kept: list[str] = []
     fence_marker: str | None = None
@@ -113,8 +125,11 @@ def content_without_fences(body: str, strip_inline_code: bool = True) -> str:
                 fence_marker = None
             continue
         if fence_marker is None:
-            kept.append(INLINE_CODE.sub("", line) if strip_inline_code else line)
-    return "\n".join(kept)
+            kept.append(line)
+    # Spans are removed after the lines are rejoined, not per line: the closing
+    # backtick run may sit on a later line than the opening one.
+    text = "\n".join(kept)
+    return without_inline_code(text) if strip_inline_code else text
 
 
 def normalized_target(raw: str) -> str:
