@@ -38,7 +38,9 @@ It reports and never edits. Five sections:
 - **session context** — a missing `index.md`, `log.md`, or `hot.md`, a hot
   cache over its byte budget, and an `index.md` linking more notes than the
   `--index-link-budget` (default 15), which means it has started listing the
-  vault instead of orienting a reader.
+  vault instead of orienting a reader. A link shown as syntax, inside a fence
+  or a code span, is not navigation and is not counted - the budget reads the
+  same text the graph does, including a code span that wraps to the next line.
 
 It scans `wiki/`, the three derived files, and `raw/` existence. **It does not
 walk the rest of the knowledge root.** A real vault holds unrelated

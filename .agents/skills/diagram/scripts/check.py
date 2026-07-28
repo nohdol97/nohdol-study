@@ -26,6 +26,10 @@ import sys
 
 
 FENCE_OPEN = re.compile(r"^\s*(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)\s*$")
+# A code span closes at the next backtick run of the same length, wherever that
+# run sits, so it can carry a line ending inside it. A blank line ends the
+# block and no span reaches past one.
+INLINE_CODE = re.compile(r"(`+)(?:(?!\n[ \t]*\n).)*?\1", re.DOTALL)
 EMBED = re.compile(r"!\[\[([^\[\]\n|]+)(?:\|[^\[\]\n]*)?\]\]")
 IDENTIFIER = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
 
@@ -92,6 +96,33 @@ def fences(lines: list[str]) -> list[tuple[int, str, list[str]]]:
     if marker is not None:
         blocks.append((start, info, body))
     return blocks
+
+
+def prose_lines(lines: list[str]) -> list[str]:
+    """Return the note's lines with code blanked out and positions preserved.
+
+    An embed written inside a fence or a code span is an example of the syntax,
+    not a picture the note draws. Reporting it as a missing asset sends a reader
+    looking for a file nobody ever meant to add.
+    """
+    kept: list[str] = []
+    marker: str | None = None
+    for line in lines:
+        match = FENCE_OPEN.match(line)
+        if match:
+            if marker is None:
+                marker = match.group(1)
+            elif match.group(1)[0] == marker[0] and len(match.group(1)) >= len(marker):
+                marker = None
+            kept.append("")
+            continue
+        kept.append("" if marker is not None else line)
+    # One newline is kept for every one a span consumed, so a finding still
+    # points at the line the reader has to open.
+    text = INLINE_CODE.sub(
+        lambda match: "\n" * match.group(0).count("\n"), "\n".join(kept)
+    )
+    return text.split("\n")
 
 
 def strip_labels(text: str) -> str:
@@ -220,7 +251,10 @@ def unquoted_labels(line: str) -> list[str]:
 # instead of the label. The diagram parses, so no delimiter or label rule above
 # can see it. Each pattern below was confirmed against Obsidian's own bundled
 # `markdownToHTML` driven by `marked`.
-MARKDOWN_LABEL_RULES = (
+#
+# The rules split by what the lexer decides where. A block rule reads the front
+# of a line, and a <br/> starts a new line, so each segment is judged on its own.
+BLOCK_LABEL_RULES = (
     (re.compile(r"^\d{1,9}[.)](\s|$)"), "list",
      "starts with an ordered-list marker - write '①' or '1 ·' instead; "
      "'1)' is a list marker too, and the backslash escape '1\\.' is dropped "
@@ -233,6 +267,15 @@ MARKDOWN_LABEL_RULES = (
      "starts with a blockquote marker - write '&gt;' or move it off the front"),
     (re.compile(r"^(?:-{3,}|\*{3,}|_{3,})$"), "hr",
      "is a horizontal rule - use a different separator"),
+)
+# An inline rule is not confined to one segment. The whole label goes to a
+# single markdown lexer, and a backtick opened before a <br/> closes after it -
+# `marked` reports one codespan spanning the break, so the reader gets
+# "Unsupported markdown" for a label whose every segment looks harmless. These
+# run over the whole label with the breaks flattened. Bold and italic span a
+# break the same way and are left alone: strong and em are supported types, so
+# they render.
+INLINE_LABEL_RULES = (
     (re.compile(r"`[^`]*`"), "codespan",
      "holds a backtick pair - drop the backticks"),
     (re.compile(r"!?\[[^\]]*\]\([^)]*\)"), "link",
@@ -271,6 +314,18 @@ def markdown_label_problems(offset: int, line: str) -> list[str]:
                 "\\n - a markdown label renders it as two characters; "
                 "use <br/> for the line break"
             )
+        # An inline construct is read from the whole label, so the break has to
+        # be flattened away before the rules run.
+        flattened = LINE_BREAK.sub(" ", text).strip()
+        for pattern, kind, advice in INLINE_LABEL_RULES:
+            if pattern.search(flattened):
+                problems.append(
+                    f"line {offset + 1}: label {flattened!r} {advice} - "
+                    f'Mermaid renders "Unsupported markdown: {kind}" '
+                    "in place of the label"
+                )
+                break
+
         # The renderer that keeps HTML labels breaks a markdown block only at
         # the front of the label; the one that draws SVG text breaks it at
         # every <br/>. Checking each segment covers both.
@@ -278,7 +333,7 @@ def markdown_label_problems(offset: int, line: str) -> list[str]:
             segment = segment.strip()
             if not segment:
                 continue
-            for pattern, kind, advice in MARKDOWN_LABEL_RULES:
+            for pattern, kind, advice in BLOCK_LABEL_RULES:
                 if pattern.search(segment):
                     problems.append(
                         f"line {offset + 1}: label {segment!r} {advice} - "
@@ -404,7 +459,7 @@ def check_markdown(
 
     # An embedded image that does not exist renders as a broken link, which is
     # invisible until someone opens the note.
-    for number, line in enumerate(lines, start=1):
+    for number, line in enumerate(prose_lines(lines), start=1):
         for target in EMBED.findall(line):
             target = target.strip()
             if not target.lower().endswith((".svg", ".png", ".jpg", ".jpeg", ".webp")):

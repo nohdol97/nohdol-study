@@ -202,6 +202,34 @@ with tempfile.TemporaryDirectory() as temporary:
     assert nodes["Using `fd` for search"]["backlinks"] == ["Using `rg` for search"]
     assert graph["missing_targets"] == []
 
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    wiki = root / "wiki"
+    wiki.mkdir()
+
+    # A code span closes at the matching backtick run wherever it sits, so it
+    # can carry a line ending inside it. The wikilink between the two is code,
+    # and reading one line at a time never sees the closing run: the note
+    # renders exactly as written while the graph reports a link to nothing.
+    (wiki / "wrapped.md").write_text(
+        "# Wrapped\n\n"
+        "Real link [[Target]].\n\n"
+        "Run `rg --files\n[[Ghost]]` to search.\n\n"
+        "A stray ` in prose.\n\n"
+        "[[Target]] sits between it and the one below, and a blank line ends\n"
+        "the block, so it is a link and not the inside of a span.\n\n"
+        "Another stray ` here.\n",
+        encoding="utf-8",
+    )
+    (wiki / "target.md").write_text("# Target\n", encoding="utf-8")
+
+    output = root / "graph.json"
+    result = run(wiki, output)
+    assert result.returncode == 0, result.stderr
+    graph = json.loads(output.read_text(encoding="utf-8"))
+    assert graph["missing_targets"] == [], graph["missing_targets"]
+    assert articles(graph)["Wrapped"]["links"] == ["Target"]
+
 # A knowledge root with a single note still produces a typed graph, and the
 # note body never reaches the output.
 with tempfile.TemporaryDirectory() as temporary:

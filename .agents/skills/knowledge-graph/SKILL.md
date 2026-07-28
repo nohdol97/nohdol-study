@@ -45,7 +45,9 @@ The parser uses only the Python standard library. It:
   stays unresolved instead of being guessed;
 - normalizes Unicode to NFC before matching, so a decomposed Korean filename
   still matches a composed link;
-- ignores wikilinks inside fenced code blocks and inline code spans;
+- ignores wikilinks inside fenced code blocks and inline code spans, including
+  a span whose closing backtick run sits on a later line - a code span carries
+  a line ending inside it, so a link written across the break is still code;
 - normalizes aliases, headings, and block references to their note targets, and
   counts case or spelling variants of one note as a single edge;
 - calculates backlinks, missing targets, and notes with no links in either

@@ -180,6 +180,23 @@ sequenceDiagram
     assert result.returncode == 1
     assert "Unsupported markdown: list" in result.stderr, result.stderr
 
+    # An inline construct does not stop at the break. The whole label goes to
+    # one markdown lexer, so a backtick opened before a <br/> closes after it
+    # and the reader gets "Unsupported markdown" for a label whose every
+    # segment reads as plain text. Confirmed by lexing each label with `marked`
+    # after the <br/> becomes a line break, as Mermaid does before lexing.
+    for label, kind in [("run `rg<br/>--files` here", "codespan"),
+                        ("see [the doc<br/>page](http://x) now", "link")]:
+        result = run(str(write(root, "md-inline-break.md", f'```mermaid\nflowchart LR\n  A["{label}"] --> B[ok]\n```\n')))
+        assert result.returncode == 1, f"{label}: {result.stdout}"
+        assert f'"Unsupported markdown: {kind}"' in result.stderr, f"{label}: {result.stderr}"
+
+    # Bold and italic cross a break the same way and must not be reported:
+    # strong and em are types the handler supports, so the label renders.
+    for label in ["**굵게<br/>이어짐** 뒤", "*기울임<br/>이어짐* 뒤", "**닫히지 않음<br/>뒤"]:
+        result = run(str(write(root, "md-emphasis.md", f'```mermaid\nflowchart LR\n  A["{label}"] --> B[ok]\n```\n')))
+        assert result.returncode == 0, f"{label}: {result.stderr}"
+
     # A markdown label treats \n as two characters, not a line break.
     result = run(str(write(root, "md-newline.md", '```mermaid\nflowchart LR\n  A["창발성\\n임계점 돌파"] --> B[ok]\n```\n')))
     assert result.returncode == 1
@@ -310,6 +327,37 @@ flowchart LR
     # A wikilink to a note is not an asset reference.
     result = run(str(write(root, "note-link.md", "See [[Another Note]] and ![[Another Note]].\n")))
     assert result.returncode == 0, result.stderr
+
+    # An embed shown as syntax is not a picture the note draws. A code span
+    # keeps its line ending inside it, so the one written across a break is
+    # code too, and neither may be reported as a file somebody forgot to add.
+    result = run(
+        str(
+            write(
+                root,
+                "embed-shown.md",
+                "Write `![[assets/example.svg]]` to embed.\n\n"
+                "Or with a path that wraps: `![[assets/very-long-name\n"
+                "example.svg]]` in prose.\n\n"
+                "```md\n![[assets/fenced.svg]]\n```\n",
+            )
+        )
+    )
+    assert result.returncode == 0, result.stderr
+
+    # Blanking the code keeps the line numbers, so a real finding after it
+    # still points at the line the reader has to open.
+    result = run(
+        str(
+            write(
+                root,
+                "embed-after-code.md",
+                "```md\n![[assets/fenced.svg]]\n```\n\n![[assets/gone.svg]]\n",
+            )
+        )
+    )
+    assert result.returncode == 1
+    assert "embed-after-code.md:5: embedded asset not found: assets/gone.svg" in result.stderr, result.stderr
 
     # An SVG that a failed render left empty is caught.
     result = run(str(write(root, "empty.svg", "<svg xmlns='http://www.w3.org/2000/svg'></svg>")))
