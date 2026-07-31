@@ -329,8 +329,31 @@ def load_semantic(
     }
 
 
-def build(wiki: Path, semantic: Path | None = None) -> dict[str, Any]:
+def raw_file_stems(raw: Path | None) -> set[str]:
+    """Filenames under `raw/`, so a link to captured source material is not
+    reported as pointing at nothing.
+
+    Obsidian resolves `[[target]]` against the whole vault. This graph names
+    notes from `wiki/` alone, so a note citing a preserved capture by filename
+    had a link that works in the app and was reported broken here. Two such
+    links sat in the vault when the Stop hook was about to start blocking on
+    this list, which would have spent the warning on correct notes.
+
+    Only names are read. `raw/` holds immutable captures: nothing in it becomes
+    a node, and its contents are never parsed for links.
+    """
+    if raw is None or not raw.is_dir():
+        return set()
+    return {
+        identity(path.stem) for path in raw.rglob("*") if path.is_file()
+    }
+
+
+def build(
+    wiki: Path, semantic: Path | None = None, raw: Path | None = None
+) -> dict[str, Any]:
     files = sorted(path for path in wiki.rglob("*.md") if path.is_file())
+    raw_stems = raw_file_stems(raw)
     notes: list[dict[str, Any]] = []
     title_map: dict[str, dict[str, Any]] = {}
     stem_owners: dict[str, list[dict[str, Any]]] = {}
@@ -387,6 +410,10 @@ def build(wiki: Path, semantic: Path | None = None) -> dict[str, Any]:
             target_key = identity(Path(target).name)
             target_note = title_map.get(target_key) or stem_map.get(target_key)
             if target_note is None:
+                # A capture under raw/ resolves in Obsidian but is not a note,
+                # so the link is neither broken nor an edge between articles.
+                if target_key in raw_stems:
+                    continue
                 unresolved.append(target)
                 entry = missing.setdefault(
                     target_key, {"target": target, "referenced_by": set()}
@@ -545,6 +572,14 @@ def main() -> int:
         type=Path,
         help="JSON file of model-produced records to validate and include",
     )
+    parser.add_argument(
+        "--raw",
+        type=Path,
+        help=(
+            "raw/ directory whose filenames also resolve a wikilink in Obsidian; "
+            "only names are read and nothing in it becomes a node"
+        ),
+    )
     args = parser.parse_args()
 
     if not args.wiki.is_dir():
@@ -558,7 +593,7 @@ def main() -> int:
         return 2
 
     try:
-        graph = build(args.wiki, args.semantic)
+        graph = build(args.wiki, args.semantic, args.raw)
     except (OSError, UnicodeError, ValueError) as exc:
         print(f"knowledge-graph: {exc}", file=sys.stderr)
         return 1

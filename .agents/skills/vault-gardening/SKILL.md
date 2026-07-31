@@ -21,7 +21,9 @@ python3 .agents/skills/vault-gardening/scripts/garden.py --vault vault
 It reports and never edits. Five sections:
 
 - **links pointing at nothing** — with who pointed at them, so the fix is
-  either the link or the missing note, decided per case.
+  either the link or the missing note, decided per case. A name that resolves
+  to a capture under `raw/` is not listed: Obsidian indexes the whole vault, so
+  that link works in the app.
 - **notes nothing points to** — reachability is decided by what points AT a
   note: a backlink, or a category in the index. A note's own outgoing links do
   not make it findable, so a note citing six others while nobody cites it is

@@ -18,8 +18,15 @@ From the harness root:
 ```sh
 python3 .agents/skills/knowledge-graph/scripts/build_graph.py \
   --wiki vault/wiki \
+  --raw vault/raw \
   --output _workspace/knowledge-graph.json
 ```
+
+`--raw` is optional and changes only `missing_targets`. Obsidian resolves
+`[[target]]` against the whole vault, so a note citing a capture by filename
+has a link that works in the app; without this the graph reports it broken.
+Only filenames are read — nothing under `raw/` becomes a node, and its
+contents are never parsed for links.
 
 The graph has three node types, all read straight from the files:
 
@@ -102,7 +109,8 @@ An accepted record is still a candidate. Promote it to knowledge through
 ## Review
 
 1. Fix duplicate titles first; no graph is emitted for ambiguous identity.
-2. Review `missing_targets` for broken links or intentional future notes.
+2. Review `missing_targets` for broken links or intentional future notes. Pass
+   `--raw` first, or a link to a preserved capture reads as a broken one.
 3. Review `orphans` for notes that need a meaningful relationship. Do not add
    decorative links just to make the count zero.
 4. Regenerate after Markdown changes. Never hand-edit the JSON.
