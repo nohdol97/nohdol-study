@@ -49,6 +49,16 @@ Explain one concept or claim in the user's working language.
 - [Source title](https://example.com/source)
 ```
 
+## Line layout
+
+One source line per paragraph, per list item, and per blockquote line. Do not
+wrap prose at a column: the break renders as a space, so it changes nothing a
+reader sees while making every later edit reflow the block and every diff show
+rewrapping instead of the change. Reserve a line break for structure - a
+heading, a list item, a table row, fenced code, a frontmatter key, or an
+explicit hard break written as two trailing spaces or a backslash. The
+`note-writer` SKILL carries the check that finds violations.
+
 ## Field rules
 
 The H1 must match the filename exactly. A title containing `/` cannot, because
