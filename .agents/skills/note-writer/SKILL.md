@@ -16,7 +16,13 @@ false memory.
 ## Procedure
 
 1. Verify installation (`REGISTRY.md` and `vault`).
-2. Search `vault/wiki/` for an existing note that already represents the concept or claim.
+2. Search `vault/wiki/` for an existing note that already represents the concept or claim. Search twice, because the two searches fail differently: `rg` finds the wording you guessed, and `vault-search` finds the concept when the existing note called it something else — which is exactly how a duplicate gets written.
+
+   ```sh
+   python3 .agents/skills/vault-search/scripts/semantic.py query --vault vault "노트로 쓰려는 개념을 한 문장으로"
+   ```
+
+   Open the top candidates before deciding. A ranked hit is a pointer, not a verdict that the concept is already covered, and an empty result is not proof that it is not — the index can be stale (`semantic.py status --vault vault`).
 3. Choose between improving the existing note and creating one new atomic note. Do not create aliases merely because wording differs.
 4. If a source must be retained, save an unchanged copy under `vault/raw/`. Never rewrite raw material.
 5. Apply the mandatory evidence-check reference for material factual claims. Inspect the underlying primary or authoritative source rather than trusting a model summary or citation list.
@@ -28,7 +34,15 @@ false memory.
 9. Add one concise row at the top of `vault/log.md` so the newest work reads
    first; never change or remove an entry already written.
 10. Refresh `vault/hot.md` with only current focus, recent durable learning, open questions, and next actions. Keep it roughly 500 tokens or less.
-11. Verify frontmatter, links, source paths, evidence status, and that no raw file changed unexpectedly.
+11. Verify frontmatter, links, source paths, evidence status, and that no raw
+    file changed unexpectedly. Then check the line layout, which nothing else
+    catches because a hard-wrapped file renders correctly:
+
+    ```sh
+    python3 .agents/skills/note-writer/scripts/unwrap.py --vault vault
+    ```
+
+    It reports; `--write` applies. See "One line per paragraph" below.
 12. When the note carries a diagram or an embedded asset, run the `diagram`
     check on it before finishing. A broken diagram renders as
     `Error parsing Mermaid diagram!`, or prints `Unsupported markdown: list`
@@ -43,6 +57,34 @@ false memory.
     `subgraph` title, start no label with `1. `, `- `, or `# `, and break lines
     with `<br/>` rather than `\n` - see the `diagram` skill for why.
 
+## One line per paragraph
+
+**Write each paragraph, list item, and blockquote line as a single source line.
+Do not wrap prose at a column.** A newline inside a paragraph renders as a
+space, so the break says nothing a reader can see - but the writer pays for it
+every time: editing one word reflows the whole block, the diff turns into
+rewrapping noise that hides the real change, and Obsidian's editor rewraps to
+the pane width anyway, so the file and the screen disagree.
+
+A line break is content only where it is structure. Keep these on their own
+lines: headings, list items, table rows, fenced code, frontmatter keys, and a
+line ending in two spaces or a backslash, which is an explicit hard break.
+
+Long lines are correct here. Wrap at the reader's window, not in the file.
+
+```markdown
+<!-- no -->
+IMEC이 정리한 5대 난제 중 핵심은 비정상성이다.
+"정상"은 하나가 아니며, 학습 시점의 정상이
+테스트 시점에도 정상이라는 보장이 없다.
+
+<!-- yes -->
+IMEC이 정리한 5대 난제 중 핵심은 비정상성이다. "정상"은 하나가 아니며, 학습 시점의 정상이 테스트 시점에도 정상이라는 보장이 없다.
+```
+
+The same rule holds inside a blockquote (`> ` prose is one line per paragraph)
+and inside a list item (a wrapped continuation belongs on the item's line).
+
 ## Quality gates
 
 - One note has one central concept or claim.
@@ -55,6 +97,7 @@ false memory.
 - Agreement between AI systems is not counted as independent corroboration.
 - Existing legacy notes outside the curated layer stay untouched unless the user requests migration.
 - Any diagram in the note passes the `diagram` check, so it renders as a picture rather than an error block.
+- Each paragraph, list item, and blockquote line occupies one source line; `unwrap.py` reports nothing to join.
 
 ## With / without
 
@@ -63,3 +106,4 @@ false memory.
 | Scope | Topic dumps and duplicates | One central concept or claim |
 | Confidence | Fluent prose hides uncertainty | Verification state and open gaps |
 | Navigation | Isolated files | Wikilinks plus index/log/hot consistency |
+| Line layout | Prose hard-wrapped, so every edit reflows a block | One line per paragraph; diffs show the change |

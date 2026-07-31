@@ -14,6 +14,15 @@ command = '"$(git rev-parse --show-toplevel)/.agents/hooks/study-session-start.s
 timeout = 10
 statusMessage = "Loading study context"
 
+[[hooks.PostToolUse]]
+matcher = "Write|Edit|MultiEdit|NotebookEdit"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = '"$(git rev-parse --show-toplevel)/.agents/hooks/study-note-check.py"'
+timeout = 60
+statusMessage = "Checking the note just written"
+
 [[hooks.Stop]]
 
 [[hooks.Stop.hooks]]

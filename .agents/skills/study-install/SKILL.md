@@ -75,8 +75,37 @@ Phase 1 requires no global tool beyond a POSIX shell and one supported agent CLI
 - paper search tooling: Phase 2 paper ingestion
 - `yt-dlp` and `ffmpeg`: Phase 2 video ingestion
 - `d2`: renders a diagram that has outgrown Mermaid, for the `diagram` skill
+- a local embedding server: semantic search over the notes, for `vault-search`
 
 Missing optional tools are not installation failures.
+
+#### Local embedding server
+
+```sh
+sh scripts/install-embedding.sh --check      # report only
+sh scripts/install-embedding.sh --install    # ollama, a LaunchAgent, and a model
+```
+
+The script sizes the model from installed memory and says which it picked.
+Report the choice and let the user override with `--model`; the trade-off is
+worth stating plainly, because it is about the knowledge base rather than the
+hardware.
+
+The notes here are Korean, and an English-centred embedding model retrieves
+them badly. Measured over eight questions whose answering note was known,
+`nomic-embed-text` put the right note in the top ten **twice out of eight**
+(MRR 0.067) — for "에이전트가 낸 결과를 배포 전에 자동으로 막는 방법" it ranked a
+GeekNews item about customer churn above the note that answers it, matching on
+the shared verb 막다 rather than on meaning. So a multilingual model is the
+default wherever it fits in memory, and the smaller English-centred one is a
+fallback whose weakness is reported rather than hidden.
+
+Never install this through `brew services`. Its plist forces
+`OLLAMA_KV_CACHE_TYPE=q8_0`, which an encoder model has no cache for, and the
+server then answers `/api/version` while no model ever loads — a failure that
+looks like a hardware limit and is not. The script's own LaunchAgent sets no
+tuning variables, and it verifies by requesting an actual embedding rather than
+by checking that a port is open.
 
 For Phase 2b, run `scripts/install-phase2b-tools.sh --check`. It observes Node,
 pnpm, Obsidian, and each pinned source tree without reaching the network and

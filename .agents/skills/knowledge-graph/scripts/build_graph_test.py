@@ -436,4 +436,49 @@ The measured latency was 42 ms under load.
     assert failed.returncode == 1
     assert "records" in failed.stderr
 
+with tempfile.TemporaryDirectory() as temporary:
+    # A link naming a capture under raw/ resolves in Obsidian, which indexes the
+    # whole vault. Reporting it broken spends a warning on a correct note, and
+    # two such links were sitting in the vault when the Stop hook was about to
+    # start blocking on this list.
+    root = Path(temporary)
+    wiki = root / "wiki"
+    wiki.mkdir()
+    raw = root / "raw"
+    (raw / "captures").mkdir(parents=True)
+    (raw / "captures" / "2026-07-31-source-excerpt.md").write_text("x\n", encoding="utf-8")
+    (raw / "captures" / "report.pdf").write_bytes(b"%PDF-1.4\n")
+    (wiki / "note.md").write_text(
+        "# Note\n\nSee [[2026-07-31-source-excerpt]], [[report]], and [[Nowhere]].\n",
+        encoding="utf-8",
+    )
+
+    without = root / "without.json"
+    assert run(wiki, without).returncode == 0
+    targets = {
+        item["target"] for item in json.loads(without.read_text(encoding="utf-8"))["missing_targets"]
+    }
+    assert targets == {"2026-07-31-source-excerpt", "report", "Nowhere"}, targets
+
+    with_raw = root / "with-raw.json"
+    assert run(wiki, with_raw, "--raw", str(raw)).returncode == 0
+    graph = json.loads(with_raw.read_text(encoding="utf-8"))
+    targets = {item["target"] for item in graph["missing_targets"]}
+    assert targets == {"Nowhere"}, targets
+
+    # A raw capture is not a note: it resolves the link but adds no node and no
+    # edge, so it must not appear as an article or as an outgoing link.
+    note = articles(graph)["Note"]
+    assert note["links"] == [], note["links"]
+    assert note["missing_links"] == ["Nowhere"], note["missing_links"]
+    assert len(articles(graph)) == 1, articles(graph).keys()
+
+    # A missing or unreadable raw/ directory is not an error.
+    absent = root / "absent.json"
+    assert run(wiki, absent, "--raw", str(root / "no-such-dir")).returncode == 0
+    targets = {
+        item["target"] for item in json.loads(absent.read_text(encoding="utf-8"))["missing_targets"]
+    }
+    assert targets == {"2026-07-31-source-excerpt", "report", "Nowhere"}, targets
+
 print("knowledge graph tests: PASS")

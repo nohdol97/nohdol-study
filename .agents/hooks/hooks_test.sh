@@ -9,7 +9,16 @@ trap 'rm -rf "$test_root"' EXIT HUP INT TERM
 mkdir -p "$test_root/.agents/hooks" "$test_root/.agents/skills/using-study" "$test_root/knowledge/wiki"
 cp "$source_dir/study-session-start.sh" "$test_root/.agents/hooks/"
 cp "$source_dir/study-wrapup.sh" "$test_root/.agents/hooks/"
+cp "$source_dir/study-note-record.py" "$test_root/.agents/hooks/"
 printf '%s\n' '# using-study-test-marker' >"$test_root/.agents/skills/using-study/SKILL.md"
+
+# The wrap-up hook delegates its note judgment to a helper that reads the
+# shared graph and gardening definitions. The real ones are borrowed rather
+# than copied: the point of moving that judgment into one place is that a
+# second copy drifts, and a test fixture is a second copy.
+for shared in knowledge-graph vault-gardening; do
+  ln -s "$source_dir/../skills/$shared" "$test_root/.agents/skills/$shared"
+done
 
 # Missing installation reports bootstrap guidance.
 missing_output=$("$test_root/.agents/hooks/study-session-start.sh")
@@ -53,22 +62,42 @@ touch -t 202201010000 "$test_root/knowledge/index.md" "$test_root/knowledge/log.
 fresh_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 [ -z "$fresh_output" ]
 
-# A note already named in index.md passes even when it is newer than the
+# A note filed under a topic hub passes even when it is newer than the
 # records. Saving a note seconds after updating the index is ordinary, and
 # on cloud storage a sync client can rewrite modification times outright.
-printf '%s\n' '# index' '- [[recorded note]]' >"$test_root/knowledge/index.md"
+# Nesting under a topic bullet is what makes it a category edge, which is what
+# reachability is judged by.
+printf '%s\n' '# index' '- 어떤 주제' '  - [[recorded note]]' >"$test_root/knowledge/index.md"
 touch -t 202201010000 "$test_root/knowledge/index.md" "$test_root/knowledge/log.md" "$test_root/knowledge/hot.md"
 printf '%s\n' '# recorded note' >"$test_root/knowledge/wiki/recorded note.md"
 touch -t 202301010000 "$test_root/knowledge/wiki/recorded note.md"
 recorded_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 [ -z "$recorded_output" ]
 
-# Being named in log.md alone is enough; the log is the append-only record.
+# A note sitting in the index's flat chronology list is recorded but NOT
+# reachable, and the hook must now say so. This is the defect the split was
+# made for: "recent updates" keeps five entries and drops the rest, so the
+# note is findable only until the sixth one lands. The A100 guide shipped
+# exactly this way and the old hook passed it.
+printf '%s\n' '# index' '- 어떤 주제' '  - [[recorded note]]' '- [[chronology only]]' \
+  >"$test_root/knowledge/index.md"
+touch -t 202201010000 "$test_root/knowledge/index.md" "$test_root/knowledge/log.md" "$test_root/knowledge/hot.md"
+printf '%s\n' '# chronology only' >"$test_root/knowledge/wiki/chronology only.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/chronology only.md"
+chronology_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+printf '%s' "$chronology_output" | grep -F '"decision":"block"' >/dev/null
+printf '%s' "$chronology_output" | grep -F 'Nothing points at' >/dev/null
+printf '%s' "$chronology_output" | grep -F 'chronology only' >/dev/null
+rm "$test_root/knowledge/wiki/chronology only.md"
+
+# An inbound wikilink from another note is reachability on its own; the index
+# does not have to mention it.
 printf '%s\n' '# log' '| 2020-01-01 | wrote it | [[logged note]] |' >"$test_root/knowledge/log.md"
 printf '%s\n' '---' 'updated: 2020-01-01' '---' >"$test_root/knowledge/hot.md"
 touch -t 202201010000 "$test_root/knowledge/index.md" "$test_root/knowledge/log.md" "$test_root/knowledge/hot.md"
 printf '%s\n' '# logged note' >"$test_root/knowledge/wiki/logged note.md"
-touch -t 202301010000 "$test_root/knowledge/wiki/logged note.md"
+printf '%s\n' '# recorded note' 'see [[logged note]]' >"$test_root/knowledge/wiki/recorded note.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/logged note.md" "$test_root/knowledge/wiki/recorded note.md"
 logged_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 [ -z "$logged_output" ]
 
@@ -128,6 +157,54 @@ printf '%s\n' '---' 'updated: 2026-07-26' '---' >"$test_root/knowledge/hot.md"
 touch -t 202201010000 "$test_root/knowledge/hot.md"
 caught_up_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
 [ -z "$caught_up_output" ]
+
+# A link written this session that resolves to nothing blocks, and the reason
+# names both ends. Reachability asks what points at a note; this asks whether
+# what the note points at exists. A wikilink lives between files, so the note
+# holding it stays valid Markdown either way and no per-file check can see it
+# break. The note is recorded and reachable here on purpose, so the earlier two
+# findings stay silent and this one is what surfaces.
+printf '%s\n' '# log' '| 2026-07-26 | newer entry | [[logged note]] |' \
+  '| 2026-07-26 | wrote it | [[linking note]] |' >"$test_root/knowledge/log.md"
+printf '%s\n' '# recorded note' 'see [[logged note]] and [[linking note]]' \
+  >"$test_root/knowledge/wiki/recorded note.md"
+printf '%s\n' '# linking note' 'see [[nowhere note]]' \
+  >"$test_root/knowledge/wiki/linking note.md"
+touch -t 202201010000 "$test_root/knowledge/log.md" "$test_root/knowledge/hot.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/recorded note.md" \
+  "$test_root/knowledge/wiki/linking note.md"
+broken_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+printf '%s' "$broken_output" | grep -F '"decision":"block"' >/dev/null
+printf '%s' "$broken_output" | grep -F 'linking note' >/dev/null
+printf '%s' "$broken_output" | grep -F 'nowhere note' >/dev/null
+
+# Correcting the link clears it. Writing the missing note would work too, but
+# then that note owes a record of its own, which is a different finding.
+printf '%s\n' '# linking note' 'see [[logged note]]' \
+  >"$test_root/knowledge/wiki/linking note.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/linking note.md"
+repaired_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+[ -z "$repaired_output" ]
+
+# A link naming a capture under raw/ resolves in Obsidian, which indexes the
+# whole vault rather than the curated layer alone. Blocking on it would spend
+# the warning on a correct note; two such links were in the real vault when
+# this check was added.
+mkdir -p "$test_root/knowledge/raw/captures"
+printf 'x\n' >"$test_root/knowledge/raw/captures/2026-07-31-capture.md"
+printf '%s\n' '# linking note' 'see [[2026-07-31-capture]]' \
+  >"$test_root/knowledge/wiki/linking note.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/linking note.md"
+raw_output=$("$test_root/.agents/hooks/study-wrapup.sh" </dev/null)
+[ -z "$raw_output" ]
+rm -r "$test_root/knowledge/raw"
+rm "$test_root/knowledge/wiki/linking note.md"
+printf '%s\n' '# log' '| 2026-07-26 | newer entry | [[logged note]] |' \
+  >"$test_root/knowledge/log.md"
+printf '%s\n' '# recorded note' 'see [[logged note]]' \
+  >"$test_root/knowledge/wiki/recorded note.md"
+touch -t 202201010000 "$test_root/knowledge/log.md" "$test_root/knowledge/hot.md"
+touch -t 202301010000 "$test_root/knowledge/wiki/recorded note.md"
 
 # A missing record is reported as such rather than as a stale cache.
 rm "$test_root/knowledge/index.md"

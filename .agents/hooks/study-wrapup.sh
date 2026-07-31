@@ -34,53 +34,29 @@ for tracked_cache in "$index_path" "$log_path" "$hot_path"; do
   fi
 done
 
-# Which notes count as unrecorded.
+# Whether the notes written this session were recorded, and whether anything
+# points at them.
 #
-# The earlier check compared modification times alone, which produced two
-# false alarms often enough to train the reminder away. A note saved seconds
-# after the index was updated looked newer even though it was already listed,
-# and the feed scraper rewrites its collection documents every morning, so any
-# automated run made the hook fire. Both are answered by asking what the files
-# say rather than when they were touched.
+# Both questions used to be answered here with `grep`, and the reachability one
+# was answered wrongly: a title found anywhere in index.md counted, including
+# under the capped "recent updates" list, so a note passed at write time and
+# went unreachable once five newer notes pushed it out. `vault-gardening` was
+# corrected to judge by inbound links; this hook was not, and the two
+# definitions disagreed until now. The judgment moved to a helper that calls
+# the same `garden.unreachable_notes`, because a rule written twice in this
+# repository has drifted every time.
 #
-# Timestamps still bound the search: a note older than both records was either
-# handled long ago or is a known gap that vault-gardening reports, and walking
-# the whole curated layer on every Stop would be slow on cloud storage.
+# An earlier version of the record check compared modification times alone,
+# which produced two false alarms often enough to train the reminder away. A
+# note saved seconds after the index was updated looked newer even though it
+# was already listed, and the feed scraper rewrites its collection documents
+# every morning, so any automated run made the hook fire. The helper keeps the
+# answer to "what do the files say" and uses timestamps only to bound where it
+# looks.
 if [ -z "$message" ]; then
-  older_cache="$index_path"
-  [ "$log_path" -ot "$older_cache" ] && older_cache="$log_path"
-
-  unrecorded=""
-  # `find -newer` output is newline-separated; note titles contain spaces, so
-  # only the line break can separate them.
-  candidates=$(find "$vault_root/wiki" -type f -name '*.md' -newer "$older_cache" 2>/dev/null || true)
-  saved_ifs=$IFS
-  IFS='
-'
-  for note in $candidates; do
-    # Generated listings are skipped. `index` is a month archive index and `moc`
-    # is a topic or per-source queue; the scraper rewrites both every run, and
-    # neither is something index.md is meant to name item by item. Hand-written
-    # maps use `topic` or `source`, so they are still checked. A dated capture
-    # is `article`, so it is matched by its tag instead.
-    if head -n 20 "$note" | grep -qE '^type: (index|moc)$'; then
-      continue
-    fi
-    if head -n 20 "$note" | grep -qE '^  - (feed|daily-scrap)$'; then
-      continue
-    fi
-    title=$(basename "$note" .md)
-    if grep -qF "$title" "$index_path" || grep -qF "$title" "$log_path"; then
-      continue
-    fi
-    unrecorded=$title
-    break
-  done
-  IFS=$saved_ifs
-
-  if [ -n "$unrecorded" ]; then
-    message="Curated note \"$unrecorded\" is not recorded in index.md or log.md. Update the index, append the log, and refresh the compact hot cache before finishing."
-  fi
+  # A helper that fails must not block finishing, so its exit status is
+  # ignored and only what it printed is used.
+  message=$(python3 "$script_dir/study-note-record.py" --vault "$vault_root" 2>/dev/null | head -n 1 || true)
 fi
 
 # hot.md carries no note list, so registration cannot be checked the same way.
