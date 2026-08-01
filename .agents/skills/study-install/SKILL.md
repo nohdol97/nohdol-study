@@ -76,6 +76,7 @@ Phase 1 requires no global tool beyond a POSIX shell and one supported agent CLI
 - `yt-dlp` and `ffmpeg`: Phase 2 video ingestion
 - `d2`: renders a diagram that has outgrown Mermaid, for the `diagram` skill
 - a local embedding server: semantic search over the notes, for `vault-search`
+- `colab-mcp`: agent access to Google Colab runtimes (GPU practice) — profile-gated external transmission, see below
 
 Missing optional tools are not installation failures.
 
@@ -106,6 +107,20 @@ server then answers `/api/version` while no model ever loads — a failure that
 looks like a hardware limit and is not. The script's own LaunchAgent sets no
 tuning variables, and it verifies by requesting an actual embedding rather than
 by checking that a port is open.
+
+#### Colab MCP server (profile-gated, external transmission)
+
+Google's official MCP server ([googlecolab/colab-mcp](https://github.com/googlecolab/colab-mcp)) lets the agent CLI create notebooks and run code on Colab runtimes, including the free T4 GPU — useful when practice work exceeds local memory. Everything it runs executes on Google's servers, so it is optional third-party transmission under the `AGENTS.md` §5 rule, not an ordinary local tool.
+
+- `corporate` profile: do not offer, install, or register it. Record `blocked-by-profile` in `REGISTRY.md` so a later session does not re-litigate the question.
+- `personal` profile: ask the user explicitly during this step. Never install it by default, and record the decision either way.
+
+```sh
+claude mcp list 2>/dev/null | grep -i colab                                        # observe only
+claude mcp add --scope user colab-mcp -- uvx "git+https://github.com/googlecolab/colab-mcp"   # only after explicit opt-in
+```
+
+Requires `uv`. The first use triggers an OAuth browser approval for Colab/Drive scopes, and the tools appear from the next CLI session, not the current one — say so instead of claiming live verification. Vault content does not go through this server; it exists to run practice code on public data and models.
 
 For Phase 2b, run `scripts/install-phase2b-tools.sh --check`. It observes Node,
 pnpm, Obsidian, and each pinned source tree without reaching the network and
@@ -147,7 +162,8 @@ Mention them, install none by default, and set one up only when the user asks:
   `sources.local.example.toml`, and enable only the sources this machine wants.
   A source using the `geeknews` pipeline additionally needs a `.env` API key;
   `feed` sources need none. See `docs/guides/feed-scraper.md`.
-- `examples/telegram_bot/` — mobile bridge. See
+- `examples/telegram_bot/` — read-only mobile bridge: it searches, reads, and
+  explains the vault but never writes to it. See
   `docs/guides/mobile-telegram-bot.md`.
 
 Record in `REGISTRY.md` which automations this installation actually runs, since
@@ -159,11 +175,11 @@ Only needed when this installation drives the harness from a surface with no
 human approving tool calls, such as the Telegram bot in `examples/`. Everywhere
 else the permission prompt is already the gate and this step is skipped.
 
-`.agents/hooks/study-tool-guard.py` is that gate: it confines writes to the
-vault, refuses home-directory sweeps that trip macOS privacy prompts, and holds
-new `wiki/` notes to the note-writer contract. It acts only when the surface
-sets `STUDY_SURFACE=telegram`, so registering it cannot disturb interactive
-sessions.
+`.agents/hooks/study-tool-guard.py` is that gate: it makes the knowledge root
+read-only, confines writing to `_workspace/` and the temp directory, and refuses
+home-directory sweeps that trip macOS privacy prompts. It acts only when the
+surface sets `STUDY_SURFACE=telegram`, so registering it cannot disturb
+interactive sessions.
 
 Registration is per CLI and is not tracked here, because it names an absolute
 installation path:
@@ -195,9 +211,14 @@ is present but unregistered fails silently:
 ```sh
 STUDY_SURFACE=telegram agy --dangerously-skip-permissions \
   -p "Create the file ~/guard-probe.md containing 'probe'. Quote any error."
+
+STUDY_SURFACE=telegram agy --dangerously-skip-permissions \
+  -p "Create the file vault/wiki/guard-probe.md containing 'probe'. Quote any error."
 ```
 
-The write must be refused and no file may appear.
+Both writes must be refused and no file may appear. The second probe is the one
+worth running twice, because a guard that still allows the vault looks healthy
+on the first probe while leaving the knowledge root open.
 
 ### 7. Verify
 

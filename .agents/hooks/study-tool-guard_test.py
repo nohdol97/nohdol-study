@@ -15,6 +15,8 @@ import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# note-writer 계약을 완전히 만족하는 노트. 이 표면에서는 이것조차 막혀야 한다 —
+# 판정 기준이 내용의 형식이 아니라 목적지라는 것이 읽기 전용의 뜻이다.
 GOOD_NOTE = "\n".join(
     [
         "---",
@@ -156,7 +158,6 @@ def main():
         )
 
         print("쓰기 경로")
-        check("vault 안 노트는 통과한다", write(root, os.path.join(vault, "wiki", "어떤 개념.md"))[0], "allow")
         check(
             "하네스 저장소 쓰기는 차단한다",
             write(root, os.path.join(root, "AGENTS.md"), content=None, tool="Edit")[0],
@@ -168,7 +169,7 @@ def main():
             "deny",
         )
         check(
-            "_workspace 는 제안을 두는 곳이라 허용한다",
+            "_workspace 는 스크래치라 허용한다",
             write(root, os.path.join(root, "_workspace", "proposal.md"), content=None, tool="Edit")[0],
             "allow",
         )
@@ -177,74 +178,42 @@ def main():
             write(root, os.path.join(scratch_dir(root), "scratch.txt"), content=None, tool="Edit")[0],
             "allow",
         )
+        check("상대 경로로 저장소를 건드리면 차단한다", write(root, "AGENTS.md", content=None, tool="Edit")[0], "deny")
+
+        print("지식 루트는 읽기 전용")
+        # 이 표면은 질의응답만 한다. 계약을 만족하는 노트조차 통과하지 않는 것이
+        # 요점이다 — 막는 기준은 내용의 형식이 아니라 어디에 쓰느냐다.
+        decision, reason = write(root, os.path.join(vault, "wiki", "어떤 개념.md"))
+        check("계약을 만족하는 노트도 차단한다", decision, "deny")
+        check("사유가 읽기 전용임을 밝힌다", "read-only" in reason, True)
+        check("사유가 note-writer 와 대화형 세션으로 안내한다", "note-writer" in reason and "interactive" in reason, True)
+
+        check(
+            "index·log 같은 항해 파일도 차단한다",
+            write(root, os.path.join(vault, "log.md"), content="# log\n")[0],
+            "deny",
+        )
+        # raw/ 캡처가 막히지 않으면 ingest 가 그대로 돈다.
+        check(
+            "raw 캡처 저장도 차단한다",
+            write(root, os.path.join(vault, "raw", "page.md"), content="captured\n")[0],
+            "deny",
+        )
+        check(
+            "Edit 도 같은 판정을 받는다",
+            write(root, os.path.join(vault, "wiki", "어떤 개념.md"), content=None, tool="Edit")[0],
+            "deny",
+        )
         # vault 는 심링크다. 실경로로 정규화하지 않으면 경로 검사가 통째로 빗나간다.
         check(
             "심링크를 지나 실경로로 판정한다",
             write(root, os.path.join(root, "knowledge", "wiki", "어떤 개념.md"))[0],
-            "allow",
+            "deny",
         )
         check(
             "상대 경로도 cwd 기준으로 판정한다",
             write(root, "vault/wiki/어떤 개념.md")[0],
-            "allow",
-        )
-        check("상대 경로로 저장소를 건드리면 차단한다", write(root, "AGENTS.md", content=None, tool="Edit")[0], "deny")
-
-        print("노트 계약")
-        missing = GOOD_NOTE.replace("verification: source-backed\n", "")
-        decision, reason = write(root, os.path.join(vault, "wiki", "어떤 개념.md"), content=missing)
-        check("필수 필드가 빠지면 차단한다", decision, "deny")
-        check("사유가 빠진 필드를 지목한다", "verification" in reason, True)
-        check("사유가 note-writer 로 안내한다", "note-writer" in reason, True)
-
-        check(
-            "프론트매터가 아예 없으면 차단한다",
-            write(root, os.path.join(vault, "wiki", "어떤 개념.md"), content="# 어떤 개념\n\n본문.\n")[0],
             "deny",
-        )
-        check(
-            "status 값이 계약 밖이면 차단한다",
-            write(
-                root,
-                os.path.join(vault, "wiki", "어떤 개념.md"),
-                content=GOOD_NOTE.replace("status: seed", "status: draft"),
-            )[0],
-            "deny",
-        )
-        check(
-            "verification 값이 계약 밖이면 차단한다",
-            write(
-                root,
-                os.path.join(vault, "wiki", "어떤 개념.md"),
-                content=GOOD_NOTE.replace("verification: source-backed", "verification: ok"),
-            )[0],
-            "deny",
-        )
-        check(
-            "날짜 형식이 어긋나면 차단한다",
-            write(
-                root,
-                os.path.join(vault, "wiki", "어떤 개념.md"),
-                content=GOOD_NOTE.replace("checked: 2026-07-26", "checked: 2026/07/26"),
-            )[0],
-            "deny",
-        )
-        # H1 과 파일명이 어긋나면 위키링크가 노트를 못 찾는다.
-        check(
-            "H1 이 파일명과 다르면 차단한다",
-            write(root, os.path.join(vault, "wiki", "다른 이름.md"), content=GOOD_NOTE)[0],
-            "deny",
-        )
-        check(
-            "wiki 밖 vault 파일에는 노트 계약을 적용하지 않는다",
-            write(root, os.path.join(vault, "log.md"), content="# log\n")[0],
-            "allow",
-        )
-        # Edit 은 이미 이 게이트를 통과한 노트의 일부만 바꾼다.
-        check(
-            "Edit 은 경로만 본다",
-            write(root, os.path.join(vault, "wiki", "어떤 개념.md"), content=None, tool="Edit")[0],
-            "allow",
         )
 
         print("Bash — 홈 스캔과 보호 경로")
@@ -278,7 +247,12 @@ def main():
             bash(root, "echo hi | tee -a %s" % os.path.expanduser("~/notes.md"))[0],
             "deny",
         )
-        check("vault 안 리다이렉션은 통과한다", bash(root, "echo hi > vault/wiki/tmp.md")[0], "allow")
+        check("vault 안 리다이렉션도 차단한다", bash(root, "echo hi > vault/wiki/tmp.md")[0], "deny")
+        check(
+            "_workspace 리다이렉션은 통과한다",
+            bash(root, "echo hi > _workspace/scratch.txt")[0],
+            "allow",
+        )
         # 아래 셋은 오탐이 나기 쉬운 형태다. 하나라도 막히면 봇이 아무것도 못 한다.
         check("stderr 버리기는 통과한다", bash(root, "rg foo vault/ 2>/dev/null")[0], "allow")
         check("파일 서술자 병합은 통과한다", bash(root, "make build > /dev/null 2>&1")[0], "allow")
@@ -288,13 +262,13 @@ def main():
         # 텔레그램 봇이 실제로 띄우는 CLI는 Claude Code가 아니라 agy다.
         # 도구 이름도 인자 키도 전부 다르므로 같은 규칙을 그 형식으로도 고정한다.
         check(
-            "write_to_file 이 vault 안이면 통과한다",
+            "write_to_file 이 vault 로 향하면 차단한다",
             agy(
                 root,
                 "write_to_file",
                 {"TargetFile": os.path.join(vault, "wiki", "어떤 개념.md"), "CodeContent": GOOD_NOTE},
             )[0],
-            "allow",
+            "deny",
         )
         check(
             "write_to_file 이 홈으로 향하면 차단한다",
@@ -306,18 +280,24 @@ def main():
             "deny",
         )
         check(
-            "write_to_file 도 노트 계약을 검사한다",
+            "write_to_file 도 _workspace 는 통과한다",
             agy(
                 root,
                 "write_to_file",
-                {"TargetFile": os.path.join(vault, "wiki", "어떤 개념.md"), "CodeContent": "# 어떤 개념\n"},
+                {"TargetFile": os.path.join(root, "_workspace", "index.json"), "CodeContent": "{}"},
             )[0],
-            "deny",
+            "allow",
         )
         check(
-            "file_change 는 경로만 본다",
+            "file_change 도 vault 면 차단한다",
             agy(root, "file_change", {"TargetFile": os.path.join(vault, "wiki", "어떤 개념.md")})[0],
-            "allow",
+            "deny",
+        )
+        # 읽기 전용 표면에서 가장 위험한 실패는 노트가 조용히 사라지는 것이다.
+        check(
+            "delete_file 로 노트를 지우는 것도 차단한다",
+            agy(root, "delete_file", {"TargetFile": os.path.join(vault, "wiki", "어떤 개념.md")})[0],
+            "deny",
         )
         check(
             "delete_file 도 vault 밖이면 차단한다",

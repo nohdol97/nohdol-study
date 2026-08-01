@@ -111,7 +111,8 @@
 - **완료 기준**: 기존 지식은 보존되고, 설치처 정보는 미추적 `REGISTRY.md`에만 있으며, 누락 도구와 실환경 미검증 항목이 명시된다.
 - **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치하며, 사용자의 상시 승인 결정에 따라 의존성 설치 및 빌드가 자동 진행된다. 전역 스킬·vault는 건드리지 않는다. hash 불일치·미충족 runtime·파싱 불가 pin·`python3` 부재는 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. 이동한 tag도 막지만 이는 변조 신호라 API 미도달 시에는 보고 후 진행한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
 - **로컬 임베딩 서버**: `install-embedding.sh --check|--install`이 `vault-search`용 임베딩 서버를 설치한다. 설치 메모리에 맞춰 모델을 고르고 무엇을 골랐는지 보고하며 `--model`로 덮어쓸 수 있다. **기준은 하드웨어가 아니라 노트 언어다** — 정답 노트를 아는 한국어 질의 8건으로 재보니 영어 중심 `nomic-embed-text`는 10위 안 적중이 **8건 중 2건**(MRR 0.067)이었고, "배포 전에 자동으로 막는 방법"에 GeekNews의 "고객 이탈을 막는법"을 더 위에 올렸다(의미가 아니라 `막다`에 걸린 것). 그래서 메모리가 허용하면 다국어 모델이 기본이고, 작은 영어 모델은 약점을 숨기지 않고 보고하는 폴백이다. **`brew services`로 설치하지 않는다** — 그 plist가 `OLLAMA_KV_CACHE_TYPE=q8_0`을 강제하는데 인코더 모델엔 그 캐시가 없어 `/api/version`은 답하면서 모델이 영원히 안 올라온다(하드웨어 한계처럼 보이지만 아니다). 스크립트는 포트가 아니라 **실제 임베딩 응답**으로 검증한다.
-- **선택적 로컬 자동화**: `examples/` 아래 레퍼런스 구현(`feed_scraper`, `telegram_bot`)을 안내만 하고 기본 설치하지 않는다. 요청이 있을 때만 `_workspace/`로 복사해 구성하며, 이 설치처가 실제로 돌리는 자동화는 `REGISTRY.md`에 기록한다. 피드 스크래퍼는 소스 카탈로그만 추적하고 어떤 소스를 켤지는 비추적 `sources.local.toml`이 정한다.
+- **Colab MCP 서버(프로필 게이트)**: 공식 `googlecolab/colab-mcp`를 선택 항목으로 확인한다. 코드·데이터가 Google 런타임에서 실행되는 외부 전송이므로 `corporate` 설치처에는 설치·등록하지 않고 `blocked-by-profile`로 기록하며, `personal`에서만 명시 동의를 받아 `claude mcp add --scope user`로 등록하고 결정을 `REGISTRY.md`에 남긴다. 첫 사용 시 OAuth 승인, 도구는 다음 세션부터 반영. vault 내용은 이 서버로 보내지 않는다.
+- **선택적 로컬 자동화**: `examples/` 아래 레퍼런스 구현(`feed_scraper`, 읽기 전용 조회 표면인 `telegram_bot`)을 안내만 하고 기본 설치하지 않는다. 요청이 있을 때만 `_workspace/`로 복사해 구성하며, 이 설치처가 실제로 돌리는 자동화는 `REGISTRY.md`에 기록한다. 피드 스크래퍼는 소스 카탈로그만 추적하고 어떤 소스를 켤지는 비추적 `sources.local.toml`이 정한다.
 
 ## study-video
 

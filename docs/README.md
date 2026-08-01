@@ -6,7 +6,7 @@
 
 | 가이드 | 대상 | 요지 |
 |---|---|---|
-| [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 | 모바일 소크라테스 학습, 인라인 버튼 제어, MessageEntity 기반 무결점 서식 렌더링 및 로컬 URL 정제, launchd 부팅 시 자동 시작, AGENTS.md 보안 화이트리스트 준수 |
+| [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 (읽기 전용) | 지식 루트를 읽기만 하는 조회·문답 표면, 모바일 소크라테스 학습, 인라인 버튼 제어, MessageEntity 기반 무결점 서식 렌더링 및 로컬 URL 정제, launchd 부팅 시 자동 시작, AGENTS.md 보안 화이트리스트 준수 |
 | [피드 스크래퍼](guides/feed-scraper.md) | RSS 소스 → vault 자동 수집 | 카탈로그(추적)와 컴퓨터별 선택(비추적) 분리, `feed`는 제목·링크만 쌓아 API 호출 0, `geeknews`는 점수 게이트 후 요약·분류, 마커 기반 중복 방지, launchd 자동 실행 |
 
 ## ADR

@@ -56,7 +56,7 @@ AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거�
 ```
 
 ### 2단계: 모바일 텔레그램 스터디 봇 구동 (선택 사항)
-텔레그램의 `@BotFather`에게서 봇 토큰을 발급받은 후, Mac 터미널에서 아래 명령어로 봇을 백그라운드에 구동한다:
+폰에서 볼트를 **검색·조회·문답**하는 읽기 전용 브리지다. 노트 작성·수정·삭제는 하지 않으며, 그 경계는 안내문이 아니라 `.agents/hooks/study-tool-guard.py`가 강제한다. 텔레그램의 `@BotFather`에게서 봇 토큰을 발급받은 후, Mac 터미널에서 아래 명령어로 봇을 백그라운드에 구동한다:
 
 ```bash
 export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHI..."
@@ -120,7 +120,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 이 프로젝트의 세부 아키텍처 결정(ADR), 단계별 구현 스펙(Specs), 보안 검토 보고서는 모두 `docs/` 디렉터리에 체계적으로 정리되어 있다.
 
 - **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
-- **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드
+- **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드 (읽기 전용 — 조회·문답만)
 - **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차
 - **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록
 - **운영 규칙 원본**: [AGENTS.md](AGENTS.md) (모든 AI 에이전트 및 CLI가 세션 시작 시 우선 준수하는 불변 규칙)
