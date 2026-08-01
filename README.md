@@ -31,12 +31,12 @@
 - **안전한 격리 런타임**: 외부 도구 트리는 `.tools/PINS.md`의 tree hash를 검증하여 배치하며, 승인 없는 의존성 설치 및 외부 전송을 철저히 차단
 
 ### 4. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
-- **이동 중 소크라테스식 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 AI와 문답하고, Mac 백그라운드 엔진이 지식 볼트에 노트를 직접 기록
+- **이동 중 읽기 전용 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 기존 지식 볼트를 검색·조회·설명하고 소크라테스식 문답을 진행하며, 노트 작성·수정·삭제는 하지 않음
 - **클라우드 실시간 동기화**: Mac에서 생성·수정된 노트는 Google Drive를 통해 스마트폰 Obsidian 앱에 즉시 동기화
 - **인라인 버튼 및 메뉴 제어**: 좌측 하단 `[Menu]` 버튼과 터치 버튼으로 AI 모델(`Gemini 3.1 Pro` ↔ `2.5 Flash`) 및 추론 강도(`High/Med/Low`) 즉시 전환
 - **무결점 서식 렌더링 (`MessageEntity`)**: 마크다운 기호(`\`, `*`, `` ` ``) 노출 없이 스타일 속성 배열만 분리 전송하고 로컬 경로(`file://`)를 정제하는 방어 아키텍처 탑재
 - **맥 OS 부팅 시 자동 구동 (`launchd`)**: 재부팅 후에도 명령어 입력 없이 상시 구동되며 프로세스 종료 시 자동 복구(`KeepAlive`)
-- **AGENTS.md Rule 5 보안 준수**: 환경 변수 주입 방식 및 Chat ID 화이트리스트 차단 기능으로 완벽한 보안 격리
+- **AGENTS.md Rule 5 보안 경계**: 환경 변수 주입, Chat ID 화이트리스트, `STUDY_SURFACE=telegram` 도구 게이트로 vault 쓰기·삭제와 홈 디렉터리 스윕을 차단
 
 ---
 
@@ -110,8 +110,9 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 ├── study-session/       # 물어서 가르치는 소크라테스식 학습 대화
 ├── study-video/         # 2-pass 영상 학습 및 타임스탬프 프레임 추출
 ├── understand/          # Understand Anything 9개 모드 내부 라우팅
+├── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
 ├── vault-gardening/     # 지식 루트 드리프트·고아/깨진 링크·index 비대화 점검
-└── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
+└── vault-search/        # 로컬 임베딩으로 curated 노트를 의미 검색
 ```
 
 ---
