@@ -220,6 +220,31 @@ Both writes must be refused and no file may appear. The second probe is the one
 worth running twice, because a guard that still allows the vault looks healthy
 on the first probe while leaving the knowledge root open.
 
+### 6b. Egress guard — only when a notebook MCP server is registered
+
+`.agents/hooks/study-egress-guard.py` keeps vault material out of an external
+notebook runtime. Unlike the tool guard it runs on every surface, because the
+permission prompt asks whether to run a tool and never whether the payload
+carries the user's notes. It is already registered for Claude Code in the
+tracked `.claude/settings.json` and for Codex in `.codex/config.toml`, so this
+step is only about confirming it fires.
+
+There is nothing to install when no notebook server is registered — the guard
+matches `mcp__colab-mcp__*` and stays silent otherwise. When one is registered,
+confirm the guard is live before the first real cell:
+
+```sh
+printf '%s' '{"tool_name":"mcp__colab-mcp__add_code_cell","tool_input":{"code":"p = \"vault/wiki/a.md\""}}' \
+  | .agents/hooks/study-egress-guard.py
+```
+
+A deny payload must come back. Silence means the guard is not doing its job, and
+silence is also what an unregistered hook looks like from inside a session, so
+check the CLI's own hook listing rather than assuming.
+
+Codex support for `PreToolUse` has not been observed in a live session; Claude
+Code is the verified path.
+
 ### 7. Verify
 
 Run:

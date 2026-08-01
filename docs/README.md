@@ -17,6 +17,7 @@
 | [002](adr/002-phase2-derived-workflows.md) | 2026-07-25 | 활성 | Phase 2 수집·NotebookLM·그래프 파생 워크플로 |
 | [003](adr/003-cli-learning-integrations.md) | 2026-07-25 | 부분 대체(→004) | Understand Anything 전체 스킬과 선택적 학습 연동의 project-local 채택 |
 | [004](adr/004-remove-notebooklm-export.md) | 2026-07-25 | 활성 | NotebookLM export 스킬 제거 — 회수 0건, 763줄 유지 비용 대비 무효 |
+| [005](adr/005-egress-guard-for-external-runtimes.md) | 2026-08-01 | 활성 | 외부 런타임 유출 게이트를 별도 훅으로 — 승인 프롬프트는 페이로드 내용을 묻지 않는다 |
 
 ## 스펙
 

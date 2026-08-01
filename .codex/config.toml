@@ -14,6 +14,18 @@ command = '"$(git rev-parse --show-toplevel)/.agents/hooks/study-session-start.s
 timeout = 10
 statusMessage = "Loading study context"
 
+# Keeps vault material out of an external notebook runtime. Registered here for
+# parity with .claude/settings.json; whether this CLI honors PreToolUse has not
+# been observed in a live Codex session, so treat Claude Code as the verified path.
+[[hooks.PreToolUse]]
+matcher = "mcp__colab-mcp__.*"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = '"$(git rev-parse --show-toplevel)/.agents/hooks/study-egress-guard.py"'
+timeout = 10
+statusMessage = "Checking the cell for vault material"
+
 [[hooks.PostToolUse]]
 matcher = "Write|Edit|MultiEdit|NotebookEdit"
 

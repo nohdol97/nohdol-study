@@ -9,6 +9,15 @@
             "command": "\"$CLAUDE_PROJECT_DIR/.agents/hooks/study-tool-guard.py\""
           }
         ]
+      },
+      {
+        "matcher": "mcp__colab-mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.agents/hooks/study-egress-guard.py\""
+          }
+        ]
       }
     ],
     "PostToolUse": [
