@@ -143,13 +143,13 @@ def main():
         # 월 인덱스 — 폴더에서 다시 만들어 고아 노트를 막는다.
         print("\nrefresh_month_index")
         import datetime
-        month_dir = os.path.join(m.VAULT_DIR, "2026.7")
+        month_dir = os.path.join(m.DAILY_DIR, "2026.7")
         os.makedirs(month_dir, exist_ok=True)
         for day in ("2026-07-24", "2026-07-25"):
             with open(os.path.join(month_dir, f"{day}.md"), "w",
                       encoding="utf-8") as f:
                 f.write(f"# {day}\n")
-        index_path = os.path.join(m.VAULT_DIR, "2026.7 인덱스.md")
+        index_path = os.path.join(m.DAILY_DIR, "2026.7 인덱스.md")
         # 하루가 빠진 인덱스를 만들어 둔다. 실제로 이런 상태였다.
         with open(index_path, "w", encoding="utf-8") as f:
             f.write("---\ncreated: 2026-07-01\nupdated: 2026-07-01\n---\n\n"
@@ -163,6 +163,20 @@ def main():
         check("created는 보존된다", "created: 2026-07-01" in index, True)
         check("허브를 related로 가리킨다",
               '- "[[GeekNews 큐레이션 허브]]"' in index, True)
+
+        # 층이 갈리는 기준은 "사람의 판단이 들어갔는가"다. 자동 생성물(캡처·월 인덱스)은
+        # raw, 사람이 정한 분류(주제 문서)만 wiki. 한쪽으로 몰리면 원자 노트를 세는
+        # 지표가 수집량에 휩쓸리므로 경로로 못박는다.
+        check("일일 캡처는 raw/geeknews 아래에 쌓인다",
+              m.note_path(datetime.datetime(2026, 7, 25)).startswith(m.DAILY_DIR), True)
+        check("월 인덱스도 raw/geeknews에 있다",
+              index_path.startswith(m.DAILY_DIR), True)
+        check("raw 산출물은 wiki를 건드리지 않는다",
+              index_path.startswith(m.WIKI_ROOT), False)
+        check("주제 문서만 wiki/GeekNews에 남는다",
+              m.TOPIC_DIR == os.path.join(m.WIKI_ROOT, "GeekNews"), True)
+        check("주제 문서는 하위 디렉터리를 두지 않는다",
+              os.path.basename(m.TOPIC_DIR), "GeekNews")
 
         # 두 번째 호출은 아무것도 바꾸지 않아야 한다. 매 실행 mtime을 건드리면
         # 파일 시각에 기대는 도구가 헛돌고 클라우드 sync도 매번 올린다.

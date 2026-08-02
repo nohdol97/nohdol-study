@@ -15,6 +15,7 @@
 - **노트 계약 (Note Contract)**: Flat YAML 프론트매터, 위키링크, 주장별 출처 및 검증 상태(`unverified` ~ `primary-confirmed`) 엄격 집행
 - **쓰기 시점 게이트 (`PostToolUse`)**: 노트를 저장하는 순간 다이어그램 렌더 실패·프론트매터 계약 위반·해석되지 않는 `sources:` 경로를 검사해 같은 턴에서 고치게 한다. 스킬을 거치지 않은 작성자에게도 파일 기준으로 적용된다
 - **마무리 게이트 (`Stop`)**: 이번 세션에 쓴 노트가 기록됐는지, **무엇이 그 노트를 가리키는지**, 새로 건 링크가 실제로 해석되는지 확인한다. 도달 가능성 판정은 `vault-gardening`과 같은 정의를 쓴다
+- **유출 게이트 (`PreToolUse`)**: 노트북 셀에 지식 루트 경로·위키링크·노트 프론트매터가 섞이면 막는다. 승인 프롬프트는 "이 도구를 실행할까"를 묻지 **페이로드에 노트가 들어 있는지**를 묻지 않기 때문에, 이 게이트만 대화형 세션에서도 켜져 있다. 공개 데이터셋에서 실측한 수치는 vault 자료가 아니므로 통과한다
 
 ### 2. 🔍 Phase 2: 다중 매체 수집 및 지식 그래프
 - **웹 문서 캡처 (`defuddle`)**: 광고·내비게이션을 제거한 깨끗한 마크다운 불변 캡처
@@ -30,12 +31,12 @@
 - **안전한 격리 런타임**: 외부 도구 트리는 `.tools/PINS.md`의 tree hash를 검증하여 배치하며, 승인 없는 의존성 설치 및 외부 전송을 철저히 차단
 
 ### 4. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
-- **이동 중 소크라테스식 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 AI와 문답하고, Mac 백그라운드 엔진이 지식 볼트에 노트를 직접 기록
+- **이동 중 읽기 전용 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 기존 지식 볼트를 검색·조회·설명하고 소크라테스식 문답을 진행하며, 노트 작성·수정·삭제는 하지 않음
 - **클라우드 실시간 동기화**: Mac에서 생성·수정된 노트는 Google Drive를 통해 스마트폰 Obsidian 앱에 즉시 동기화
 - **인라인 버튼 및 메뉴 제어**: 좌측 하단 `[Menu]` 버튼과 터치 버튼으로 AI 모델(`Gemini 3.1 Pro` ↔ `2.5 Flash`) 및 추론 강도(`High/Med/Low`) 즉시 전환
 - **무결점 서식 렌더링 (`MessageEntity`)**: 마크다운 기호(`\`, `*`, `` ` ``) 노출 없이 스타일 속성 배열만 분리 전송하고 로컬 경로(`file://`)를 정제하는 방어 아키텍처 탑재
 - **맥 OS 부팅 시 자동 구동 (`launchd`)**: 재부팅 후에도 명령어 입력 없이 상시 구동되며 프로세스 종료 시 자동 복구(`KeepAlive`)
-- **AGENTS.md Rule 5 보안 준수**: 환경 변수 주입 방식 및 Chat ID 화이트리스트 차단 기능으로 완벽한 보안 격리
+- **AGENTS.md Rule 5 보안 경계**: 환경 변수 주입, Chat ID 화이트리스트, `STUDY_SURFACE=telegram` 도구 게이트로 vault 쓰기·삭제와 홈 디렉터리 스윕을 차단
 
 ---
 
@@ -56,7 +57,7 @@ AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거�
 ```
 
 ### 2단계: 모바일 텔레그램 스터디 봇 구동 (선택 사항)
-텔레그램의 `@BotFather`에게서 봇 토큰을 발급받은 후, Mac 터미널에서 아래 명령어로 봇을 백그라운드에 구동한다:
+폰에서 볼트를 **검색·조회·문답**하는 읽기 전용 브리지다. 노트 작성·수정·삭제는 하지 않으며, 그 경계는 안내문이 아니라 `.agents/hooks/study-tool-guard.py`가 강제한다. 텔레그램의 `@BotFather`에게서 봇 토큰을 발급받은 후, Mac 터미널에서 아래 명령어로 봇을 백그라운드에 구동한다:
 
 ```bash
 export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHI..."
@@ -109,8 +110,9 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 ├── study-session/       # 물어서 가르치는 소크라테스식 학습 대화
 ├── study-video/         # 2-pass 영상 학습 및 타임스탬프 프레임 추출
 ├── understand/          # Understand Anything 9개 모드 내부 라우팅
+├── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
 ├── vault-gardening/     # 지식 루트 드리프트·고아/깨진 링크·index 비대화 점검
-└── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
+└── vault-search/        # 로컬 임베딩으로 curated 노트를 의미 검색
 ```
 
 ---
@@ -120,7 +122,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 이 프로젝트의 세부 아키텍처 결정(ADR), 단계별 구현 스펙(Specs), 보안 검토 보고서는 모두 `docs/` 디렉터리에 체계적으로 정리되어 있다.
 
 - **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
-- **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드
+- **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드 (읽기 전용 — 조회·문답만)
 - **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차
 - **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록
 - **운영 규칙 원본**: [AGENTS.md](AGENTS.md) (모든 AI 에이전트 및 CLI가 세션 시작 시 우선 준수하는 불변 규칙)

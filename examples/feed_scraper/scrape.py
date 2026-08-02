@@ -73,6 +73,7 @@ if not _root:
     print("하네스 루트를 찾지 못했습니다. sources.local.toml에 study_root를 적으세요.")
     sys.exit(1)
 WIKI_ROOT = os.path.join(_root, "vault", "wiki")
+RAW_ROOT = os.path.join(_root, "vault", "raw")
 
 # 켤 소스. 카탈로그에 없는 키는 오타이므로 조용히 넘기지 않는다.
 ENABLED = CONFIG.get('enabled', [])
@@ -89,7 +90,20 @@ GEMINI_MODEL = "gemini-flash-lite-latest"
 
 GEEKNEWS_RSS = "https://news.hada.io/rss/news"
 TOPIC_URL = "https://news.hada.io/topic?id={topic_id}"
-VAULT_DIR = os.path.join(WIKI_ROOT, "GeekNews")
+# 산출물이 두 층으로 갈린다. 기준은 "사람의 판단이 들어갔는가"이다.
+#
+# `raw/geeknews/`에는 **자동 생성물만** 쌓는다. 일일 리포트는 하루치에 서로 무관한
+# 글이 여러 개 들어가는 불변 캡처이고, 월 인덱스는 그 폴더를 훑어 만든 링크 목록일
+# 뿐이라 둘 다 큐레이션 판단이 하나도 없다. 이것들을 `wiki/`에 두면 원자 노트를 세는
+# 모든 지표(고아 노트, status 분포, 지식 그래프)가 수집량에 휩쓸린다.
+#
+# `wiki/GeekNews/`에는 **주제 문서만** 남는다. 무엇을 어느 주제로 볼지가 사람이 정하는
+# 분류이고, 이어지는 원자 노트를 `related`에 적는 것도 사람이 한다.
+#
+# Obsidian은 wikilink를 vault 전체에서 이름으로 풀므로, 층이 갈려도 인덱스의
+# `[[2026-08-01]]`과 허브의 `[[2026.8 인덱스]]`는 그대로 걸린다.
+DAILY_DIR = os.path.join(RAW_ROOT, "geeknews")
+TOPIC_DIR = os.path.join(WIKI_ROOT, "GeekNews")
 
 # ---------------------------------------------------------
 # 소스 카탈로그.
@@ -244,9 +258,8 @@ BODY_HEADING = re.compile(r"^(#{1,4})\s", re.M)
 # 요약에 넘길 본문 길이 상한. GeekNews 본문은 1만 자를 넘기도 한다.
 SUMMARY_INPUT_LIMIT = 4000
 
-# 주제 문서를 둘 곳. 날짜별 파일은 원본으로 남고, 여기 문서들이 그 글을 주제별로
-# 가리킨다. 분류 기준이 바뀌면 원본에서 다시 만들 수 있다.
-TOPIC_DIR = os.path.join(VAULT_DIR, "주제")
+# 주제 문서 위치는 `TOPIC_DIR`(위쪽 층 구분 참고). 날짜별 파일은 원본으로 남고,
+# 주제 문서들이 그 글을 주제별로 가리킨다. 분류 기준이 바뀌면 원본에서 다시 만들 수 있다.
 
 # 최근 14일 10P+ 63건의 실제 분포에서 뽑은 분류다. 고정 목록인 이유는, 자유롭게
 # 주제를 지어내게 하면 "LLM"과 "LLMOps"와 "언어모델"이 각각 문서를 만들기 때문이다.
@@ -321,7 +334,7 @@ def pending_path(date_str):
 def note_path(date_obj):
     month_folder = f"{date_obj.year}.{date_obj.month}"
     return os.path.join(
-        VAULT_DIR, month_folder, f"{date_obj.strftime('%Y-%m-%d')}.md"
+        DAILY_DIR, month_folder, f"{date_obj.strftime('%Y-%m-%d')}.md"
     )
 
 
@@ -718,7 +731,9 @@ def refresh_month_index(date_obj):
     건드리지 않는다.
     """
     month = f"{date_obj.year}.{date_obj.month}"
-    folder = os.path.join(VAULT_DIR, month)
+    # 목록도 인덱스도 `raw/geeknews/`에 있다. 인덱스는 폴더를 훑어 만든 링크 목록일
+    # 뿐이라 사람의 판단이 하나도 들어가지 않는다 — 캡처와 같은 층이다.
+    folder = os.path.join(DAILY_DIR, month)
     if not os.path.isdir(folder):
         return
 
@@ -730,7 +745,7 @@ def refresh_month_index(date_obj):
     if not dates:
         return
 
-    path = os.path.join(VAULT_DIR, f"{month} 인덱스.md")
+    path = os.path.join(DAILY_DIR, f"{month} 인덱스.md")
     today_str = kst_now().strftime('%Y-%m-%d')
 
     # `created`는 처음 만든 날이므로 보존한다.
@@ -755,9 +770,10 @@ def refresh_month_index(date_obj):
         "sources: []\n"
         "---\n\n"
         f"# 📰 GeekNews {month} 아카이브 인덱스\n\n"
-        "> [!NOTE]\n"
-        f"> {month} 월에 자동 수집된 GeekNews 일일 리포트 {len(dates)}개의"
-        " 전체 목차 및 링크 인덱스입니다.\n\n"
+        f"> [!NOTE] {month} 월에 자동 수집된 GeekNews 일일 리포트 {len(dates)}개의"
+        f" 전체 목차 및 링크 인덱스입니다. 이 파일과 본문은 모두 자동 생성물이라"
+        f" `raw/geeknews/`에 있습니다. 주제별 큐레이션은"
+        " [[GeekNews 큐레이션 허브]]에서 시작하세요.\n\n"
         "## 일일 뉴스 리포트 목록\n\n"
         f"{listing}\n"
     )
@@ -767,6 +783,9 @@ def refresh_month_index(date_obj):
         strip = lambda s: re.sub(r"^updated: .*$", "", s, count=1, flags=re.M)
         if strip(previous) == strip(text):
             return
+    # 캡처가 `raw/`로 간 뒤로는 이 디렉터리가 저절로 생기지 않는다. 예전에는 일일
+    # 리포트를 같은 자리에 쓰면서 만들어졌다.
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w', encoding='utf-8') as f:
         f.write(text)
     print(f"  {month} 인덱스 {len(dates)}건 갱신")
@@ -790,14 +809,12 @@ def topic_note_header(name, today_str):
         "sources: []\n"
         "---\n\n"
         f"# {name}\n\n"
-        "> [!NOTE]\n"
-        f"> GeekNews 자동 수집분 중 {MIN_POINTS}P 이상인 글을 주제별로 모은 큐레이션\n"
-        "> 대기열입니다. 각 항목의 한 줄 요약은 **검증되지 않은 AI 생성 요약**이며\n"
-        "> 근거가 아닙니다. 원문을 읽고 판단할 대상의 목록으로만 쓰세요.\n"
-        "> 날짜순 원본은 `GeekNews/<연월>/`에 그대로 있습니다.\n\n"
-        "> [!TIP]\n"
-        "> 이 문서와 이어지는 원자적 노트는 frontmatter의 `related`에 직접\n"
-        "> 적어 주세요. 자동 수집은 그 값을 건드리지 않습니다.\n"
+        f"> [!NOTE] GeekNews 자동 수집분 중 {MIN_POINTS}P 이상인 글을 주제별로 모은 큐레이션 대기열입니다."
+        " 각 항목의 한 줄 요약은 **검증되지 않은 AI 생성 요약**이며 근거가 아닙니다."
+        " 원문을 읽고 판단할 대상의 목록으로만 쓰세요."
+        " 날짜순 원본은 `raw/geeknews/<연월>/`에 그대로 있습니다.\n\n"
+        "> [!TIP] 이 문서와 이어지는 원자적 노트는 frontmatter의 `related`에 직접"
+        " 적어 주세요. 자동 수집은 그 값을 건드리지 않습니다.\n"
     )
 
 
@@ -914,10 +931,9 @@ def feed_note_header(source, today_str):
         "sources: []\n"
         "---\n\n"
         f"# {source['name']}\n\n"
-        "> [!NOTE]\n"
-        "> 발행된 제목과 링크만 자동으로 쌓는 대기열입니다. 요약하지 않으므로\n"
-        "> 여기 있는 어떤 줄도 내용에 대한 주장이 아닙니다. 읽을 것을 고르는\n"
-        "> 목록으로만 쓰고, 읽은 뒤의 이해는 원자적 노트에 적으세요.\n"
+        "> [!NOTE] 발행된 제목과 링크만 자동으로 쌓는 대기열입니다. 요약하지 않으므로"
+        " 여기 있는 어떤 줄도 내용에 대한 주장이 아닙니다. 읽을 것을 고르는"
+        " 목록으로만 쓰고, 읽은 뒤의 이해는 원자적 노트에 적으세요.\n"
     )
 
 

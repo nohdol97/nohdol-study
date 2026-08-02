@@ -21,6 +21,19 @@ So this hook is that missing gate, and only that. It engages when
 because on an interactive surface the prompt already does this job and a second
 gate would only get in the user's way.
 
+Why the knowledge root is read-only here
+----------------------------------------
+The first version of this guard let a prompt-less surface write into `vault/`
+as long as the note satisfied the note-writer contract. A conforming
+frontmatter block is not the same thing as a note worth keeping: the contract
+is checkable, but whether a claim is verified, whether the note duplicates one
+that already exists, and whether `index.md`, `log.md`, and `hot.md` moved with
+it are judgment calls, and on this surface nobody was there to make them. So
+the knowledge root is now closed to writing entirely and the surface answers
+questions instead. `_workspace/` and the temp directory stay open because
+reading is not free of side effects — the semantic index `vault-search` reads
+lives there and refreshes itself as notes change.
+
 Contract
 --------
 Reads a PreToolUse payload on stdin, prints nothing when the call is allowed,
@@ -56,30 +69,6 @@ import sys
 # Surfaces that run with no human approving tool calls. Anything not listed
 # here keeps its permission prompt and is left alone.
 GUARDED_SURFACES = {"telegram"}
-
-# The note contract from note-writer/references/note-schema.md. Kept here as
-# data rather than parsed out of the reference, so the guard cannot be
-# weakened by a wording change in prose.
-REQUIRED_FIELDS = (
-    "type",
-    "status",
-    "created",
-    "updated",
-    "related",
-    "sources",
-    "verification",
-    "checked",
-)
-VALID_STATUS = {"seed", "developing", "mature", "evergreen"}
-VALID_VERIFICATION = {
-    "unverified",
-    "source-backed",
-    "primary-confirmed",
-    "cross-checked",
-    "contested",
-}
-ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-DATE_FIELDS = ("created", "updated", "checked")
 
 # Directories macOS protects with a TCC consent prompt. Touching one from a
 # background process raises a dialog the user cannot connect to anything they
@@ -166,113 +155,45 @@ def is_within(path, parent):
 def writable_roots(root):
     """Where a prompt-less surface may write.
 
-    The vault is the point of the surface. `_workspace/` holds proposals a
-    corporate-profile installation cannot apply directly, and the temp
-    directory is where scratch files belong. The harness repository itself is
-    deliberately absent: changing tracked harness files is metaskill's job and
-    needs a human at the prompt.
+    Scratch space only. `_workspace/` holds the semantic index and any proposal
+    the surface wants to leave behind, and the temp directory is where working
+    files belong. Two places are deliberately absent: the knowledge root, which
+    this surface reads and never changes, and the harness repository, because
+    changing tracked harness files is metaskill's job and needs a human at the
+    prompt.
     """
-    roots = [os.path.realpath(os.path.join(root, "vault"))]
-    roots.append(os.path.realpath(os.path.join(root, "_workspace")))
+    roots = [os.path.realpath(os.path.join(root, "_workspace"))]
     for temp in ("/tmp", os.environ.get("TMPDIR", "")):
         if temp:
             roots.append(os.path.realpath(temp))
     return [r for r in roots if r]
 
 
-def frontmatter_violations(content, expected_title):
-    """Check a curated note against the note-writer contract.
-
-    Returns a list of human-readable problems; empty means the note conforms.
-    """
-    lines = content.split("\n")
-    if not lines or lines[0].strip() != "---":
-        return ["it has no YAML frontmatter block opening on line 1"]
-
-    end = None
-    for number, line in enumerate(lines[1:], start=1):
-        if line.strip() == "---":
-            end = number
-            break
-    if end is None:
-        return ["its frontmatter block is never closed by a second ---"]
-
-    fields = {}
-    for line in lines[1:end]:
-        match = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$", line)
-        if match:
-            fields[match.group(1)] = match.group(2).strip()
-
-    problems = []
-    missing = [name for name in REQUIRED_FIELDS if name not in fields]
-    if missing:
-        problems.append("required frontmatter fields are missing: " + ", ".join(missing))
-
-    status = fields.get("status")
-    if status and status not in VALID_STATUS:
-        problems.append(
-            "status is %r but must be one of: %s" % (status, ", ".join(sorted(VALID_STATUS)))
-        )
-
-    verification = fields.get("verification")
-    if verification and verification not in VALID_VERIFICATION:
-        problems.append(
-            "verification is %r but must be one of: %s"
-            % (verification, ", ".join(sorted(VALID_VERIFICATION)))
-        )
-
-    for name in DATE_FIELDS:
-        value = fields.get(name)
-        if value and not ISO_DATE.match(value):
-            problems.append("%s is %r but must be an ISO date (YYYY-MM-DD)" % (name, value))
-
-    heading = None
-    for line in lines[end + 1 :]:
-        if line.startswith("# "):
-            heading = line[2:].strip()
-            break
-    if heading is None:
-        problems.append("the body has no H1 title")
-    elif heading != expected_title:
-        problems.append(
-            "the H1 %r does not match the filename %r; the note contract requires them to be identical"
-            % (heading, expected_title)
-        )
-
-    return problems
-
-
-def check_write(path_value, cwd, root, content, dialect):
+def check_write(path_value, cwd, root, dialect):
     if not path_value:
         return
     resolved = resolve(path_value, cwd)
-    roots = writable_roots(root)
-    if not any(is_within(resolved, allowed) for allowed in roots):
-        emit_deny(
-            "This surface runs without a permission prompt, so it may only write inside the "
-            "knowledge vault (plus _workspace/ and the temp directory). %s is outside all of "
-            "them. Write the knowledge into vault/ instead; changes to the harness repository "
-            "need an interactive session and the metaskill workflow." % resolved,
-            dialect,
-        )
-
-    if content is None:
+    if any(is_within(resolved, allowed) for allowed in writable_roots(root)):
         return
+
     vault = os.path.realpath(os.path.join(root, "vault"))
-    wiki = os.path.join(vault, "wiki")
-    if not is_within(resolved, wiki) or not resolved.endswith(".md"):
-        return
-
-    expected_title = os.path.basename(resolved)[: -len(".md")]
-    problems = frontmatter_violations(content, expected_title)
-    if problems:
+    if is_within(resolved, vault):
         emit_deny(
-            "This curated note does not satisfy the note-writer contract: %s. Use the "
-            "note-writer skill rather than writing the file directly — it carries the schema "
-            "in references/note-schema.md, and the index, log, and hot cache have to move with "
-            "the note." % "; ".join(problems),
+            "This surface is read-only: it answers from the knowledge base and does not change "
+            "it. %s is inside the knowledge root. Whether a note is worth keeping, whether it "
+            "duplicates one that exists, and whether index.md, log.md, and hot.md move with it "
+            "are judgment calls that need a person at the prompt, so write it from an "
+            "interactive session through the note-writer skill instead. Searching, reading, and "
+            "explaining are all available here." % resolved,
             dialect,
         )
+
+    emit_deny(
+        "This surface runs without a permission prompt and is read-only apart from scratch "
+        "space (_workspace/ and the temp directory). %s is outside both. Changes to the "
+        "knowledge root or the harness repository need an interactive session." % resolved,
+        dialect,
+    )
 
 
 def check_bash(command, cwd, root, dialect):
@@ -316,8 +237,9 @@ def check_bash(command, cwd, root, dialect):
         resolved = resolve(target, cwd)
         if not any(is_within(resolved, allowed) for allowed in roots):
             emit_deny(
-                "This command writes to %s, outside the vault this surface is allowed to "
-                "change. Write knowledge into vault/ instead." % resolved,
+                "This command writes to %s. This surface is read-only apart from scratch space "
+                "(_workspace/ and the temp directory); the knowledge root is read here and "
+                "changed from an interactive session." % resolved,
                 dialect,
             )
 
@@ -338,22 +260,23 @@ def read_call(payload):
     return DIALECT_CLAUDE, payload.get("tool_name", ""), args if isinstance(args, dict) else {}
 
 
-# Tool names that write a whole file, per CLI, mapped to the argument keys
-# holding the path and the content.
+# Tool names that change a file, per CLI, mapped to the argument key holding
+# the path. Only the path matters: a read-only surface is judged on where a
+# call would land, never on what it would put there.
 WRITE_TOOLS = {
     DIALECT_ANTIGRAVITY: {
-        "write_to_file": ("TargetFile", "CodeContent"),
-        "create_file": ("TargetFile", "CodeContent"),
-        "file_change": ("TargetFile", None),
-        "edit_notebook": ("TargetFile", None),
-        "delete_file": ("TargetFile", None),
-        "delete_directory": ("DirectoryPath", None),
+        "write_to_file": "TargetFile",
+        "create_file": "TargetFile",
+        "file_change": "TargetFile",
+        "edit_notebook": "TargetFile",
+        "delete_file": "TargetFile",
+        "delete_directory": "DirectoryPath",
     },
     DIALECT_CLAUDE: {
-        "Write": ("file_path", "content"),
-        "Edit": ("file_path", None),
-        "MultiEdit": ("file_path", None),
-        "NotebookEdit": ("notebook_path", None),
+        "Write": "file_path",
+        "Edit": "file_path",
+        "MultiEdit": "file_path",
+        "NotebookEdit": "notebook_path",
     },
 }
 SHELL_TOOLS = {
@@ -385,14 +308,9 @@ def main():
         check_bash(args.get(command_key, ""), cwd, root, dialect)
         return
 
-    keys = WRITE_TOOLS[dialect].get(tool)
-    if keys:
-        path_key, content_key = keys
-        # Only a whole-file write carries content worth judging. A partial edit
-        # changes a note that already passed this gate, so for those the path
-        # check is the whole check.
-        content = args.get(content_key) if content_key else None
-        check_write(args.get(path_key, ""), payload.get("cwd") or root, root, content, dialect)
+    path_key = WRITE_TOOLS[dialect].get(tool)
+    if path_key:
+        check_write(args.get(path_key, ""), payload.get("cwd") or root, root, dialect)
 
 
 if __name__ == "__main__":
