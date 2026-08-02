@@ -106,7 +106,9 @@ sequenceDiagram
     assert result.returncode == 0, result.stderr
 
     # The shapes that stack delimiters are not labels holding a parenthesis.
-    for shape in ["A[(store)]", "A((circle))", "A[[Some Note]]", "A{{hex}}"]:
+    # The subroutine shape is quoted here because a bare one is a wikilink the
+    # renderer swallows; that rule is exercised on its own below.
+    for shape in ["A[(store)]", "A((circle))", 'A[["Some Note"]]', "A{{hex}}"]:
         result = run(str(write(root, f"shape-{shape[1:3]}.md", f"```mermaid\nflowchart LR\n  {shape} --> B[ok]\n```\n")))
         assert result.returncode == 0, f"{shape}: {result.stderr}"
 
@@ -266,6 +268,35 @@ sequenceDiagram
         result = run(str(write(root, "safe-decl.md", f"```mermaid\nflowchart LR\n  A[x] --> B[y]\n  {statement}\n```\n")))
         assert result.returncode == 0, f"{statement}: {result.stderr}"
 
+    # A wikilink pasted into a diagram parses as the subroutine shape, so
+    # nothing fails and the box is drawn holding a note title that links
+    # nowhere. Only quoting tells the two apart.
+    result = run(
+        str(
+            write(
+                root,
+                "subroutine-link.md",
+                "```mermaid\ngraph TD\n"
+                "  EV -->|연동| OBS[[LLM 트레이싱과 OpenTelemetry 계측]]\n```\n",
+            )
+        )
+    )
+    assert result.returncode == 1
+    assert "subroutine label 'LLM 트레이싱과 OpenTelemetry 계측' is unquoted" in result.stderr, result.stderr
+    assert "connects to nothing" in result.stderr, result.stderr
+
+    # Both repairs the message offers must pass: the plain box, and the
+    # subroutine shape kept deliberately.
+    for shape in ['OBS["LLM 트레이싱과 OpenTelemetry 계측"]',
+                  'OBS[["LLM 트레이싱과 OpenTelemetry 계측"]]']:
+        result = run(str(write(root, "subroutine-fixed.md", f"```mermaid\ngraph TD\n  EV -->|연동| {shape}\n```\n")))
+        assert result.returncode == 0, f"{shape}: {result.stderr}"
+
+    # The rule belongs to the node-shaped types only, and a wikilink in the
+    # note's prose is untouched by it.
+    result = run(str(write(root, "subroutine-prose.md", "See [[Another Note]].\n\n```mermaid\nsequenceDiagram\n  A->>B: ok\n```\n")))
+    assert result.returncode == 0, result.stderr
+
     # A subgraph left unclosed - a mistyped end reads as an ordinary line and
     # the diagram fails far from where it was written.
     result = run(
@@ -301,6 +332,36 @@ flowchart LR
     result = run(str(small))
     assert result.returncode == 0, result.stderr
     assert "render this one with D2" not in result.stderr, result.stderr
+
+    # A subgraph title is words, not nodes. Counting them inflates the total
+    # and sends a diagram of seven boxes to D2 for no reason.
+    layered = write(
+        root,
+        "layered.md",
+        "```mermaid\ngraph LR\n"
+        + "".join(
+            f"  subgraph {name} Layer\n    N{index}[x]\n  end\n"
+            for index, name in enumerate(
+                ["Client", "Security", "Context", "Serving", "Observability"], start=1
+            )
+        )
+        + "```\n",
+    )
+    result = run(str(layered))
+    assert result.returncode == 0, result.stderr
+    assert "render this one with D2" not in result.stderr, result.stderr
+
+    # Giving the subgraph an id counts that id, not the title either way.
+    result = run(
+        str(
+            write(
+                root,
+                "layered-id.md",
+                '```mermaid\ngraph LR\n  subgraph SEC["Security & Guardrail Layer"]\n    A[x]\n  end\n```\n',
+            )
+        )
+    )
+    assert result.returncode == 0, result.stderr
 
     nodes = "\n".join(f"  n{index} --> n{index + 1}" for index in range(1, 18))
     big = write(root, "big.md", f"```mermaid\ngraph TD\n{nodes}\n```\n")

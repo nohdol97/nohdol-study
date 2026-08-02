@@ -68,6 +68,14 @@ INLINE_LINK_TEXT = re.compile(
 )
 QUOTED = re.compile(r'"[^"\n]*"')
 EDGE_LABEL = re.compile(r"\|[^|\n]*\|")
+# `id[[text]]` is Mermaid's subroutine shape. It is the one shape whose source
+# is character-for-character an Obsidian wikilink, so a link pasted into a
+# diagram parses as a box and nothing says otherwise: the note title is drawn
+# with a double border, and Obsidian resolves no link inside a code fence. The
+# diagram then shows a connection the vault does not have, which no rendering
+# reveals. Quoting settles which of the two was meant, and every other label in
+# a flowchart is quoted anyway.
+SUBROUTINE_UNQUOTED = re.compile(r"\[\[\s*(?!\")([^\]\n]+?)\s*\]\]")
 
 DEFAULT_MAX_NODES = 15
 
@@ -151,6 +159,14 @@ def count_nodes(body: list[str]) -> int:
             continue
         first = stripped.split()[0].lower().rstrip(":")
         if first in {"style", "classdef", "click", "linkstyle", "class"}:
+            continue
+        if first == "subgraph":
+            # A subgraph carries one container, and an unquoted title is just
+            # words - `subgraph Client Layer` is not two nodes. Counting them
+            # inflates the total and sends a small diagram to D2 for no reason.
+            rest = strip_labels(stripped[len("subgraph"):]).split()
+            if rest:
+                found.add(rest[0])
             continue
         for token in IDENTIFIER.findall(strip_labels(stripped)):
             if token.lower() not in NOT_NODES:
@@ -389,6 +405,16 @@ def label_problems(body: list[str]) -> list[str]:
                 )
         elif stripped.lower() == "end":
             closed += 1
+
+        for match in SUBROUTINE_UNQUOTED.finditer(line):
+            text = match.group(1)
+            problems.append(
+                f"line {offset + 1}: subroutine label {text!r} is unquoted and "
+                "reads as a wikilink - Mermaid draws a subroutine box here and "
+                "Obsidian links nothing inside a fence, so a pasted [[note]] "
+                f'connects to nothing; write ["{text}"] and link it in the '
+                f'prose, or [["{text}"]] to keep the subroutine shape'
+            )
 
         for label in unquoted_labels(line):
             if "(" in label or ")" in label:

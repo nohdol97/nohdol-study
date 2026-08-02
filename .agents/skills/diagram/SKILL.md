@@ -31,8 +31,8 @@ python3 .agents/skills/diagram/scripts/check.py NOTE.md
 ```
 
 It reports an unknown Mermaid diagram type, unbalanced delimiters, the label
-mistakes below, an embedded asset that does not exist, and an SVG a failed
-render left empty. It also counts nodes and says when a diagram has outgrown
+mistakes below, a wikilink pasted in as a node shape, an embedded asset that
+does not exist, and an SVG a failed render left empty. It also counts nodes and says when a diagram has outgrown
 Mermaid. That count is advice - the note still renders - but it is the signal
 to escalate rather than adding one more edge to a diagram already too dense.
 
@@ -123,6 +123,28 @@ side of the break still closes on the other.
 These are the node-shaped types only. A `sequenceDiagram` message is drawn by a
 different code path that still treats `\n` as a line break.
 
+## A wikilink drawn in a diagram links to nothing
+
+`id[[text]]` is Mermaid's subroutine shape, and its source is
+character-for-character an Obsidian wikilink. So pasting `[[노트 이름]]` into a
+flowchart parses cleanly and draws the note title in a double-bordered box,
+while Obsidian resolves no link inside a code fence. The diagram then shows a
+connection the vault does not have, and looking at it cannot reveal that: the
+box is exactly the box that was meant.
+
+Quoting decides which of the two was intended:
+
+- `OBS["LLM 트레이싱과 OpenTelemetry 계측"]` - an ordinary box. Put the wikilink
+  in the prose, which is where it becomes an edge. `related` is not a
+  substitute: `knowledge-graph` reads note bodies and never the frontmatter, so
+  a link that lives only in `related` is invisible to the graph, to
+  `vault-gardening`, and to the Stop hook's reachability check.
+- `OBS[["LLM 트레이싱과 OpenTelemetry 계측"]]` - the subroutine shape, kept
+  deliberately.
+
+The check reports an unquoted subroutine label for this reason, and for this
+one shape it asks for quotes even where Mermaid would parse the label bare.
+
 ## Rendering to SVG
 
 D2 and matplotlib produce files, and files go stale silently. So:
@@ -157,5 +179,5 @@ D2 and matplotlib produce files, and files go stale silently. So:
 |---|---|---|
 | Tool choice | Habit, or whatever is installed | Matched to structure, escalated on a counted threshold |
 | Editability | Rendered image with no source | Source beside the output, same base name |
-| Silent failure | Empty SVG or broken embed ships | Both caught before the note is done |
+| Silent failure | Empty SVG, broken embed, or a wikilink that draws as a box and links nowhere | All caught before the note is done |
 | Authority | Diagram read as a finding | Explanation only; evidence rules unchanged |
