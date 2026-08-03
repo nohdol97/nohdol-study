@@ -84,6 +84,16 @@ enabled = ["ieee-robotics", "the-robot-report"]
 자정**(PDT 기준 KST 16:00)에 리셋되므로, KST 17시 이후 실행은 그 이전 실행과
 다른 할당을 받는다. `feed` 소스만 쓴다면 호출이 없어 시각은 아무래도 좋다.
 
+## 테스트
+
+```sh
+python3 examples/feed_scraper/scrape_test.py   # 엔진
+sh examples/feed_scraper/run_scraper_test.sh   # 실행 래퍼의 어긋남 검사
+```
+
+래퍼 테스트는 venv 없는 임시 디렉터리에서 돌므로 네트워크도 vault도 건드리지
+않는다.
+
 ## 중복과 재실행
 
 모든 항목은 끝에 마커를 달고 저장된다(`<!-- src:키:링크 -->`, GeekNews는
