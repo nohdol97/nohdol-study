@@ -33,7 +33,7 @@ false memory.
    through the hub, and recent-change lines capped because `log.md` is the record.
 9. Add one concise row at the top of `vault/log.md` so the newest work reads
    first; never change or remove an entry already written.
-10. Refresh `vault/hot.md` with only current focus, recent durable learning, open questions, and next actions. Keep it roughly 500 tokens or less.
+10. Refresh `vault/hot.md` with only current focus, recent durable learning, open questions, and next actions. Keep it under 3000 bytes, roughly 900 tokens once Korean prose is counted.
 11. Verify frontmatter, links, source paths, evidence status, and that no raw
     file changed unexpectedly. Then check the line layout, which nothing else
     catches because a hard-wrapped file renders correctly:

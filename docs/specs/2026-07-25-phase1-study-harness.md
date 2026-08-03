@@ -51,7 +51,7 @@ Phase 1 설치기는 macOS `/bin/sh`과 표준 유틸리티만 사용한다. Obs
 
 ### R7. 지식 규약
 
-`raw/` 원문은 불변으로 취급한다. `wiki/` 노트는 flat YAML frontmatter와 위키링크를 사용한다. `log.md`는 append-only이며 `hot.md`는 약 500토큰 이하의 파생 캐시다.
+`raw/` 원문은 불변으로 취급한다. `wiki/` 노트는 flat YAML frontmatter와 위키링크를 사용한다. `log.md`는 append-only이며 `hot.md`는 3,000바이트(한글 혼합 기준 약 900토큰) 이하의 파생 캐시다. 게이트는 바이트로 재므로 토크나이저와 무관하게 재현된다.
 
 ### R8. 세션 시작
 

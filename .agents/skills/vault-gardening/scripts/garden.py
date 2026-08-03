@@ -37,7 +37,19 @@ VERIFICATION_VALUES = {
 }
 # hot.md is loaded at the start of every session, so its cost is paid whether
 # or not it is used. The budget is the reason it stays worth loading.
-DEFAULT_HOT_BUDGET = 2000
+#
+# Measured in bytes rather than tokens on purpose: a byte count is reproducible
+# without a tokenizer, while a token estimate would put a number no one can
+# recompute into a gate. The conversion is not language-neutral but it is close
+# enough to reason about - Korean prose costs about 3.3 bytes per token against
+# 4.0 for English, because a Hangul syllable is 3 UTF-8 bytes and roughly one
+# token, so a Korean vault gets slightly more content per byte, not less.
+#
+# 3000 replaced the original 2000 on 2026-08-02. The old value came from the
+# "~500 tokens" line in the 2026-07-25 direction proposal, written when the
+# vault held about 30 notes; at 160 notes across 7 hubs the same cache has more
+# topics to orient. Revisit when the note count doubles again.
+DEFAULT_HOT_BUDGET = 3000
 # index.md is an entry point, not a listing. It should link the hub note for a
 # topic and let the hub carry that topic's atomic notes, so its size tracks the
 # number of topics rather than the number of notes. Once it links more notes

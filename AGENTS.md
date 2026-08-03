@@ -21,7 +21,7 @@ raw/       immutable source material
 wiki/      curated atomic knowledge notes
 index.md   master map of content
 log.md     knowledge chronology, newest entry first
-hot.md     compact session-start context, target <= 500 tokens
+hot.md     compact session-start context, budget 3000 bytes (~900 tokens mixed Korean)
 ```
 
 Markdown and wikilinks are the source of truth. Graph databases, SQLite indexes, canvases, and generated diagrams are derivative artifacts and must be reproducible from the files. A derived graph carries no note body, and a model-inferred entity or claim enters it only with an evidence anchor that resolves in the note it cites; one that does not resolve is dropped rather than kept at low confidence.

@@ -17,7 +17,7 @@ point while preserving the difference between memory, source, and new reasoning.
 4. Verify before asserting or retaining: apply the always-on `AGENTS.md` evidence rules for material factual claims. A model answer or generated summary is not a source; inspect the cited underlying evidence.
 5. Retain selectively: create or improve a durable note when the session produces reusable understanding. Skip transient chatter and duplicates.
 6. Use `note-writer` for curated notes. Preserve raw sources, use wikilinks, distinguish fact from inference, and state uncertainty honestly.
-7. After knowledge changes, update `index.md`, add a `log.md` entry at the top, and refresh `hot.md` to no more than roughly 500 tokens.
+7. After knowledge changes, update `index.md`, add a `log.md` entry at the top, and refresh `hot.md` to no more than 3000 bytes (roughly 900 tokens once Korean prose is counted).
 8. Treat injected `hot.md` as a navigation cache. Verify material claims against the actual note and source.
 
 ## With / without

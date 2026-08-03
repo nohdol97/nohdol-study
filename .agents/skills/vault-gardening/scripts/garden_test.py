@@ -140,9 +140,26 @@ with tempfile.TemporaryDirectory() as temporary:
     # The hot cache is loaded every session, so its budget is enforced.
     (vault / "hot.md").write_text("x" * 4000, encoding="utf-8")
     result = run(vault)
-    assert "over the 2000 budget" in result.stdout, result.stdout
+    assert "over the 3000 budget" in result.stdout, result.stdout
     result = run(vault, "--hot-budget", "8000")
     assert "budget" not in result.stdout.split("session context")[1]
+
+    # The default is enforced at its actual value, not merely somewhere below
+    # the oversized case above: a cache one byte under budget passes and one
+    # byte over is reported. Without this the constant could drift and only the
+    # 4000-byte case would notice.
+    (vault / "hot.md").write_text("x" * 3000, encoding="utf-8")
+    assert "budget" not in run(vault).stdout.split("session context")[1]
+    (vault / "hot.md").write_text("x" * 3001, encoding="utf-8")
+    assert "over the 3000 budget" in run(vault).stdout
+
+    # Korean prose is counted in bytes like everything else. A Hangul syllable
+    # is 3 UTF-8 bytes, so 1000 of them sit exactly at the budget and 1001 do
+    # not - the gate must not silently measure characters instead.
+    (vault / "hot.md").write_text("가" * 1000, encoding="utf-8")
+    assert "budget" not in run(vault).stdout.split("session context")[1]
+    (vault / "hot.md").write_text("가" * 1001, encoding="utf-8")
+    assert "over the 3000 budget" in run(vault).stdout
 
     # A missing derived file is a finding, not a crash.
     (vault / "log.md").unlink()
