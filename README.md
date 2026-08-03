@@ -20,7 +20,7 @@
 ### 2. 🔍 Phase 2: 다중 매체 수집 및 지식 그래프
 - **웹 문서 캡처 (`defuddle`)**: 광고·내비게이션을 제거한 깨끗한 마크다운 불변 캡처
 - **학술 논문 탐색 (`paper-search`)**: arXiv·DOI 기반 논문 검색, PDF 다운로드 및 출판 메타데이터 검증
-- **영상 심층 학습 (`study-video`)**: 한국어·영어 자막 우선의 Transcript-first 2-pass 강의 학습 및 핵심 시각 프레임 추출
+- **영상 심층 학습 (`study-video`)**: 한국어·영어 자막 우선의 Transcript-first 학습. 영상 다운로드는 화면이 답해야 할 질문이 있을 때만
 - **결정적 지식 그래프 (`knowledge-graph`)**: `article`·`topic`·`source` 타입의 결정적 JSON 그래프 생성 및 모델 추론 근거 검증
 - **의미 검색 (`vault-search`)**: 노트가 쓴 단어를 몰라도 **의미로** 찾는다. 임베딩은 루프백 서버에서만 계산하고(그 외 엔드포인트는 스크립트가 거부), 인덱스는 동기화 밖 `_workspace/`에 둔다. 검색할 때 바뀐 노트만 자동으로 다시 임베딩하므로 재빌드를 기억할 필요가 없다. 결과는 근거가 아니라 **후보 목록**이다
 - **대량 문서화 큐 (`ingest` 배치 모드)**: 진행률을 체크박스가 아니라 **노트가 그 파일을 실제로 인용하는지**로 계산해, 세션이 끊겨도 노트에서 재개된다
@@ -108,7 +108,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 ├── recall/              # 출처 추적 가능한 간격 반복 복습 카드 제작
 ├── study-install/       # 설치처 부트스트랩 및 로컬 환경 검사
 ├── study-session/       # 물어서 가르치는 소크라테스식 학습 대화
-├── study-video/         # 2-pass 영상 학습 및 타임스탬프 프레임 추출
+├── study-video/         # 자막 우선 영상 학습, 프레임 확인은 조건부
 ├── understand/          # Understand Anything 9개 모드 내부 라우팅
 ├── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
 ├── vault-gardening/     # 지식 루트 드리프트·고아/깨진 링크·index 비대화 점검
