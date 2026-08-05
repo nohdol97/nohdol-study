@@ -112,6 +112,27 @@ def main():
         grown = open(path, encoding="utf-8").read()
         check("새 항목만 더해진다", grown.count("<!-- src:test:"), 3)
 
+        # 노트가 다른 폴더로 옮겨졌는데 'path'가 낡았을 때. 그대로 만들면 빈
+        # 대기열이 하나 더 생기고 오늘 수집분만 거기 쌓이는데, 누적본은 옮겨 간
+        # 자리에 그대로 있어 아무것도 실패하지 않는다 - 그래서 멈춰야 한다.
+        print("\n옮겨진 노트")
+        moved_dir = os.path.join(m.WIKI_ROOT, "Moved")
+        os.makedirs(moved_dir, exist_ok=True)
+        with open(os.path.join(moved_dir, "Roaming.md"), "w", encoding="utf-8") as f:
+            f.write("---\ntype: moc\n---\n\n# Roaming\n\n## 2026-07\n\n- 기존 누적분\n")
+        roaming = dict(source, path="Test/Roaming.md", window_days=3650,
+                       rss=rss(("Fresh", "https://e.test/r",
+                                "Thu, 23 Jul 2026 00:00:00 +0000")))
+        m.scrape_feed_source('roaming', roaming)
+        check("낡은 경로에 새 대기열을 만들지 않는다",
+              os.path.exists(os.path.join(m.WIKI_ROOT, "Test", "Roaming.md")), False)
+        check("옮겨 간 노트를 건드리지도 않는다",
+              "src:roaming:" in open(os.path.join(moved_dir, "Roaming.md"),
+                                     encoding="utf-8").read(), False)
+        check("경로가 맞으면 평소대로 만든다",
+              (m.scrape_feed_source('roaming', dict(roaming, path="Moved/Fine.md")),
+               os.path.exists(os.path.join(moved_dir, "Fine.md")))[1], True)
+
         # 창 밖의 글은 받지 않는다.
         print("\nwindow_days")
         narrow = dict(source, path="Test/Narrow.md", window_days=1,

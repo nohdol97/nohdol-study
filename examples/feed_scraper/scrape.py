@@ -117,6 +117,23 @@ TOPIC_DIR = os.path.join(WIKI_ROOT, "GeekNews")
 #      넉넉히 잡아야 놓치지 않는다
 # 재는 방법과 탈락한 후보는 vault의 [[로봇과 피지컬 AI 정보 소스]]에 있다.
 # ---------------------------------------------------------
+def find_note_elsewhere(filename, expected_path):
+    """`filename`과 같은 이름의 노트가 `wiki/` 안 다른 자리에 있으면 그 경로.
+
+    큐레이션 층만 훑는다(AGENTS 8절). 노트가 폴더 사이를 옮겨 다녀도 Obsidian은
+    위키링크를 이름으로 풀어 주므로 아무것도 깨지지 않고, 그래서 대상 경로가
+    낡았다는 신호가 이 이름 충돌 말고는 남지 않는다.
+    """
+    if not os.path.isdir(WIKI_ROOT):
+        return None
+    for folder, _dirs, files in os.walk(WIKI_ROOT):
+        if filename in files:
+            found = os.path.join(folder, filename)
+            if os.path.abspath(found) != os.path.abspath(expected_path):
+                return found
+    return None
+
+
 SOURCES = {
     'geeknews': {
         'name': "GeekNews",
@@ -128,7 +145,7 @@ SOURCES = {
         'name': "IEEE Spectrum Robotics",
         'pipeline': 'feed',
         'rss': "https://spectrum.ieee.org/feeds/topic/robotics.rss",
-        'path': "Robotics/IEEE Spectrum Robotics.md",
+        'path': "Physical AI/IEEE Spectrum Robotics.md",
         'tags': ["robotics", "physical-ai", "feed"],
         'hub': "로봇과 피지컬 AI 정보 소스",
         # 실측(2026-07-26) 30건이 67일에 걸쳐 있고 일평균 0.4건. 창이 아주 넓다.
@@ -138,7 +155,7 @@ SOURCES = {
         'name': "The Robot Report",
         'pipeline': 'feed',
         'rss': "https://www.therobotreport.com/feed/",
-        'path': "Robotics/The Robot Report.md",
+        'path': "Physical AI/The Robot Report.md",
         'tags': ["robotics", "industry", "feed"],
         'hub': "로봇과 피지컬 AI 정보 소스",
         # 실측 15건이 4.1일에 걸쳐 있고 일평균 3.7건. 창이 좁으므로 14일로
@@ -149,7 +166,7 @@ SOURCES = {
         'name': "ROS Discourse",
         'pipeline': 'feed',
         'rss': "https://discourse.openrobotics.org/latest.rss",
-        'path': "Robotics/ROS Discourse.md",
+        'path': "Physical AI/ROS Discourse.md",
         'tags': ["robotics", "ros", "forum", "feed"],
         'hub': "로봇과 피지컬 AI 정보 소스",
         # 일평균 6.7건으로 가장 활발하지만, 첫 표본 30건에서 개념 노트감이
@@ -164,7 +181,7 @@ SOURCES = {
         'name': "Robohub",
         'pipeline': 'feed',
         'rss': "https://robohub.org/feed/",
-        'path': "Robotics/Robohub.md",
+        'path': "Physical AI/Robohub.md",
         'tags': ["robotics", "research", "feed"],
         'hub': "로봇과 피지컬 AI 정보 소스",
         # 연구를 일반 독자용으로 옮기는 축. arXiv cs.RO는 API로 받을 수 있지만
@@ -177,7 +194,7 @@ SOURCES = {
         'name': "NVIDIA Robotics",
         'pipeline': 'feed',
         'rss': "https://blogs.nvidia.com/blog/category/robotics/feed/",
-        'path': "Robotics/NVIDIA Robotics.md",
+        'path': "Physical AI/NVIDIA Robotics.md",
         'tags': ["robotics", "physical-ai", "vendor", "feed"],
         'hub': "로봇과 피지컬 AI 정보 소스",
         # 피지컬 AI 스택(Isaac, GR00T) 발표처. 벤더 블로그이므로 자사 제품
@@ -189,7 +206,7 @@ SOURCES = {
         'name': "Hugging Face (로봇)",
         'pipeline': 'feed',
         'rss': "https://huggingface.co/blog/feed.xml",
-        'path': "Robotics/Hugging Face 로봇.md",
+        'path': "Physical AI/Hugging Face 로봇.md",
         'tags': ["robotics", "physical-ai", "open-source", "feed"],
         'hub': "로봇과 피지컬 AI 정보 소스",
         # 이 피드는 로봇 전용이 아니다. 실측 831건 중 제목에 로봇 관련어가
@@ -959,6 +976,19 @@ def scrape_feed_source(key, source):
         with open(path, encoding='utf-8') as f:
             text = f.read()
     else:
+        misplaced = find_note_elsewhere(os.path.basename(source['path']), path)
+        if misplaced:
+            # 이 자리에 파일이 없는데 같은 이름이 wiki/ 다른 곳에 있다면, 새 설치가
+            # 아니라 노트가 옮겨진 것이다. 그대로 만들면 빈 대기열이 하나 더 생기고
+            # 오늘 수집분만 거기 쌓인다 - 누적본은 옮겨 간 자리에 그대로 있으므로
+            # 아무것도 실패하지 않고 링크도 안 깨져, 사람이 눈으로 볼 때까지 모른다.
+            print(
+                f"⚠️  {source['name']}: {source['path']} 없음. "
+                f"같은 이름이 여기 있다 → {os.path.relpath(misplaced, WIKI_ROOT)}\n"
+                f"    노트를 옮겼다면 SOURCES['{key}']['path']를 고치고 다시 실행하십시오. "
+                f"수집분을 잃지 않도록 이 소스는 건너뜁니다."
+            )
+            return
         text = feed_note_header(source, today_str)
 
     # 로봇 전용이 아닌 피드에서 관련 글만 받을 때 쓴다. 제목만 검사하는 이유는
