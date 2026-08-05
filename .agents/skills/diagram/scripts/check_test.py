@@ -385,6 +385,22 @@ flowchart LR
     assert result.returncode == 1
     assert "embedded asset not found: assets/gone.svg" in result.stderr
 
+    # Obsidian resolves an embed against the vault, not the note's directory, so
+    # a note in wiki/<topic>/ draws an asset that lives in wiki/assets/. Reading
+    # only the note's own directory reported every such embed as broken.
+    write(root, "wiki/assets/ax-wiki/ecosystem.svg", "<svg><rect width='1' height='1'/></svg>")
+    result = run(
+        str(write(root, "wiki/AI Transformation/hub.md", "![[assets/ax-wiki/ecosystem.svg|697]]\n"))
+    )
+    assert result.returncode == 0, result.stderr
+
+    # Walking up must not turn a genuinely missing asset into a pass.
+    result = run(
+        str(write(root, "wiki/AI Transformation/broken.md", "![[assets/ax-wiki/gone.svg]]\n"))
+    )
+    assert result.returncode == 1
+    assert "embedded asset not found: assets/ax-wiki/gone.svg" in result.stderr, result.stderr
+
     # A wikilink to a note is not an asset reference.
     result = run(str(write(root, "note-link.md", "See [[Another Note]] and ![[Another Note]].\n")))
     assert result.returncode == 0, result.stderr

@@ -444,6 +444,27 @@ def label_problems(body: list[str]) -> list[str]:
     return problems
 
 
+def embed_resolves(path: Path, target: str) -> bool:
+    """Whether Obsidian will find `target` embedded from the note at `path`.
+
+    A wikilink embed resolves against the whole vault, not the note's own
+    directory, so a note in `wiki/<topic>/` draws `assets/name.svg` that lives in
+    `wiki/assets/`. Checking only the note's directory reports every such embed
+    as broken. Walk up instead, and stop at `wiki/` - the curated layer is the
+    root a vault-relative embed is written against.
+    """
+    name = Path(target).name
+    bases = [path.parent]
+    for parent in path.parent.parents:
+        bases.append(parent)
+        if parent.name == "wiki" or len(bases) > 3:
+            break
+    return any(
+        (base / target).exists() or (base / "assets" / name).exists()
+        for base in bases
+    )
+
+
 def check_markdown(
     path: Path, max_nodes: int, problems: list[str], advice: list[str]
 ) -> int:
@@ -490,9 +511,7 @@ def check_markdown(
             target = target.strip()
             if not target.lower().endswith((".svg", ".png", ".jpg", ".jpeg", ".webp")):
                 continue
-            if (path.parent / target).exists():
-                continue
-            if any((path.parent / "assets" / Path(target).name).exists() for _ in [0]):
+            if embed_resolves(path, target):
                 continue
             problems.append(f"{path}:{number}: embedded asset not found: {target}")
 

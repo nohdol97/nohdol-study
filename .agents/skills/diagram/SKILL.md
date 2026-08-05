@@ -149,9 +149,12 @@ one shape it asks for quotes even where Mermaid would parse the label bare.
 
 D2 and matplotlib produce files, and files go stale silently. So:
 
-- Write the source next to the note it serves, under `assets/`, with the same
-  base name as the SVG. A rendered file with no source beside it cannot be
-  corrected, only redrawn.
+- Write the source under `assets/`, with the same base name as the SVG. A
+  rendered file with no source beside it cannot be corrected, only redrawn.
+  `wiki/` keeps notes one level deep in topic folders and `wiki/assets/` is the
+  one exception, so the pair lives at `wiki/assets/<group>/name.d2` and the note
+  in `wiki/<topic>/` embeds it as `![[assets/<group>/name.svg]]` - a wikilink
+  resolves against the vault, not the note's own directory.
 - Render with `d2 assets/name.d2 assets/name.svg`, or a small matplotlib
   script saved beside its output. Embed with `![[assets/name.svg]]`.
 - Run the check on the SVG too. A failed render often still writes a file, and
