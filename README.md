@@ -28,6 +28,7 @@
 ### 3. 🧠 Phase 2b: 코드·도메인 분석 및 Obsidian 연동
 - **Understand Anything 9개 모드 라우팅 (`understand`)**: 코드베이스 아키텍처 파악, 기능 위치 탐색, 개념 설명, 온보딩 가이드, 변경 영향 범위, 도메인 분석, 대시보드 뷰어
 - **Obsidian 형식 및 CLI 연동 (`obsidian`)**: 마크다운 확장, Bases(`.base`), JSON Canvas(`.canvas`) 작성 및 Obsidian CLI (4개 모드) 내부 라우팅
+- **발표용 인터랙티브 다이어그램 (`archify`)**: **명시 호출 시에만** pin된 CLI로 단독 실행 HTML 다이어그램을 만든다. Obsidian이 임베드할 수 없고 지식 루트는 동기화되므로 산출물은 `_workspace/`에만 두며, 노트에 들어갈 다이어그램은 `diagram`(Mermaid/D2)이 그대로 담당한다
 - **안전한 격리 런타임**: 외부 도구 트리는 `.tools/PINS.md`의 tree hash를 검증하여 배치하며, 승인 없는 의존성 설치 및 외부 전송을 철저히 차단
 
 ### 4. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
@@ -96,6 +97,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 
 ```text
 .agents/skills/
+├── archify/             # 명시 호출 전용 단독 HTML 인터랙티브 다이어그램 (vault 밖)
 ├── context7/            # 최신 버전 라이브러리 공식 문서 조회
 ├── defuddle/            # 공개 웹 페이지 본문 마크다운 추출
 ├── diagram/             # 구조별 다이어그램 도구 선택 (Mermaid / D2 / Canvas)

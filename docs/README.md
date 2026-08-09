@@ -18,6 +18,7 @@
 | [003](adr/003-cli-learning-integrations.md) | 2026-07-25 | 부분 대체(→004) | Understand Anything 전체 스킬과 선택적 학습 연동의 project-local 채택 |
 | [004](adr/004-remove-notebooklm-export.md) | 2026-07-25 | 활성 | NotebookLM export 스킬 제거 — 회수 0건, 763줄 유지 비용 대비 무효 |
 | [005](adr/005-egress-guard-for-external-runtimes.md) | 2026-08-01 | 활성 | 외부 런타임 유출 게이트를 별도 훅으로 — 승인 프롬프트는 페이로드 내용을 묻지 않는다 |
+| [006](adr/006-archify-explicit-use-outside-vault.md) | 2026-08-09 | 활성 | archify는 명시 호출 전용, 산출물은 `_workspace/` — CLI에 SVG 출력이 없어 노트가 임베드할 수 없다 |
 
 ## 스펙
 

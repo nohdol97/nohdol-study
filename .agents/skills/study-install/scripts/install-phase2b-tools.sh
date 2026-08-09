@@ -71,6 +71,8 @@ command -v pnpm >/dev/null 2>&1 && pnpm_version=$(pnpm --version 2>/dev/null)
 
 node_ok=0
 at_least "$(leading_integer "${node_version:-}")" 22 && node_ok=1
+node18_ok=0
+at_least "$(leading_integer "${node_version:-}")" 18 && node18_ok=1
 pnpm_ok=0
 at_least "$(leading_integer "${pnpm_version:-}")" 10 && pnpm_ok=1
 
@@ -84,7 +86,7 @@ elif [ -d /Applications/Obsidian.app ]; then
 fi
 
 runtime_report() {
-  printf '%-22s %s\n' node "${node_version:-missing} (need v22+)"
+  printf '%-22s %s\n' node "${node_version:-missing} (need v18+ or v22+ per pin)"
   printf '%-22s %s\n' pnpm "${pnpm_version:-missing} (need 10+)"
   printf '%-22s %s\n' obsidian "$obsidian_state"
 }
@@ -116,6 +118,14 @@ trim() { printf '%s' "$1" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'; }
 runtime_satisfied() {
   case "$1" in
     none) return 0 ;;
+    # A tree whose tools ship their runtime dependencies already generated needs
+    # an interpreter and no package manager. Folding it into the pnpm value
+    # would report a missing pnpm as the reason such a tool cannot run, which is
+    # a false explanation the user would then act on.
+    node18)
+      [ "$node18_ok" -eq 1 ] && return 0
+      return 1
+      ;;
     node22-pnpm10)
       [ "$node_ok" -eq 1 ] && [ "$pnpm_ok" -eq 1 ] && return 0
       return 1

@@ -1,6 +1,6 @@
 ---
 name: diagram
-description: Draw a diagram for a study note and pick the tool that fits it - Mermaid inline by default, D2 rendered to SVG when the structure outgrows Mermaid, JSON Canvas for a map of existing notes, and matplotlib for anything with real coordinates. Use for 다이어그램, 그림, 도식, 아키텍처 그리기, 플로우차트, 시퀀스 다이어그램, 개념도, 지식 맵, and 그래프 그려줘. Do NOT use it to decide what is true (that is note-writer and the evidence rules), and do NOT reach for a heavier tool than the diagram needs.
+description: Draw a diagram for a study note and pick the tool that fits it - Mermaid inline by default, D2 rendered to SVG when the structure outgrows Mermaid, JSON Canvas for a map of existing notes, and matplotlib for anything with real coordinates. Use for 다이어그램, 그림, 도식, 아키텍처 그리기, 플로우차트, 시퀀스 다이어그램, 개념도, 지식 맵, and 그래프 그려줘. Do NOT use it to decide what is true (that is note-writer and the evidence rules), do NOT reach for a heavier tool than the diagram needs, and do NOT use it when the user explicitly wants a standalone interactive HTML diagram for a talk or a shared link (that is archify).
 ---
 
 # diagram — Pick the tool the diagram needs
@@ -175,6 +175,11 @@ D2 and matplotlib produce files, and files go stale silently. So:
 - Do not send note or source content to an external rendering or image service.
   A scene description is enough (AGENTS.md section 5).
 - Redraw from the source, never by editing an SVG by hand.
+- A diagram bound for a talk or a shared link is a different artifact, not a
+  bigger one. `archify` renders that as standalone interactive HTML and keeps it
+  in `_workspace/`, because Obsidian cannot embed an HTML file and the knowledge
+  root is synced. Density alone never routes there: past about 15 nodes the
+  escalation is still Mermaid → D2, and the note keeps an embeddable SVG.
 
 ## With / without
 

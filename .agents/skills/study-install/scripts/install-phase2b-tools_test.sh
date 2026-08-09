@@ -130,6 +130,21 @@ if grep -q 'is not satisfied' "$test_root/out-d"; then
 fi
 assert_untouched "runtime report"
 
+# 4b. The same machine satisfies node18, because that value asks for an
+# interpreter and not a package manager. Reporting node18 as unmet here would
+# blame a missing pnpm for a tool that never needed one.
+root_d2=$(new_tools_root tools-d2)
+write_pins "$root_d2" \
+  'needs-node18 | commit | main | example/sample | abc123 | '"$(printf '0%.0s' $(seq 64))"' | MIT | node18'
+if run_installer "$root_d2" --check | grep -q 'runtime node18 unmet'; then
+  fail "node v18 was reported as not satisfying the node18 runtime"
+fi
+write_stub node v16.0.0
+run_installer "$root_d2" --check | grep -q 'runtime node18 unmet' ||
+  fail "node v16 was accepted for the node18 runtime"
+write_stub node v18.0.0
+assert_untouched "node18 runtime report"
+
 # 5. A satisfied runtime passes the gate and then fails on the download.
 write_stub node v22.1.0
 write_stub pnpm 10.2.0
