@@ -1,4 +1,4 @@
-<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: dd7d845ffedbf531f89218991ec18d17a701e701f9b2657798db05e386232f12 -->
+<!-- 생성된 요약 뷰입니다. AGENTS.md를 직접 편집하고 이 파일을 다시 생성하세요. source-sha256: bce14a03793d47e9520ee5e48c47f0a399c5f92071359430f8e1be4fa6f3837c -->
 
 # nohdol-study 운영 규칙 요약
 
@@ -21,6 +21,7 @@
 - 외부 서비스에서 코드를 실행하거나 데이터를 보내는 MCP 서버(예: Colab MCP)는 선택적 제3자 전송이다. `corporate` 설치처에는 설치·등록하지 않고, `personal`에서는 `study-install`이 설치 여부를 명시적 확인 항목으로 물어 결정을 `REGISTRY.md`에 기록한다. vault 내용은 별도 명시 승인 없이 그런 서버로 보내지 않는다.
 - 승인 프롬프트는 위 규칙을 집행하지 못한다. 프롬프트가 묻는 것은 "이 도구를 실행할까"이지 "이 페이로드에 사용자의 노트가 들어 있나"가 아니다. 노트북 셀 도구에 대한 집행은 `.agents/hooks/study-egress-guard.py`이고, 프롬프트 없는 표면만이 아니라 모든 표면에서 켜지며, 지식 루트 경로·vault 상대 경로·위키링크·노트 프론트매터를 담은 셀을 막는다. 공개 데이터셋에서 실측한 수치는 vault 자료가 아니므로 통과한다. 이 게이트는 알려진 통로 하나에 대한 표적 검사일 뿐 전송이 안전하다는 증명이 아니다 — 바꿔 쓰거나 인코딩한 내용은 통과하므로 판단 책임은 에이전트에 남는다.
 - 공용 스킬 원본은 `.agents/skills/`뿐이다. Claude는 심링크, Codex는 네이티브 스킬 발견과 프로젝트 훅을 사용한다.
+- 반복 이용하는 사용자용 다이내믹 HTML 사이트는 `_workspace/sites/<slug>/`에 두고 `examples/workspace_portal/portal.py`로 등록해 `_workspace/index.html`에서 접근한다. `_workspace`를 한 번만 serve하고 사이트마다 별도 server를 띄우지 않으며, 내부 scratch·분석 결과·tool dashboard는 사용자가 노출을 요청하지 않는 한 등록하지 않는다.
 - 하네스 규칙·스킬·훅·설치기·ADR·스펙 변경은 `metaskill`로 수행하고 루트 README·한글 스킬 안내·MOC·변경 이력을 함께 맞춘다.
 - Phase 2는 웹·논문·영상 ingest와 결정적 Markdown 그래프를 제공한다.
 - `.tools/`는 pin된 서드파티 소스 트리 자리다. 내용은 미추적이고 pin 원장 `.tools/PINS.md`만 추적하며, 배치는 tree hash를 검증하는 Phase 2b 설치기로만 한다. upstream installer 실행·전역 스킬 링크·의존성 설치는 하지 않는다.

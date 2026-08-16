@@ -87,6 +87,7 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 - Preserve unrelated user changes and existing vault content.
 - Use `apply_patch` for tracked file edits.
 - For behavior changes, define testable criteria, add or update tests, and run fresh verification before claiming completion.
+- Put reusable user-facing dynamic HTML sites under `_workspace/sites/<slug>/` and register their relative entry point in the `_workspace` portal with `examples/workspace_portal/portal.py`; the portal at `_workspace/index.html` must reach every registered site. Serve `_workspace` once rather than starting one server per site, and keep site URLs and assets relative to that root. Do not register internal scratch, analysis output, or tool dashboards unless the user asks to expose them as a site.
 - Keep installation scripts dependency-free and compatible with macOS `/bin/sh`.
 - Do not install optional global tools during ordinary study work. `study-install` reports optional capabilities and installs nothing unless the user separately asks.
 - Use `metaskill` for changes to harness rules, shared skills, hooks, installers, ADRs, or specs. Keep root README, the Korean skill map, docs MOC, and harness changelog synchronized with those changes.

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="로컬 다이내믹 학습 사이트를 한 서버에서 여는 workspace portal">
+  <title>Study Workspace</title>
+  <link rel="stylesheet" href="assets/portal.css">
+  <script defer src="assets/portal.js"></script>
+</head>
+<body>
+  <a class="skip" href="#sites">사이트 목록으로 건너뛰기</a>
+  <main>
+    <header class="hero">
+      <p class="eyebrow">NOHDOL STUDY · LOCAL PORTAL</p>
+      <h1>한 서버에서 여는<br><em>다이내믹 학습 공간</em></h1>
+      <p class="lede">독립 학습 사이트를 매번 따로 띄우지 않습니다. 이 포털을 시작점으로 로드맵, 시뮬레이터, 대시보드와 시각 자료를 찾아갑니다.</p>
+      <div class="hero-meta"><span id="site-count">불러오는 중</span><span>Local only</span><span>Single server</span></div>
+    </header>
+    <section class="controls" aria-label="사이트 필터">
+      <label><span>사이트 검색</span><input id="query" type="search" placeholder="예: 로봇, LLM, 백엔드" autocomplete="off"></label>
+      <label><span>분류</span><select id="category"><option value="">전체</option></select></label>
+    </section>
+    <section id="sites" class="site-grid" aria-live="polite"></section>
+    <p id="empty" class="empty" hidden>조건에 맞는 사이트가 없습니다.</p>
+    <footer><p>정본 지식은 vault의 Markdown입니다. 이곳의 사이트와 다이어그램은 탐색·설명·실습을 위한 로컬 파생물입니다.</p><p class="mono">python3 examples/workspace_portal/portal.py serve</p></footer>
+  </main>
+</body>
+</html>

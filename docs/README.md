@@ -6,6 +6,7 @@
 
 | 가이드 | 대상 | 요지 |
 |---|---|---|
+| [Workspace Portal](../examples/workspace_portal/README.md) | `_workspace`의 사용자용 다이내믹 HTML 사이트 | `_workspace/sites/<slug>/` 경로와 명시적 manifest, 단일 server root, portal 초기화·등록·검사 |
 | [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 (읽기 전용) | 지식 루트를 읽기만 하는 조회·문답 표면, 모바일 소크라테스 학습, 인라인 버튼 제어, MessageEntity 기반 무결점 서식 렌더링 및 로컬 URL 정제, launchd 부팅 시 자동 시작, AGENTS.md 보안 화이트리스트 준수 |
 | [피드 스크래퍼](guides/feed-scraper.md) | RSS 소스 → vault 자동 수집 | 카탈로그(추적)와 컴퓨터별 선택(비추적) 분리, `feed`는 제목·링크만 쌓아 API 호출 0, `geeknews`는 점수 게이트 후 요약·분류, 마커 기반 중복 방지, launchd 자동 실행 |
 
@@ -19,6 +20,7 @@
 | [004](adr/004-remove-notebooklm-export.md) | 2026-07-25 | 활성 | NotebookLM export 스킬 제거 — 회수 0건, 763줄 유지 비용 대비 무효 |
 | [005](adr/005-egress-guard-for-external-runtimes.md) | 2026-08-01 | 활성 | 외부 런타임 유출 게이트를 별도 훅으로 — 승인 프롬프트는 페이로드 내용을 묻지 않는다 |
 | [006](adr/006-archify-explicit-use-outside-vault.md) | 2026-08-09 | 활성 | archify는 명시 호출 전용, 산출물은 `_workspace/` — CLI에 SVG 출력이 없어 노트가 임베드할 수 없다 |
+| [007](adr/007-single-workspace-site-portal.md) | 2026-08-16 | 활성 | 사용자용 다이내믹 사이트는 `_workspace` 단일 포털에서 연다 |
 
 ## 스펙
 
@@ -27,6 +29,7 @@
 | [2026-07-25-phase1-study-harness](specs/2026-07-25-phase1-study-harness.md) | 구현됨 | 설치기, 지식 구조, 공용 스킬, 세션 훅 |
 | [2026-07-25-phase2-ingest-notebooklm-graph](specs/2026-07-25-phase2-ingest-notebooklm-graph.md) | 구현됨 | 웹·논문·영상 ingest, NotebookLM export, 그래프 기준 파서 |
 | [2026-07-25-phase2b-cli-learning-integrations](specs/2026-07-25-phase2b-cli-learning-integrations.md) | 2b-A~2b-D 구현, 2b-E는 ADR 004로 철회 | Understand Anything 9종, Obsidian 4종, NotebookLM CLI bridge |
+| [2026-08-16-workspace-site-portal](specs/2026-08-16-workspace-site-portal.md) | 구현됨 | `_workspace` 단일 portal, site manifest, 등록·검증 도구 |
 
 ## 제안
 

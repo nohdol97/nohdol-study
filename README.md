@@ -31,7 +31,12 @@
 - **발표용 인터랙티브 다이어그램 (`archify`)**: **명시 호출 시에만** pin된 CLI로 단독 실행 HTML 다이어그램을 만든다. Obsidian이 임베드할 수 없고 지식 루트는 동기화되므로 산출물은 `_workspace/`에만 두며, 노트에 들어갈 다이어그램은 `diagram`(Mermaid/D2)이 그대로 담당한다
 - **안전한 격리 런타임**: 외부 도구 트리는 `.tools/PINS.md`의 tree hash를 검증하여 배치하며, 승인 없는 의존성 설치 및 외부 전송을 철저히 차단
 
-### 4. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
+### 4. 🖥️ 로컬 다이내믹 사이트 포털
+- **단일 진입점**: 반복 이용하는 HTML 학습 사이트는 `_workspace/sites/<slug>/`에 두고 `_workspace/index.html`에서 검색·접근
+- **서버 한 개**: `python3 examples/workspace_portal/portal.py serve`로 `_workspace` 전체를 한 번만 제공
+- **명시적 노출**: 지식 그래프·임시 분석물은 숨기고 사용자가 보는 사이트만 `sites.json`에 등록
+
+### 5. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
 - **이동 중 읽기 전용 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 기존 지식 볼트를 검색·조회·설명하고 소크라테스식 문답을 진행하며, 노트 작성·수정·삭제는 하지 않음
 - **클라우드 실시간 동기화**: Mac에서 생성·수정된 노트는 Google Drive를 통해 스마트폰 Obsidian 앱에 즉시 동기화
 - **인라인 버튼 및 메뉴 제어**: 좌측 하단 `[Menu]` 버튼과 터치 버튼으로 AI 모델(`Gemini 3.1 Pro` ↔ `2.5 Flash`) 및 추론 강도(`High/Med/Low`) 즉시 전환
@@ -42,6 +47,16 @@
 ---
 
 ## 🚀 빠른 시작 (Quick Start)
+
+### 로컬 다이내믹 사이트 포털
+
+```sh
+python3 examples/workspace_portal/portal.py init
+python3 examples/workspace_portal/portal.py check
+python3 examples/workspace_portal/portal.py serve
+```
+
+브라우저에서 `http://127.0.0.1:4173/`을 열면 등록된 모든 사이트에 접근할 수 있다. 새 사이트 등록 방법은 [Workspace Portal 안내](examples/workspace_portal/README.md)를 따른다.
 
 ### 1단계: 하네스 설치 및 Vault 연결
 AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거나 셸 스크립트를 직접 실행한다:
