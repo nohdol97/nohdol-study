@@ -2,6 +2,20 @@
 
 > 실습 등급: render 단계는 **Local**, install·upgrade는 **Local Kubernetes**다. 공개 registry에 push하지 않으며 AWS 비용은 없다.
 
+## 먼저 이해하기
+
+이 실습은 같은 chart를 네 단계에서 확인한다. lint는 chart 자체의 기본 오류를 찾고, template은 values가 적용된 최종 YAML을 보여 준다. Kubernetes dry-run은 API 형식과 일부 admission 조건을 확인하며 실제 install은 controller가 Pod를 만들어 readiness에 도달하는지 확인한다. 앞 단계가 뒤 단계의 성공을 보장하지 않는다.
+
+| gate | 성공의 의미 | 아직 모르는 것 |
+|---|---|---|
+| `helm lint` | chart 관례·일부 template 검사 통과 | 특정 values의 모든 결과 |
+| `helm template` | 원하는 YAML 생성 | cluster API·admission 수용 여부 |
+| client dry-run | local schema 처리 가능 | server CRD·policy·quota |
+| install/upgrade | release action 완료 | 사용자 요청과 외부 dependency 정상 |
+| rollout check | controller readiness 달성 | SLO와 business 결과 |
+
+각 명령 뒤에 “성공”만 적지 말고 무엇을 새로 알았고 무엇은 아직 모르는지 기록한다.
+
 ## 1. Chart 생성과 최소화
 
 ```bash
@@ -101,6 +115,14 @@ rm -f rendered.yaml
 ```
 
 CRD나 cluster-scoped resource가 chart에 있었다면 namespace 삭제만으로 정리되지 않는다. 이 실습 chart에는 넣지 않는다.
+
+## 결과를 이렇게 읽는다
+
+`helm template` 결과에서 image, replica, label selector와 Service port를 먼저 찾는다. chart source가 복잡해도 cluster가 받는 것은 이 manifest다. 예상한 value가 보이지 않으면 cluster를 조사하기 전에 values precedence와 template reference를 고친다.
+
+`helm history`에 새 revision이 생겼다는 사실은 release 기록이 갱신됐다는 뜻이다. `kubectl rollout status`가 실패하면 Pod event, image pull, probe와 quota를 확인한다. `--atomic`이 rollback을 수행했더라도 외부 database migration이나 hook side effect가 원래 상태로 돌아왔는지는 별도다.
+
+Argo CD가 `OutOfSync`를 보이면 compare가 drift를 발견한 것이다. self-heal로 replica가 돌아와도 긴급 변경의 이유가 Git과 incident 기록에 남지 않으면 운영 경로는 닫히지 않았다.
 
 ## 스스로 설명해 보기
 

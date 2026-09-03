@@ -2,6 +2,21 @@
 
 > 실습 등급: 첫 절은 **Local**, AWS 예시는 **Plan only**다. 이 장은 `terraform apply`를 실행하지 않는다.
 
+## 먼저 이해하기
+
+이 실습은 Terraform 명령의 성공 여부보다 각 단계가 어떤 불확실성을 줄이는지 확인한다. `fmt`는 표현 형식을 통일하지만 의미를 검증하지 않는다. `validate`는 configuration 구조와 provider schema를 검사하지만 어느 AWS account를 바꿀지는 판단하지 않는다. `plan`은 state와 remote object를 읽어 변경안을 만들지만 application health를 보장하지 않는다.
+
+| 단계 | 확인하는 것 | 통과해도 남는 위험 |
+|---|---|---|
+| `fmt -check` | canonical formatting | 잘못된 resource 설계 |
+| `init` | backend·module·provider 준비 | 올바른 account·변경 여부 |
+| `validate` | syntax와 내부 consistency | quota·비용·runtime 영향 |
+| `test` | 작성한 assertion | assertion에 쓰지 않은 동작 |
+| `plan` | 현재 입력 기준 변경 proposal | apply 중 race와 서비스 정상성 |
+| post-apply check | 실제 resource와 health | 장기 운영·복구 가능성 |
+
+처음 두 절은 AWS provider 없이도 이 차이를 확인하도록 `terraform_data`를 쓴다. AWS plan 단계에서는 credential과 remote state가 추가되므로 출력과 artifact를 민감하게 다룬다.
+
 ## 1. Provider 없는 core workflow
 
 빈 directory에 `main.tf`를 만든다.
@@ -129,6 +144,14 @@ rm -rf .terraform
 ```
 
 이 정리는 실습 directory 안에서 경로를 확인한 뒤 실행한다. 실제 backend state나 lockfile은 삭제하지 않는다.
+
+## 결과를 이렇게 읽는다
+
+첫 plan의 `+ create`는 built-in resource가 아직 state에 없어서 생긴다. apply하지 않았으므로 같은 plan을 다시 만들어도 create 제안이 남는 것이 정상이다. `environment=unknown`이 실패하면 variable validation이 입력 경계에서 작동한 것이다. 이것은 AWS resource가 안전하다는 검증이 아니라 module contract 한 조각의 검증이다.
+
+AWS plan의 `known after apply`는 API가 생성 뒤에만 결정하는 값일 수 있다. 오류라고 지우기보다 그 unknown 값에 의존하는 policy나 route가 계획 단계에서 지나치게 넓어지지 않는지 확인한다.
+
+drift plan이 나오면 console 변경이 잘못됐다고 즉시 단정하지 않는다. emergency change가 정당할 수도 있고 configuration 배포가 누락됐을 수도 있다. 변경 주체와 시각, owner를 확인한 뒤 remote를 코드로 채택할지 코드대로 되돌릴지 결정한다.
 
 ## 스스로 설명해 보기
 

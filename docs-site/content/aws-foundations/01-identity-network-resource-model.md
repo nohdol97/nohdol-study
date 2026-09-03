@@ -1,5 +1,19 @@
 # Account, identity와 network boundary
 
+## 먼저 이해하기
+
+AWS에서 resource 접근은 “같은 VPC에 있으니 된다” 또는 “IAM role이 있으니 된다”로 설명되지 않는다. API 호출에는 principal과 policy evaluation이 필요하고, network packet에는 address·route·filter·listener가 필요하다. 애플리케이션 요청 하나가 둘을 모두 거칠 수 있지만 두 허가는 독립적이다.
+
+예를 들어 private subnet의 EC2에서 S3 object를 읽는다고 하자. application은 instance role의 temporary credential로 `s3:GetObject` 권한을 받아야 한다. 동시에 packet은 NAT gateway 또는 S3 VPC endpoint 같은 실제 경로를 가져야 한다. IAM이 허용해도 route가 없으면 timeout이 나고, network가 열려 있어도 IAM이 거부하면 AWS API가 AccessDenied를 반환한다.
+
+| 경계 | 핵심 질문 | 주된 증거 |
+|---|---|---|
+| account | 누가 resource와 비용의 최종 owner인가? | account·organization 구조, billing owner |
+| identity | 어떤 principal이 어떤 session으로 요청하는가? | role ARN, STS session, CloudTrail |
+| authorization | 어떤 action·resource·condition이 허용되는가? | policy evaluation과 denial context |
+| network | packet이 어느 hop과 filter를 지나는가? | subnet, route, SG/NACL, flow evidence |
+| resource | 실제 object가 어느 region·AZ와 lifecycle에 있는가? | service API, tags, state와 health |
+
 ## 요청 하나에 필요한 두 허가
 
 AWS API 요청과 workload network 연결은 서로 다른 경로다.

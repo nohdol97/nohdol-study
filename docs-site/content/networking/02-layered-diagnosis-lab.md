@@ -2,6 +2,20 @@
 
 > 실습 등급: **Local**. `tcpdump`만 packet capture 권한이 필요하며 나머지는 일반 사용자로 실행할 수 있다.
 
+## 먼저 이해하기
+
+이 실습의 목적은 많은 network 명령을 실행하는 것이 아니라 실패 지점을 이분하는 것이다. 매 단계에서 “여기까지는 성공했는가?”를 묻고, 성공한 계층보다 아래를 다시 조사하지 않는다.
+
+예를 들어 DNS가 올바른 address를 반환하고 TCP probe가 연결 성공을 보여 줬다면 basic name resolution과 TCP 443 path는 작동한다. 이후 `curl`이 certificate error를 낸다면 문제 범위는 TLS identity로 좁아진다. 반대로 TCP가 timeout이면 HTTP status를 논할 단계가 아니다.
+
+| 확인 순서 | 사용할 증거 | 성공 기준 | 실패 시 다음 조사 |
+|---:|---|---|---|
+| 1 | `dig` 또는 `nslookup` | 예상 resolver와 address | record·resolver·search domain |
+| 2 | route 조회 | 예상 interface·next hop | local route·VPN·NAT |
+| 3 | TCP probe | connect 또는 명시적 refuse | firewall·listener·return path |
+| 4 | `openssl s_client` | hostname과 chain 검증 | certificate·SNI·clock·trust store |
+| 5 | `curl -v` | 기대한 status와 body | proxy·backend·application |
+
 ## 목표
 
 URL 하나를 같은 명령으로 반복 호출하지 않고 DNS, route, TCP, TLS, HTTP 증거로 나눈다.
@@ -82,6 +96,14 @@ kubectl run netcheck --rm -it --restart=Never --image=curlimages/curl -- \
 | T1 | TCP | remote IP, connect 결과 | path·listener 후보 |
 | T2 | TLS | SNI, certificate 검증 | identity 성공/실패 |
 | T3 | HTTP | status, latency | proxy/backend 후보 |
+
+## 결과를 이렇게 읽는다
+
+`connection refused`는 destination까지 packet이 갔고 해당 port를 받아 줄 listener가 없거나 명시적으로 거부됐을 가능성을 보여 준다. `timeout`은 packet drop, 잘못된 route, return path, stateful policy 등 더 넓은 범위를 남긴다. 두 결과를 같은 “연결 실패”로 처리하면 조사 순서가 흐려진다.
+
+TLS에서 certificate를 받았다는 사실만으로 검증이 끝나지 않는다. 요청 hostname과 Subject Alternative Name, 유효 기간, issuer chain과 client trust를 확인한다. `-k`로 검증을 끈 curl 성공은 암호화된 연결 가능성을 볼 뿐 production identity 검증 성공을 증명하지 않는다.
+
+HTTP status가 보이면 그 응답을 누가 만들었는지 확인한다. proxy, load balancer와 application이 모두 status를 만들 수 있다. response header, request ID와 hop별 log timestamp를 연결하면 마지막으로 request를 본 component를 찾을 수 있다.
 
 ## 스스로 설명해 보기
 

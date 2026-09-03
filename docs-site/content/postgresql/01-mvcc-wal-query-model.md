@@ -1,5 +1,19 @@
 # MVCC, WAL과 query plan
 
+## 먼저 이해하기
+
+두 사용자가 같은 계좌 row를 거의 동시에 읽고 수정한다고 생각해 보자. database는 단순히 파일의 한 줄을 즉시 덮어쓰지 않는다. transaction마다 어떤 row version을 볼 수 있는지 정하고, 변경 복구에 필요한 WAL을 남기며, 더는 보이지 않는 과거 version을 나중에 정리한다. MVCC·WAL·VACUUM은 서로 다른 단계의 문제를 해결한다.
+
+| 개념 | 답하는 질문 | 혼동하기 쉬운 것 |
+|---|---|---|
+| snapshot | 이 transaction이 어떤 version을 볼 수 있는가? | disk backup 시점 |
+| MVCC | reader와 writer가 row version을 어떻게 공유하는가? | 모든 lock 제거 |
+| WAL | crash 뒤 committed change를 어떻게 재현하는가? | query audit log |
+| checkpoint | recovery가 시작할 기준점을 어떻게 전진시키는가? | 매 transaction backup |
+| VACUUM | 오래된 version을 언제 재사용 가능하게 하는가? | table을 항상 축소하는 작업 |
+
+예를 들어 transaction A가 오래 열린 채 과거 snapshot을 유지하면, 다른 transaction이 row를 여러 번 UPDATE해도 VACUUM은 A에게 보일 수 있는 version을 함부로 제거할 수 없다. application의 “idle in transaction”이 storage 증가와 transaction ID 위험으로 이어질 수 있는 이유다.
+
 ## 한 변경이 보이고 남는 과정
 
 PostgreSQL은 각 statement가 어떤 row version을 볼 수 있는지 snapshot과 isolation 규칙으로 정한다. 변경된 page가 data file에 기록되기 전에 WAL record가 durable storage에 먼저 기록되는 write-ahead 규칙은 crash recovery의 기반이다.

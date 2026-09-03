@@ -2,6 +2,18 @@
 
 > 실습 등급: **Local — Linux VM 또는 systemd가 실행되는 Linux host**. root 권한을 쓰는 단계는 임시 unit 생성과 삭제뿐이다.
 
+## 먼저 이해하기
+
+이 실습은 일부러 두 process가 같은 port를 가지려고 경쟁하게 만든다. TCP listener는 IP address와 port 조합에 bind된다. 첫 번째 Python process가 `127.0.0.1:18080`을 차지한 상태에서 systemd가 두 번째 process를 시작하면 새 process는 socket을 만들지 못하고 종료한다. systemd의 `failed`, journal의 bind error, `ss`에 보이는 기존 PID는 같은 사건을 서로 다른 관점에서 보여 준다.
+
+| 관찰 | 답하는 질문 | 답하지 못하는 질문 |
+|---|---|---|
+| unit `active` | manager가 main process를 실행 중인가? | 올바른 port에서 정상 응답하는가? |
+| listening socket | kernel이 어느 process에 address를 할당했는가? | HTTP handler가 정상인가? |
+| `curl` 성공 | 이 client 위치에서 요청·응답이 끝났는가? | 다른 network 위치에서도 접근 가능한가? |
+
+세 관찰을 모두 정상 기준으로 만든 뒤 장애를 주입한다. 그래야 실패 후 무엇이 달라졌는지 비교할 수 있다.
+
 ## 목표
 
 정상 service의 unit·PID·socket·log 기준을 기록한 뒤 port 충돌을 만들어 `failed`라는 결과가 아니라 실패 원인을 찾는다.
@@ -105,6 +117,12 @@ sudo systemctl reset-failed
 ```
 
 삭제 대상이 정확히 `/etc/systemd/system/infra-http.service`인지 먼저 확인한다. 다른 unit이나 Python process는 이 정리 명령이 제거하지 않는다.
+
+## 결과를 이렇게 읽는다
+
+정상 상태에서는 `MainPID`와 `ss`의 process가 같고 `curl`이 성공한다. 충돌 상태에서는 systemd가 시작한 process가 bind 단계에서 종료하므로 안정된 `MainPID`가 없고, journal에는 address 사용 중이라는 원인이 남는다. 동시에 `ss`에는 foreground Python process가 계속 보인다. 이 세 증거가 일치할 때 port 충돌로 판정한다.
+
+`ss`에 listener가 없다면 port를 차지한 process가 원인이 아니다. listener가 있고 local `curl`은 성공하지만 remote request만 실패하면 bind address, route, host firewall과 상위 network policy로 조사 범위를 옮긴다. 복구 후에는 새 `MainPID`, 기대한 listener owner와 마지막 HTTP 성공을 다시 확인한다.
 
 ## 스스로 설명해 보기
 

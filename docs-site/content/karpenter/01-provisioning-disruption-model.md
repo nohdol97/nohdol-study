@@ -1,5 +1,21 @@
 # Provisioning과 disruption model
 
+## 먼저 이해하기
+
+Kubernetes scheduler가 Pod를 놓을 node를 찾지 못하면 Pod는 Pending에 남는다. Karpenter는 그 Pending Pod들의 CPU·memory request, architecture, zone, taint·toleration과 volume topology를 모아 “어떤 새 node라면 이 Pod들을 실행할 수 있는가?”를 계산한다. EC2 capacity를 확보해 node가 cluster에 등록되면 scheduler가 다시 Pod를 배치한다.
+
+여기서 Karpenter가 scheduler를 대신하는 것은 아니다. scheduler는 존재하는 node에 Pod를 bind하고, Karpenter는 요구를 만족할 node capacity가 없을 때 공급한다.
+
+| resource | 사람이 선언하는 것 | controller가 구체화하는 것 |
+|---|---|---|
+| Pod | request와 scheduling constraint | 필요한 capacity의 입력 |
+| NodePool | 허용 범위·limit·disruption policy | 어떤 NodeClaim을 만들 수 있는지 |
+| EC2NodeClass | AWS subnet·AMI·role·storage 선택 | EC2 launch 설정 |
+| NodeClaim | 한 node의 구체적 요구와 상태 | instance launch·register·terminate 수명주기 |
+| Node | Kubernetes가 보는 실행 capacity | scheduler가 Pod를 배치할 대상 |
+
+예를 들어 Pod가 arm64를 요구하지만 NodePool이 amd64만 허용하면 둘의 교집합이 없다. AWS에 arm64 instance가 충분해도 provisioning되지 않는다. 반대로 instance type을 하나만 허용하면 요구 조건은 맞아도 그 zone에 capacity가 없어 launch가 실패할 수 있다. constraint의 정확성과 선택지의 폭을 함께 설계해야 한다.
+
 ## 세 resource의 책임
 
 - **NodePool**: 허용할 requirement, taint, limit, disruption policy와 template를 정의한다.

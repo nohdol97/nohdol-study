@@ -1,5 +1,20 @@
 # Delivery, ordering과 replay model
 
+## 먼저 이해하기
+
+주문 서비스가 `order.accepted` event를 보낸 뒤 결제 consumer가 처리한다고 하자. producer는 broker에 event를 기록했지만 consumer가 결제 DB를 갱신한 직후 acknowledgement를 보내기 전에 죽을 수 있다. broker는 처리되지 않았다고 판단해 같은 event를 다시 전달한다. 메시징 시스템이 정상 작동했는데도 business side effect가 두 번 실행될 수 있는 이유다.
+
+| 시점 | broker가 아는 것 | broker가 모르는 것 |
+|---|---|---|
+| publish 성공 | event를 수락했다 | 모든 consumer의 business 처리 성공 |
+| delivery | consumer에게 보냈다 | consumer transaction commit 여부 |
+| acknowledgement | consumer가 완료라고 응답했다 | 외부 시스템 전체의 일관성 |
+| retention/replay | event를 다시 읽을 수 있다 | 재실행해도 side effect가 안전한지 |
+
+그래서 delivery guarantee와 processing outcome을 분리한다. at-least-once delivery에서는 중복 가능성을 인정하고 consumer가 durable idempotency key를 사용한다. ordering도 “전체가 순서대로”가 아니라 queue group이나 Kafka partition처럼 보장되는 범위를 명시한다.
+
+SQS·SNS·EventBridge·Kafka는 이 문제의 서로 다른 모양을 해결한다. SQS는 작업을 consumer 사이에 분배하는 queue에 가깝고, SNS와 EventBridge는 여러 target으로 fan-out·routing하며, Kafka는 retained partition log를 consumer group이 offset으로 읽는다. 이름을 고르기 전에 누가 event를 소유하고 누가 retry·replay를 책임지는지 정해야 한다.
+
 ## 서비스 이름보다 책임을 본다
 
 | 구성 | 주된 목적 | 운영 질문 |

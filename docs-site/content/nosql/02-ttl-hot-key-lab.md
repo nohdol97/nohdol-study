@@ -2,6 +2,19 @@
 
 > 실습 등급: Redis는 **Local**, DynamoDB design은 **Plan only**이며 선택적으로 격리된 table에서 **AWS optional**로 검증한다.
 
+## 먼저 이해하기
+
+Redis에서 key가 없어지는 길은 하나가 아니다. TTL이 끝나 논리적으로 만료될 수 있고, `maxmemory`에 도달해 eviction policy가 key를 제거할 수 있으며, persistence 설정과 마지막 저장 시점 때문에 restart 뒤 일부 key가 돌아오지 않을 수도 있다. 원인이 다르면 복구와 예방도 다르다.
+
+DynamoDB의 hot key는 저장 용량 문제가 아니라 request 분포 문제다. table 전체 요청량이 낮아도 하나의 partition key에 traffic이 집중되면 해당 partition에서 latency나 throttling이 나타날 수 있다. key design은 값을 저장하는 형식이면서 동시에 load를 분산하는 규칙이다.
+
+| 현상 | 먼저 확인 | 잘못된 단정 |
+|---|---|---|
+| Redis key 없음 | TTL, eviction counter, write/restart 시점 | 누군가 `DEL`했다 |
+| Redis write 실패 | maxmemory와 policy | network 장애다 |
+| DynamoDB throttling | key별 traffic·index·capacity mode | table 전체 capacity만 부족하다 |
+| query가 Scan 필요 | access pattern과 key/index | NoSQL은 원래 전부 scan한다 |
+
 ## 1. Redis TTL 관찰
 
 disposable Redis instance에서 실행한다.
@@ -53,6 +66,14 @@ flowchart LR
 - Redis에서는 expiration과 eviction을 별도 실험으로 판정한다.
 - DynamoDB에서는 각 query가 Scan 없이 어떤 key/index로 수행되는지 설명한다.
 - AWS optional table, index, backup와 test IAM policy를 inventory 역순으로 삭제하고 billing·resource view를 재확인한다.
+
+## 결과를 이렇게 읽는다
+
+`TTL`이 양수에서 `-2`로 바뀌면 key가 만료되어 더는 존재하지 않는 최소 흐름을 확인한 것이다. `-1`이라면 key는 있지만 expiration이 설정되지 않았다. 두 음수 값을 구분해야 session이 영구히 남는 설정 누락과 정상 만료를 나눌 수 있다.
+
+`evicted_keys`가 증가하면 memory pressure 때문에 policy가 key를 제거했다는 뜻이다. cache라면 source DB의 miss traffic이 함께 증가할 수 있고 source of truth라면 data loss 사건일 수 있다. 같은 counter라도 workload 역할에 따라 심각도가 다르다.
+
+DynamoDB worksheet에서는 각 요구가 `GetItem` 또는 `Query`의 key condition으로 표현되는지 확인한다. 운영 화면 하나를 위해 status 값 하나에 모든 item이 몰리는 GSI를 만들면 새로운 hot partition을 만들 수 있다. 시간 bucket이나 write sharding을 쓰면 read fan-out과 정렬 비용이 생기므로 함께 비교한다.
 
 ## 스스로 설명해 보기
 

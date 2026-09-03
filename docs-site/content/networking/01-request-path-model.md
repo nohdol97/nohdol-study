@@ -1,5 +1,19 @@
 # DNS부터 backend까지
 
+## 먼저 이해하기
+
+브라우저에 `https://api.example`을 입력하면 곧바로 서버에 HTTP 요청이 도착하는 것이 아니다. client는 먼저 이름을 IP address로 바꾸고, 그 address까지 packet을 보낼 route를 찾고, TCP connection을 만든 뒤 TLS로 상대 identity와 암호화 조건을 합의한다. 그 위에서야 HTTP request와 response가 흐른다.
+
+| 단계 | 입력 | 성공했을 때 얻는 것 | 대표 실패 |
+|---|---|---|---|
+| DNS | hostname | 하나 이상의 IP address | NXDOMAIN, timeout, 오래된 record |
+| route | destination IP | interface와 next hop | no route, 잘못된 NAT path |
+| TCP | IP와 port | 양방향 byte stream | refused, timeout, reset |
+| TLS | TCP stream과 server name | 검증된 encrypted session | 이름 불일치, 만료, trust failure |
+| HTTP | method·path·header·body | status·header·body | 4xx, 5xx, upstream timeout |
+
+각 단계의 출력이 다음 단계의 입력이다. 사용자가 보는 증상은 대개 “접속 안 됨” 하나지만, DNS가 틀렸는데 load balancer health check를 고치거나 TLS 이름이 틀렸는데 security group을 여는 조치는 도움이 되지 않는다. 마지막으로 성공한 계층을 찾으면 조사 범위를 줄일 수 있다.
+
 ## 계층은 책임 분리 도구다
 
 실제 packet은 교과서의 층을 차례로 “호출”하지 않지만, 운영자는 실패를 분리하기 위해 각 계층의 계약을 사용한다.

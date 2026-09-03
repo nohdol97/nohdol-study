@@ -113,6 +113,15 @@ test('builds every catalog document into a relative-path Pages artifact', async 
       assert.match(source, /<!-- source: https:\/\/[^|]+ \| checked: 2026-09-03/);
       assert.match(document.html, /스스로 설명해 보기/);
       assert.doesNotMatch(document.html, /source:/);
+      if (/\/(?:01|02)-/.test(document.path)) {
+        assert.match(document.html, /먼저 이해하기/);
+        assert.match(document.html, /<table>/);
+        assert.ok(source.length >= 3000, `${document.id} must explain the model with enough context`);
+      }
+      if (/\/02-/.test(document.path)) {
+        assert.match(document.html, /결과를 이렇게 읽는다/);
+        assert.ok(source.length >= 3500, `${document.id} must explain how to interpret the exercise`);
+      }
     }
   }
   const observabilityRoadmap = content.documents.find((document) => document.id === 'observability-sre-roadmap');

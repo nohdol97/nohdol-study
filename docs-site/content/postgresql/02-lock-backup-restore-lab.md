@@ -2,6 +2,20 @@
 
 > 실습 등급: **Local**. disposable PostgreSQL 18 instance를 사용한다. production query를 그대로 복사해 실행하지 않는다.
 
+## 먼저 이해하기
+
+첫 실습에서는 session A가 row lock을 가진 채 transaction을 끝내지 않아 session B가 기다린다. B의 query가 느린 것이지만 CPU나 disk가 원인인 것은 아니다. PostgreSQL은 같은 row의 충돌하는 변경이 일관성을 깨지 않도록 B를 대기시키고, `pg_blocking_pids`는 대기의 직접 원인인 session A를 가리킨다.
+
+두 번째 실습은 backup 생성과 restore 성공을 분리한다. `pg_dump` exit code 0은 dump artifact를 만들었다는 뜻이고, 별도 database에 `pg_restore`한 뒤 schema·constraint·대표 row를 읽어야 복구 경로가 실제로 작동했음을 확인할 수 있다.
+
+| 단계 | 성공 기준 | 성공해도 남는 확인 |
+|---|---|---|
+| lock 관찰 | waiter와 blocker PID 연결 | blocker transaction의 업무 의미 |
+| blocker 종료 | waiter 진행·rollback 완료 | application retry와 일관성 |
+| dump 생성 | exit code·artifact 존재 | artifact 손상·복원 가능성 |
+| restore | 별도 DB에 schema와 data 생성 | application query·RPO·RTO |
+| failover | 새 primary가 write 수락 | client endpoint·old primary 처리 |
+
 ## 1. 실습 데이터
 
 ```sql
@@ -75,6 +89,14 @@ managed service가 backup과 promotion API를 제공해도 application consisten
 dropdb replace_restore_db
 rm -f accounts.dump
 ```
+
+## 결과를 이렇게 읽는다
+
+session B의 `wait_event_type`이 `Lock`이고 `pg_blocking_pids`가 A를 가리키면 B가 스스로 느린 것이 아니라 A의 transaction 종료를 기다리는 상태다. A를 종료하기 전에 어떤 변경이 rollback될지, application이 retry할 수 있는지 확인한다. waiter만 취소하면 blocker는 그대로 남아 다음 요청을 다시 막을 수 있다.
+
+restore된 `accounts` row가 보이면 dump→restore의 최소 경로는 검증됐다. production 완료 판정에는 owner·privilege, sequence, extension, large object와 application query 같은 실제 사용 요소가 더 필요하다. logical backup은 WAL 기반 PITR과도 다른 복구 방식이다.
+
+RTO는 restore 명령 수행 시간만 재지 않는다. DNS 또는 endpoint 전환, connection pool 갱신, application readiness와 write 승인까지 포함한다. RPO는 backup schedule이 아니라 marker data로 실제 마지막 복구 시점을 확인한다.
 
 ## 스스로 설명해 보기
 

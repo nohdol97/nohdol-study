@@ -1,5 +1,20 @@
 # Chart, release와 desired state
 
+## 먼저 이해하기
+
+Helm과 GitOps를 함께 쓰면 상태가 최소 네 겹 생긴다. chart template은 Kubernetes object를 만드는 규칙이고 values는 그 규칙에 넣는 입력이다. 둘을 렌더링한 manifest가 실제 API request가 되며, cluster에는 그 결과의 live object가 존재한다. Helm release history나 Git commit은 이 상태를 추적하는 또 다른 기준이다.
+
+| 대상 | 쉬운 질문 | 실패 예 |
+|---|---|---|
+| chart | 어떤 종류의 manifest를 만들 수 있는가? | 잘못된 template 조건 |
+| values | 이번 환경이 무엇을 선택했는가? | type 오류, 누락된 필수 값 |
+| rendered manifest | API server에 무엇을 보낼 것인가? | 잘못된 image·selector·권한 |
+| release | 어떤 revision을 install·upgrade했는가? | hook 실패, partial rollout |
+| Git desired state | controller가 무엇으로 되돌리려 하는가? | stale commit, 잘못된 promotion |
+| live state | cluster에서 실제로 무엇이 실행되는가? | manual drift, admission mutation |
+
+values에서 replica를 2에서 3으로 바꿔도 template이 그 값을 쓰지 않으면 rendered manifest는 달라지지 않는다. 반대로 manifest가 3으로 렌더돼도 admission rejection이나 quota 부족으로 live workload가 바뀌지 않을 수 있다. 각 경계를 따로 관찰해야 한다.
+
 ## Chart는 package, release는 설치 instance
 
 ```text

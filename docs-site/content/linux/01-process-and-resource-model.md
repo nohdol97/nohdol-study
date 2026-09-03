@@ -1,5 +1,19 @@
 # Process와 resource의 연결
 
+## 먼저 이해하기
+
+웹 서버가 느려졌다고 가정하자. 사용자는 “서버가 느리다”고 말하지만 Linux가 실제로 관리하는 대상은 하나의 `server`라는 덩어리가 아니다. 실행 중인 process, 그 process가 연 file descriptor와 socket, 할당받은 CPU 시간과 memory page, filesystem을 거친 I/O가 따로 존재한다. 원인을 찾으려면 서비스 이름을 이 실제 자원으로 번역해야 한다.
+
+| 용어 | 뜻 | 운영할 때 확인할 것 |
+|---|---|---|
+| program | disk에 저장된 실행 파일 | 경로, owner, permission, version |
+| process | program이 실행되어 PID와 자원을 가진 상태 | PID, parent, state, open file, memory |
+| thread | process 안에서 CPU scheduling을 받는 실행 단위 | runnable 수, CPU time, lock wait |
+| service | systemd 같은 manager가 process 수명주기에 붙인 운영 이름 | start 조건, restart policy, main PID |
+| cgroup | process 집합에 CPU·memory·I/O 규칙을 적용하는 경계 | limit, usage, pressure, kill event |
+
+예를 들어 `api.service`가 `active`여도 main process가 `127.0.0.1`에만 bind했다면 외부 요청은 실패한다. socket은 열려 있어도 cgroup memory limit에 계속 닿으면 process가 재시작될 수 있다. service 상태는 출발점이며 실제 요청 성공과 자원 여유를 대신하지 않는다.
+
 ## 먼저 구분할 다섯 상태
 
 | 상태 | 대표 질문 | 관찰 위치 |

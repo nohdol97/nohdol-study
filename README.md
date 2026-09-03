@@ -40,7 +40,7 @@
 [**공개 문서 사이트 바로 열기 →**](https://nohdol97.github.io/nohdol-study/)
 
 - **13개 Infra Specialist 주제·47개 문서**: Kubernetes를 공통 과정으로 두고 Linux·네트워크·AWS → Terraform·Helm/GitOps → 운영·데이터·보안·신뢰성 → Karpenter 심화까지 선수 순서로 공개
-- **실행과 복구 중심**: 각 신규 topic은 로드맵·운영 모델·실습으로 구성하고 Local·Plan only·AWS optional 경계, 실패 판정과 cleanup을 [스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)에 맞춰 제공
+- **생략 없는 개념→실행→복구 연결**: 각 신규 topic은 핵심 용어와 실제 상황부터 설명하고, 명령 결과가 증명하는 것과 아직 모르는 것을 구분한다. Local·Plan only·AWS optional 경계, 실패 판정과 cleanup은 [스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)에 맞춰 제공
 - **링크를 내부 문서로 전환**: 사용자가 지정한 공식 페이지를 외부 링크로 연결하지 않고, 관계·시퀀스 다이어그램, 실행 가능한 YAML·`kubectl` 예시, 실패 사례와 복구 흐름이 있는 자립형 설명으로 발전
 - **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
 - **공개 범위 게이트**: `docs-site/catalog.json`에 명시한 Git 추적 Markdown만 빌드하며 `vault/`·`REGISTRY.md`·`_workspace/`는 거부

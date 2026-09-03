@@ -2,6 +2,22 @@
 
 > 실습 등급: **AWS optional**. EKS와 Karpenter가 설치된 격리 환경이 필요하며 EC2·EKS·network·log 비용이 발생할 수 있다. CI에서는 manifest 정적 검증만 수행한다.
 
+## 먼저 이해하기
+
+이 실습에는 두 방향의 수렴이 있다. workload를 늘리면 Pending Pod 요구를 만족하도록 capacity가 생겨야 하고, workload를 없애면 불필요한 capacity가 disruption policy 안에서 줄어야 한다. 빠른 scale-up만 확인하면 비용과 scale-down 안전성은 검증되지 않는다.
+
+관찰 대상도 계층별로 다르다. Pod event는 scheduler가 왜 배치하지 못했는지, Karpenter log는 어떤 requirement와 offering을 검토했는지, NodeClaim condition은 launch·register·initialize 진행을, EC2 API는 실제 instance와 purchase option을 보여 준다.
+
+| 상태 | 기대 관찰 | 오래 머물 때 볼 것 |
+|---|---|---|
+| Pod Pending | unschedulable 이유 | request·affinity·taint·volume topology |
+| NodeClaim 생성 | 선택된 requirement | NodePool 교집합과 limit |
+| launched | provider ID·instance | EC2 capacity·quota·IAM |
+| registered | Kubernetes Node 등장 | bootstrap·network·security group |
+| initialized | startup resource 준비 | CNI·CSI·DaemonSet readiness |
+| disrupting | taint·eviction·replacement | PDB·budget·grace period |
+| terminated | NodeClaim·Node·EC2 정리 | finalizer와 cloud resource 잔존 |
+
 ## 1. 실행 전 gate
 
 - Karpenter 설치 방식과 controller IAM 권한, EKS·Kubernetes 호환성을 현재 공식 문서에서 다시 확인한다.
@@ -89,6 +105,14 @@ Deployment를 0으로 줄이고 `consolidateAfter` 이후 event, NodeClaim과 EC
 ## 정리
 
 test workload를 먼저 삭제하고 NodePool이 만든 NodeClaim 정리를 관찰한다. 그 뒤 test NodePool·EC2NodeClass와 관련 IAM·network·log artifact를 inventory 역순으로 정리한다. finalizer를 임의 제거하기 전에 controller와 cloud instance 상태를 조사한다.
+
+## 결과를 이렇게 읽는다
+
+Pod가 Pending에서 Running으로 바뀌었다면 end-to-end capacity path의 한 사례가 성공한 것이다. 하지만 NodeClaim이 예상한 zone·capacity type·instance 범위를 벗어났다면 policy 목표에는 실패했다. application request와 SLO도 함께 확인한다.
+
+NodeClaim이 생겼지만 node가 register되지 않으면 scheduler 문제가 아니라 EC2 launch 이후 bootstrap 경계를 조사한다. subnet route, security group, instance role, cluster endpoint reachability와 startup log가 다음 증거다. NodeClaim 자체가 없다면 Pod와 NodePool requirement의 교집합, limit와 controller 권한을 먼저 본다.
+
+scale-down 뒤 Kubernetes Node만 사라지고 EC2 instance가 남으면 cleanup은 끝나지 않았다. 반대로 node가 빨리 줄었지만 Pod가 readiness를 잃거나 PDB를 우회했다면 consolidation도 실패다. 비용 감소와 availability guardrail을 동시에 만족해야 한다.
 
 ## 스스로 설명해 보기
 

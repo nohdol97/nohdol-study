@@ -1,5 +1,20 @@
 # Resource graph와 state
 
+## 먼저 이해하기
+
+Terraform에는 서로 다른 세 상태가 있다. **configuration**은 코드에 적은 의도, **state**는 Terraform resource address와 remote object ID의 연결 장부, **remote object**는 AWS에 실제로 존재하는 VPC나 subnet이다. 셋이 같아 보일 때도 있지만 역할은 다르다.
+
+예를 들어 AWS에 `vpc-123`이 있고 state가 이를 `aws_vpc.main`에 연결한다고 하자. HCL block 이름만 `aws_vpc.platform`으로 바꾸면 AWS object가 자동으로 이름을 바꾼 것이 아니다. Terraform은 기존 address가 사라지고 새 address가 생겼다고 해석할 수 있다. `moved` block이나 state migration으로 “같은 object의 주소만 이동했다”는 의도를 알려야 불필요한 destroy/create를 피할 수 있다.
+
+| 대상 | 무엇을 담는가 | 사람이 주로 하는 일 |
+|---|---|---|
+| configuration | 원하는 resource와 관계 | 코드 review, versioning, test |
+| state | address↔remote ID, 일부 속성 | backend 보호, lock, recovery |
+| remote object | AWS의 현재 실제 상태 | API 관찰, health·cost 확인 |
+| plan | 셋의 차이를 바탕으로 한 변경 제안 | create/update/replace/destroy review |
+
+plan은 미래를 완벽히 예언하는 문서가 아니라 특정 configuration·state·provider 관찰 시점에서 계산한 제안이다. apply 전까지 외부 상태가 바뀌거나 provider API가 다른 값을 반환할 수 있으므로 실행 후 검증도 필요하다.
+
 ## Configuration은 원하는 구조, state는 binding
 
 resource block은 “저 object가 이미 존재한다”는 기록이 아니다. Terraform state가 configuration의 resource instance와 remote system object identity 사이 binding을 저장한다.
