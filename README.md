@@ -36,7 +36,14 @@
 - **서버 한 개**: `python3 examples/workspace_portal/portal.py serve`로 `_workspace` 전체를 한 번만 제공
 - **명시적 노출**: 지식 그래프·임시 분석물은 숨기고 사용자가 보는 사이트만 `sites.json`에 등록
 
-### 5. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
+### 5. 🌐 GitHub Pages 공개 문서
+- **주제별 게이트웨이**: 첫 화면의 주제 카드에서 학습 경로를 선택하고 문서 순서·예상 읽기 시간을 확인
+- **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
+- **공개 범위 게이트**: `docs-site/catalog.json`에 명시한 Git 추적 Markdown만 빌드하며 `vault/`·`REGISTRY.md`·`_workspace/`는 거부
+- **Pages artifact 배포**: 생성물은 커밋하지 않고 GitHub Actions가 테스트한 `docs-site/dist/`만 배포
+- **직접 전달**: 검증을 통과한 일반 변경은 별도 승인 대기 없이 `origin/main`에 push하고 Pages 배포까지 확인
+
+### 6. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
 - **이동 중 읽기 전용 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 기존 지식 볼트를 검색·조회·설명하고 소크라테스식 문답을 진행하며, 노트 작성·수정·삭제는 하지 않음
 - **클라우드 실시간 동기화**: Mac에서 생성·수정된 노트는 Google Drive를 통해 스마트폰 Obsidian 앱에 즉시 동기화
 - **인라인 버튼 및 메뉴 제어**: 좌측 하단 `[Menu]` 버튼과 터치 버튼으로 AI 모델(`Gemini 3.1 Pro` ↔ `2.5 Flash`) 및 추론 강도(`High/Med/Low`) 즉시 전환
@@ -57,6 +64,18 @@ python3 examples/workspace_portal/portal.py serve
 ```
 
 브라우저에서 `http://127.0.0.1:4173/`을 열면 등록된 모든 사이트에 접근할 수 있다. 새 사이트 등록 방법은 [Workspace Portal 안내](examples/workspace_portal/README.md)를 따른다.
+
+### GitHub Pages 공개 문서
+
+```sh
+cd docs-site
+npm ci
+npm test
+npm run build
+npm run preview
+```
+
+브라우저에서 `http://127.0.0.1:4174/`를 연다. 공개 문서 추가와 Pages 설정은 [공개 문서 사이트 안내](docs-site/README.md)를 따른다.
 
 ### 1단계: 하네스 설치 및 Vault 연결
 AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거나 셸 스크립트를 직접 실행한다:
@@ -139,6 +158,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 이 프로젝트의 세부 아키텍처 결정(ADR), 단계별 구현 스펙(Specs), 보안 검토 보고서는 모두 `docs/` 디렉터리에 체계적으로 정리되어 있다.
 
 - **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
+- **[공개 문서 사이트](docs-site/README.md)**: 주제 카탈로그, 로컬 빌드와 GitHub Pages 배포 방법
 - **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드 (읽기 전용 — 조회·문답만)
 - **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차
 - **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록

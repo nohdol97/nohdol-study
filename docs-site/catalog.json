@@ -1,0 +1,190 @@
+{
+  "site": {
+    "title": "nohdol study docs",
+    "eyebrow": "STUDY HARNESS",
+    "description": "AI와 함께 지식을 수집하고, 검증하고, 오래 남기는 방법을 주제별로 공부합니다.",
+    "repository": "https://github.com/nohdol97/nohdol-study"
+  },
+  "topics": [
+    {
+      "id": "start",
+      "number": "01",
+      "label": "Start here",
+      "title": "처음 시작하기",
+      "description": "프로젝트의 목적과 전체 문서 지도를 훑고, 내 컴퓨터에 적용할 흐름을 잡습니다.",
+      "accent": "lime",
+      "documents": [
+        {
+          "id": "project-overview",
+          "title": "프로젝트 개요와 빠른 시작",
+          "summary": "nohdol-study가 해결하는 문제, 주요 기능, 설치와 사용 흐름을 한 번에 봅니다.",
+          "path": "README.md"
+        },
+        {
+          "id": "documentation-map",
+          "title": "전체 문서 지도",
+          "summary": "가이드, ADR, 스펙, 검토 기록을 목적에 따라 찾아갑니다.",
+          "path": "docs/README.md"
+        },
+        {
+          "id": "project-direction",
+          "title": "프로젝트 방향과 단계",
+          "summary": "Markdown 정본, 휴대 가능한 하네스, 단계별 확장 방향을 이해합니다.",
+          "path": "docs/proposals/2026-07-25-nohdol-study-direction.md"
+        }
+      ]
+    },
+    {
+      "id": "principles",
+      "number": "02",
+      "label": "Core rules",
+      "title": "설계 원칙과 안전 경계",
+      "description": "정본, 근거, 개인정보, 외부 전송, 파생물의 역할을 결정한 핵심 원칙입니다.",
+      "accent": "blue",
+      "documents": [
+        {
+          "id": "operating-rules",
+          "title": "운영 규칙 요약",
+          "summary": "세션마다 지켜야 할 지식·검증·보안·호환성 규칙을 읽습니다.",
+          "path": "AGENTS.ko.md"
+        },
+        {
+          "id": "initial-architecture",
+          "title": "초기 하네스 아키텍처",
+          "summary": "파일 기반 지식 루트와 휴대 가능한 설치 구조를 선택한 이유를 봅니다.",
+          "path": "docs/adr/001-initial-study-harness.md"
+        },
+        {
+          "id": "derived-workflows",
+          "title": "수집과 파생 워크플로",
+          "summary": "원문, 노트, 그래프와 외부 도구 사이의 책임을 구분합니다.",
+          "path": "docs/adr/002-phase2-derived-workflows.md"
+        },
+        {
+          "id": "egress-guard",
+          "title": "외부 런타임 유출 게이트",
+          "summary": "도구 승인과 데이터 반출 승인이 왜 다른지 사례로 이해합니다.",
+          "path": "docs/adr/005-egress-guard-for-external-runtimes.md"
+        }
+      ]
+    },
+    {
+      "id": "workflows",
+      "number": "03",
+      "label": "Hands-on",
+      "title": "운영 워크플로",
+      "description": "로컬 포털, 모바일 학습, 피드 수집을 실제로 연결하고 운영합니다.",
+      "accent": "orange",
+      "documents": [
+        {
+          "id": "workspace-portal-guide",
+          "title": "Workspace Portal 사용법",
+          "summary": "로컬 학습 사이트를 한 진입점에서 열고 등록·검사하는 방법입니다.",
+          "path": "examples/workspace_portal/README.md"
+        },
+        {
+          "id": "workspace-portal-decision",
+          "title": "단일 로컬 포털 결정",
+          "summary": "여러 사이트를 하나의 document root로 모은 설계 배경을 읽습니다.",
+          "path": "docs/adr/007-single-workspace-site-portal.md"
+        },
+        {
+          "id": "telegram-guide",
+          "title": "모바일 텔레그램 학습",
+          "summary": "읽기 전용 모바일 학습 표면의 설치와 안전 경계를 따라갑니다.",
+          "path": "docs/guides/mobile-telegram-bot.md"
+        },
+        {
+          "id": "feed-guide",
+          "title": "피드 스크래퍼 운영",
+          "summary": "RSS 소스를 선택하고 원문 수집을 자동화하는 운영 절차입니다.",
+          "path": "docs/guides/feed-scraper.md"
+        }
+      ]
+    },
+    {
+      "id": "specs",
+      "number": "04",
+      "label": "Build contracts",
+      "title": "구현 스펙",
+      "description": "완료 기준부터 읽으며 각 단계가 무엇을 보장하고 무엇을 하지 않는지 확인합니다.",
+      "accent": "violet",
+      "documents": [
+        {
+          "id": "phase1-spec",
+          "title": "Phase 1 — 기본 하네스",
+          "summary": "설치, 지식 구조, 노트 계약과 세션 컨텍스트의 실행 기준입니다.",
+          "path": "docs/specs/2026-07-25-phase1-study-harness.md"
+        },
+        {
+          "id": "phase2-spec",
+          "title": "Phase 2 — 수집과 그래프",
+          "summary": "웹·논문·영상 수집과 결정적 지식 그래프의 요구사항입니다.",
+          "path": "docs/specs/2026-07-25-phase2-ingest-notebooklm-graph.md"
+        },
+        {
+          "id": "phase2b-spec",
+          "title": "Phase 2b — CLI 학습 연동",
+          "summary": "코드 분석, Obsidian, 외부 도구 pin과 격리 경계를 정의합니다.",
+          "path": "docs/specs/2026-07-25-phase2b-cli-learning-integrations.md"
+        },
+        {
+          "id": "portal-spec",
+          "title": "Workspace Portal 스펙",
+          "summary": "로컬 포털의 manifest, 경로 안전성, 검증 기준을 확인합니다.",
+          "path": "docs/specs/2026-08-16-workspace-site-portal.md"
+        }
+      ]
+    },
+    {
+      "id": "reviews",
+      "number": "05",
+      "label": "Trade-offs",
+      "title": "도구 검토와 선택",
+      "description": "새 도구를 무엇 때문에 채택하거나 보류했는지 증거와 비용을 따라가며 읽습니다.",
+      "accent": "pink",
+      "documents": [
+        {
+          "id": "additional-tools-review",
+          "title": "추가 도구 도입 검토",
+          "summary": "검색·메모리·Obsidian 연동 후보의 적합성과 위험을 비교합니다.",
+          "path": "docs/reviews/2026-07-25-additional-tools-review.md"
+        },
+        {
+          "id": "security-review",
+          "title": "CLI 연동 보안 검토",
+          "summary": "NotebookLM과 Understand Anything 도입 판단의 보안 근거를 봅니다.",
+          "path": "docs/reviews/2026-07-25-notebooklm-understand-anything-security.md"
+        },
+        {
+          "id": "phase2c-review",
+          "title": "Phase 2c 파일럿 결과",
+          "summary": "후보 도구가 원본 불변 조건을 만족했는지 실제 결과로 판정합니다.",
+          "path": "docs/reviews/2026-07-25-phase2c-pilot-status.md"
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "number": "06",
+      "label": "Project memory",
+      "title": "변경 기록과 맥락",
+      "description": "현재 규칙만으로 보이지 않는 변화의 순서와 다음 작업의 맥락을 확인합니다.",
+      "accent": "teal",
+      "documents": [
+        {
+          "id": "harness-changelog",
+          "title": "하네스 변경 이력",
+          "summary": "사용자 관점의 변화와 검증 방법을 최신순으로 살펴봅니다.",
+          "path": "docs/harness-changelog.md"
+        },
+        {
+          "id": "next-session-handoff",
+          "title": "프로젝트 인계 기록",
+          "summary": "초기 구현 이후의 상태, 결정 근거와 후속 작업을 복원합니다.",
+          "path": "docs/handoffs/2026-07-25-next-session.md"
+        }
+      ]
+    }
+  ]
+}

@@ -5,6 +5,11 @@ _workspace/
 .ua
 .understand-anything/
 
+# Public docs build output and local dependencies. Pages receives dist as an
+# Actions artifact; neither generated HTML nor node_modules belongs in Git.
+docs-site/dist/
+docs-site/node_modules/
+
 # Third-party checkouts placed by install-phase2b-tools.sh. Ignore the
 # contents rather than the directory itself, so the tracked pin ledger inside
 # it stays visible to git.
