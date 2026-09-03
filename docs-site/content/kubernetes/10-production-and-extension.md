@@ -34,13 +34,11 @@
 - CRD → custom controller → 외부 시스템 reconciliation 다이어그램
 - 같은 애플리케이션의 Helm과 Kustomize 구성 비교
 
-## 공식 시작 링크
-
-- [쿠버네티스 설정](https://kubernetes.io/ko/docs/setup/)
-- [프로덕션 환경](https://kubernetes.io/ko/docs/setup/production-environment/)
-- [클러스터 관리](https://kubernetes.io/ko/docs/concepts/cluster-administration/)
-- [쿠버네티스 확장](https://kubernetes.io/ko/docs/concepts/extend-kubernetes/)
-- [커스텀 리소스](https://kubernetes.io/ko/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
-- [Kubernetes 레퍼런스](https://kubernetes.io/ko/docs/reference/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/setup/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/setup/production-environment/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/cluster-administration/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/extend-kubernetes/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/extend-kubernetes/api-extension/custom-resources/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/reference/ | checked: 2026-09-03 -->

@@ -32,12 +32,10 @@
 - PDB가 자발적 중단에 미치는 영향 확인
 - 부하 생성 후 HPA의 metrics → desired replicas 계산 추적
 
-## 공식 시작 링크
-
-- [스케줄링, 선점, 축출](https://kubernetes.io/ko/docs/concepts/scheduling-eviction/)
-- [리소스 관리](https://kubernetes.io/ko/docs/concepts/configuration/manage-resources-containers/)
-- [파드 오버헤드](https://kubernetes.io/ko/docs/concepts/scheduling-eviction/pod-overhead/)
-- [Horizontal Pod Autoscaling](https://kubernetes.io/ko/docs/tasks/run-application/horizontal-pod-autoscale/)
-- [GPU 스케줄링](https://kubernetes.io/ko/docs/tasks/manage-gpus/scheduling-gpus/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/concepts/scheduling-eviction/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/configuration/manage-resources-containers/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/scheduling-eviction/pod-overhead/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/run-application/horizontal-pod-autoscale/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/manage-gpus/scheduling-gpus/ | checked: 2026-09-03 -->

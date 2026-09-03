@@ -31,12 +31,10 @@
 - `kubectl explain`으로 현재 클러스터의 필드 계약 확인
 - 잘못된 API 버전과 필드가 거부되는 과정 관찰
 
-## 공식 시작 링크
-
-- [쿠버네티스 API](https://kubernetes.io/ko/docs/concepts/overview/kubernetes-api/)
-- [쿠버네티스 오브젝트 이해하기](https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/kubernetes-objects/)
-- [쿠버네티스 오브젝트 관리](https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/object-management/)
-- [레이블과 셀렉터](https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/labels/)
-- [네임스페이스](https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/namespaces/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/concepts/overview/kubernetes-api/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/kubernetes-objects/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/object-management/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/labels/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/namespaces/ | checked: 2026-09-03 -->

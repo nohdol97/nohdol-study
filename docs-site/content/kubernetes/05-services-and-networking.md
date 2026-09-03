@@ -30,13 +30,11 @@
 - Service selector와 Pod label 연결
 - NetworkPolicy 적용 전후 허용 흐름
 
-## 공식 시작 링크
-
-- [서비스, 로드밸런싱, 네트워킹](https://kubernetes.io/ko/docs/concepts/services-networking/)
-- [서비스](https://kubernetes.io/ko/docs/concepts/services-networking/service/)
-- [클러스터 네트워킹](https://kubernetes.io/ko/docs/concepts/cluster-administration/networking/)
-- [DNS](https://kubernetes.io/ko/docs/concepts/services-networking/dns-pod-service/)
-- [Ingress](https://kubernetes.io/ko/docs/concepts/services-networking/ingress/)
-- [네트워킹 태스크](https://kubernetes.io/ko/docs/tasks/network/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/concepts/services-networking/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/services-networking/service/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/cluster-administration/networking/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/services-networking/dns-pod-service/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/services-networking/ingress/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/network/ | checked: 2026-09-03 -->

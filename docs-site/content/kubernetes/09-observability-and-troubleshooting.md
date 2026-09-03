@@ -35,12 +35,10 @@
 5. 스케줄링, 구성, 네트워크, 스토리지와 애플리케이션 중 실패 계층을 좁힌다.
 6. 수정 후 rollout과 사용자 경로를 다시 검증한다.
 
-## 공식 시작 링크
-
-- [모니터링, 로깅 및 디버깅 태스크](https://kubernetes.io/ko/docs/tasks/debug/)
-- [애플리케이션 트러블슈팅](https://kubernetes.io/ko/docs/tasks/debug/debug-application/)
-- [클러스터 트러블슈팅](https://kubernetes.io/ko/docs/tasks/debug/debug-cluster/)
-- [파드와 컨테이너 리소스 모니터링](https://kubernetes.io/ko/docs/tasks/debug/debug-cluster/resource-usage-monitoring/)
-- [파드 라이프사이클](https://kubernetes.io/ko/docs/concepts/workloads/pods/pod-lifecycle/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/tasks/debug/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/debug/debug-application/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/debug/debug-cluster/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/debug/debug-cluster/resource-usage-monitoring/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/workloads/pods/pod-lifecycle/ | checked: 2026-09-03 -->

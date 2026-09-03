@@ -31,14 +31,12 @@
 - PVC 삭제와 PV reclaim policy 조합 실험
 - Secret이 출력·로그·환경 변수로 노출되는 경로 점검
 
-## 공식 시작 링크
-
-- [스토리지](https://kubernetes.io/ko/docs/concepts/storage/)
-- [볼륨](https://kubernetes.io/ko/docs/concepts/storage/volumes/)
-- [퍼시스턴트 볼륨](https://kubernetes.io/ko/docs/concepts/storage/persistent-volumes/)
-- [스토리지클래스](https://kubernetes.io/ko/docs/concepts/storage/storage-classes/)
-- [구성](https://kubernetes.io/ko/docs/concepts/configuration/)
-- [컨피그맵](https://kubernetes.io/ko/docs/concepts/configuration/configmap/)
-- [시크릿](https://kubernetes.io/ko/docs/concepts/configuration/secret/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/concepts/storage/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/storage/volumes/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/storage/persistent-volumes/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/storage/storage-classes/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/configuration/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/configuration/configmap/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/configuration/secret/ | checked: 2026-09-03 -->

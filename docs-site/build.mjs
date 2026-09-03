@@ -81,12 +81,28 @@ function plainText(markdown) {
     .trim();
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 function readingMinutes(text) {
   return Math.max(1, Math.ceil(text.length / 700));
 }
 
 function renderMarkdown(source, sourcePath, documentIdByPath, repositoryUrl) {
   const renderer = new Renderer();
+  const renderCode = renderer.code.bind(renderer);
+  renderer.code = (token) => {
+    if (token.lang?.trim().toLowerCase() === 'mermaid') {
+      return `<pre class="mermaid">${escapeHtml(token.text)}</pre>\n`;
+    }
+    return renderCode(token);
+  };
   renderer.html = ({ text }) => {
     if (/^<!--[\s\S]*-->$/u.test(text.trim())) return '';
     return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
@@ -197,6 +213,10 @@ export async function buildSite({
       copyFile(path.join(SITE_ROOT, 'src', 'index.html'), path.join(outputPath, 'index.html')),
       copyFile(path.join(SITE_ROOT, 'src', 'styles.css'), path.join(outputPath, 'assets', 'styles.css')),
       copyFile(path.join(SITE_ROOT, 'src', 'app.js'), path.join(outputPath, 'assets', 'app.js')),
+      copyFile(
+        path.join(SITE_ROOT, 'node_modules', 'mermaid', 'dist', 'mermaid.min.js'),
+        path.join(outputPath, 'assets', 'mermaid.min.js'),
+      ),
       writeFile(path.join(outputPath, 'content.json'), `${JSON.stringify(payload)}\n`, 'utf8'),
       writeFile(path.join(outputPath, '.nojekyll'), '', 'utf8'),
     ]);

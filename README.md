@@ -40,7 +40,7 @@
 [**공개 문서 사이트 바로 열기 →**](https://nohdol97.github.io/nohdol-study/)
 
 - **현재 주제는 Kubernetes 하나**: 공식 한국어 문서의 설치·개념·태스크·튜토리얼·레퍼런스를 전체 로드맵과 10개 장으로 재구성
-- **링크 단위 확장**: 사용자가 지정한 공식 문서를 다이어그램, 실행 가능한 YAML·`kubectl` 예시, 실패 사례와 복구 흐름이 있는 설명으로 발전
+- **링크를 내부 문서로 전환**: 사용자가 지정한 공식 페이지를 외부 링크로 연결하지 않고, 관계·시퀀스 다이어그램, 실행 가능한 YAML·`kubectl` 예시, 실패 사례와 복구 흐름이 있는 자립형 설명으로 발전
 - **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
 - **공개 범위 게이트**: `docs-site/catalog.json`에 명시한 Git 추적 Markdown만 빌드하며 `vault/`·`REGISTRY.md`·`_workspace/`는 거부
 - **Pages artifact 배포**: 생성물은 커밋하지 않고 GitHub Actions가 테스트한 `docs-site/dist/`만 배포

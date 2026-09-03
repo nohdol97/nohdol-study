@@ -6,6 +6,52 @@ let content;
 let documentsById;
 let topicsById;
 let activeQuery = '';
+let mermaidRuntime;
+let mermaidLoadPromise;
+
+function loadMermaid() {
+  if (mermaidRuntime) return Promise.resolve(mermaidRuntime);
+  if (mermaidLoadPromise) return mermaidLoadPromise;
+
+  mermaidLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = './assets/mermaid.min.js';
+    script.onload = () => {
+      mermaidRuntime = globalThis.mermaid;
+      if (!mermaidRuntime) {
+        reject(new Error('Mermaid runtime did not initialize'));
+        return;
+      }
+      mermaidRuntime.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: 'base',
+        themeVariables: {
+          fontFamily: 'Inter, Pretendard, sans-serif',
+          primaryColor: '#e8f1ff',
+          primaryBorderColor: '#326ce5',
+          primaryTextColor: '#17211b',
+          lineColor: '#526159',
+          secondaryColor: '#f6f4ed',
+          tertiaryColor: '#fffef9',
+          actorBkg: '#e8f1ff',
+          actorBorder: '#326ce5',
+          actorTextColor: '#17211b',
+          signalColor: '#17211b',
+          signalTextColor: '#17211b',
+          noteBkgColor: '#fff4d6',
+          noteBorderColor: '#d2a53d',
+          noteTextColor: '#17211b',
+        },
+      });
+      resolve(mermaidRuntime);
+    };
+    script.onerror = () => reject(new Error('Mermaid bundle could not be loaded'));
+    document.head.append(script);
+  });
+
+  return mermaidLoadPromise;
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -197,6 +243,23 @@ function renderDocument(currentDocument) {
     link.target = '_blank';
     link.rel = 'noreferrer';
   });
+
+  renderMermaidDiagrams(document.querySelector('.markdown-body'));
+}
+
+async function renderMermaidDiagrams(root) {
+  const nodes = [...root.querySelectorAll('.mermaid')];
+  if (!nodes.length) return;
+
+  try {
+    const runtime = await loadMermaid();
+    await runtime.run({ nodes });
+  } catch (error) {
+    nodes.forEach((node) => {
+      if (!node.dataset.processed) node.classList.add('diagram-error');
+    });
+    console.error('Mermaid diagram rendering failed', error);
+  }
 }
 
 function searchDocuments(query) {

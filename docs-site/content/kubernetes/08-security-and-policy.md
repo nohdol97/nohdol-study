@@ -32,13 +32,11 @@
 - default deny NetworkPolicy 뒤 필요한 통신만 허용
 - 권한 오류를 `kubectl auth can-i`로 진단
 
-## 공식 시작 링크
-
-- [보안](https://kubernetes.io/ko/docs/concepts/security/)
-- [API 접근 제어](https://kubernetes.io/ko/docs/reference/access-authn-authz/)
-- [서비스 어카운트](https://kubernetes.io/ko/docs/concepts/security/service-accounts/)
-- [RBAC 인가](https://kubernetes.io/ko/docs/reference/access-authn-authz/rbac/)
-- [파드 보안 표준](https://kubernetes.io/ko/docs/concepts/security/pod-security-standards/)
-- [네트워크 정책](https://kubernetes.io/ko/docs/concepts/services-networking/network-policies/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/concepts/security/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/reference/access-authn-authz/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/security/service-accounts/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/reference/access-authn-authz/rbac/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/security/pod-security-standards/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/services-networking/network-policies/ | checked: 2026-09-03 -->

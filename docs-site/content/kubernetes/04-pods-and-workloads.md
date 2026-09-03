@@ -31,13 +31,11 @@
 - StatefulSet Pod 이름과 볼륨 identity 확인
 - Job 실패 정책과 재시도 관찰
 
-## 공식 시작 링크
-
-- [워크로드와 파드](https://kubernetes.io/ko/docs/concepts/workloads/)
-- [파드](https://kubernetes.io/ko/docs/concepts/workloads/pods/)
-- [워크로드 리소스](https://kubernetes.io/ko/docs/concepts/workloads/controllers/)
-- [파드 라이프사이클](https://kubernetes.io/ko/docs/concepts/workloads/pods/pod-lifecycle/)
-- [애플리케이션 실행 태스크](https://kubernetes.io/ko/docs/tasks/run-application/)
-- [잡 실행 태스크](https://kubernetes.io/ko/docs/tasks/job/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/concepts/workloads/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/workloads/pods/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/workloads/controllers/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/workloads/pods/pod-lifecycle/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/run-application/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/tasks/job/ | checked: 2026-09-03 -->

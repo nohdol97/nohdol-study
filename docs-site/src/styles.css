@@ -723,6 +723,17 @@ kbd {
 .markdown-body code { padding: 0.16em 0.38em; border: 1px solid var(--line); border-radius: 5px; background: var(--paper-raised); font: 0.88em/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .markdown-body pre { margin: 26px 0; padding: 20px 22px; overflow-x: auto; border: 1px solid var(--line); border-radius: 13px; background: #17211b; color: #e8f0ea; }
 .markdown-body pre code { padding: 0; border: 0; background: transparent; color: inherit; }
+.markdown-body pre.mermaid {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: 28px 18px;
+  border-color: var(--line-strong);
+  background: #fffef9;
+  color: #17211b;
+}
+.markdown-body pre.mermaid svg { max-width: 100%; height: auto; }
+.markdown-body pre.mermaid.diagram-error { place-items: start; white-space: pre-wrap; color: #8a2d24; }
 .markdown-body table { width: 100%; margin: 28px 0; border-collapse: collapse; display: block; overflow-x: auto; }
 .markdown-body th,
 .markdown-body td { min-width: 120px; padding: 11px 13px; border: 1px solid var(--line); text-align: left; vertical-align: top; }

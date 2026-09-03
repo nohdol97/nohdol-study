@@ -40,15 +40,29 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.ok(payload.documents.every((document) => !/^(?:vault|_workspace)(?:\/|$)/.test(document.path)));
 
   const index = await readFile(path.join(outputPath, 'index.html'), 'utf8');
+  const app = await readFile(path.join(outputPath, 'assets', 'app.js'), 'utf8');
+  const mermaidBundle = await readFile(path.join(outputPath, 'assets', 'mermaid.min.js'), 'utf8');
   const content = JSON.parse(await readFile(path.join(outputPath, 'content.json'), 'utf8'));
   assert.match(index, /href="\.\/assets\/styles\.css"/);
   assert.match(index, /src="\.\/assets\/app\.js"/);
+  assert.doesNotMatch(index, /src="\.\/assets\/mermaid\.min\.js"/);
+  assert.match(app, /script\.src = '\.\/assets\/mermaid\.min\.js'/);
+  assert.match(mermaidBundle, /globalThis\["mermaid"\]/);
   assert.equal(content.documents.length, expectedCount);
 
   const roadmap = content.documents.find((document) => document.id === 'kubernetes-roadmap');
+  const firstCluster = content.documents.find((document) => document.id === 'kubernetes-first-cluster');
   assert.match(roadmap.html, /href="#doc=kubernetes-first-cluster"/);
   assert.match(roadmap.html, /href="#doc=kubernetes-api-objects"/);
+  assert.equal([...roadmap.html.matchAll(/<pre class="mermaid">/g)].length, 2);
+  assert.equal([...firstCluster.html.matchAll(/<pre class="mermaid">/g)].length, 2);
+  assert.match(firstCluster.html, /language-yaml/);
+  assert.match(firstCluster.html, /ImagePullBackOff/);
+  assert.doesNotMatch(roadmap.html, /language-mermaid/);
+  assert.doesNotMatch(roadmap.html, /source:/);
+  assert.doesNotMatch(firstCluster.html, /source:/);
   assert.ok(content.documents.every((document) => !/<script>/i.test(document.html)));
+  assert.ok(content.documents.every((document) => !/href="https:\/\/kubernetes\.io/i.test(document.html)));
   assert.equal(content.documents.some((document) => document.id === 'project-overview'), false);
   assert.equal(content.documents.some((document) => document.id === 'operating-rules'), false);
 });

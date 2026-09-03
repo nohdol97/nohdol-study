@@ -30,12 +30,10 @@
 - 컨트롤 플레인과 워커 노드의 네트워크 경계
 - desired state와 current state를 맞추는 reconciliation loop
 
-## 공식 시작 링크
-
-- [클러스터 컴포넌트](https://kubernetes.io/ko/docs/concepts/overview/components/)
-- [쿠버네티스 아키텍처](https://kubernetes.io/ko/docs/concepts/architecture/)
-- [컨트롤러](https://kubernetes.io/ko/docs/concepts/architecture/controller/)
-- [노드](https://kubernetes.io/ko/docs/concepts/architecture/nodes/)
-- [리스](https://kubernetes.io/ko/docs/concepts/architecture/leases/)
-
 [전체 로드맵으로 돌아가기](00-roadmap.md)
+
+<!-- source: https://kubernetes.io/ko/docs/concepts/overview/components/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/architecture/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/architecture/controller/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/architecture/nodes/ | checked: 2026-09-03 -->
+<!-- source: https://kubernetes.io/ko/docs/concepts/architecture/leases/ | checked: 2026-09-03 -->
