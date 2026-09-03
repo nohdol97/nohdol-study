@@ -44,9 +44,20 @@ test('builds every catalog document into a relative-path Pages artifact', async 
     'messaging',
     'reliability-finops',
     'karpenter',
+    'traffic-resilience',
+    'backend-engineering',
+    'ai-specialist-core',
+    'ai-transformation-platform',
+    'aiops-foundations',
+    'aiops-diagnosis',
+    'aiops-remediation',
   ];
+  assert.deepEqual(payload.paths.map((learningPath) => learningPath.id), ['infra', 'aiops']);
+  assert.deepEqual(payload.paths.map((learningPath) => learningPath.title), ['DevOps', 'AIOps']);
+  assert.equal(payload.paths[0].topicIds.length, 15);
+  assert.equal(payload.paths[1].topicIds.length, 5);
   assert.deepEqual(payload.topics.map((topic) => topic.id), expectedTopicIds);
-  assert.equal(expectedCount, 47);
+  assert.equal(expectedCount, 77);
   assert.equal(payload.documents.length, expectedCount);
   assert.equal(new Set(payload.documents.map((document) => document.id)).size, expectedCount);
   assert.ok(payload.documents.every((document) => document.searchText.length > 0));
@@ -67,8 +78,10 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(app, /Math\.min\(3, Math\.max\(0\.35, nextScale\)\)/);
   assert.match(app, /let mermaidRenderQueue = Promise\.resolve\(\)/);
   assert.match(app, /node\.dataset\.processed !== 'true'/);
-  assert.match(app, /인프라를/);
-  assert.match(app, /Infra Specialist 학습 경로/);
+  assert.match(app, /운영 기술을/);
+  assert.match(app, /배울 영역을 선택하세요/);
+  assert.match(app, /content\.paths/);
+  assert.match(app, /#path=/);
   assert.match(app, /문제와 용어/);
   assert.match(app, /정상 관찰/);
   assert.match(app, /복구 증명/);
@@ -103,9 +116,11 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.doesNotMatch(roadmap.html, /source:/);
   assert.doesNotMatch(firstCluster.html, /source:/);
   const addedTopics = payload.topics.filter((topic) => topic.id !== 'kubernetes');
+  let parsedJsonExamples = 0;
   for (const topic of addedTopics) {
     const topicDocuments = content.documents.filter((document) => document.topicId === topic.id);
-    assert.equal(topicDocuments.length, 3, `${topic.id} must publish three complete documents`);
+    const isExpandedHub = ['backend-engineering', 'ai-specialist-core', 'ai-transformation-platform'].includes(topic.id);
+    assert.ok(topicDocuments.length >= 3, `${topic.id} must publish a complete learning unit`);
     assert.equal(topic.documentIds[0], `${topic.id}-roadmap`);
     assert.ok(
       topicDocuments.reduce((total, document) => total + [...document.html.matchAll(/<pre class="mermaid">/g)].length, 0) >= 2,
@@ -117,6 +132,10 @@ test('builds every catalog document into a relative-path Pages artifact', async 
     );
     for (const document of topicDocuments) {
       const source = await readFile(path.join(REPOSITORY_ROOT, document.path), 'utf8');
+      for (const match of source.matchAll(/```json\n([\s\S]*?)```/g)) {
+        assert.doesNotThrow(() => JSON.parse(match[1]), `${document.id} must contain valid JSON examples`);
+        parsedJsonExamples += 1;
+      }
       assert.match(source, /<!-- source: https:\/\/[^|]+ \| checked: 2026-09-03/);
       assert.match(document.html, /스스로 설명해 보기|운영 판단으로 확장하기/);
       assert.doesNotMatch(document.html, /source:/);
@@ -130,12 +149,12 @@ test('builds every catalog document into a relative-path Pages artifact', async 
           `${document.id} must establish beginner context before completion criteria`,
         );
       }
-      if (/\/(?:01|02)-/.test(document.path)) {
+      if (!/\/00-roadmap\.md$/.test(document.path)) {
         assert.match(document.html, /먼저 이해하기/);
         assert.match(document.html, /<table>/);
         assert.ok(source.length >= 3000, `${document.id} must explain the model with enough context`);
       }
-      if (/\/01-/.test(document.path)) {
+      if (/\/01-/.test(document.path) || (isExpandedHub && !/\/00-roadmap\.md$/.test(document.path))) {
         assert.match(source, /## 이 장에서 처음 쓰는 말/);
         assert.match(source, /\n1\. .+\n2\. /);
         assert.ok(
@@ -143,7 +162,7 @@ test('builds every catalog document into a relative-path Pages artifact', async 
           `${document.id} must define terms before using the detailed model`,
         );
       }
-      if (/\/02-/.test(document.path)) {
+      if (/\/02-/.test(document.path) && !isExpandedHub) {
         assert.match(source, /## 실습 전에 준비할 것/);
         assert.ok(
           source.indexOf('## 실습 전에 준비할 것') < source.indexOf('## 먼저 이해하기'),
@@ -154,12 +173,63 @@ test('builds every catalog document into a relative-path Pages artifact', async 
       }
     }
   }
+  assert.ok(parsedJsonExamples >= 6, 'the AIOps path must include multiple valid incident and operation records');
   const observabilityRoadmap = content.documents.find((document) => document.id === 'observability-sre-roadmap');
   const postgresqlRoadmap = content.documents.find((document) => document.id === 'postgresql-roadmap');
   const karpenterRoadmap = content.documents.find((document) => document.id === 'karpenter-roadmap');
+  const trafficRoadmap = content.documents.find((document) => document.id === 'traffic-resilience-roadmap');
+  const aiopsFoundationsRoadmap = content.documents.find((document) => document.id === 'aiops-foundations-roadmap');
+  const aiopsDiagnosisRoadmap = content.documents.find((document) => document.id === 'aiops-diagnosis-roadmap');
+  const aiopsRemediationRoadmap = content.documents.find((document) => document.id === 'aiops-remediation-roadmap');
+  const backendRoadmap = content.documents.find((document) => document.id === 'backend-engineering-roadmap');
+  const aiSpecialistRoadmap = content.documents.find((document) => document.id === 'ai-specialist-core-roadmap');
+  const aiTransformationRoadmap = content.documents.find((document) => document.id === 'ai-transformation-platform-roadmap');
   assert.match(observabilityRoadmap.html, /href="#doc=kubernetes-roadmap"/);
   assert.match(postgresqlRoadmap.html, /href="#doc=reliability-finops-roadmap"/);
   assert.match(karpenterRoadmap.html, /href="#doc=kubernetes-scheduling-scaling"/);
+  assert.match(trafficRoadmap.html, /href="#doc=aiops-remediation-roadmap"/);
+  assert.match(aiopsFoundationsRoadmap.html, /href="#doc=observability-sre-roadmap"/);
+  assert.match(aiopsDiagnosisRoadmap.html, /href="#doc=aiops-foundations-roadmap"/);
+  assert.match(aiopsRemediationRoadmap.html, /href="#doc=traffic-resilience-roadmap"/);
+  assert.match(backendRoadmap.html, /href="#doc=traffic-resilience-roadmap"/);
+  assert.match(backendRoadmap.html, /href="#doc=aiops-remediation-roadmap"/);
+  assert.match(aiSpecialistRoadmap.html, /href="#doc=ai-transformation-platform-roadmap"/);
+  assert.match(aiSpecialistRoadmap.html, /href="#doc=aiops-foundations-roadmap"/);
+  assert.match(aiTransformationRoadmap.html, /href="#doc=ai-specialist-core-llm"/);
+  assert.match(aiTransformationRoadmap.html, /href="#doc=aiops-foundations-evidence-graph"/);
+  for (const term of [
+    'HTTP/2·HTTP/3',
+    'TLA+',
+    'eBPF·io_uring·zero-copy',
+    'CDC·CQRS·Event Sourcing',
+    'fleet device registry',
+    'memory hierarchy·storage latency',
+    '증분 집계의 삽입 여부 기반 멱등성',
+    '집계 인원수의 재식별 위험',
+    'OpenTelemetry pipeline의 단계별 보증',
+  ]) {
+    assert.match(backendRoadmap.html, new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  for (const term of [
+    'MLA 저랭크 KV 압축',
+    'Gated DeltaNet',
+    'Stable Diffusion',
+    'GPTQ·AWQ',
+    'HNSW·DiskANN',
+  ]) {
+    assert.match(aiSpecialistRoadmap.html, new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  for (const term of [
+    'Ray 분산 compute',
+    'Kueue quota·gang scheduling',
+    'LiteLLM gateway',
+    'Temporal durable execution',
+    'A2A task lifecycle',
+    'OPA/Rego policy',
+  ]) {
+    assert.match(aiTransformationRoadmap.html, new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.doesNotMatch(index + app + JSON.stringify(content.site) + JSON.stringify(content.paths), /Infra Specialist/);
   assert.ok(content.documents.every((document) => !/<script>/i.test(document.html)));
   assert.ok(content.documents.every((document) => !/href="https:\/\/(?:kubernetes\.io|docs\.aws\.amazon\.com|developer\.hashicorp\.com|helm\.sh|www\.postgresql\.org|redis\.io|karpenter\.sh)/i.test(document.html)));
   assert.equal(content.documents.some((document) => document.id === 'project-overview'), false);
@@ -176,6 +246,23 @@ test('rejects duplicate document ids', async () => {
     () => loadCatalog({ catalogPath, repositoryRoot: REPOSITORY_ROOT, requireTracked: false }),
     /duplicate document id/,
   );
+});
+
+test('rejects missing, duplicate, and unknown path topic assignments', async () => {
+  for (const mutate of [
+    (catalog) => catalog.paths[0].topicIds.pop(),
+    (catalog) => catalog.paths[1].topicIds.push(catalog.paths[0].topicIds[0]),
+    (catalog) => catalog.paths[1].topicIds.push('missing-topic'),
+  ]) {
+    const directory = await temporaryDirectory();
+    const catalog = await clonedCatalog();
+    mutate(catalog);
+    const catalogPath = await writeCatalog(directory, catalog);
+    await assert.rejects(
+      () => loadCatalog({ catalogPath, repositoryRoot: REPOSITORY_ROOT, requireTracked: false }),
+      /not assigned|more than one path|unknown topic/,
+    );
+  }
 });
 
 test('rejects private paths and path traversal', async () => {

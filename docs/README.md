@@ -6,7 +6,7 @@
 
 | 가이드 | 대상 | 요지 |
 |---|---|---|
-| [공개 학습 가이드](../docs-site/README.md) | Infra Specialist GitHub Pages 주제 게이트웨이 | 13개 topic·47개 문서, 초심자 문제 상황→용어→정상 관찰→실패·복구→운영 판단의 학습 사다리, 검색·Markdown 읽기 화면과 Pages 배포 |
+| [공개 학습 가이드](../docs-site/README.md) | DevOps·AIOps GitHub Pages 학습 게이트웨이 | 루트 2개 학습 영역, 20개 topic·77개 문서, 백엔드·AI Specialist·AI Transformation을 포함한 선수·후속 링크, 검색·Markdown 읽기 화면과 Pages 배포 |
 | [Workspace Portal](../examples/workspace_portal/README.md) | `_workspace`의 사용자용 다이내믹 HTML 사이트 | `_workspace/sites/<slug>/` 경로와 명시적 manifest, 단일 server root, portal 초기화·등록·검사 |
 | [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 (읽기 전용) | 지식 루트를 읽기만 하는 조회·문답 표면, 모바일 소크라테스 학습, 인라인 버튼 제어, MessageEntity 기반 무결점 서식 렌더링 및 로컬 URL 정제, launchd 부팅 시 자동 시작, AGENTS.md 보안 화이트리스트 준수 |
 | [피드 스크래퍼](guides/feed-scraper.md) | RSS 소스 → vault 자동 수집 | 카탈로그(추적)와 컴퓨터별 선택(비추적) 분리, `feed`는 제목·링크만 쌓아 API 호출 0, `geeknews`는 점수 게이트 후 요약·분류, 마커 기반 중복 방지, launchd 자동 실행 |
@@ -15,7 +15,8 @@
 
 | ADR | 날짜 | 상태 | 제목 |
 |---|---|---|---|
-| [008](adr/008-public-docs-gateway.md) | 2026-09-03 | 활성 | 주제별 학습 문서는 명시적 카탈로그를 거쳐 GitHub Pages에 배포 |
+| [009](adr/009-public-docs-root-learning-paths.md) | 2026-09-03 | 활성 | 공개 문서 루트는 DevOps·AIOps 학습 영역을 나누고 topic을 정확히 한 영역에 배치 |
+| [008](adr/008-public-docs-gateway.md) | 2026-09-03 | 부분 대체(→009) | 주제별 학습 문서는 명시적 카탈로그를 거쳐 GitHub Pages에 배포 |
 | [001](adr/001-initial-study-harness.md) | 2026-07-25 | 활성 | 파일 기반 공부 하네스 Phase 1 구조 |
 | [002](adr/002-phase2-derived-workflows.md) | 2026-07-25 | 활성 | Phase 2 수집·NotebookLM·그래프 파생 워크플로 |
 | [003](adr/003-cli-learning-integrations.md) | 2026-07-25 | 부분 대체(→004) | Understand Anything 전체 스킬과 선택적 학습 연동의 project-local 채택 |
@@ -28,7 +29,8 @@
 
 | 스펙 | 상태 | 대상 |
 |---|---|---|
-| [2026-09-03-infra-specialist-public-learning-path](specs/2026-09-03-infra-specialist-public-learning-path.md) | 구현됨 | 인프라를 처음 접하는 개발자에서 시작해 Kubernetes와 12개 인프라 topic을 잇고 Karpenter만 심화로 둔 47개 문서 경로, 용어 정의·정상 관찰·실패·복구·운영 판단을 생략하지 않는 설명 계약 |
+| [2026-09-03-aiops-public-learning-path](specs/2026-09-03-aiops-public-learning-path.md) | 구현됨 | AI Specialist 5개 모듈·AI Transformation 4개 필러 → 신호·근거 기반 진단 → 승인된 자동 복구의 5개 topic·20개 문서와 DevOps 교차 링크·실행 안전 계약 |
+| [2026-09-03-infra-specialist-public-learning-path](specs/2026-09-03-infra-specialist-public-learning-path.md) | 구현됨 | Kubernetes와 14개 DevOps topic을 잇는 57개 문서 경로, 백엔드 6개 축·트래픽 제어 보강과 용어→정상 관찰→실패·복구→운영 판단 계약 |
 | [2026-09-03-public-docs-gateway](specs/2026-09-03-public-docs-gateway.md) | 구현됨 | 확장 가능한 주제 게이트웨이의 초기 Kubernetes 11개 학습 문서, 검색·문서 뷰어와 공개 범위 게이트 |
 | [2026-07-25-phase1-study-harness](specs/2026-07-25-phase1-study-harness.md) | 구현됨 | 설치기, 지식 구조, 공용 스킬, 세션 훅 |
 | [2026-07-25-phase2-ingest-notebooklm-graph](specs/2026-07-25-phase2-ingest-notebooklm-graph.md) | 구현됨 | 웹·논문·영상 ingest, NotebookLM export, 그래프 기준 파서 |

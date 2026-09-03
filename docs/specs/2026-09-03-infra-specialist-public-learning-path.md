@@ -1,4 +1,4 @@
-# Infra Specialist 공개 학습 경로 스펙
+# DevOps 공개 학습 경로 스펙
 
 - 날짜: 2026-09-03
 - 상태: 구현됨
@@ -7,9 +7,9 @@
 
 ## 목표
 
-- 현재 Kubernetes 과정에 Linux·네트워크·AWS·Terraform·Helm·운영·데이터 계층을 연결해 AWS 기반 cloud-native 인프라를 설계하고 운영하는 학습 경로를 제공한다.
+- 현재 Kubernetes 과정에 Linux·네트워크·AWS·Terraform·Helm·운영·데이터·백엔드 애플리케이션 계층을 연결해 cloud-native 시스템을 설계하고 운영하는 학습 경로를 제공한다.
 - 제품 기능을 나열하지 않고 `요구사항 → 선언 상태 → 실제 자원 → 관측 → 장애 복구 → 비용`의 운영 수명주기로 설명한다.
-- 각 주제를 독립 카드와 자체 로드맵으로 제공하되, 선수·후속 관계를 표시해 전체 Infra Specialist 경로로 이어지게 한다.
+- 각 주제를 독립 카드와 자체 로드맵으로 제공하되, 선수·후속 관계를 표시해 전체 DevOps 경로로 이어지게 한다.
 - 로컬에서 재현 가능한 실습을 기본으로 하고, AWS 자원을 만드는 실습은 예상 영향·비용·정리 절차를 명시한 선택 과정으로 분리한다.
 - 심화 제품 트랙은 Karpenter 하나만 포함해 EKS의 workload 요구가 AWS compute capacity로 수렴하는 과정을 다룬다.
 
@@ -32,6 +32,7 @@
 - queue·event stream의 중복·순서·retry·dead-letter 책임을 정한다.
 - RPO·RTO·용량·비용 목표를 아키텍처와 운영 runbook에 반영한다.
 - Karpenter의 provisioning·consolidation·disruption 판단을 Pod scheduling, AWS capacity와 비용 신호로 검증한다.
+- API 계약, transaction 불변식, runtime capacity, 분산 workflow, cache와 호환 배포를 인프라의 실제 실패·복구 경계에 연결한다.
 
 ## 범위
 
@@ -55,13 +56,15 @@
 | 10 | `messaging` | 메시징과 이벤트 인프라 | SQS·SNS·EventBridge와 Kafka의 역할, queue와 event log, delivery·ordering·idempotency, retry·backoff·DLQ, retention·replay·schema evolution |
 | 11 | `reliability-finops` | 신뢰성·DR·FinOps | availability target, backup·restore, RPO·RTO, multi-AZ·region 판단, capacity planning, tagging·cost allocation, rightsizing, On-Demand·Reserved·Spot 선택 |
 | 12 | `karpenter` | Karpenter 심화 | EKS 연동, workload 요구와 node provisioning, NodePool·node class·claim 계층, topology·capacity type, consolidation·disruption, PDB·termination, 관측·비용·복구 |
+| 13 | `traffic-resilience` | 트래픽 제어와 서비스 복원력 | Gateway·Route 소유권, 전체 deadline·per-try timeout, retry budget, circuit breaker·outlier detection, blast radius와 복구 검증 |
+| 14 | `backend-engineering` | 운영 가능한 백엔드 엔지니어링 | HTTP·API 계약, 도메인 불변식·transaction·outbox, 동시성·용량·runtime, 부분 실패·fencing·saga, cache·성능, contract test·online migration·점진 배포 |
 
 ### 명시적으로 제외하는 심화 트랙
 
-초기 Infra Specialist 경로에는 다음을 별도 topic으로 추가하지 않는다.
+초기 DevOps 경로에는 다음을 별도 topic으로 추가하지 않는다.
 
 - Ansible·Packer와 별도 image factory
-- Cilium/eBPF 심화와 service mesh(Envoy·Istio)
+- Cilium/eBPF와 Envoy·Istio의 설치·제품별 service mesh 심화. 다만 공통 트래픽 실패 계약은 `traffic-resilience`에서 다룬다
 - Vault와 별도 secret platform
 - OpenTofu·Pulumi·Crossplane 비교 과정
 - 독립 Chaos Engineering 제품 과정
@@ -85,6 +88,9 @@ Linux ──> Networking ──> AWS Foundations ──> Terraform on AWS
                               Reliability & FinOps
                                        v
                                 Karpenter 심화
+                                       │
+        API 계약 ─> Transaction ─> 용량 ─> 분산 Workflow ─> Cache ─> 호환 배포
+                                       └────────────> AIOps 증거·진단·복구
 ```
 
 카탈로그의 카드 순서는 위 선수 관계를 따르되, 독자는 각 topic을 직접 열 수 있다. 각 topic의 `00-roadmap.md`는 필수 선수 문서와 독립적으로 건너뛸 수 있는 장을 구분한다.
@@ -196,6 +202,7 @@ Linux ──> Networking ──> AWS Foundations ──> Terraform on AWS
 | Messaging | duplicate·retry·DLQ 또는 replay를 발생시키고 consumer의 idempotency와 복구 완료를 확인 |
 | Reliability & FinOps | 하나의 workload에 RPO·RTO·용량·비용 budget을 정하고 backup 복구 또는 game-day 결과로 검증 |
 | Karpenter | pending Pod가 node capacity로 수렴하는 과정과 consolidation/disruption 결과를 event·metric·AWS resource에서 확인 |
+| Traffic & Resilience | Gateway·Route attachment와 소유권을 검토하고 deadline·retry budget·circuit breaker가 retry storm의 상한을 닫는지 plan-only evidence로 확인 |
 
 ### R6. 통합 캡스톤
 
@@ -212,9 +219,10 @@ Linux ──> Networking ──> AWS Foundations ──> Terraform on AWS
 1. 기반: Linux, Networking, AWS Foundations
 2. 선언과 배포: Terraform on AWS, Helm & GitOps
 3. 운영: Observability & SRE, Infrastructure Security
-4. 데이터: PostgreSQL, NoSQL, Messaging
-5. 신뢰성과 통합: Reliability & FinOps, local/AWS optional capstone
-6. 유일한 심화: Karpenter
+4. 트래픽과 복원력: Traffic & Resilience
+5. 데이터: PostgreSQL, NoSQL, Messaging
+6. 신뢰성과 통합: Reliability & FinOps, local/AWS optional capstone
+7. 유일한 심화: Karpenter
 
 한 단계의 topic은 작성 작업을 병렬화할 수 있지만, 각 topic은 자체 roadmap·본문·검증이 모두 준비됐을 때 한 번에 공개한다.
 
@@ -226,7 +234,7 @@ Linux ──> Networking ──> AWS Foundations ──> Terraform on AWS
 - 실제 AWS 계정·비용·가용성을 CI 성공 조건으로 만드는 일
 - 하나의 정답 architecture, 무조건적인 multi-AZ·multi-region 또는 특정 database 선택을 제시하는 일
 - 도구 설치 성공만으로 운영 역량이 생겼다고 판정하는 일
-- Karpenter 이외의 심화 제품을 초기 경로에 추가하는 일
+- Karpenter 이외의 제품별 심화 track을 초기 경로에 추가하는 일. 백엔드 topic은 제품 심화가 아니라 기존 DevOps 계층을 요청·업무 결과로 연결하는 공통 계약이다
 
 ## 구현 완료 기준
 
@@ -236,6 +244,8 @@ Linux ──> Networking ──> AWS Foundations ──> Terraform on AWS
 - 카탈로그에는 본문과 검증이 완료된 topic만 선수 순서로 등록된다.
 - 모든 공개 source는 Git 추적 Markdown이며 기존 public docs gateway의 경로 이탈·비공개 경로 거부 테스트를 통과한다.
 - topic 간 내부 링크는 빌드된 사이트의 document route로 해석되고 깨진 상대 링크가 없다.
+- DevOps 15개 topic·57개 문서가 catalog에 등록되고 백엔드 roadmap이 network·database·messaging·security·traffic·AIOps를 내부 route로 연결한다.
+- 백엔드 roadmap의 전체 내용 연결표는 vault 81개 노트의 protocol·data·runtime·cache·distributed correctness·data platform·security·delivery·traffic·AI/robot 교차 영역을 빠짐없이 공개 장에 배치한다.
 
 ### 콘텐츠 품질
 
@@ -262,7 +272,7 @@ Linux ──> Networking ──> AWS Foundations ──> Terraform on AWS
 ## 스펙 단계 완료 기준
 
 - 신규 topic의 범위와 순서가 명시되어 있다.
-- Karpenter만 심화 topic으로 포함되고 제외 목록이 명시되어 있다.
+- Karpenter만 제품 심화 topic으로 포함되고 백엔드 공통 계약과 제외 목록이 명시되어 있다.
 - 문서·실습·출처·버전·AWS 안전 계약이 판정 가능한 요구사항으로 작성되어 있다.
 - 단계별 구현과 최종 완료 기준이 분리되어 있다.
 - 이 스펙이 docs MOC, 공개 학습 가이드와 루트 README에서 탐색 가능하다.

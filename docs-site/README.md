@@ -1,12 +1,12 @@
 # 공개 학습 가이드
 
-GitHub Pages에서 Infra Specialist 기술을 선수 순서로 제공하는 한국어 학습 가이드다. 파일을 만들고 기본 shell 명령을 실행해 본 애플리케이션 개발자를 출발점으로 삼으며, 개별 인프라 기술을 처음 접해도 용어부터 시작할 수 있게 구성한다. Kubernetes 11개 문서와 Linux·네트워크·AWS·Terraform·Helm/GitOps·관측성·PostgreSQL·Redis/DynamoDB·보안·메시징·신뢰성·Karpenter의 12개 topic, 총 47개 문서를 공개한다.
+GitHub Pages에서 DevOps와 AIOps를 별도 학습 영역으로 제공하는 한국어 학습 가이드다. 파일을 만들고 기본 shell 명령을 실행해 본 애플리케이션 개발자를 출발점으로 삼으며, 처음 만나는 기술도 용어에서 시작해 정상 관찰·실패·복구와 운영 판단으로 이어지게 구성한다. 루트 2개 영역 아래 DevOps 15개 topic·57개 문서와 AIOps 5개 topic·20개 문서, 총 20개 topic·77개 문서를 공개한다.
 
 - 공개 URL: <https://nohdol97.github.io/nohdol-study/>
 - 공개 콘텐츠: `docs-site/content/<topic>/`
 - 카탈로그: `docs-site/catalog.json`
 
-`docs/`의 하네스 ADR·스펙과 개인 `vault/`는 이 학습 과정의 내용이 아니며 사이트에 게시하지 않는다.
+`docs/`의 하네스 ADR·스펙과 개인 `vault/`는 공개 학습 본문이 아니며 사이트에 게시하지 않는다. vault 노트는 주제 발견에 참고할 수 있지만 공개 본문은 공식 문서와 1차 자료에서 사실을 다시 확인해 `docs-site/content/`에 별도로 작성한다.
 
 ## 주제와 링크를 확장하는 방식
 
@@ -26,9 +26,9 @@ GitHub Pages에서 Infra Specialist 기술을 선수 순서로 제공하는 한�
 
 Markdown의 `mermaid` 코드 블록은 사이트가 함께 배포하는 Mermaid 번들로 직접 렌더링한다. 외부 CDN에 의존하지 않으며 관계도와 시퀀스가 문서 안에 표시된다.
 
-각 주제는 `docs-site/content/<topic>/`에 독립된 로드맵과 본문을 두고 `catalog.json`에 명시적으로 등록한다. 카탈로그 순서는 Linux 기반에서 선언·배포, 운영·데이터, 신뢰성과 Karpenter 심화로 이어지는 선수 관계를 따른다.
+루트는 `infra`와 `aiops` 학습 영역을 보여 주고, 영역을 선택하면 그 안의 주제가 선수 순서로 열린다. 각 주제는 `docs-site/content/<topic>/`에 독립된 로드맵과 본문을 두고 `catalog.json`에 명시적으로 등록한다. 모든 주제는 정확히 한 영역에 속하며, 영역을 넘는 선수·후속 지식은 Markdown 상대 링크로 연결되어 빌드 후 내부 문서 route가 된다.
 
-전체 과정은 [Infra Specialist 공개 학습 경로 스펙](../docs/specs/2026-09-03-infra-specialist-public-learning-path.md)을 구현한다. 각 신규 topic은 진입 로드맵·개념 모델·안내형 실습 3개 문서로 첫 학습 순환을 제공하며, 이 세 문서가 제품 전체 reference나 실무 숙련을 대신하지 않는다. Karpenter만 `Advanced`로 구분한다. AWS 실습은 Local·Plan only·AWS optional 등급과 비용·권한·cleanup 경계를 명시한다.
+DevOps는 [DevOps 공개 학습 경로 스펙](../docs/specs/2026-09-03-infra-specialist-public-learning-path.md), AIOps는 [AIOps 공개 학습 경로 스펙](../docs/specs/2026-09-03-aiops-public-learning-path.md)을 구현한다. 작은 topic은 진입 로드맵·개념 모델·안내형 실습 3개 문서로 첫 학습 순환을 제공하고, 넓은 허브 topic은 vault의 전체 축을 누락하지 않도록 모듈별 장을 둔다. DevOps는 트래픽 제어에 더해 백엔드 요청·transaction·용량·분산 workflow·cache·호환 배포를 연결한다. AIOps는 AI Specialist의 LLM·Vision·On-device·시계열·추천·RAG/MCP와 AI Transformation의 GPU·MLOps/LLMOps·AI DevOps/FinOps·enterprise agent를 운영 증거→진단→승인된 자동 복구의 폐루프로 잇는다.
 
 ## 로컬 실행
 

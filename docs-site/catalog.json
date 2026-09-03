@@ -2,9 +2,51 @@
   "site": {
     "title": "Study Gateway",
     "eyebrow": "CURATED LEARNING PATHS",
-    "description": "인프라를 처음 접하는 개발자가 Linux부터 AWS·Terraform·Kubernetes·데이터·신뢰성까지 정상 실행, 실패 관찰, 복구를 반복하며 전문가의 판단 순서를 배웁니다.",
+    "description": "인프라·백엔드·AIOps를 처음 접하는 개발자가 요청, 저장, 실행, 관찰, 진단과 복구를 하나의 운영 경로로 연결해 배웁니다.",
     "repository": "https://github.com/nohdol97/nohdol-study"
   },
+  "paths": [
+    {
+      "id": "infra",
+      "number": "01",
+      "label": "DEVOPS",
+      "title": "DevOps",
+      "description": "Linux·네트워크·AWS·Kubernetes부터 백엔드 계약·데이터·보안·트래픽·신뢰성까지, 시스템을 만들고 운영하는 기반을 선수 순서로 배웁니다.",
+      "accent": "blue",
+      "topicIds": [
+        "kubernetes",
+        "linux",
+        "networking",
+        "aws-foundations",
+        "terraform-aws",
+        "helm-gitops",
+        "observability-sre",
+        "postgresql",
+        "nosql",
+        "infrastructure-security",
+        "messaging",
+        "reliability-finops",
+        "karpenter",
+        "traffic-resilience",
+        "backend-engineering"
+      ]
+    },
+    {
+      "id": "aiops",
+      "number": "02",
+      "label": "AIOPS",
+      "title": "AIOps",
+      "description": "AI 모델·검색·에이전트의 기초부터 GPU·MLOps 운영 플랫폼을 거쳐, 근거 있는 진단과 제한된 자동 복구로 이어지는 전체 폐루프를 배웁니다.",
+      "accent": "violet",
+      "topicIds": [
+        "ai-specialist-core",
+        "ai-transformation-platform",
+        "aiops-foundations",
+        "aiops-diagnosis",
+        "aiops-remediation"
+      ]
+    }
+  ],
   "topics": [
     {
       "id": "kubernetes",
@@ -384,7 +426,7 @@
         },
         {
           "id": "reliability-finops-capstone",
-          "title": "Infra Specialist 통합 capstone",
+          "title": "DevOps 통합 capstone",
           "summary": "앞서 배운 기술을 작은 서비스 하나에 연결해 장애 발생부터 복구까지 증거를 남깁니다.",
           "path": "docs-site/content/reliability-finops/02-integrated-capstone.md"
         }
@@ -415,6 +457,256 @@
           "title": "기다리는 Pod와 안전한 Node 정리 실습",
           "summary": "Pod를 실행할 Node가 생기는 과정과 서비스 보호 규칙 때문에 Node 제거가 멈추는 상황을 관찰합니다.",
           "path": "docs-site/content/karpenter/02-pending-pod-consolidation-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "traffic-resilience",
+      "number": "13",
+      "label": "Traffic & Resilience",
+      "title": "트래픽 제어와 서비스 복원력",
+      "description": "Gateway와 Route의 소유권을 나누고, timeout·retry budget·circuit breaker·outlier detection으로 한 실패가 전체 장애로 번지지 않게 합니다.",
+      "accent": "teal",
+      "documents": [
+        {
+          "id": "traffic-resilience-roadmap",
+          "title": "트래픽 제어와 서비스 복원력 로드맵",
+          "summary": "요청 경로의 소유권과 부하 제한부터 시작해 재시도가 장애를 키우지 않는 설계를 배웁니다.",
+          "path": "docs-site/content/traffic-resilience/00-roadmap.md"
+        },
+        {
+          "id": "traffic-resilience-request-budget",
+          "title": "Gateway에서 upstream까지의 실패 예산",
+          "summary": "전체 deadline 안에서 연결·시도·재시도 예산을 나누고 circuit breaker와 outlier detection의 책임을 구분합니다.",
+          "path": "docs-site/content/traffic-resilience/01-request-budget-and-ownership.md"
+        },
+        {
+          "id": "traffic-resilience-policy-lab",
+          "title": "Route 소유권과 retry storm 검토 실습",
+          "summary": "Gateway API와 Envoy 설정을 읽어 허용된 route, 최대 동시 재시도와 복구 판정 증거를 점검합니다.",
+          "path": "docs-site/content/traffic-resilience/02-route-and-retry-review-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "backend-engineering",
+      "number": "14",
+      "label": "Backend Engineering",
+      "title": "운영 가능한 백엔드 엔지니어링",
+      "description": "HTTP 요청 한 건이 도메인 규칙과 트랜잭션을 거쳐 저장·이벤트·캐시로 흐르고, 과부하와 변경 속에서도 검증 가능한 결과로 남는 전체 경로를 배웁니다.",
+      "accent": "blue",
+      "documents": [
+        {
+          "id": "backend-engineering-roadmap",
+          "title": "운영 가능한 백엔드 엔지니어링 로드맵",
+          "summary": "vault의 백엔드 지식 축을 공개 학습 경로로 재구성해 요청·데이터·분산 실패·성능·변경을 기존 DevOps 주제와 연결합니다.",
+          "path": "docs-site/content/backend-engineering/00-roadmap.md"
+        },
+        {
+          "id": "backend-engineering-api-contract",
+          "title": "요청 의미와 API 계약",
+          "summary": "HTTP method·status·오류 형식·idempotency key·비동기 상태를 클라이언트가 안전하게 판단할 수 있는 계약으로 만듭니다.",
+          "path": "docs-site/content/backend-engineering/01-request-and-api-contract.md"
+        },
+        {
+          "id": "backend-engineering-domain-transaction",
+          "title": "도메인 불변식과 데이터 트랜잭션",
+          "summary": "업무 규칙의 동시 변경 경계를 정하고 DB constraint·transaction·outbox가 각각 무엇을 보장하는지 구분합니다.",
+          "path": "docs-site/content/backend-engineering/02-domain-data-transaction.md"
+        },
+        {
+          "id": "backend-engineering-runtime-capacity",
+          "title": "동시성·큐·런타임과 용량",
+          "summary": "도착률·체류 시간·동시 작업·pool·GC를 연결해 처리량을 늘리기 전에 먼저 고갈되는 자원과 과부하 경계를 찾습니다.",
+          "path": "docs-site/content/backend-engineering/03-concurrency-capacity-runtime.md"
+        },
+        {
+          "id": "backend-engineering-distributed-workflow",
+          "title": "부분 실패와 분산 워크플로",
+          "summary": "중복·순서 변경·결과 불명·stale owner를 전제로 idempotency, outbox, fencing과 보상 상태 머신을 설계합니다.",
+          "path": "docs-site/content/backend-engineering/04-distributed-workflows.md"
+        },
+        {
+          "id": "backend-engineering-cache-performance",
+          "title": "캐시·데이터 흐름과 성능 증거",
+          "summary": "cache key·freshness·invalidations와 query·event 경로를 함께 측정해 빠르지만 틀린 시스템을 피합니다.",
+          "path": "docs-site/content/backend-engineering/05-cache-performance-dataflow.md"
+        },
+        {
+          "id": "backend-engineering-evolution",
+          "title": "호환 변경·테스트와 점진적 배포",
+          "summary": "구·신 코드와 데이터가 공존하는 기간을 계약 테스트, expand-contract, canary, rollback과 사후 검증으로 닫습니다.",
+          "path": "docs-site/content/backend-engineering/06-evolutionary-delivery-and-testing.md"
+        }
+      ]
+    },
+    {
+      "id": "ai-specialist-core",
+      "number": "A01",
+      "label": "AI Specialist",
+      "title": "AI Specialist 핵심 모델과 응용",
+      "description": "LLM·Vision·생성 모델·On-device AI·시계열·추천·RAG·GraphRAG·MCP를 모델 구조와 평가 단위에서 연결하고 AIOps 적용의 전제를 만듭니다.",
+      "accent": "blue",
+      "documents": [
+        {
+          "id": "ai-specialist-core-roadmap",
+          "title": "AI Specialist 전체 모듈 로드맵",
+          "summary": "vault의 AI Specialist 5개 모듈과 교차 개념을 빠짐없이 공개 학습 순서로 재구성합니다.",
+          "path": "docs-site/content/ai-specialist-core/00-roadmap.md"
+        },
+        {
+          "id": "ai-specialist-core-llm",
+          "title": "LLM 밑바닥 구조와 효율화",
+          "summary": "tokenization·embedding·attention·GPT·학습·LoRA·DPO에서 KV cache·GQA·MoE 같은 추론 효율화까지 연결합니다.",
+          "path": "docs-site/content/ai-specialist-core/01-llm-foundations-and-efficiency.md"
+        },
+        {
+          "id": "ai-specialist-core-vision",
+          "title": "Vision과 생성 모델 계보",
+          "summary": "CNN·ResNet·ViT·DETR·UNet의 표현 구조와 GAN·VAE·VQ-VAE·diffusion·image token 생성을 비교합니다.",
+          "path": "docs-site/content/ai-specialist-core/02-vision-and-generative-models.md"
+        },
+        {
+          "id": "ai-specialist-core-edge",
+          "title": "On-device AI와 모델 압축",
+          "summary": "pruning·quantization·knowledge distillation을 정확도뿐 아니라 실제 target 지연·메모리·전력·artifact 계약으로 평가합니다.",
+          "path": "docs-site/content/ai-specialist-core/03-on-device-model-compression.md"
+        },
+        {
+          "id": "ai-specialist-core-forecast-recommend",
+          "title": "시계열 예측과 추천 시스템",
+          "summary": "시간 누수 없는 예측과 naive baseline, 암묵적 피드백·BPR·NCF·graph recommendation의 평가를 배웁니다.",
+          "path": "docs-site/content/ai-specialist-core/04-time-series-and-recommendation.md"
+        },
+        {
+          "id": "ai-specialist-core-rag-mcp",
+          "title": "RAG·GraphRAG·NL2SQL과 MCP",
+          "summary": "검색·ANN·reranking에서 graph·SQL 질의와 도구 실행으로 확장하되 retrieval evidence와 action authority를 구분합니다.",
+          "path": "docs-site/content/ai-specialist-core/05-rag-graph-mcp.md"
+        }
+      ]
+    },
+    {
+      "id": "ai-transformation-platform",
+      "number": "A02",
+      "label": "AI Transformation",
+      "title": "AI Transformation 운영 플랫폼",
+      "description": "GPU 학습·추론 인프라, MLOps/LLMOps, AI DevOps/FinOps와 권한 있는 에이전트를 데이터·평가·배포 receipt로 연결합니다.",
+      "accent": "teal",
+      "documents": [
+        {
+          "id": "ai-transformation-platform-roadmap",
+          "title": "AI Transformation 전체 필러 로드맵",
+          "summary": "vault의 AI Transformation 4개 필러와 에이전트 실행 계약을 운영 가능한 공개 경로로 재구성합니다.",
+          "path": "docs-site/content/ai-transformation-platform/00-roadmap.md"
+        },
+        {
+          "id": "ai-transformation-platform-infrastructure",
+          "title": "AI 인프라·분산 학습과 LLM 서빙",
+          "summary": "GPU memory·interconnect·parallelism·scheduler·KV cache·continuous batching을 workload SLO와 비용 단위로 설계합니다.",
+          "path": "docs-site/content/ai-transformation-platform/01-ai-infrastructure-serving.md"
+        },
+        {
+          "id": "ai-transformation-platform-mlops",
+          "title": "MLOps·LLMOps와 평가 가능한 수명주기",
+          "summary": "dataset·run·model·prompt·retrieval index·eval suite·deployment를 하나의 재현 가능한 lineage와 승급 gate로 연결합니다.",
+          "path": "docs-site/content/ai-transformation-platform/02-mlops-llmops-lifecycle.md"
+        },
+        {
+          "id": "ai-transformation-platform-devops",
+          "title": "AI DevOps·플랫폼과 FinOps",
+          "summary": "IaC·Kubernetes·GitOps·GPU telemetry·quota·autoscaling을 성공한 추론·학습 작업당 비용과 운영 경계로 묶습니다.",
+          "path": "docs-site/content/ai-transformation-platform/03-ai-devops-platform-finops.md"
+        },
+        {
+          "id": "ai-transformation-platform-agents",
+          "title": "Enterprise AI와 안전한 에이전트 실행",
+          "summary": "RAG·LLM gateway·MCP·A2A·memory·durable workflow·sandbox·workload identity·policy를 승인 가능한 operation으로 구성합니다.",
+          "path": "docs-site/content/ai-transformation-platform/04-enterprise-agent-operations.md"
+        }
+      ]
+    },
+    {
+      "id": "aiops-foundations",
+      "number": "A03",
+      "label": "Signals & Topology",
+      "title": "AIOps 신호와 운영 토폴로지",
+      "description": "AI를 붙이기 전에 metric·log·trace·event·change를 같은 서비스와 시간축에 연결하고 학습 가능한 incident record를 만듭니다.",
+      "accent": "violet",
+      "documents": [
+        {
+          "id": "aiops-foundations-roadmap",
+          "title": "AIOps 신호와 운영 토폴로지 로드맵",
+          "summary": "AIOps가 읽을 데이터 계약과 서비스 관계, 변경 이력, incident label의 기초를 잡습니다.",
+          "path": "docs-site/content/aiops-foundations/00-roadmap.md"
+        },
+        {
+          "id": "aiops-foundations-evidence-graph",
+          "title": "운영 신호를 incident evidence graph로 연결하기",
+          "summary": "사용자 증상에서 service·deployment·resource·trace로 내려가는 식별자와 시간 창을 설계합니다.",
+          "path": "docs-site/content/aiops-foundations/01-evidence-graph.md"
+        },
+        {
+          "id": "aiops-foundations-contract-lab",
+          "title": "Incident bundle 데이터 계약 검토 실습",
+          "summary": "작은 JSON bundle을 만들고 빠진 시간·서비스·변경 식별자가 진단을 어떻게 막는지 확인합니다.",
+          "path": "docs-site/content/aiops-foundations/02-incident-bundle-contract-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "aiops-diagnosis",
+      "number": "A04",
+      "label": "Detect & Diagnose",
+      "title": "이상 탐지와 근거 기반 장애 진단",
+      "description": "정적 규칙·기준선·상관 분석으로 후보를 좁히고, LLM을 포함한 진단기가 읽은 근거와 불확실성을 남기게 합니다.",
+      "accent": "pink",
+      "documents": [
+        {
+          "id": "aiops-diagnosis-roadmap",
+          "title": "이상 탐지와 장애 진단 로드맵",
+          "summary": "증상 탐지, alert grouping, 진단 정보 회수, 원인 후보 평가를 서로 다른 단계로 나눕니다.",
+          "path": "docs-site/content/aiops-diagnosis/00-roadmap.md"
+        },
+        {
+          "id": "aiops-diagnosis-pipeline",
+          "title": "탐지 점수에서 근거 있는 원인 후보까지",
+          "summary": "사용자 영향과 단순 규칙을 우선하고, 이상 점수·변경 상관·LLM 설명을 검증 가능한 후보로 제한합니다.",
+          "path": "docs-site/content/aiops-diagnosis/01-detection-correlation-rca.md"
+        },
+        {
+          "id": "aiops-diagnosis-triage-lab",
+          "title": "Alert 묶기와 진단 근거 선택 실습",
+          "summary": "같은 장애에서 나온 여러 alert를 incident 하나로 묶고, 원인 후보에 필요한 evidence만 선택합니다.",
+          "path": "docs-site/content/aiops-diagnosis/02-alert-correlation-triage-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "aiops-remediation",
+      "number": "A05",
+      "label": "Act & Learn",
+      "title": "승인된 자동 복구와 운영 학습",
+      "description": "진단 결과를 곧바로 실행하지 않고 권한·사전 조건·영향 범위·중단 조건·rollback·사후 검증이 있는 runbook으로 닫습니다.",
+      "accent": "orange",
+      "documents": [
+        {
+          "id": "aiops-remediation-roadmap",
+          "title": "승인된 자동 복구와 운영 학습 로드맵",
+          "summary": "추천, 사람 승인 실행, 제한된 자동 실행을 구분하고 incident 결과를 규칙과 평가셋으로 되돌립니다.",
+          "path": "docs-site/content/aiops-remediation/00-roadmap.md"
+        },
+        {
+          "id": "aiops-remediation-state-machine",
+          "title": "Remediation을 상태 머신과 안전 계약으로 만들기",
+          "summary": "동일 사건 중복 실행, 결과 불명, blast radius 확대를 막는 operation 상태와 증거를 설계합니다.",
+          "path": "docs-site/content/aiops-remediation/01-guarded-remediation-state-machine.md"
+        },
+        {
+          "id": "aiops-remediation-dry-run-lab",
+          "title": "자동 복구 dry-run과 rollback 판정 실습",
+          "summary": "실제 변경 없이 복구 계획을 검토하고, 승인·중단·성공 판정이 빠진 경우를 찾아 보완합니다.",
+          "path": "docs-site/content/aiops-remediation/02-remediation-dry-run-lab.md"
         }
       ]
     }

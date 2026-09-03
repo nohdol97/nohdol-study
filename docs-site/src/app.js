@@ -8,6 +8,7 @@ const diagramZoomOutput = diagramViewer.querySelector('[data-diagram-zoom]');
 let content;
 let documentsById;
 let topicsById;
+let pathsById;
 let activeQuery = '';
 let mermaidRuntime;
 let mermaidLoadPromise;
@@ -73,11 +74,16 @@ function parseRoute() {
   const parameters = new URLSearchParams(window.location.hash.slice(1));
   if (parameters.has('doc')) return { view: 'document', id: parameters.get('doc') };
   if (parameters.has('topic')) return { view: 'topic', id: parameters.get('topic') };
+  if (parameters.has('path')) return { view: 'path', id: parameters.get('path') };
   return { view: 'home' };
 }
 
 function topicDocuments(topic) {
   return topic.documentIds.map((id) => documentsById.get(id)).filter(Boolean);
+}
+
+function pathTopics(learningPath) {
+  return learningPath.topicIds.map((id) => topicsById.get(id)).filter(Boolean);
 }
 
 function documentCard(document, index) {
@@ -100,7 +106,7 @@ function renderHome() {
     <section class="hero shell">
       <div class="hero-copy">
         <p class="eyebrow"><span></span>${escapeHtml(content.site.eyebrow)}</p>
-        <h1>인프라를<br /><em>쉽게, 깊게</em></h1>
+        <h1>운영 기술을<br /><em>쉽게, 깊게</em></h1>
         <p class="hero-description">${escapeHtml(content.site.description)}</p>
         <button class="hero-search-trigger" type="button" data-focus-search>
           <span>궁금한 키워드로 찾아보기</span>
@@ -110,51 +116,48 @@ function renderHome() {
       <div class="hero-orbit" aria-hidden="true">
         <div class="orbit-ring orbit-ring-one"></div>
         <div class="orbit-ring orbit-ring-two"></div>
-        <span class="orbit-core">I</span>
-        <span class="orbit-label orbit-label-one">design</span>
-        <span class="orbit-label orbit-label-two">operate</span>
-        <span class="orbit-label orbit-label-three">recover</span>
+        <span class="orbit-core">S</span>
+        <span class="orbit-label orbit-label-one">learn</span>
+        <span class="orbit-label orbit-label-two">connect</span>
+        <span class="orbit-label orbit-label-three">operate</span>
       </div>
       <div class="hero-stats" aria-label="문서 사이트 현황">
+        <div><strong>${content.paths.length}</strong><span>learning paths</span></div>
         <div><strong>${content.topics.length}</strong><span>topics</span></div>
         <div><strong>${documentCount}</strong><span>documents</span></div>
-        <div><strong>6</strong><span>learning phases</span></div>
       </div>
     </section>
     <section class="topics-section shell" aria-labelledby="topics-title">
       <div class="section-heading">
         <div>
           <p class="eyebrow"><span></span>CHOOSE A PATH</p>
-          <h2 id="topics-title">Infra Specialist 학습 경로</h2>
+          <h2 id="topics-title">배울 영역을 선택하세요</h2>
         </div>
-        <p>각 주제는 쉬운 문제 상황과 용어에서 시작해 정상 관찰, 실패·복구, 운영 판단 순서로 깊어집니다.</p>
+        <p>DevOps의 백엔드 요청·데이터 경로와 AIOps의 모델·운영 플랫폼은 관측·진단·복구 문서에서 서로의 선수 지식으로 다시 연결됩니다.</p>
       </div>
-      <ol class="learning-ladder" aria-label="초심자에서 전문가 판단까지의 학습 단계">
-        <li><strong>1. 문제와 용어</strong><span>왜 필요한지 보고 낯선 말을 먼저 풉니다.</span></li>
-        <li><strong>2. 정상 관찰</strong><span>작은 예제를 실행하고 정상 상태의 증거를 남깁니다.</span></li>
-        <li><strong>3. 실패 분리</strong><span>조건 하나를 바꾸고 어느 단계에서 멈췄는지 찾습니다.</span></li>
-        <li><strong>4. 복구 증명</strong><span>명령 성공이 아니라 사용자 결과가 돌아왔는지 확인합니다.</span></li>
-        <li><strong>5. 운영 판단</strong><span>보안·신뢰성·성능·비용의 선택 근거를 설명합니다.</span></li>
-      </ol>
-      <div class="topic-grid">
-        ${content.topics
+      <div class="path-grid">
+        ${content.paths
           .map(
-            (topic) => `
-            <a class="topic-card accent-${escapeHtml(topic.accent)}" href="#topic=${encodeURIComponent(topic.id)}">
+            (learningPath) => {
+              const topics = pathTopics(learningPath);
+              const pathDocumentCount = topics.reduce((total, topic) => total + topic.documentIds.length, 0);
+              return `
+            <a class="topic-card path-card accent-${escapeHtml(learningPath.accent)}" href="#path=${encodeURIComponent(learningPath.id)}">
               <div class="topic-card-top">
-                <span class="topic-number">${escapeHtml(topic.number)}</span>
-                <span class="topic-label">${escapeHtml(topic.label)}</span>
+                <span class="topic-number">${escapeHtml(learningPath.number)}</span>
+                <span class="topic-label">${escapeHtml(learningPath.label)}</span>
                 <span class="topic-arrow" aria-hidden="true">↗</span>
               </div>
               <div class="topic-card-body">
-                <h3>${escapeHtml(topic.title)}</h3>
-                <p>${escapeHtml(topic.description)}</p>
+                <h3>${escapeHtml(learningPath.title)}</h3>
+                <p>${escapeHtml(learningPath.description)}</p>
               </div>
               <div class="topic-card-footer">
-                <span>${topic.documentIds.length}개 문서</span>
+                <span>${topics.length}개 주제 · ${pathDocumentCount}개 문서</span>
                 <span class="topic-line"></span>
               </div>
-            </a>`,
+            </a>`;
+            },
           )
           .join('')}
       </div>
@@ -168,13 +171,70 @@ function renderHome() {
     </section>`;
 }
 
+function renderPath(learningPath) {
+  document.title = `${learningPath.title} — ${content.site.title}`;
+  const topics = pathTopics(learningPath);
+  main.innerHTML = `
+    <section class="topic-hero accent-${escapeHtml(learningPath.accent)}">
+      <div class="shell">
+        <a class="back-link" href="#"><span aria-hidden="true">←</span> 모든 학습 영역</a>
+        <div class="topic-hero-grid">
+          <div>
+            <p class="eyebrow"><span></span>${escapeHtml(learningPath.number)} / ${escapeHtml(learningPath.label)}</p>
+            <h1>${escapeHtml(learningPath.title)}</h1>
+          </div>
+          <div class="topic-intro">
+            <p>${escapeHtml(learningPath.description)}</p>
+            <span>${topics.length}개 주제 · ${topics.reduce((total, topic) => total + topic.documentIds.length, 0)}개 문서</span>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="topics-section shell" aria-labelledby="path-topics-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow"><span></span>CHOOSE A TOPIC</p>
+          <h2 id="path-topics-title">${escapeHtml(learningPath.title)} 학습 경로</h2>
+        </div>
+        <p>각 주제는 문제와 용어에서 시작해 정상 관찰, 실패 분리, 복구 증명과 운영 판단으로 이어집니다.</p>
+      </div>
+      <ol class="learning-ladder" aria-label="초심자에서 전문가 판단까지의 학습 단계">
+        <li><strong>1. 문제와 용어</strong><span>왜 필요한지 보고 낯선 말을 먼저 풉니다.</span></li>
+        <li><strong>2. 정상 관찰</strong><span>작은 예제를 실행하고 정상 상태의 증거를 남깁니다.</span></li>
+        <li><strong>3. 실패 분리</strong><span>조건 하나를 바꾸고 어느 단계에서 멈췄는지 찾습니다.</span></li>
+        <li><strong>4. 복구 증명</strong><span>명령 성공이 아니라 사용자 결과가 돌아왔는지 확인합니다.</span></li>
+        <li><strong>5. 운영 판단</strong><span>보안·신뢰성·성능·비용의 선택 근거를 설명합니다.</span></li>
+      </ol>
+      <div class="topic-grid">
+        ${topics
+          .map(
+            (topic) => `
+            <a class="topic-card accent-${escapeHtml(topic.accent)}" href="#topic=${encodeURIComponent(topic.id)}">
+              <div class="topic-card-top">
+                <span class="topic-number">${escapeHtml(topic.number)}</span>
+                <span class="topic-label">${escapeHtml(topic.label)}</span>
+                <span class="topic-arrow" aria-hidden="true">↗</span>
+              </div>
+              <div class="topic-card-body">
+                <h3>${escapeHtml(topic.title)}</h3>
+                <p>${escapeHtml(topic.description)}</p>
+              </div>
+              <div class="topic-card-footer"><span>${topic.documentIds.length}개 문서</span><span class="topic-line"></span></div>
+            </a>`,
+          )
+          .join('')}
+      </div>
+    </section>`;
+}
+
 function renderTopic(topic) {
   document.title = `${topic.title} — ${content.site.title}`;
+  const learningPath = pathsById.get(topic.pathId);
   const documents = topicDocuments(topic);
   main.innerHTML = `
     <section class="topic-hero accent-${escapeHtml(topic.accent)}">
       <div class="shell">
-        <a class="back-link" href="#"><span aria-hidden="true">←</span> 모든 주제</a>
+        <a class="back-link" href="#path=${encodeURIComponent(learningPath.id)}"><span aria-hidden="true">←</span> ${escapeHtml(learningPath.title)}</a>
         <div class="topic-hero-grid">
           <div>
             <p class="eyebrow"><span></span>${escapeHtml(topic.number)} / ${escapeHtml(topic.label)}</p>
@@ -203,6 +263,7 @@ function renderTopic(topic) {
 
 function renderDocument(currentDocument) {
   const topic = topicsById.get(currentDocument.topicId);
+  const learningPath = pathsById.get(currentDocument.pathId);
   const documents = topicDocuments(topic);
   const currentIndex = documents.findIndex((item) => item.id === currentDocument.id);
   const previous = documents[currentIndex - 1];
@@ -228,7 +289,7 @@ function renderDocument(currentDocument) {
       </aside>
       <article class="reader-article">
         <header class="article-header">
-          <p class="article-kicker">${escapeHtml(topic.title)}</p>
+          <p class="article-kicker">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</p>
           <h1>${escapeHtml(currentDocument.title)}</h1>
           <p class="article-summary">${escapeHtml(currentDocument.summary)}</p>
           <div class="article-meta">
@@ -380,9 +441,10 @@ function renderSearch(query) {
             ? results
                 .map((document) => {
                   const topic = topicsById.get(document.topicId);
+                  const learningPath = pathsById.get(document.pathId);
                   return `
                     <a class="search-result" href="#doc=${encodeURIComponent(document.id)}">
-                      <span class="search-result-topic">${escapeHtml(topic.number)} · ${escapeHtml(topic.title)}</span>
+                      <span class="search-result-topic">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</span>
                       <strong>${escapeHtml(document.title)}</strong>
                       <p>${escapeHtml(document.summary)}</p>
                       <span class="reading-time">약 ${document.readingMinutes}분</span>
@@ -405,6 +467,7 @@ function renderRoute() {
   const route = parseRoute();
   if (route.view === 'document' && documentsById.has(route.id)) renderDocument(documentsById.get(route.id));
   else if (route.view === 'topic' && topicsById.has(route.id)) renderTopic(topicsById.get(route.id));
+  else if (route.view === 'path' && pathsById.has(route.id)) renderPath(pathsById.get(route.id));
   else renderHome();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
@@ -426,6 +489,7 @@ async function initialize() {
     content = await response.json();
     documentsById = new Map(content.documents.map((document) => [document.id, document]));
     topicsById = new Map(content.topics.map((topic) => [topic.id, topic]));
+    pathsById = new Map(content.paths.map((learningPath) => [learningPath.id, learningPath]));
     document.querySelectorAll('[data-repository-link]').forEach((link) => {
       link.href = content.site.repository;
       link.target = '_blank';

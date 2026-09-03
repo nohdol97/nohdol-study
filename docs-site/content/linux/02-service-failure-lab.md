@@ -36,7 +36,7 @@
 ```ini
 # /etc/systemd/system/infra-http.service
 [Unit]
-Description=Infra study HTTP server
+Description=DevOps study HTTP server
 After=network.target
 
 [Service]

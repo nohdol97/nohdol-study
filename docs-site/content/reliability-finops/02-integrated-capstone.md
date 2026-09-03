@@ -1,4 +1,4 @@
-# Infra Specialist 통합 capstone
+# DevOps 통합 capstone
 
 > 실습 등급: **Local 필수 + AWS optional**. AWS 단계는 실제 계정 변경 없이 design·plan까지만 수행해도 된다. live 실행 시 resource inventory, 과금 가능성과 cleanup 승인을 먼저 남긴다.
 

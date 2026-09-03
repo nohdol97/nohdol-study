@@ -36,7 +36,7 @@ flowchart LR
 1. [DNS부터 backend까지](01-request-path-model.md): 각 계층의 입력·출력과 AWS·Kubernetes 대응을 연결한다.
 2. [계층별 장애 분리 실습](02-layered-diagnosis-lab.md): `dig`, `ip route`, `curl`, `openssl`, `ss`로 실패 위치를 좁힌다.
 
-## Infra specialist가 지켜야 할 경계
+## DevOps specialist가 지켜야 할 경계
 
 | 질문 | 답을 주는 계층 |
 |---|---|

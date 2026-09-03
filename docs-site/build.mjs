@@ -10,6 +10,7 @@ const DEFAULT_CATALOG = path.join(SITE_ROOT, 'catalog.json');
 const DEFAULT_OUTPUT = path.join(SITE_ROOT, 'dist');
 const BLOCKED_PATHS = ['vault', 'vault/', 'REGISTRY.md', '_workspace', '_workspace/'];
 const REQUIRED_SITE_FIELDS = ['title', 'eyebrow', 'description', 'repository'];
+const REQUIRED_PATH_FIELDS = ['id', 'number', 'label', 'title', 'description', 'accent', 'topicIds'];
 const REQUIRED_TOPIC_FIELDS = ['id', 'number', 'label', 'title', 'description', 'accent', 'documents'];
 const REQUIRED_DOCUMENT_FIELDS = ['id', 'title', 'summary', 'path'];
 const SAFE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -131,8 +132,10 @@ export async function loadCatalog({
   for (const field of REQUIRED_SITE_FIELDS) {
     invariant(typeof catalog.site[field] === 'string' && catalog.site[field], `catalog.site.${field} is required`);
   }
+  invariant(Array.isArray(catalog.paths) && catalog.paths.length > 0, 'catalog.paths must not be empty');
   invariant(Array.isArray(catalog.topics) && catalog.topics.length > 0, 'catalog.topics must not be empty');
 
+  const pathIds = new Set();
   const topicIds = new Set();
   const documentIds = new Set();
   const documentPaths = new Set();
@@ -159,6 +162,22 @@ export async function loadCatalog({
     }
   }
 
+  const assignedTopicIds = new Set();
+  for (const learningPath of catalog.paths) {
+    for (const field of REQUIRED_PATH_FIELDS) invariant(field in learningPath, `path.${field} is required`);
+    invariant(SAFE_ID.test(learningPath.id), `invalid path id: ${learningPath.id}`);
+    invariant(!pathIds.has(learningPath.id), `duplicate path id: ${learningPath.id}`);
+    invariant(SAFE_ACCENTS.has(learningPath.accent), `invalid path accent: ${learningPath.accent}`);
+    invariant(Array.isArray(learningPath.topicIds) && learningPath.topicIds.length > 0, `path has no topics: ${learningPath.id}`);
+    pathIds.add(learningPath.id);
+    for (const topicId of learningPath.topicIds) {
+      invariant(topicIds.has(topicId), `path references unknown topic: ${topicId}`);
+      invariant(!assignedTopicIds.has(topicId), `topic is assigned to more than one path: ${topicId}`);
+      assignedTopicIds.add(topicId);
+    }
+  }
+  for (const topicId of topicIds) invariant(assignedTopicIds.has(topicId), `topic is not assigned to a path: ${topicId}`);
+
   return catalog;
 }
 
@@ -171,6 +190,10 @@ export async function buildSite({
 } = {}) {
   const catalog = await loadCatalog({ catalogPath, repositoryRoot, requireTracked });
   const repositoryReal = await realpath(repositoryRoot);
+  const topicPathById = new Map();
+  for (const learningPath of catalog.paths) {
+    for (const topicId of learningPath.topicIds) topicPathById.set(topicId, learningPath.id);
+  }
   const documentIdByPath = new Map();
   for (const topic of catalog.topics) {
     for (const document of topic.documents) documentIdByPath.set(document.path, document.id);
@@ -190,6 +213,7 @@ export async function buildSite({
       documents.push({
         ...document,
         topicId: topic.id,
+        pathId: topicPathById.get(topic.id),
         readingMinutes: readingMinutes(text),
         searchText: text,
         html: renderMarkdown(source, document.path, documentIdByPath, catalog.site.repository),
@@ -199,8 +223,10 @@ export async function buildSite({
 
   const payload = {
     site: catalog.site,
+    paths: catalog.paths,
     topics: catalog.topics.map(({ documents: topicDocuments, ...topic }) => ({
       ...topic,
+      pathId: topicPathById.get(topic.id),
       documentIds: topicDocuments.map((document) => document.id),
     })),
     documents,
