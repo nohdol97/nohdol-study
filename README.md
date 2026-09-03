@@ -37,6 +37,8 @@
 - **명시적 노출**: 지식 그래프·임시 분석물은 숨기고 사용자가 보는 사이트만 `sites.json`에 등록
 
 ### 5. 🌐 GitHub Pages 공개 문서
+[**공개 문서 사이트 바로 열기 →**](https://nohdol97.github.io/nohdol-study/)
+
 - **주제별 게이트웨이**: 첫 화면의 주제 카드에서 학습 경로를 선택하고 문서 순서·예상 읽기 시간을 확인
 - **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
 - **공개 범위 게이트**: `docs-site/catalog.json`에 명시한 Git 추적 Markdown만 빌드하며 `vault/`·`REGISTRY.md`·`_workspace/`는 거부

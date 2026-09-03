@@ -2,6 +2,8 @@
 
 GitHub Pages에 배포하는 nohdol-study 문서 게이트웨이다. `docs/`, 루트 안내서, 예제 README를 복사하지 않고 빌드 시 읽어 정적 사이트로 만든다.
 
+- 공개 URL: <https://nohdol97.github.io/nohdol-study/>
+
 ## 로컬 실행
 
 Node.js 20 이상이 필요하며 CI는 Node.js 22를 사용한다.
