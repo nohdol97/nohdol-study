@@ -45,8 +45,14 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   const content = JSON.parse(await readFile(path.join(outputPath, 'content.json'), 'utf8'));
   assert.match(index, /href="\.\/assets\/styles\.css"/);
   assert.match(index, /src="\.\/assets\/app\.js"/);
+  assert.match(index, /id="diagram-viewer"/);
+  assert.match(index, /data-diagram-action="zoom-in"/);
   assert.doesNotMatch(index, /src="\.\/assets\/mermaid\.min\.js"/);
   assert.match(app, /script\.src = '\.\/assets\/mermaid\.min\.js'/);
+  assert.match(app, /diagramViewer\.showModal\(\)/);
+  assert.match(app, /Math\.min\(3, Math\.max\(0\.35, nextScale\)\)/);
+  assert.match(app, /let mermaidRenderQueue = Promise\.resolve\(\)/);
+  assert.match(app, /node\.dataset\.processed !== 'true'/);
   assert.match(mermaidBundle, /globalThis\["mermaid"\]/);
   assert.equal(content.documents.length, expectedCount);
 
@@ -56,6 +62,17 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(roadmap.html, /href="#doc=kubernetes-api-objects"/);
   assert.equal([...roadmap.html.matchAll(/<pre class="mermaid">/g)].length, 2);
   assert.equal([...firstCluster.html.matchAll(/<pre class="mermaid">/g)].length, 2);
+  const detailedChapters = content.documents.filter((document) => /^0[2-9]\. |^10\. /.test(document.title));
+  assert.equal(detailedChapters.length, 9);
+  for (const chapter of detailedChapters) {
+    assert.ok(
+      [...chapter.html.matchAll(/<pre class="mermaid">/g)].length >= 2,
+      `${chapter.id} must contain at least two diagrams`,
+    );
+    assert.match(chapter.html, /스스로 설명해 보기/);
+    assert.match(chapter.html, /language-(?:yaml|bash)/);
+    assert.doesNotMatch(chapter.html, /목차 단계|예정 실습|예정 다이어그램|예정 산출물/);
+  }
   assert.match(firstCluster.html, /language-yaml/);
   assert.match(firstCluster.html, /ImagePullBackOff/);
   assert.doesNotMatch(roadmap.html, /language-mermaid/);

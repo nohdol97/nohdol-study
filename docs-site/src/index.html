@@ -60,6 +60,25 @@
         <a data-repository-link href="#">GitHub에서 원본 보기</a>
       </div>
     </footer>
+    <dialog id="diagram-viewer" class="diagram-viewer" aria-labelledby="diagram-viewer-title">
+      <div class="diagram-viewer-frame">
+        <header class="diagram-viewer-header">
+          <div>
+            <p>DIAGRAM VIEWER</p>
+            <h2 id="diagram-viewer-title">다이어그램 크게 보기</h2>
+          </div>
+          <div class="diagram-viewer-actions" aria-label="다이어그램 확대 도구">
+            <button type="button" data-diagram-action="zoom-out" aria-label="축소">−</button>
+            <output data-diagram-zoom aria-live="polite">100%</output>
+            <button type="button" data-diagram-action="fit">화면 맞춤</button>
+            <button type="button" data-diagram-action="zoom-in" aria-label="확대">+</button>
+            <button class="diagram-viewer-close" type="button" data-diagram-action="close" aria-label="닫기">×</button>
+          </div>
+        </header>
+        <div class="diagram-viewer-canvas" data-diagram-canvas tabindex="0"></div>
+        <p class="diagram-viewer-hint">확대 후 화면을 스크롤해 세부 흐름을 확인하세요. Ctrl 또는 ⌘ 키와 마우스 휠로도 확대할 수 있습니다.</p>
+      </div>
+    </dialog>
     <noscript>이 문서 게이트웨이는 JavaScript가 필요합니다.</noscript>
   </body>
 </html>

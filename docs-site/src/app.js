@@ -1,6 +1,9 @@
 const main = document.querySelector('#main-content');
 const searchInput = document.querySelector('#site-search');
 const themeButton = document.querySelector('.theme-toggle');
+const diagramViewer = document.querySelector('#diagram-viewer');
+const diagramCanvas = diagramViewer.querySelector('[data-diagram-canvas]');
+const diagramZoomOutput = diagramViewer.querySelector('[data-diagram-zoom]');
 
 let content;
 let documentsById;
@@ -8,6 +11,10 @@ let topicsById;
 let activeQuery = '';
 let mermaidRuntime;
 let mermaidLoadPromise;
+let mermaidRenderQueue = Promise.resolve();
+let diagramScale = 1;
+let diagramNaturalWidth = 0;
+let enlargedDiagram;
 
 function loadMermaid() {
   if (mermaidRuntime) return Promise.resolve(mermaidRuntime);
@@ -253,13 +260,80 @@ async function renderMermaidDiagrams(root) {
 
   try {
     const runtime = await loadMermaid();
-    await runtime.run({ nodes });
+    mermaidRenderQueue = mermaidRenderQueue
+      .catch(() => {})
+      .then(async () => {
+        const pendingNodes = nodes.filter((node) => node.isConnected && node.dataset.processed !== 'true');
+        if (!pendingNodes.length) return;
+        await runtime.run({ nodes: pendingNodes });
+        pendingNodes.filter((node) => node.isConnected).forEach(decorateDiagram);
+      });
+    await mermaidRenderQueue;
   } catch (error) {
     nodes.forEach((node) => {
       if (!node.dataset.processed) node.classList.add('diagram-error');
     });
     console.error('Mermaid diagram rendering failed', error);
   }
+}
+
+function decorateDiagram(node) {
+  if (node.querySelector('.diagram-expand-button')) return;
+  node.classList.add('diagram-interactive');
+  node.title = '클릭해서 크게 보기';
+  const button = document.createElement('button');
+  button.className = 'diagram-expand-button';
+  button.type = 'button';
+  button.innerHTML = '<span aria-hidden="true">↗</span> 크게 보기';
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    openDiagramViewer(node);
+  });
+  node.addEventListener('click', (event) => {
+    if (event.target.closest('a')) return;
+    openDiagramViewer(node);
+  });
+  node.append(button);
+}
+
+function diagramWidth(svg) {
+  const viewBox = svg.viewBox?.baseVal;
+  if (viewBox?.width) return viewBox.width;
+  return Math.max(svg.getBoundingClientRect().width, 640);
+}
+
+function updateDiagramScale(nextScale) {
+  if (!enlargedDiagram) return;
+  diagramScale = Math.min(3, Math.max(0.35, nextScale));
+  enlargedDiagram.style.width = `${diagramNaturalWidth * diagramScale}px`;
+  diagramZoomOutput.value = `${Math.round(diagramScale * 100)}%`;
+  diagramZoomOutput.textContent = diagramZoomOutput.value;
+}
+
+function fitDiagram() {
+  if (!enlargedDiagram) return;
+  const availableWidth = Math.max(diagramCanvas.clientWidth - 48, 280);
+  updateDiagramScale(Math.min(1, availableWidth / diagramNaturalWidth));
+  diagramCanvas.scrollTo({ top: 0, left: 0 });
+}
+
+function openDiagramViewer(node) {
+  const svg = node.querySelector('svg');
+  if (!svg) return;
+  enlargedDiagram = svg.cloneNode(true);
+  enlargedDiagram.removeAttribute('style');
+  enlargedDiagram.setAttribute('aria-label', '확대된 다이어그램');
+  diagramNaturalWidth = diagramWidth(svg);
+  diagramCanvas.replaceChildren(enlargedDiagram);
+  if (!diagramViewer.open) diagramViewer.showModal();
+  requestAnimationFrame(() => {
+    fitDiagram();
+    diagramCanvas.focus({ preventScroll: true });
+  });
+}
+
+function closeDiagramViewer() {
+  if (diagramViewer.open) diagramViewer.close();
 }
 
 function searchDocuments(query) {
@@ -315,6 +389,7 @@ function renderSearch(query) {
 }
 
 function renderRoute() {
+  closeDiagramViewer();
   if (activeQuery.trim()) {
     renderSearch(activeQuery.trim());
     return;
@@ -382,6 +457,21 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('click', (event) => {
   if (event.target.closest('[data-focus-search]')) searchInput.focus();
 });
+
+diagramViewer.addEventListener('click', (event) => {
+  const action = event.target.closest('[data-diagram-action]')?.dataset.diagramAction;
+  if (action === 'zoom-out') updateDiagramScale(diagramScale - 0.2);
+  if (action === 'zoom-in') updateDiagramScale(diagramScale + 0.2);
+  if (action === 'fit') fitDiagram();
+  if (action === 'close') closeDiagramViewer();
+  if (event.target === diagramViewer) closeDiagramViewer();
+});
+
+diagramCanvas.addEventListener('wheel', (event) => {
+  if (!event.ctrlKey && !event.metaKey) return;
+  event.preventDefault();
+  updateDiagramScale(diagramScale + (event.deltaY < 0 ? 0.15 : -0.15));
+}, { passive: false });
 
 themeButton.addEventListener('click', () => {
   const current = document.documentElement.dataset.theme;
