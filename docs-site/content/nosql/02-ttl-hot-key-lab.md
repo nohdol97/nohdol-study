@@ -2,6 +2,17 @@
 
 > 실습 등급: Redis는 **Local**, DynamoDB design은 **Plan only**이며 선택적으로 격리된 table에서 **AWS optional**로 검증한다.
 
+## 실습 전에 준비할 것
+
+- **Redis 환경**: 지워도 되는 local Redis instance와 `redis-cli`가 필요하다. 공유·운영 Redis에서는 실행하지 않는다.
+- **연결 확인**: `redis-cli PING`이 `PONG`을 반환하고 현재 database에 중요한 key가 없는지 확인한다.
+- **실습 key**: `session:demo`처럼 `infra-study:` 또는 별도 prefix를 붙인 key만 사용한다.
+- **DynamoDB 단계**: 먼저 종이에 access pattern과 partition key를 설계한다. AWS table 생성은 선택 사항이다.
+- **비용·권한**: AWS optional 단계에서는 격리된 Region·table·temporary role과 cleanup owner를 정한다.
+- **끝난 상태**: 실습 Redis key와 선택적으로 만든 DynamoDB table·alarm이 모두 정리돼야 한다.
+
+TTL 실습은 기다리는 시간이 포함된다. 처음 `TTL` 결과와 10초 이후 `GET` 결과를 둘 다 기록해야 “설정했다”가 아니라 “실제로 만료됐다”고 말할 수 있다.
+
 ## 먼저 이해하기
 
 Redis에서 key가 없어지는 길은 하나가 아니다. TTL이 끝나 논리적으로 만료될 수 있고, `maxmemory`에 도달해 eviction policy가 key를 제거할 수 있으며, persistence 설정과 마지막 저장 시점 때문에 restart 뒤 일부 key가 돌아오지 않을 수도 있다. 원인이 다르면 복구와 예방도 다르다.

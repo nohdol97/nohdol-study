@@ -2,6 +2,17 @@
 
 > 실습 등급: **Local**. disposable PostgreSQL 18 instance를 사용한다. production query를 그대로 복사해 실행하지 않는다.
 
+## 실습 전에 준비할 것
+
+- **환경**: PostgreSQL 18 test instance를 사용한다. 운영 database나 중요한 local database에는 연결하지 않는다.
+- **도구**: `psql`, `pg_dump`, `pg_restore`, `createdb`, `dropdb`가 같은 major version 기준으로 준비돼야 한다.
+- **database**: 실습용 source database를 하나 만들고 문서의 `replace_source_db`를 실제 이름으로 바꾼다.
+- **terminal**: lock을 보유할 session A, 기다릴 session B, 상태를 조회할 session C까지 세 개를 연다.
+- **파일**: 현재 directory에 `accounts.dump`가 없어야 한다. 같은 이름의 파일이 있으면 덮어쓰지 말고 별도 directory를 사용한다.
+- **정리 대상**: restore database, dump 파일과 끝나지 않은 transaction이다.
+
+먼저 세 terminal이 모두 같은 test instance와 database를 보고 있는지 `SELECT current_database(), pg_backend_pid();`로 확인한다. PID가 서로 달라야 세 개의 별도 session이다.
+
 ## 먼저 이해하기
 
 첫 실습에서는 session A가 row lock을 가진 채 transaction을 끝내지 않아 session B가 기다린다. B의 query가 느린 것이지만 CPU나 disk가 원인인 것은 아니다. PostgreSQL은 같은 row의 충돌하는 변경이 일관성을 깨지 않도록 B를 대기시키고, `pg_blocking_pids`는 대기의 직접 원인인 session A를 가리킨다.

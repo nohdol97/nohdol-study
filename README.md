@@ -39,7 +39,7 @@
 ### 5. 🌐 GitHub Pages 공개 문서
 [**공개 문서 사이트 바로 열기 →**](https://nohdol97.github.io/nohdol-study/)
 
-- **13개 Infra Specialist 주제·47개 문서**: Kubernetes를 공통 과정으로 두고 Linux·네트워크·AWS → Terraform·Helm/GitOps → 운영·데이터·보안·신뢰성 → Karpenter 심화까지 선수 순서로 공개
+- **13개 Infra Specialist 주제·47개 문서**: 인프라를 처음 접하는 개발자가 용어와 작은 정상 사례부터 시작해 Linux·네트워크·AWS → Terraform·Helm/GitOps → 운영·데이터·보안·신뢰성 → Karpenter 심화까지 실패·복구를 반복하며 학습
 - **생략 없는 개념→실행→복구 연결**: 각 신규 topic은 핵심 용어와 실제 상황부터 설명하고, 명령 결과가 증명하는 것과 아직 모르는 것을 구분한다. Local·Plan only·AWS optional 경계, 실패 판정과 cleanup은 [스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)에 맞춰 제공
 - **링크를 내부 문서로 전환**: 사용자가 지정한 공식 페이지를 외부 링크로 연결하지 않고, 관계·시퀀스 다이어그램, 실행 가능한 YAML·`kubectl` 예시, 실패 사례와 복구 흐름이 있는 자립형 설명으로 발전
 - **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
@@ -162,7 +162,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 이 프로젝트의 세부 아키텍처 결정(ADR), 단계별 구현 스펙(Specs), 보안 검토 보고서는 모두 `docs/` 디렉터리에 체계적으로 정리되어 있다.
 
 - **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
-- **[공개 학습 가이드](docs-site/README.md)**: Infra Specialist 13개 주제·47개 문서, 공식 출처를 자립형 설명으로 전환하는 원칙, 로컬 빌드와 GitHub Pages 배포 방법
+- **[공개 학습 가이드](docs-site/README.md)**: Infra Specialist 13개 주제·47개 문서, 초심자 용어→정상 관찰→실패→복구→운영 판단의 학습 사다리, 공식 사실과 학습용 종합의 경계, 로컬 빌드와 GitHub Pages 배포 방법
 - **[Infra Specialist 공개 학습 경로 스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)**: Linux·네트워크·AWS부터 Terraform·Helm/GitOps·운영·데이터·Karpenter까지의 범위, 실습 안전 계약과 완료 기준
 - **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드 (읽기 전용 — 조회·문답만)
 - **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차

@@ -2,6 +2,17 @@
 
 > 실습 등급: state machine은 **Local**, managed broker 검증은 **AWS optional**이다. 실제 queue·topic을 만들면 과금과 cleanup 가능성을 먼저 확인한다.
 
+## 실습 전에 준비할 것
+
+- **첫 단계**: broker 없이 message 한 건과 처리 기록 table을 사용해 중복 처리 조건을 이해한다.
+- **local database**: 지워도 되는 PostgreSQL test database를 사용하고 `processed_events(event_id text primary key)` table을 준비한다.
+- **업무 결과**: 주문 상태처럼 중복되면 안 되는 row를 하나 정하고 처리 전후 값을 기록한다.
+- **실패 주입**: 같은 `event_id`를 두 번 처리하고, acknowledgement 직전에 process가 종료됐다고 가정한다.
+- **AWS 선택 단계**: SQS source queue와 DLQ를 전용 prefix·tag로 만들고 비용과 삭제 책임자를 정한다.
+- **끝난 상태**: local test row와 선택적으로 만든 queue, DLQ, alarm, IAM policy를 정리한다.
+
+현재 Local 절은 broker 제품의 완성된 실행 예제가 아니라 idempotency 경계를 확인하는 database 실습이다. 실제 delivery·visibility timeout·DLQ 이동을 완료하려면 AWS optional 환경이나 별도 local broker가 필요하다.
+
 ## 먼저 이해하기
 
 이 실습에서 duplicate는 예외적인 broker 오작동이 아니라 정상적으로 대비해야 할 delivery 결과다. consumer가 business DB commit에는 성공했지만 acknowledgement 직전에 종료되면 broker는 완료 사실을 알지 못해 같은 event를 다시 보낼 수 있다.

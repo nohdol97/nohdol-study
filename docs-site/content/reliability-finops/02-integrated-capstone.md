@@ -2,6 +2,19 @@
 
 > 실습 등급: **Local 필수 + AWS optional**. AWS 단계는 실제 계정 변경 없이 design·plan까지만 수행해도 된다. live 실행 시 resource inventory, 과금 가능성과 cleanup 승인을 먼저 남긴다.
 
+## 실습 전에 준비할 것
+
+이 문서는 첫 실습이 아니라 앞선 주제를 연결하는 졸업 과제다. Linux·networking·Kubernetes·Helm·observability와 PostgreSQL 또는 Redis의 기본 실습을 먼저 끝낸다.
+
+- **local cluster**: 지워도 되는 kind 또는 minikube context가 필요하다.
+- **도구**: `kubectl`, `helm`, `curl`과 선택한 data store client가 필요하다.
+- **sample workload**: `/ready`, `/metrics`, request ID와 data store 연결을 제공하는 test API와 Helm chart가 필요하다.
+- **관측 환경**: 최소한 request 성공률·latency와 application log를 볼 수 있어야 한다. trace까지 있으면 같은 request ID로 연결한다.
+- **실패 하나만 선택**: 잘못된 image, connection exhaustion, network denial 중 처음에는 하나만 고른다.
+- **안전 조건**: 실패 범위, 중단 조건, rollback 명령과 cleanup 목록을 주입 전에 작성한다.
+
+현재 저장소에는 완성된 sample workload와 chart가 포함돼 있지 않으므로, 이 문서만으로 Local capstone을 실행 완료했다고 판정할 수 없다. 아래 절은 필요한 실행 계약이며 실제 sample bundle이 제공되기 전까지는 설계·검토 단계로 취급한다.
+
 ## 먼저 이해하기
 
 capstone의 목적은 여러 도구를 한 번씩 실행하는 것이 아니라 하나의 사용자 요청이 infrastructure 전체를 지나 실패하고 회복되는 과정을 증거로 설명하는 것이다. Helm release, Pod 상태, database connection, telemetry와 SLO를 같은 timeline에 놓아야 한다.

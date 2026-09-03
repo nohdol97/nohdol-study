@@ -2,6 +2,17 @@
 
 > 실습 등급: render 단계는 **Local**, install·upgrade는 **Local Kubernetes**다. 공개 registry에 push하지 않으며 AWS 비용은 없다.
 
+## 실습 전에 준비할 것
+
+- **도구**: `helm version`과 `kubectl version --client`가 성공해야 한다.
+- **cluster**: install 단계까지 하려면 kind나 minikube 같은 disposable local Kubernetes가 필요하다. cluster가 없으면 render 단계까지만 진행한다.
+- **현재 대상 확인**: `kubectl config current-context`로 운영 cluster가 아닌지 반드시 확인한다.
+- **directory**: 빈 실습 directory에서 시작한다. `helm create`가 `sample-api/` 전체를 생성한다.
+- **관찰 순서**: chart 검사 → 최종 YAML 생성 → Kubernetes 형식 검사 → 실제 설치 순서로 진행한다.
+- **정리 대상**: Helm release, `infra-study` namespace, `sample-api/` directory와 `rendered.yaml`이다.
+
+처음에는 `helm lint`와 `helm template`까지만 실행해도 된다. 생성된 YAML에서 image와 replica 수를 직접 찾을 수 있을 때 cluster 설치로 넘어간다.
+
 ## 먼저 이해하기
 
 이 실습은 같은 chart를 네 단계에서 확인한다. lint는 chart 자체의 기본 오류를 찾고, template은 values가 적용된 최종 YAML을 보여 준다. Kubernetes dry-run은 API 형식과 일부 admission 조건을 확인하며 실제 install은 controller가 Pod를 만들어 readiness에 도달하는지 확인한다. 앞 단계가 뒤 단계의 성공을 보장하지 않는다.
@@ -130,8 +141,8 @@ Argo CD가 `OutOfSync`를 보이면 compare가 drift를 발견한 것이다. sel
 2. Helm rollback 후에도 외부 DB migration이 남을 수 있는 이유는 무엇인가?
 3. auto-sync, prune과 self-heal을 독립적으로 검토해야 하는 이유는 무엇인가?
 
-<!-- source: https://helm.sh/docs/helm/helm_lint/ | checked: 2026-09-03 -->
-<!-- source: https://helm.sh/docs/helm/helm_template/ | checked: 2026-09-03 -->
-<!-- source: https://helm.sh/docs/helm/helm_upgrade/ | checked: 2026-09-03 -->
-<!-- source: https://helm.sh/docs/helm/helm_rollback/ | checked: 2026-09-03 -->
+<!-- source: https://helm.sh/docs/helm/helm_lint/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
+<!-- source: https://helm.sh/docs/helm/helm_template/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
+<!-- source: https://helm.sh/docs/helm/helm_upgrade/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
+<!-- source: https://helm.sh/docs/helm/helm_rollback/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
 <!-- source: https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/ | checked: 2026-09-03 -->

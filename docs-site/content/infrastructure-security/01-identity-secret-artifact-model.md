@@ -1,5 +1,16 @@
 # Identity, secret과 artifact trust model
 
+## 이 장에서 처음 쓰는 말
+
+- **least privilege**: 작업에 필요한 최소 권한만 주고 필요하지 않은 작업은 허용하지 않는 원칙이다.
+- **temporary credential**: 정해진 시간이 지나면 사용할 수 없게 되는 임시 로그인 정보다.
+- **encryption key**: 데이터를 읽을 수 없는 형태로 바꾸고 다시 복원할 때 사용하는 비밀 값이다.
+- **rotation**: secret이나 key를 새 값으로 교체하고 이전 값을 안전하게 폐기하는 과정이다.
+- **digest**: 파일 내용으로 계산한 고정 길이 값이다. 내용이 달라졌는지 비교할 때 쓴다.
+- **provenance**: artifact가 어떤 source와 build 과정에서 만들어졌는지 보여 주는 출처 기록이다.
+
+처음에는 한 주체에게 한 작업만 허용하고 다른 작업이 거부되는지 확인한다. 그다음 신원, secret, artifact가 만들어지고 사용되고 폐기되는 전체 수명주기로 범위를 넓힌다.
+
 ## 먼저 이해하기
 
 배포된 Pod가 S3 object를 읽고 database에 연결하는 흐름을 생각해 보자. Pod는 먼저 자신이 어떤 workload identity인지 증명하고, IAM은 그 identity가 특정 object를 읽어도 되는지 판단한다. application은 secret 값을 전달받아 database에 인증하고, 실행 중인 image는 CI가 만든 바로 그 artifact인지 검증돼야 한다. 이후 누가 어떤 변경과 접근을 했는지 audit trail이 남아야 한다.
@@ -13,6 +24,18 @@
 | 나중에 설명할 수 있는가? | audit log와 변경 이력 | actor·resource·decision 추적 불가 |
 
 이 경로에서 encryption 하나가 모든 문제를 해결하지 않는다. 암호화된 secret도 너무 많은 principal이 decrypt할 수 있으면 과권한이고, 서명된 image도 취약한 dependency를 포함할 수 있다. 각 통제는 서로 다른 질문에 답한다.
+
+## 배포 요청 하나를 한 단계씩 따라가기
+
+1. 개발자나 CI가 자신의 identity를 credential로 증명한다.
+2. policy engine이 그 principal에게 image 업로드나 배포 action을 허용할지 판단한다.
+3. build가 source로부터 artifact를 만들고 digest와 provenance를 남긴다.
+4. 배포 gate가 허용한 builder의 artifact인지, 취약점·signature 정책을 통과했는지 확인한다.
+5. workload는 실행 중 필요한 secret만 temporary identity로 읽는다.
+6. 배포와 secret 접근 결과가 audit trail에 남는다.
+7. credential·secret·artifact가 만료되거나 교체될 때 이전 대상의 사용을 중단하고 폐기한다.
+
+한 단계의 성공이 전체 신뢰를 보장하지 않는다. 로그인에 성공해도 배포 권한은 없을 수 있고, signature가 맞아도 그 image에 알려진 취약점이 없다는 뜻은 아니다.
 
 ## Authentication과 authorization을 나눈다
 

@@ -127,8 +127,15 @@ function renderHome() {
           <p class="eyebrow"><span></span>CHOOSE A PATH</p>
           <h2 id="topics-title">Infra Specialist 학습 경로</h2>
         </div>
-        <p>기반부터 선언·배포, 운영·데이터, 신뢰성과 Karpenter 심화까지 선수 순서로 이어집니다.</p>
+        <p>각 주제는 쉬운 문제 상황과 용어에서 시작해 정상 관찰, 실패·복구, 운영 판단 순서로 깊어집니다.</p>
       </div>
+      <ol class="learning-ladder" aria-label="초심자에서 전문가 판단까지의 학습 단계">
+        <li><strong>1. 문제와 용어</strong><span>왜 필요한지 보고 낯선 말을 먼저 풉니다.</span></li>
+        <li><strong>2. 정상 관찰</strong><span>작은 예제를 실행하고 정상 상태의 증거를 남깁니다.</span></li>
+        <li><strong>3. 실패 분리</strong><span>조건 하나를 바꾸고 어느 단계에서 멈췄는지 찾습니다.</span></li>
+        <li><strong>4. 복구 증명</strong><span>명령 성공이 아니라 사용자 결과가 돌아왔는지 확인합니다.</span></li>
+        <li><strong>5. 운영 판단</strong><span>보안·신뢰성·성능·비용의 선택 근거를 설명합니다.</span></li>
+      </ol>
       <div class="topic-grid">
         ${content.topics
           .map(
@@ -154,9 +161,9 @@ function renderHome() {
     </section>
     <section class="principle-strip">
       <div class="shell principle-inner">
-        <p>공식 문서를 학습 가능한 설명으로 바꿉니다.</p>
-        <strong>Official docs → mental model → diagram → runnable example</strong>
-        <span>설계는 실행과 장애·복구 증거로 완성됩니다.</span>
+        <p>처음 만나는 용어부터 정상 실행·실패·복구를 거쳐 전문가의 판단 순서를 배웁니다.</p>
+        <strong>문제 상황 → 쉬운 용어 → 정상 관찰 → 실패 → 복구 → 운영 판단</strong>
+        <span>쉬운 설명은 출발점이고, 전문 용어는 실제 증거와 연결해 익힙니다.</span>
       </div>
     </section>`;
 }
@@ -186,7 +193,7 @@ function renderTopic(topic) {
           <p class="eyebrow"><span></span>READING ORDER</p>
           <h2 id="topic-documents-title">이 순서로 읽어보세요</h2>
         </div>
-        <p>공식 문서를 이해 순서에 맞춰 다시 구성합니다.</p>
+        <p>로드맵의 초심자 설명부터 읽고, 개념과 실습을 순서대로 진행하세요.</p>
       </div>
       <div class="document-list">
         ${documents.map(documentCard).join('')}

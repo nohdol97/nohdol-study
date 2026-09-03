@@ -1,5 +1,16 @@
 # MVCC, WAL과 query plan
 
+## 이 장에서 처음 쓰는 말
+
+- **commit**: transaction의 변경을 최종 성공으로 확정하는 동작이다.
+- **rollback**: transaction에서 수행한 변경을 취소하고 시작 전 상태로 돌아가는 동작이다.
+- **MVCC**: 동시에 실행되는 transaction이 서로에게 어떤 버전의 row를 보여 줄지 관리하는 방식이다.
+- **WAL**: data file을 바꾸기 전에 변경 내용을 순서대로 남기는 로그다. 장애 복구와 복제의 기반이 된다.
+- **VACUUM**: 더 이상 어떤 transaction에도 필요하지 않은 예전 row 공간을 다시 사용할 수 있게 정리하는 작업이다.
+- **query plan**: PostgreSQL이 SQL을 실행하기 위해 선택한 table 접근 순서와 방법이다.
+
+처음에는 `BEGIN → SQL 실행 → COMMIT` 한 흐름만 따라간다. MVCC는 “무엇이 보이는가”, WAL은 “장애 뒤 무엇을 다시 만들 수 있는가”에 답하므로 같은 기능으로 합치지 않는다.
+
 ## 먼저 이해하기
 
 두 사용자가 같은 계좌 row를 거의 동시에 읽고 수정한다고 생각해 보자. database는 단순히 파일의 한 줄을 즉시 덮어쓰지 않는다. transaction마다 어떤 row version을 볼 수 있는지 정하고, 변경 복구에 필요한 WAL을 남기며, 더는 보이지 않는 과거 version을 나중에 정리한다. MVCC·WAL·VACUUM은 서로 다른 단계의 문제를 해결한다.
@@ -13,6 +24,17 @@
 | VACUUM | 오래된 version을 언제 재사용 가능하게 하는가? | table을 항상 축소하는 작업 |
 
 예를 들어 transaction A가 오래 열린 채 과거 snapshot을 유지하면, 다른 transaction이 row를 여러 번 UPDATE해도 VACUUM은 A에게 보일 수 있는 version을 함부로 제거할 수 없다. application의 “idle in transaction”이 storage 증가와 transaction ID 위험으로 이어질 수 있는 이유다.
+
+## 데이터 변경 하나를 한 단계씩 따라가기
+
+1. client가 database connection을 열고 transaction을 시작한다.
+2. `UPDATE`가 대상 row를 찾고 충돌하는 변경이 있으면 필요한 lock을 기다린다.
+3. PostgreSQL은 기존 row를 바로 모든 reader에게 덮어씌우는 대신 새 row version을 만든다.
+4. 변경을 복구할 수 있도록 관련 WAL record가 만들어진다.
+5. commit이 성공하면 다른 transaction이 isolation 규칙에 따라 새 값을 볼 수 있게 된다.
+6. checkpoint는 변경된 memory page를 data file에 쓰는 작업을 진행하고, VACUUM은 더는 필요 없는 예전 row version을 정리한다.
+
+“사용자에게 보인다”, “commit이 성공했다”, “data file에 반영됐다”는 같은 순간을 뜻하지 않는다. WAL과 recovery 규칙 때문에 이 차이를 나누어 이해해야 한다.
 
 ## 한 변경이 보이고 남는 과정
 

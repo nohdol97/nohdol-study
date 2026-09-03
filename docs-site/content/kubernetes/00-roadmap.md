@@ -1,5 +1,21 @@
 # 쿠버네티스 전체 학습 로드맵
 
+## 처음 보는 사람을 위한 출발점
+
+애플리케이션을 container 하나로 실행하는 데 성공했다고 가정하자. 사용자가 늘어 같은 container를 세 개 실행해야 하고, 하나가 멈추면 자동으로 교체하고, 새 version을 서비스 중단 없이 배포하려면 여러 상태를 계속 확인해야 한다. Kubernetes는 이 반복 운영을 API와 controller로 자동화한다.
+
+| 처음 만나는 말 | 학습용 쉬운 뜻 |
+|---|---|
+| 컨테이너(container) | 애플리케이션 process와 실행에 필요한 파일을 격리해 실행하는 단위 |
+| 이미지(image) | container를 만들 때 사용하는 읽기 전용 실행 재료 |
+| 클러스터(cluster) | Kubernetes가 함께 관리하는 control plane과 여러 server의 집합 |
+| 노드(Node) | container가 실제로 실행되는 server |
+| 파드(Pod) | Kubernetes가 한 Node에 함께 배치하고 관리하는 container 묶음 |
+| kubectl | 사용자가 Kubernetes API에 조회·변경 요청을 보내는 명령행 도구 |
+| 원하는 상태(desired state) | “Pod 세 개가 계속 준비돼 있어야 한다”처럼 사용자가 선언한 목표 |
+
+처음에는 local cluster에 웹 서버 한 개를 배포하고, Pod를 지웠을 때 왜 새 Pod가 생기는지만 확인한다. 그 경험 위에서 API object, controller, scheduler와 network를 차례로 배운다.
+
 쿠버네티스는 **컨테이너화된 애플리케이션의 배포, 확장과 관리를 자동화하는 오픈소스 플랫폼**이다. 하지만 이 한 문장만 외우면 왜 API 오브젝트와 컨트롤러가 필요한지 이해하기 어렵다. 이 과정은 쿠버네티스를 “명령을 순서대로 실행하는 도구”가 아니라 **원하는 상태와 실제 상태의 차이를 계속 줄이는 시스템**으로 이해하는 데서 시작한다.
 
 이 문서만 읽어도 전체 구조를 잡을 수 있도록 원자료의 링크 목록을 그대로 옮기지 않았다. 이후 장도 같은 방식으로 외부 페이지를 대신하는 설명, 다이어그램, 실행 예시와 실패 사례를 내부에 축적한다.
@@ -132,6 +148,19 @@ sequenceDiagram
 8. 원리를 다시 설명하게 하는 복습 질문
 
 원자료 URL과 확인일은 저장소 Markdown에 근거 메타데이터로 남기지만, 공개 본문은 그 링크를 읽지 않아도 이해되고 실습할 수 있어야 한다.
+
+## 처음 이해했는지 확인
+
+1. image와 실행 중인 container는 어떻게 다른가?
+2. Pod를 직접 하나 실행하는 것과 Deployment에 `replicas: 1`을 선언하는 것은 실패 뒤 어떤 차이를 만드는가?
+
+**확인 기준:** image는 실행 재료이고 container는 그것으로 만든 실행 instance라고 설명할 수 있으면 된다. Deployment의 원하는 상태가 남아 있으면 기존 Pod가 사라져도 controller가 새 Pod를 요청한다.
+
+## 운영 판단으로 확장하기
+
+1. `kubectl apply`가 성공해도 사용자 요청이 실패할 수 있는 이유는 무엇인가?
+2. Pod, Deployment와 Service는 각각 어떤 상태를 소유하는가?
+3. Kubernetes가 database transaction과 application 오류까지 자동으로 해결하지 못하는 이유는 무엇인가?
 
 <!-- source: https://kubernetes.io/ko/docs/home/ | checked: 2026-09-03 -->
 <!-- source: https://kubernetes.io/ko/docs/concepts/overview/ | checked: 2026-09-03 | translation-warning: true -->

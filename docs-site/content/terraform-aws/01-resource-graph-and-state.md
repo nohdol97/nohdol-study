@@ -1,5 +1,16 @@
 # Resource graph와 state
 
+## 이 장에서 처음 쓰는 말
+
+- **HCL**: Terraform 설정 파일에 사용하는 문법이다. 보통 `.tf` 파일에 작성한다.
+- **resource address**: configuration 안에서 자원 하나를 가리키는 고유한 이름이다. 예: `aws_vpc.main`.
+- **remote object**: AWS처럼 Terraform 밖의 서비스에 실제로 존재하는 자원이다.
+- **binding**: Terraform 주소와 실제 remote object가 같은 대상이라는 연결 관계다.
+- **dependency**: 한 자원이 다른 자원의 결과를 필요로 해 먼저 만들어져야 하는 관계다.
+- **module**: 관련된 Terraform 설정을 입력과 출력이 있는 묶음으로 만든 것이다.
+
+처음에는 configuration을 “설계도”, state를 “설계도의 항목이 실제 어느 자원인지 적은 장부”로 생각해도 된다. 다만 state는 단순 복사본이 아니라 실제 자원을 찾아 변경하기 위한 운영 데이터라는 차이가 있다.
+
 ## 먼저 이해하기
 
 Terraform에는 서로 다른 세 상태가 있다. **configuration**은 코드에 적은 의도, **state**는 Terraform resource address와 remote object ID의 연결 장부, **remote object**는 AWS에 실제로 존재하는 VPC나 subnet이다. 셋이 같아 보일 때도 있지만 역할은 다르다.
@@ -14,6 +25,17 @@ Terraform에는 서로 다른 세 상태가 있다. **configuration**은 코드�
 | plan | 셋의 차이를 바탕으로 한 변경 제안 | create/update/replace/destroy review |
 
 plan은 미래를 완벽히 예언하는 문서가 아니라 특정 configuration·state·provider 관찰 시점에서 계산한 제안이다. apply 전까지 외부 상태가 바뀌거나 provider API가 다른 값을 반환할 수 있으므로 실행 후 검증도 필요하다.
+
+## 변경 계획이 만들어지는 과정을 한 단계씩 보기
+
+1. Terraform이 `.tf` configuration과 입력 변수를 읽는다.
+2. 이전 state에서 각 resource address가 어느 remote object와 연결됐는지 읽는다.
+3. provider가 허용된 범위에서 실제 remote object의 현재 값을 조회한다.
+4. Terraform이 configuration, state와 조회 결과의 차이를 계산하고 dependency 순서로 plan을 만든다.
+5. 사람이 생성·변경·교체·삭제 항목과 대상 account를 검토한다.
+6. 승인된 경우에만 apply가 provider API를 호출하고 성공한 결과를 새 state에 기록한다.
+
+`plan`은 4단계에서 만든 제안이다. 실제 변경은 6단계이며, plan이 읽기 좋다는 사실만으로 architecture와 application이 안전하다는 뜻은 아니다.
 
 ## Configuration은 원하는 구조, state는 binding
 

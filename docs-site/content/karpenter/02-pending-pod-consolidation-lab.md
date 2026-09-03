@@ -2,6 +2,19 @@
 
 > 실습 등급: **AWS optional**. EKS와 Karpenter가 설치된 격리 환경이 필요하며 EC2·EKS·network·log 비용이 발생할 수 있다. CI에서는 manifest 정적 검증만 수행한다.
 
+## 실습 전에 준비할 것
+
+이 실습은 Karpenter를 처음 설치하는 안내가 아니다. Kubernetes scheduling, AWS IAM·VPC·EC2와 EKS를 먼저 학습하고, 지워도 되는 test cluster에 공식 설치 절차로 Karpenter를 구성한 뒤 시작한다.
+
+- **호환성**: 설치된 Kubernetes·EKS·Karpenter version 조합을 공식 문서에서 다시 확인한다.
+- **도구**: `kubectl`, AWS CLI와 현재 cluster의 Karpenter CRD가 필요하다.
+- **AWS 신원**: 예상 account·Region의 temporary role인지 확인하고 EC2 생성 비용·quota를 검토한다.
+- **파일**: 완전한 `EC2NodeClass`, `NodePool`, test Deployment와 PDB manifest가 필요하다.
+- **관측**: controller log, Kubernetes event, NodeClaim condition, EC2 instance 목록을 실험 전에 볼 수 있게 준비한다.
+- **중단 조건**: 예상보다 큰 instance, 허용하지 않은 subnet·zone, Pod 가용성 저하가 보이면 즉시 중단한다.
+
+아래 NodePool은 구조 설명용 일부 예시다. 환경별 `EC2NodeClass`와 test Deployment가 없으므로 그대로 복사한 것만으로는 실습이 시작되지 않는다. 누락된 값을 추측하지 말고 공식 설치 결과와 cluster resource를 기준으로 채운다.
+
 ## 먼저 이해하기
 
 이 실습에는 두 방향의 수렴이 있다. workload를 늘리면 Pending Pod 요구를 만족하도록 capacity가 생겨야 하고, workload를 없애면 불필요한 capacity가 disruption policy 안에서 줄어야 한다. 빠른 scale-up만 확인하면 비용과 scale-down 안전성은 검증되지 않는다.
@@ -120,7 +133,7 @@ scale-down 뒤 Kubernetes Node만 사라지고 EC2 instance가 남으면 cleanup
 2. PDB가 consolidation을 막은 상황에서 PDB를 바로 완화하면 위험한 이유는 무엇인가?
 3. Node object 삭제만으로 cleanup 완료를 판정할 수 없는 이유는 무엇인가?
 
-<!-- source: https://karpenter.sh/docs/concepts/nodepools/ | checked: 2026-09-03 -->
-<!-- source: https://karpenter.sh/docs/concepts/nodeclaims/ | checked: 2026-09-03 -->
-<!-- source: https://karpenter.sh/docs/concepts/disruption/ | checked: 2026-09-03 -->
-<!-- source: https://karpenter.sh/docs/troubleshooting/ | checked: 2026-09-03 -->
+<!-- source: https://karpenter.sh/docs/concepts/nodepools/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/concepts/nodeclaims/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/concepts/disruption/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/troubleshooting/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->

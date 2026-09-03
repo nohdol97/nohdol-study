@@ -1,5 +1,16 @@
 # Provisioning과 disruption model
 
+## 이 장에서 처음 쓰는 말
+
+- **provisioning**: workload를 실행할 수 있도록 새 compute resource를 선택하고 준비하는 과정이다.
+- **requirement**: Pod나 NodePool이 허용하거나 요구하는 CPU architecture, zone, capacity type 같은 조건이다.
+- **capacity type**: EC2를 On-Demand나 Spot 같은 구매 방식으로 구분한 값이다.
+- **consolidation**: workload를 더 적은 Node로 안전하게 옮길 수 있을 때 불필요한 Node를 줄이는 동작이다.
+- **PDB**: 자발적인 중단 중 동시에 사용할 수 없게 되어도 되는 Pod 수를 제한하는 Kubernetes 정책이다.
+- **graceful termination**: process가 진행 중인 일을 정리할 시간을 주고 종료하는 절차다.
+
+처음에는 Node를 만드는 경로와 Node를 없애는 경로를 따로 본다. 빠르게 만들 수 있다는 사실만으로 안전하게 줄일 수 있는 것은 아니며 두 경로의 성공 증거도 다르다.
+
 ## 먼저 이해하기
 
 Kubernetes scheduler가 Pod를 놓을 node를 찾지 못하면 Pod는 Pending에 남는다. Karpenter는 그 Pending Pod들의 CPU·memory request, architecture, zone, taint·toleration과 volume topology를 모아 “어떤 새 node라면 이 Pod들을 실행할 수 있는가?”를 계산한다. EC2 capacity를 확보해 node가 cluster에 등록되면 scheduler가 다시 Pod를 배치한다.
@@ -15,6 +26,18 @@ Kubernetes scheduler가 Pod를 놓을 node를 찾지 못하면 Pod는 Pending에
 | Node | Kubernetes가 보는 실행 capacity | scheduler가 Pod를 배치할 대상 |
 
 예를 들어 Pod가 arm64를 요구하지만 NodePool이 amd64만 허용하면 둘의 교집합이 없다. AWS에 arm64 instance가 충분해도 provisioning되지 않는다. 반대로 instance type을 하나만 허용하면 요구 조건은 맞아도 그 zone에 capacity가 없어 launch가 실패할 수 있다. constraint의 정확성과 선택지의 폭을 함께 설계해야 한다.
+
+## 기다리는 Pod가 실행되기까지 한 단계씩 보기
+
+1. scheduler가 기존 Node를 살펴보지만 Pod의 CPU·memory·배치 조건을 모두 만족하는 곳을 찾지 못한다.
+2. Pod가 Pending 상태로 남고 배치되지 못한 이유가 event에 기록된다.
+3. Karpenter가 Pending Pod의 requirement와 허용된 NodePool 조건의 교집합을 계산한다.
+4. EC2NodeClass의 subnet·security group·AMI·role 조건을 사용해 만들 수 있는 EC2 선택지를 찾는다.
+5. 구체적인 Node 하나의 요청인 NodeClaim을 만들고 EC2 instance 시작을 요청한다.
+6. instance가 cluster에 Node로 등록되고 필요한 startup resource가 준비된다.
+7. Kubernetes scheduler가 새 Node에 Pod를 배치한다.
+
+Karpenter는 3~6단계에서 capacity를 준비한다. 마지막 Pod 배치는 Kubernetes scheduler가 하므로 두 구성 요소의 log와 event를 함께 봐야 한다.
 
 ## 세 resource의 책임
 
@@ -67,8 +90,8 @@ Kubernetes event, Karpenter controller log·metric, NodeClaim condition, Pod sch
 2. Pod request 오류가 node 비용과 안정성에 동시에 영향을 주는 이유는 무엇인가?
 3. PDB가 허용해도 application shutdown이 실패할 수 있는 이유는 무엇인가?
 
-<!-- source: https://karpenter.sh/docs/concepts/nodepools/ | checked: 2026-09-03 -->
-<!-- source: https://karpenter.sh/docs/concepts/nodeclasses/ | checked: 2026-09-03 -->
-<!-- source: https://karpenter.sh/docs/concepts/nodeclaims/ | checked: 2026-09-03 -->
-<!-- source: https://karpenter.sh/docs/concepts/disruption/ | checked: 2026-09-03 -->
-<!-- source: https://karpenter.sh/docs/concepts/scheduling/ | checked: 2026-09-03 -->
+<!-- source: https://karpenter.sh/docs/concepts/nodepools/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/concepts/nodeclasses/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/concepts/nodeclaims/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/concepts/disruption/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/concepts/scheduling/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->

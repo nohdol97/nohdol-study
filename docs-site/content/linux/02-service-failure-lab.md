@@ -2,6 +2,17 @@
 
 > 실습 등급: **Local — Linux VM 또는 systemd가 실행되는 Linux host**. root 권한을 쓰는 단계는 임시 unit 생성과 삭제뿐이다.
 
+## 실습 전에 준비할 것
+
+- **환경**: macOS가 아니라 systemd가 실행되는 disposable Linux VM을 사용한다. 운영 서버에서는 실행하지 않는다.
+- **도구**: `python3`, `curl`, `ss`, `systemctl`, `journalctl`이 필요하다.
+- **권한**: unit 파일을 만들고 지우는 단계에서만 `sudo`를 사용한다.
+- **터미널**: port를 차지한 process를 유지할 창과 진단 명령을 실행할 창, 두 개를 연다.
+- **만들 대상**: `/etc/systemd/system/infra-http.service` 한 파일과 임시 Python HTTP process다.
+- **끝난 상태**: unit 파일과 임시 process가 사라지고 `18080` port를 아무 process도 사용하지 않는다.
+
+명령어를 입력하기 전에 위 파일 경로가 실습 전에는 존재하지 않는지 확인한다. 이미 같은 이름의 unit이 있다면 이 실습을 중단하고 다른 VM을 사용한다.
+
 ## 먼저 이해하기
 
 이 실습은 일부러 두 process가 같은 port를 가지려고 경쟁하게 만든다. TCP listener는 IP address와 port 조합에 bind된다. 첫 번째 Python process가 `127.0.0.1:18080`을 차지한 상태에서 systemd가 두 번째 process를 시작하면 새 process는 socket을 만들지 못하고 종료한다. systemd의 `failed`, journal의 bind error, `ss`에 보이는 기존 PID는 같은 사건을 서로 다른 관점에서 보여 준다.

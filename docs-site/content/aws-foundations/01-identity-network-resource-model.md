@@ -1,5 +1,16 @@
 # Account, identity와 network boundary
 
+## 이 장에서 처음 쓰는 말
+
+- **principal**: AWS에 요청을 보내는 사람 또는 프로그램의 신원이다.
+- **credential**: 그 신원을 증명할 때 사용하는 로그인 정보다. 장기 access key보다 임시 credential을 우선한다.
+- **API**: 프로그램이 AWS에 “목록을 보여 줘”, “자원을 만들어 줘”라고 요청하는 정해진 통로다.
+- **subnet**: VPC의 IP 주소 범위를 더 작은 구역으로 나눈 것이다.
+- **route table**: 목적지 주소에 따라 traffic을 어느 다음 지점으로 보낼지 정한 규칙 모음이다.
+- **availability zone(AZ)**: 한 Region 안에서 전원·시설 장애 경계를 분리한 운영 구역이다.
+
+처음에는 요청 하나가 성공하려면 `신원에 작업 권한이 있음`과 `목적지까지 통신 경로가 있음`이 모두 필요하다는 사실만 잡는다. 둘 중 하나만 확인해서는 원인을 찾을 수 없다.
+
 ## 먼저 이해하기
 
 AWS에서 resource 접근은 “같은 VPC에 있으니 된다” 또는 “IAM role이 있으니 된다”로 설명되지 않는다. API 호출에는 principal과 policy evaluation이 필요하고, network packet에는 address·route·filter·listener가 필요하다. 애플리케이션 요청 하나가 둘을 모두 거칠 수 있지만 두 허가는 독립적이다.
@@ -13,6 +24,17 @@ AWS에서 resource 접근은 “같은 VPC에 있으니 된다” 또는 “IAM 
 | authorization | 어떤 action·resource·condition이 허용되는가? | policy evaluation과 denial context |
 | network | packet이 어느 hop과 filter를 지나는가? | subnet, route, SG/NACL, flow evidence |
 | resource | 실제 object가 어느 region·AZ와 lifecycle에 있는가? | service API, tags, state와 health |
+
+## AWS 조회 요청을 한 단계씩 따라가기
+
+1. 사용자나 프로그램이 credential을 사용해 AWS API 요청을 만든다.
+2. AWS가 credential로 principal과 만료된 session이 아닌지 확인한다.
+3. IAM과 관련 policy가 요청한 action을 해당 resource에 허용하는지 평가한다.
+4. 허용됐다면 대상 Region의 service가 resource 상태를 조회하거나 변경한다.
+5. data path가 필요한 작업은 VPC route와 security policy도 통과해야 한다.
+6. 결과와 변경 주체는 service log나 CloudTrail 같은 감사 기록에서 다시 확인할 수 있다.
+
+IAM 허용은 3단계의 결과다. database 연결처럼 network를 지나야 하는 요청은 3단계가 성공해도 5단계에서 실패할 수 있다.
 
 ## 요청 하나에 필요한 두 허가
 

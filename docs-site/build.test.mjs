@@ -69,6 +69,10 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(app, /node\.dataset\.processed !== 'true'/);
   assert.match(app, /인프라를/);
   assert.match(app, /Infra Specialist 학습 경로/);
+  assert.match(app, /문제와 용어/);
+  assert.match(app, /정상 관찰/);
+  assert.match(app, /복구 증명/);
+  assert.match(app, /운영 판단/);
   assert.doesNotMatch(app, /쿠버네티스 학습 목차/);
   assert.match(mermaidBundle, /globalThis\["mermaid"\]/);
   assert.equal(content.documents.length, expectedCount);
@@ -77,6 +81,9 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   const firstCluster = content.documents.find((document) => document.id === 'kubernetes-first-cluster');
   assert.match(roadmap.html, /href="#doc=kubernetes-first-cluster"/);
   assert.match(roadmap.html, /href="#doc=kubernetes-api-objects"/);
+  assert.match(roadmap.html, /처음 보는 사람을 위한 출발점/);
+  assert.match(roadmap.html, /처음 이해했는지 확인/);
+  assert.match(roadmap.html, /운영 판단으로 확장하기/);
   assert.equal([...roadmap.html.matchAll(/<pre class="mermaid">/g)].length, 2);
   assert.equal([...firstCluster.html.matchAll(/<pre class="mermaid">/g)].length, 2);
   const detailedChapters = content.documents.filter((document) => /^0[2-9]\. |^10\. /.test(document.title));
@@ -111,14 +118,37 @@ test('builds every catalog document into a relative-path Pages artifact', async 
     for (const document of topicDocuments) {
       const source = await readFile(path.join(REPOSITORY_ROOT, document.path), 'utf8');
       assert.match(source, /<!-- source: https:\/\/[^|]+ \| checked: 2026-09-03/);
-      assert.match(document.html, /스스로 설명해 보기/);
+      assert.match(document.html, /스스로 설명해 보기|운영 판단으로 확장하기/);
       assert.doesNotMatch(document.html, /source:/);
+      if (/\/00-roadmap\.md$/.test(document.path)) {
+        assert.match(source, /## 처음 보는 사람을 위한 출발점/);
+        assert.match(source, /\| 처음 만나는 말 \| 학습용 쉬운 뜻 \|/);
+        assert.match(source, /## 처음 이해했는지 확인/);
+        assert.match(source, /## 운영 판단으로 확장하기/);
+        assert.ok(
+          source.indexOf('## 처음 보는 사람을 위한 출발점') < source.indexOf('## 완료'),
+          `${document.id} must establish beginner context before completion criteria`,
+        );
+      }
       if (/\/(?:01|02)-/.test(document.path)) {
         assert.match(document.html, /먼저 이해하기/);
         assert.match(document.html, /<table>/);
         assert.ok(source.length >= 3000, `${document.id} must explain the model with enough context`);
       }
+      if (/\/01-/.test(document.path)) {
+        assert.match(source, /## 이 장에서 처음 쓰는 말/);
+        assert.match(source, /\n1\. .+\n2\. /);
+        assert.ok(
+          source.indexOf('## 이 장에서 처음 쓰는 말') < source.indexOf('## 먼저 이해하기'),
+          `${document.id} must define terms before using the detailed model`,
+        );
+      }
       if (/\/02-/.test(document.path)) {
+        assert.match(source, /## 실습 전에 준비할 것/);
+        assert.ok(
+          source.indexOf('## 실습 전에 준비할 것') < source.indexOf('## 먼저 이해하기'),
+          `${document.id} must establish prerequisites before the exercise model`,
+        );
         assert.match(document.html, /결과를 이렇게 읽는다/);
         assert.ok(source.length >= 3500, `${document.id} must explain how to interpret the exercise`);
       }

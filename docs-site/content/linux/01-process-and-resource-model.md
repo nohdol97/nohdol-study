@@ -1,5 +1,15 @@
 # Process와 resource의 연결
 
+## 이 장에서 처음 쓰는 말
+
+- **PID**: 실행 중인 process를 Linux가 구분하기 위해 붙이는 번호다. 재시작하면 보통 달라진다.
+- **file descriptor**: process가 열린 file이나 network connection을 가리키는 작은 번호다.
+- **socket**: 두 process가 network로 데이터를 주고받기 위해 사용하는 통신 끝점이다.
+- **cgroup**: 여러 process를 묶어 CPU·memory 같은 자원의 사용량과 한도를 관리하는 Linux 기능이다.
+- **RSS**: process가 현재 실제 memory에 올려 사용 중인 영역의 대략적인 크기다.
+
+처음 읽을 때는 “service 이름 → 현재 PID → 그 PID의 socket과 자원” 세 연결만 잡으면 된다. 세부 수치는 뒤의 명령에서 실제 출력과 함께 확인한다.
+
 ## 먼저 이해하기
 
 웹 서버가 느려졌다고 가정하자. 사용자는 “서버가 느리다”고 말하지만 Linux가 실제로 관리하는 대상은 하나의 `server`라는 덩어리가 아니다. 실행 중인 process, 그 process가 연 file descriptor와 socket, 할당받은 CPU 시간과 memory page, filesystem을 거친 I/O가 따로 존재한다. 원인을 찾으려면 서비스 이름을 이 실제 자원으로 번역해야 한다.
@@ -13,6 +23,17 @@
 | cgroup | process 집합에 CPU·memory·I/O 규칙을 적용하는 경계 | limit, usage, pressure, kill event |
 
 예를 들어 `api.service`가 `active`여도 main process가 `127.0.0.1`에만 bind했다면 외부 요청은 실패한다. socket은 열려 있어도 cgroup memory limit에 계속 닿으면 process가 재시작될 수 있다. service 상태는 출발점이며 실제 요청 성공과 자원 여유를 대신하지 않는다.
+
+## 웹 서버가 실행되는 과정을 한 단계씩 보기
+
+1. 사용자가 `systemctl start`로 service 시작을 요청한다.
+2. systemd가 unit 파일의 실행 명령을 읽고 새 process를 만든다.
+3. Linux가 process에 PID를 붙이고 service의 cgroup에 넣는다.
+4. process가 file을 열고 IP 주소와 port에 socket을 연다.
+5. 요청이 오면 kernel이 socket을 통해 process에 데이터를 전달한다.
+6. process가 종료되면 exit status와 시간이 journal에 남고 systemd가 재시작 정책을 판단한다.
+
+각 단계는 다른 증거를 남긴다. 그래서 “웹 서버가 안 된다”를 고칠 때 마지막 결과만 보지 않고 어느 단계까지 성공했는지 확인한다.
 
 ## 먼저 구분할 다섯 상태
 

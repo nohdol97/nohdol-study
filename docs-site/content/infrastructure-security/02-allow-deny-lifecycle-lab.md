@@ -2,6 +2,17 @@
 
 > 실습 등급: policy 검토는 **Local/Plan only**, AWS API 검증은 **AWS optional**이다. temporary role과 격리된 test resource만 사용하며 secret 값과 account ID를 기록하지 않는다.
 
+## 실습 전에 준비할 것
+
+- **첫 단계**: AWS 없이 JSON policy의 `Action`, `Resource`, `Condition`이 각각 동작·대상·조건을 뜻하는지 읽는다.
+- **AWS 선택 단계**: 전용 test bucket·prefix와 temporary role을 사용한다. 운영 bucket이나 사람의 기본 role은 사용하지 않는다.
+- **시험 쌍**: 허용돼야 하는 read 한 개와 거부돼야 하는 write 한 개를 실행 전에 적는다.
+- **안전 조건**: test object에는 공개해도 되는 임시 문자열만 넣고 실제 secret이나 고객 데이터를 사용하지 않는다.
+- **기록**: 성공·실패뿐 아니라 caller, action, resource, 결정에 관여한 policy 범위를 남긴다.
+- **정리 대상**: test object, bucket, temporary role·policy와 local verification artifact다.
+
+보안 실습에서 예상한 거부는 성공적인 관찰이다. 오류를 없애려고 곧바로 `*` 권한을 추가하지 말고 어떤 경계가 요청을 거부했는지 먼저 확인한다.
+
 ## 먼저 이해하기
 
 least privilege는 허용된 한 동작이 성공하는지만 보는 테스트가 아니다. 의도한 read는 성공하고 인접한 prefix read, write와 delete는 실패해야 policy boundary를 확인할 수 있다. 허용과 거부를 쌍으로 시험해야 wildcard나 잘못된 resource ARN을 발견할 수 있다.

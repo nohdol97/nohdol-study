@@ -1,5 +1,16 @@
 # Chart, release와 desired state
 
+## 이 장에서 처음 쓰는 말
+
+- **render**: template에 values를 넣어 Kubernetes가 받을 최종 YAML을 만드는 과정이다.
+- **desired state**: Git이나 설정 파일에 “이렇게 되어야 한다”고 선언한 원하는 상태다.
+- **live state**: 현재 cluster에 실제로 존재하는 resource의 상태다.
+- **sync**: desired state와 live state의 차이를 줄이도록 resource를 생성·변경·삭제하는 동작이다.
+- **drift**: 원하는 상태와 실제 상태가 달라진 현상이다.
+- **CRD**: Kubernetes에 새로운 종류의 resource를 추가하는 정의다.
+
+처음에는 `template + values = manifest`만 직접 확인한다. 그다음 manifest가 cluster에 설치된 기록인 release와, Git을 기준으로 계속 차이를 확인하는 GitOps를 분리해 이해한다.
+
 ## 먼저 이해하기
 
 Helm과 GitOps를 함께 쓰면 상태가 최소 네 겹 생긴다. chart template은 Kubernetes object를 만드는 규칙이고 values는 그 규칙에 넣는 입력이다. 둘을 렌더링한 manifest가 실제 API request가 되며, cluster에는 그 결과의 live object가 존재한다. Helm release history나 Git commit은 이 상태를 추적하는 또 다른 기준이다.
@@ -14,6 +25,18 @@ Helm과 GitOps를 함께 쓰면 상태가 최소 네 겹 생긴다. chart templa
 | live state | cluster에서 실제로 무엇이 실행되는가? | manual drift, admission mutation |
 
 values에서 replica를 2에서 3으로 바꿔도 template이 그 값을 쓰지 않으면 rendered manifest는 달라지지 않는다. 반대로 manifest가 3으로 렌더돼도 admission rejection이나 quota 부족으로 live workload가 바뀌지 않을 수 있다. 각 경계를 따로 관찰해야 한다.
+
+## 값 하나가 배포 상태가 되는 과정을 따라가기
+
+1. chart가 Kubernetes resource의 template과 기본 values를 제공한다.
+2. 사용자가 environment 전용 values나 명령행 값을 추가한다.
+3. Helm이 우선순위에 따라 값을 합치고 template을 최종 manifest로 render한다.
+4. 사람이나 CI가 manifest에 예상한 image, replica와 권한만 있는지 검토한다.
+5. Helm install·upgrade가 manifest를 cluster API에 보내고 release history를 기록한다.
+6. GitOps를 사용한다면 Argo CD가 Git의 manifest와 live resource를 계속 비교한다.
+7. 허용한 정책에 따라 차이를 알리거나 sync해 다시 원하는 상태로 맞춘다.
+
+Helm만 사용하는 경우 6~7단계는 없다. GitOps를 추가했다고 해서 template이 안전한지 검토하는 4단계가 사라지는 것도 아니다.
 
 ## Chart는 package, release는 설치 instance
 
@@ -98,8 +121,8 @@ auto-sync는 CI가 cluster credential 없이 Git commit만 바꾸게 할 수 있
 2. hook와 application Deployment의 rollback 완료 조건은 어떻게 다른가?
 3. self-heal이 긴급한 수동 조치를 되돌릴 수 있는 이유는 무엇인가?
 
-<!-- source: https://helm.sh/docs/topics/charts/ | checked: 2026-09-03 -->
-<!-- source: https://helm.sh/docs/chart_template_guide/values_files/ | checked: 2026-09-03 -->
-<!-- source: https://helm.sh/docs/topics/charts_hooks/ | checked: 2026-09-03 -->
+<!-- source: https://helm.sh/docs/topics/charts/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 | retrieval-warning: page states it is not yet updated for Helm 4 -->
+<!-- source: https://helm.sh/docs/chart_template_guide/values_files/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
+<!-- source: https://helm.sh/docs/topics/charts_hooks/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
 <!-- source: https://argo-cd.readthedocs.io/en/stable/core_concepts/ | checked: 2026-09-03 -->
 <!-- source: https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/ | checked: 2026-09-03 -->

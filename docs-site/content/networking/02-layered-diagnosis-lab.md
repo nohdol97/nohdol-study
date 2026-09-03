@@ -2,6 +2,16 @@
 
 > 실습 등급: **Local**. `tcpdump`만 packet capture 권한이 필요하며 나머지는 일반 사용자로 실행할 수 있다.
 
+## 실습 전에 준비할 것
+
+- **환경**: 인터넷에 접속할 수 있는 Linux 또는 macOS terminal을 사용한다.
+- **도구**: `dig`, `curl`, `openssl`이 필요하다. Linux의 route·socket 확인에는 `ip`와 `ss`를 사용한다.
+- **대상**: 처음에는 본인이 운영하지 않는 production 주소 대신 `example.com`과 예약된 `.invalid` 이름을 사용한다.
+- **기록**: 각 명령마다 `성공/실패`, 마지막으로 성공한 단계, 다음에 확인할 항목을 한 줄씩 적는다.
+- **정리**: 이 기본 실습은 resource를 만들지 않는다. 선택적인 Kubernetes test Pod를 만들었다면 명령의 `--rm` 동작으로 삭제됐는지 확인한다.
+
+macOS에는 기본적으로 Linux의 `ip`, `ss`가 없다. 이 경우 route 확인은 `route -n get 1.1.1.1`, listening port 확인은 `lsof -nP -iTCP -sTCP:LISTEN`으로 바꾸고, 출력 항목이 완전히 같지는 않다는 점을 기록한다.
+
 ## 먼저 이해하기
 
 이 실습의 목적은 많은 network 명령을 실행하는 것이 아니라 실패 지점을 이분하는 것이다. 매 단계에서 “여기까지는 성공했는가?”를 묻고, 성공한 계층보다 아래를 다시 조사하지 않는다.

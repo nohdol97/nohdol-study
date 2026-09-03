@@ -2,6 +2,17 @@
 
 > 실습 등급: **Local**. 이미 Prometheus와 OpenTelemetry demo 환경이 있다면 그 환경을 사용하고, 없으면 아래 데이터로 질의 의미를 먼저 검증한다.
 
+## 실습 전에 준비할 것
+
+- **선행 이해**: HTTP status, 요청 처리 시간, metric·log·trace의 차이를 먼저 설명할 수 있어야 한다.
+- **실행 환경**: Prometheus와 OpenTelemetry demo가 있으면 실제 query를 실행한다. 없다면 이 장은 수식과 사건 기록을 읽는 worksheet이며 실행 실습으로 완료 처리하지 않는다.
+- **필요한 데이터**: request 수 counter, latency histogram, request ID가 있는 log, trace ID가 있는 trace가 필요하다.
+- **시간 고정**: 장애 시작·완화·회복 시각과 query window를 같은 timezone으로 기록한다.
+- **변경 범위**: 첫 실행에서는 alert를 production pager에 연결하지 않고 local rule 평가만 확인한다.
+- **끝난 상태**: 임시 rule과 test traffic을 제거하고 원래 metric 추세로 돌아왔는지 확인한다.
+
+아래 PromQL을 그대로 입력하기 전에 자신의 metric 이름과 label을 확인한다. 이름이 다르면 문법이 맞아도 데이터가 나오지 않으며, 그 결과는 서비스가 정상이라는 뜻이 아니다.
+
 ## 먼저 이해하기
 
 이 실습에서 만들려는 것은 dashboard가 아니라 하나의 설명 가능한 incident chain이다. 사용자가 실패한 요청 하나를 출발점으로 request ID와 trace ID를 찾고, 그 요청이 전체 실패율에 포함됐는지 확인한 뒤 어떤 span과 dependency에서 시간이 늘었는지 좁힌다.

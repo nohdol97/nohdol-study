@@ -2,6 +2,17 @@
 
 > 실습 등급: **Plan only에 준하는 read-only 조회**. AWS resource를 생성·변경하지 않지만 API 호출 권한과 credential이 필요하다. 출력의 account ID와 ARN은 공개 저장소에 복사하지 않는다.
 
+## 실습 전에 준비할 것
+
+- **환경**: AWS 계정과 AWS CLI가 필요하다. 계정이 없다면 명령을 실행하지 않고 출력 예시를 읽는 단계까지만 진행한다.
+- **신원**: root user나 장기 access key를 새로 만들지 않는다. 조직이 제공한 SSO 또는 temporary role을 사용한다.
+- **권한**: STS caller 조회와 EC2 VPC·subnet·route table 목록 조회만 허용된 read-only role을 사용한다.
+- **범위**: 사용할 profile과 Region 이름을 운영자가 확인한 뒤 명시한다.
+- **변경 여부**: 이 장의 명령은 조회만 한다. `create`, `modify`, `delete`가 들어간 AWS 명령은 실행하지 않는다.
+- **기록 보호**: account ID, ARN, 내부 CIDR과 resource ID는 공개 문서나 issue에 그대로 붙이지 않는다.
+
+첫 명령의 목적은 VPC를 보는 것이 아니라 “지금 어떤 신원과 Region을 보고 있는가”를 고정하는 것이다. 이 값이 예상과 다르면 이후 명령을 진행하지 않는다.
+
 ## 먼저 이해하기
 
 이 실습은 AWS 구성을 바꾸지 않고 “내가 지금 어느 계정에서 무엇을 보고 있는가”부터 확인한다. cloud 장애 조사에서 흔한 실수는 이름이 같은 dev/prod resource나 다른 region을 보고도 올바른 대상을 조사한다고 믿는 것이다. 그래서 첫 증거는 VPC가 아니라 caller identity와 region이다.

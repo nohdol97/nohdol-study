@@ -2,6 +2,17 @@
 
 > 실습 등급: 첫 절은 **Local**, AWS 예시는 **Plan only**다. 이 장은 `terraform apply`를 실행하지 않는다.
 
+## 실습 전에 준비할 것
+
+- **도구**: Terraform 1.16.x를 설치하고 `terraform version`으로 확인한다.
+- **directory**: 다른 Terraform state가 없는 새 directory를 만든 뒤 그 안에서만 실행한다.
+- **파일**: 첫 단계에서 `main.tf`, 두 번째 단계에서 `contract.tftest.hcl`을 만든다.
+- **AWS 단계**: 선택 사항이다. AWS CLI와 temporary credential, 조회·plan에 필요한 최소 권한이 있을 때만 진행한다.
+- **생성 여부**: 이 장은 `apply`하지 않으므로 AWS resource를 만들지 않는다. local saved plan 파일만 생긴다.
+- **정리 대상**: `study.tfplan`, `planned-change.tfplan`, `.terraform/`이며 실제 backend state와 `.terraform.lock.hcl`은 같은 대상으로 취급하지 않는다.
+
+Terraform을 처음 쓴다면 첫 절의 성공 기준은 `plan`에 `terraform_data.contract` 하나의 생성 제안이 보이는 것이다. AWS 연결은 그 결과를 설명할 수 있게 된 다음에 진행한다.
+
 ## 먼저 이해하기
 
 이 실습은 Terraform 명령의 성공 여부보다 각 단계가 어떤 불확실성을 줄이는지 확인한다. `fmt`는 표현 형식을 통일하지만 의미를 검증하지 않는다. `validate`는 configuration 구조와 provider schema를 검사하지만 어느 AWS account를 바꿀지는 판단하지 않는다. `plan`은 state와 remote object를 읽어 변경안을 만들지만 application health를 보장하지 않는다.
