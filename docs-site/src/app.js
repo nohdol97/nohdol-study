@@ -100,7 +100,7 @@ function renderHome() {
     <section class="hero shell">
       <div class="hero-copy">
         <p class="eyebrow"><span></span>${escapeHtml(content.site.eyebrow)}</p>
-        <h1>쿠버네티스를<br /><em>쉽게, 깊게</em></h1>
+        <h1>인프라를<br /><em>쉽게, 깊게</em></h1>
         <p class="hero-description">${escapeHtml(content.site.description)}</p>
         <button class="hero-search-trigger" type="button" data-focus-search>
           <span>궁금한 키워드로 찾아보기</span>
@@ -110,24 +110,24 @@ function renderHome() {
       <div class="hero-orbit" aria-hidden="true">
         <div class="orbit-ring orbit-ring-one"></div>
         <div class="orbit-ring orbit-ring-two"></div>
-        <span class="orbit-core">K</span>
-        <span class="orbit-label orbit-label-one">desired state</span>
-        <span class="orbit-label orbit-label-two">observe</span>
-        <span class="orbit-label orbit-label-three">reconcile</span>
+        <span class="orbit-core">I</span>
+        <span class="orbit-label orbit-label-one">design</span>
+        <span class="orbit-label orbit-label-two">operate</span>
+        <span class="orbit-label orbit-label-three">recover</span>
       </div>
       <div class="hero-stats" aria-label="문서 사이트 현황">
         <div><strong>${content.topics.length}</strong><span>topics</span></div>
         <div><strong>${documentCount}</strong><span>documents</span></div>
-        <div><strong>1</strong><span>official source</span></div>
+        <div><strong>6</strong><span>learning phases</span></div>
       </div>
     </section>
     <section class="topics-section shell" aria-labelledby="topics-title">
       <div class="section-heading">
         <div>
           <p class="eyebrow"><span></span>CHOOSE A PATH</p>
-          <h2 id="topics-title">쿠버네티스 학습 목차</h2>
+          <h2 id="topics-title">Infra Specialist 학습 경로</h2>
         </div>
-        <p>전체 로드맵을 먼저 본 뒤, 기초부터 운영까지 한 장씩 확장합니다.</p>
+        <p>기반부터 선언·배포, 운영·데이터, 신뢰성과 Karpenter 심화까지 선수 순서로 이어집니다.</p>
       </div>
       <div class="topic-grid">
         ${content.topics
@@ -156,7 +156,7 @@ function renderHome() {
       <div class="shell principle-inner">
         <p>공식 문서를 학습 가능한 설명으로 바꿉니다.</p>
         <strong>Official docs → mental model → diagram → runnable example</strong>
-        <span>링크를 받을 때마다 한 장씩 깊어집니다.</span>
+        <span>설계는 실행과 장애·복구 증거로 완성됩니다.</span>
       </div>
     </section>`;
 }

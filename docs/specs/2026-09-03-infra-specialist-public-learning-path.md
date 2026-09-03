@@ -1,7 +1,7 @@
 # Infra Specialist 공개 학습 경로 스펙
 
 - 날짜: 2026-09-03
-- 상태: 계획됨
+- 상태: 구현됨
 - 관련 결정: [ADR 008](../adr/008-public-docs-gateway.md)
 - 선행 구현: [Public Docs Gateway](2026-09-03-public-docs-gateway.md)
 

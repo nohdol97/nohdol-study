@@ -2,7 +2,7 @@
   "site": {
     "title": "Study Gateway",
     "eyebrow": "CURATED LEARNING PATHS",
-    "description": "현재는 공식 Kubernetes 문서를 따라가며 개념의 연결·실행 예시·실패 상황을 중심으로 다시 배웁니다. 새로운 기술 주제도 차례로 추가됩니다.",
+    "description": "Linux에서 AWS·Terraform·Kubernetes·데이터·신뢰성까지, 개념의 연결과 실행·장애·복구를 중심으로 Infra Specialist의 운영 판단을 배웁니다.",
     "repository": "https://github.com/nohdol97/nohdol-study"
   },
   "topics": [
@@ -79,6 +79,342 @@
           "title": "10. 프로덕션 운영과 확장",
           "summary": "클러스터 구축·업그레이드·백업과 CRD, Operator, Helm, Kustomize, API 레퍼런스 활용법을 정리합니다.",
           "path": "docs-site/content/kubernetes/10-production-and-extension.md"
+        }
+      ]
+    },
+    {
+      "id": "linux",
+      "number": "01",
+      "label": "Linux",
+      "title": "Linux 시스템 운영",
+      "description": "process와 signal, systemd, filesystem, CPU·memory·I/O, namespace와 cgroup을 한 workload의 자원 경계로 연결합니다.",
+      "accent": "lime",
+      "documents": [
+        {
+          "id": "linux-roadmap",
+          "title": "Linux 시스템 운영 로드맵",
+          "summary": "명령어 암기보다 process와 kernel resource의 연결을 중심으로 학습 순서를 잡습니다.",
+          "path": "docs-site/content/linux/00-roadmap.md"
+        },
+        {
+          "id": "linux-process-resources",
+          "title": "Process와 resource model",
+          "summary": "process·signal·systemd와 CPU·memory·filesystem·cgroup의 소유권을 연결합니다.",
+          "path": "docs-site/content/linux/01-process-and-resource-model.md"
+        },
+        {
+          "id": "linux-service-failure",
+          "title": "Service failure 진단 실습",
+          "summary": "service의 process, socket, log와 자원 압력을 관찰해 실패 구간을 찾습니다.",
+          "path": "docs-site/content/linux/02-service-failure-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "networking",
+      "number": "02",
+      "label": "Networking",
+      "title": "네트워크와 요청 경로",
+      "description": "DNS·routing·TCP·TLS·HTTP와 load balancer를 요청이 통과하는 실제 계층 순서로 추적합니다.",
+      "accent": "teal",
+      "documents": [
+        {
+          "id": "networking-roadmap",
+          "title": "네트워크 학습 로드맵",
+          "summary": "주소·이름·연결·암호화·애플리케이션 응답을 하나의 진단 경로로 구성합니다.",
+          "path": "docs-site/content/networking/00-roadmap.md"
+        },
+        {
+          "id": "networking-request-path",
+          "title": "DNS부터 backend까지",
+          "summary": "각 network layer의 입력·출력과 AWS·Kubernetes resource의 역할을 연결합니다.",
+          "path": "docs-site/content/networking/01-request-path-model.md"
+        },
+        {
+          "id": "networking-diagnosis-lab",
+          "title": "계층별 요청 진단 실습",
+          "summary": "DNS, TCP, TLS와 HTTP 증거를 순서대로 수집해 차단 구간을 판정합니다.",
+          "path": "docs-site/content/networking/02-layered-diagnosis-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "aws-foundations",
+      "number": "03",
+      "label": "AWS",
+      "title": "AWS 인프라 기반",
+      "description": "account·IAM·STS, VPC와 compute·storage·database의 trust boundary와 공동 책임을 설계합니다.",
+      "accent": "orange",
+      "documents": [
+        {
+          "id": "aws-foundations-roadmap",
+          "title": "AWS 인프라 기반 로드맵",
+          "summary": "AWS resource 이름보다 identity, network와 owner 경계를 중심으로 학습합니다.",
+          "path": "docs-site/content/aws-foundations/00-roadmap.md"
+        },
+        {
+          "id": "aws-foundations-identity-network",
+          "title": "Identity·network·resource model",
+          "summary": "IAM session과 VPC route에서 workload resource까지 trust path를 구성합니다.",
+          "path": "docs-site/content/aws-foundations/01-identity-network-resource-model.md"
+        },
+        {
+          "id": "aws-foundations-diagnosis-lab",
+          "title": "Read-only reachability 진단",
+          "summary": "실제 변경 없이 caller identity, route와 reachability evidence를 수집합니다.",
+          "path": "docs-site/content/aws-foundations/02-read-only-diagnosis-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "terraform-aws",
+      "number": "04",
+      "label": "Terraform",
+      "title": "Terraform on AWS",
+      "description": "resource graph와 state binding, module, plan·apply·import·drift를 안전한 변경 흐름으로 운영합니다.",
+      "accent": "violet",
+      "documents": [
+        {
+          "id": "terraform-aws-roadmap",
+          "title": "Terraform on AWS 로드맵",
+          "summary": "configuration·state·remote object의 관계와 변경 검토 순서를 잡습니다.",
+          "path": "docs-site/content/terraform-aws/00-roadmap.md"
+        },
+        {
+          "id": "terraform-aws-resource-state",
+          "title": "Resource graph와 state",
+          "summary": "참조에서 생기는 dependency와 remote state·locking의 운영 계약을 설명합니다.",
+          "path": "docs-site/content/terraform-aws/01-resource-graph-and-state.md"
+        },
+        {
+          "id": "terraform-aws-plan-drift",
+          "title": "Plan·drift·import 실습",
+          "summary": "local test와 AWS plan-only 흐름으로 변경·주소 이동·drift 판단을 검증합니다.",
+          "path": "docs-site/content/terraform-aws/02-plan-drift-import-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "helm-gitops",
+      "number": "05",
+      "label": "Helm & GitOps",
+      "title": "Helm Charts와 GitOps",
+      "description": "chart 렌더링·release 수명주기와 Git desired state의 sync·drift·promotion 책임을 구분합니다.",
+      "accent": "blue",
+      "documents": [
+        {
+          "id": "helm-gitops-roadmap",
+          "title": "Helm과 GitOps 로드맵",
+          "summary": "package rendering과 continuous reconciliation을 분리해 학습합니다.",
+          "path": "docs-site/content/helm-gitops/00-roadmap.md"
+        },
+        {
+          "id": "helm-gitops-chart-release",
+          "title": "Chart·release·GitOps model",
+          "summary": "template·values·schema, hook·CRD와 Argo CD sync 경계를 연결합니다.",
+          "path": "docs-site/content/helm-gitops/01-chart-release-gitops-model.md"
+        },
+        {
+          "id": "helm-gitops-render-upgrade",
+          "title": "Render·upgrade·drift 실습",
+          "summary": "lint·template·install·upgrade·rollback과 live drift 수렴을 검증합니다.",
+          "path": "docs-site/content/helm-gitops/02-render-upgrade-drift-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "observability-sre",
+      "number": "06",
+      "label": "Observability & SRE",
+      "title": "Observability와 SRE",
+      "description": "metric·log·trace를 같은 요청과 시간축에 놓고 SLI·SLO·error budget으로 대응을 결정합니다.",
+      "accent": "pink",
+      "documents": [
+        {
+          "id": "observability-sre-roadmap",
+          "title": "Observability와 SRE 로드맵",
+          "summary": "telemetry signal에서 alert, incident와 학습으로 이어지는 경로를 잡습니다.",
+          "path": "docs-site/content/observability-sre/00-roadmap.md"
+        },
+        {
+          "id": "observability-sre-signals",
+          "title": "Signal·SLO·incident model",
+          "summary": "Prometheus·Alertmanager·OpenTelemetry의 책임과 SLO 기반 대응을 연결합니다.",
+          "path": "docs-site/content/observability-sre/01-signals-slo-incident-model.md"
+        },
+        {
+          "id": "observability-sre-correlation-lab",
+          "title": "Signal 상관관계와 alert 실습",
+          "summary": "metric·log·trace를 한 장애 시간축에 연결하고 alert 발생과 회복을 검증합니다.",
+          "path": "docs-site/content/observability-sre/02-correlation-and-alert-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "postgresql",
+      "number": "07",
+      "label": "PostgreSQL",
+      "title": "PostgreSQL 운영",
+      "description": "MVCC·WAL·VACUUM·query plan·lock을 이해하고 backup·PITR·failover의 복구 결과를 검증합니다.",
+      "accent": "blue",
+      "documents": [
+        {
+          "id": "postgresql-roadmap",
+          "title": "PostgreSQL 운영 로드맵",
+          "summary": "transaction의 보이는 상태에서 durable change와 복구까지 운영 순서를 잡습니다.",
+          "path": "docs-site/content/postgresql/00-roadmap.md"
+        },
+        {
+          "id": "postgresql-mvcc-wal",
+          "title": "MVCC·WAL·query plan",
+          "summary": "row version, WAL·checkpoint, VACUUM과 실행 계획의 관계를 설명합니다.",
+          "path": "docs-site/content/postgresql/01-mvcc-wal-query-model.md"
+        },
+        {
+          "id": "postgresql-lock-restore",
+          "title": "Lock·backup·restore 실습",
+          "summary": "blocking transaction을 찾고 별도 database restore와 복구 목표를 검증합니다.",
+          "path": "docs-site/content/postgresql/02-lock-backup-restore-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "nosql",
+      "number": "08",
+      "label": "Redis & DynamoDB",
+      "title": "Redis와 DynamoDB",
+      "description": "in-memory data structure와 managed partitioned store를 access pattern·consistency·failure mode로 구분합니다.",
+      "accent": "teal",
+      "documents": [
+        {
+          "id": "nosql-roadmap",
+          "title": "Redis와 DynamoDB 로드맵",
+          "summary": "NoSQL이라는 이름보다 access pattern과 failure contract를 먼저 선택합니다.",
+          "path": "docs-site/content/nosql/00-roadmap.md"
+        },
+        {
+          "id": "nosql-redis-dynamodb",
+          "title": "서로 다른 저장 모델",
+          "summary": "Redis TTL·eviction·persistence와 DynamoDB key·index·consistency를 구분합니다.",
+          "path": "docs-site/content/nosql/01-redis-dynamodb-models.md"
+        },
+        {
+          "id": "nosql-ttl-hot-key",
+          "title": "TTL·eviction·hot key 실습",
+          "summary": "Redis expiration과 memory pressure, DynamoDB partition 분포를 관찰합니다.",
+          "path": "docs-site/content/nosql/02-ttl-hot-key-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "infrastructure-security",
+      "number": "09",
+      "label": "Security",
+      "title": "인프라 보안",
+      "description": "identity·least privilege, secret·key와 artifact provenance를 배포와 audit 수명주기에 연결합니다.",
+      "accent": "orange",
+      "documents": [
+        {
+          "id": "infrastructure-security-roadmap",
+          "title": "인프라 보안 로드맵",
+          "summary": "identity에서 policy, secret과 artifact gate를 거쳐 audit까지 trust path를 구성합니다.",
+          "path": "docs-site/content/infrastructure-security/00-roadmap.md"
+        },
+        {
+          "id": "infrastructure-security-trust",
+          "title": "Identity·secret·artifact model",
+          "summary": "IAM 평가와 secret rotation, SBOM·scan·signature·provenance의 역할을 나눕니다.",
+          "path": "docs-site/content/infrastructure-security/01-identity-secret-artifact-model.md"
+        },
+        {
+          "id": "infrastructure-security-allow-deny",
+          "title": "Allow·deny 수명주기 실습",
+          "summary": "최소 policy의 허용·거부와 signed artifact·secret rotation gate를 검증합니다.",
+          "path": "docs-site/content/infrastructure-security/02-allow-deny-lifecycle-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "messaging",
+      "number": "10",
+      "label": "Messaging",
+      "title": "메시징과 이벤트 인프라",
+      "description": "SQS·SNS·EventBridge와 Kafka를 delivery·ordering·retry·DLQ·replay 책임으로 구분합니다.",
+      "accent": "violet",
+      "documents": [
+        {
+          "id": "messaging-roadmap",
+          "title": "메시징과 이벤트 로드맵",
+          "summary": "queue, fan-out과 event log를 business 처리 책임과 함께 학습합니다.",
+          "path": "docs-site/content/messaging/00-roadmap.md"
+        },
+        {
+          "id": "messaging-delivery-replay",
+          "title": "Delivery·ordering·replay model",
+          "summary": "서비스별 delivery 의미와 consumer idempotency·schema evolution을 연결합니다.",
+          "path": "docs-site/content/messaging/01-delivery-ordering-replay-model.md"
+        },
+        {
+          "id": "messaging-duplicate-dlq",
+          "title": "Duplicate·DLQ·replay 실습",
+          "summary": "중복과 poison message를 만들고 controlled redrive와 reconciliation을 검증합니다.",
+          "path": "docs-site/content/messaging/02-duplicate-dlq-replay-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "reliability-finops",
+      "number": "11",
+      "label": "Reliability & FinOps",
+      "title": "신뢰성·DR·FinOps",
+      "description": "availability, RPO·RTO, capacity와 cost budget을 한 workload의 검증 가능한 운영 계약으로 만듭니다.",
+      "accent": "pink",
+      "documents": [
+        {
+          "id": "reliability-finops-roadmap",
+          "title": "신뢰성·DR·FinOps 로드맵",
+          "summary": "목표와 failure mode, backup·capacity·cost evidence를 하나의 흐름으로 구성합니다.",
+          "path": "docs-site/content/reliability-finops/00-roadmap.md"
+        },
+        {
+          "id": "reliability-finops-model",
+          "title": "Reliability·capacity·cost model",
+          "summary": "failure domain, restore 검증, degraded capacity와 unit cost를 연결합니다.",
+          "path": "docs-site/content/reliability-finops/01-reliability-capacity-cost-model.md"
+        },
+        {
+          "id": "reliability-finops-capstone",
+          "title": "Infra Specialist 통합 capstone",
+          "summary": "Local 필수 장애 복구와 AWS optional 설계·정리 증거를 종합합니다.",
+          "path": "docs-site/content/reliability-finops/02-integrated-capstone.md"
+        }
+      ]
+    },
+    {
+      "id": "karpenter",
+      "number": "12",
+      "label": "Advanced · Karpenter",
+      "title": "Karpenter 심화",
+      "description": "pending Pod 요구가 NodePool·EC2NodeClass·NodeClaim을 거쳐 AWS capacity로 수렴하고 안전하게 줄어드는 과정을 검증합니다.",
+      "accent": "lime",
+      "documents": [
+        {
+          "id": "karpenter-roadmap",
+          "title": "Karpenter 심화 로드맵",
+          "summary": "Kubernetes scheduling과 EKS·EC2 capacity를 잇는 유일한 심화 과정을 시작합니다.",
+          "path": "docs-site/content/karpenter/00-roadmap.md"
+        },
+        {
+          "id": "karpenter-provisioning",
+          "title": "Provisioning과 disruption model",
+          "summary": "NodePool·EC2NodeClass·NodeClaim과 consolidation·drift·interruption을 연결합니다.",
+          "path": "docs-site/content/karpenter/01-provisioning-disruption-model.md"
+        },
+        {
+          "id": "karpenter-consolidation-lab",
+          "title": "Pending Pod·consolidation 실습",
+          "summary": "node provisioning과 PDB에 막힌 disruption, EC2 cleanup을 evidence로 판정합니다.",
+          "path": "docs-site/content/karpenter/02-pending-pod-consolidation-lab.md"
         }
       ]
     }

@@ -30,13 +30,27 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   const payload = await buildSite({ outputPath });
   const expectedCount = payload.topics.reduce((total, topic) => total + topic.documentIds.length, 0);
 
-  assert.equal(payload.topics.length, 1);
-  assert.equal(payload.topics[0].id, 'kubernetes');
-  assert.equal(expectedCount, 11);
+  const expectedTopicIds = [
+    'kubernetes',
+    'linux',
+    'networking',
+    'aws-foundations',
+    'terraform-aws',
+    'helm-gitops',
+    'observability-sre',
+    'postgresql',
+    'nosql',
+    'infrastructure-security',
+    'messaging',
+    'reliability-finops',
+    'karpenter',
+  ];
+  assert.deepEqual(payload.topics.map((topic) => topic.id), expectedTopicIds);
+  assert.equal(expectedCount, 47);
   assert.equal(payload.documents.length, expectedCount);
   assert.equal(new Set(payload.documents.map((document) => document.id)).size, expectedCount);
   assert.ok(payload.documents.every((document) => document.searchText.length > 0));
-  assert.ok(payload.documents.every((document) => document.path.startsWith('docs-site/content/kubernetes/')));
+  assert.ok(payload.documents.every((document) => document.path.startsWith('docs-site/content/')));
   assert.ok(payload.documents.every((document) => !/^(?:vault|_workspace)(?:\/|$)/.test(document.path)));
 
   const index = await readFile(path.join(outputPath, 'index.html'), 'utf8');
@@ -53,6 +67,9 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(app, /Math\.min\(3, Math\.max\(0\.35, nextScale\)\)/);
   assert.match(app, /let mermaidRenderQueue = Promise\.resolve\(\)/);
   assert.match(app, /node\.dataset\.processed !== 'true'/);
+  assert.match(app, /인프라를/);
+  assert.match(app, /Infra Specialist 학습 경로/);
+  assert.doesNotMatch(app, /쿠버네티스 학습 목차/);
   assert.match(mermaidBundle, /globalThis\["mermaid"\]/);
   assert.equal(content.documents.length, expectedCount);
 
@@ -78,8 +95,34 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.doesNotMatch(roadmap.html, /language-mermaid/);
   assert.doesNotMatch(roadmap.html, /source:/);
   assert.doesNotMatch(firstCluster.html, /source:/);
+  const addedTopics = payload.topics.filter((topic) => topic.id !== 'kubernetes');
+  for (const topic of addedTopics) {
+    const topicDocuments = content.documents.filter((document) => document.topicId === topic.id);
+    assert.equal(topicDocuments.length, 3, `${topic.id} must publish three complete documents`);
+    assert.equal(topic.documentIds[0], `${topic.id}-roadmap`);
+    assert.ok(
+      topicDocuments.reduce((total, document) => total + [...document.html.matchAll(/<pre class="mermaid">/g)].length, 0) >= 2,
+      `${topic.id} must contain useful relationship diagrams`,
+    );
+    assert.ok(
+      topicDocuments.some((document) => /language-(?:bash|yaml|hcl|sql|json|promql)/.test(document.html)),
+      `${topic.id} must contain an executable or reviewable example`,
+    );
+    for (const document of topicDocuments) {
+      const source = await readFile(path.join(REPOSITORY_ROOT, document.path), 'utf8');
+      assert.match(source, /<!-- source: https:\/\/[^|]+ \| checked: 2026-09-03/);
+      assert.match(document.html, /스스로 설명해 보기/);
+      assert.doesNotMatch(document.html, /source:/);
+    }
+  }
+  const observabilityRoadmap = content.documents.find((document) => document.id === 'observability-sre-roadmap');
+  const postgresqlRoadmap = content.documents.find((document) => document.id === 'postgresql-roadmap');
+  const karpenterRoadmap = content.documents.find((document) => document.id === 'karpenter-roadmap');
+  assert.match(observabilityRoadmap.html, /href="#doc=kubernetes-roadmap"/);
+  assert.match(postgresqlRoadmap.html, /href="#doc=reliability-finops-roadmap"/);
+  assert.match(karpenterRoadmap.html, /href="#doc=kubernetes-scheduling-scaling"/);
   assert.ok(content.documents.every((document) => !/<script>/i.test(document.html)));
-  assert.ok(content.documents.every((document) => !/href="https:\/\/kubernetes\.io/i.test(document.html)));
+  assert.ok(content.documents.every((document) => !/href="https:\/\/(?:kubernetes\.io|docs\.aws\.amazon\.com|developer\.hashicorp\.com|helm\.sh|www\.postgresql\.org|redis\.io|karpenter\.sh)/i.test(document.html)));
   assert.equal(content.documents.some((document) => document.id === 'project-overview'), false);
   assert.equal(content.documents.some((document) => document.id === 'operating-rules'), false);
 });

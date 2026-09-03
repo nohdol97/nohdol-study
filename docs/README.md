@@ -6,7 +6,7 @@
 
 | 가이드 | 대상 | 요지 |
 |---|---|---|
-| [공개 학습 가이드](../docs-site/README.md) | 확장 가능한 GitHub Pages 주제 게이트웨이 | 현재 Kubernetes 11개 문서 목차, 외부 링크를 자립형 글·다이어그램·실습으로 전환하는 원칙, 검색·Markdown 읽기 화면과 Pages 배포 |
+| [공개 학습 가이드](../docs-site/README.md) | Infra Specialist GitHub Pages 주제 게이트웨이 | Kubernetes와 12개 인프라 topic의 47개 문서, 외부 링크를 자립형 글·다이어그램·실습으로 전환하는 원칙, 검색·Markdown 읽기 화면과 Pages 배포 |
 | [Workspace Portal](../examples/workspace_portal/README.md) | `_workspace`의 사용자용 다이내믹 HTML 사이트 | `_workspace/sites/<slug>/` 경로와 명시적 manifest, 단일 server root, portal 초기화·등록·검사 |
 | [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 (읽기 전용) | 지식 루트를 읽기만 하는 조회·문답 표면, 모바일 소크라테스 학습, 인라인 버튼 제어, MessageEntity 기반 무결점 서식 렌더링 및 로컬 URL 정제, launchd 부팅 시 자동 시작, AGENTS.md 보안 화이트리스트 준수 |
 | [피드 스크래퍼](guides/feed-scraper.md) | RSS 소스 → vault 자동 수집 | 카탈로그(추적)와 컴퓨터별 선택(비추적) 분리, `feed`는 제목·링크만 쌓아 API 호출 0, `geeknews`는 점수 게이트 후 요약·분류, 마커 기반 중복 방지, launchd 자동 실행 |
@@ -28,8 +28,8 @@
 
 | 스펙 | 상태 | 대상 |
 |---|---|---|
-| [2026-09-03-infra-specialist-public-learning-path](specs/2026-09-03-infra-specialist-public-learning-path.md) | 계획됨 | Kubernetes 이후 Linux·네트워크·AWS·Terraform·Helm/GitOps·운영·데이터·보안·신뢰성을 잇고 Karpenter 하나만 심화로 두는 공개 Infra Specialist 학습 경로 |
-| [2026-09-03-public-docs-gateway](specs/2026-09-03-public-docs-gateway.md) | 구현됨 | 확장 가능한 주제 게이트웨이, 현재 Kubernetes 11개 학습 문서, 검색·문서 뷰어와 공개 범위 게이트 |
+| [2026-09-03-infra-specialist-public-learning-path](specs/2026-09-03-infra-specialist-public-learning-path.md) | 구현됨 | Kubernetes와 Linux·네트워크·AWS·Terraform·Helm/GitOps·운영·데이터·보안·신뢰성을 잇고 Karpenter 하나만 심화로 둔 47개 문서 경로 |
+| [2026-09-03-public-docs-gateway](specs/2026-09-03-public-docs-gateway.md) | 구현됨 | 확장 가능한 주제 게이트웨이의 초기 Kubernetes 11개 학습 문서, 검색·문서 뷰어와 공개 범위 게이트 |
 | [2026-07-25-phase1-study-harness](specs/2026-07-25-phase1-study-harness.md) | 구현됨 | 설치기, 지식 구조, 공용 스킬, 세션 훅 |
 | [2026-07-25-phase2-ingest-notebooklm-graph](specs/2026-07-25-phase2-ingest-notebooklm-graph.md) | 구현됨 | 웹·논문·영상 ingest, NotebookLM export, 그래프 기준 파서 |
 | [2026-07-25-phase2b-cli-learning-integrations](specs/2026-07-25-phase2b-cli-learning-integrations.md) | 2b-A~2b-D 구현, 2b-E는 ADR 004로 철회 | Understand Anything 9종, Obsidian 4종, NotebookLM CLI bridge |

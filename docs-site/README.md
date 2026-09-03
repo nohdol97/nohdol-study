@@ -1,9 +1,9 @@
 # 공개 학습 가이드
 
-GitHub Pages에서 여러 기술 주제를 차례로 제공하는 한국어 학습 가이드다. 게이트웨이와 카탈로그는 여러 주제를 지원하며, **현재 공개한 주제는 Kubernetes 하나**다. Kubernetes 공식 문서의 설치·개념·태스크·튜토리얼·레퍼런스를 학습하기 좋은 11개 문서 순서로 재구성한다.
+GitHub Pages에서 Infra Specialist 기술을 선수 순서로 제공하는 한국어 학습 가이드다. Kubernetes 11개 문서와 Linux·네트워크·AWS·Terraform·Helm/GitOps·관측성·PostgreSQL·Redis/DynamoDB·보안·메시징·신뢰성·Karpenter의 12개 topic, 총 47개 문서를 공개한다.
 
 - 공개 URL: <https://nohdol97.github.io/nohdol-study/>
-- 공개 콘텐츠: `docs-site/content/kubernetes/`
+- 공개 콘텐츠: `docs-site/content/<topic>/`
 - 카탈로그: `docs-site/catalog.json`
 
 `docs/`의 하네스 ADR·스펙과 개인 `vault/`는 이 학습 과정의 내용이 아니며 사이트에 게시하지 않는다.
@@ -14,7 +14,7 @@ GitHub Pages에서 여러 기술 주제를 차례로 제공하는 한국어 학�
 
 1. 기능이 해결하는 문제를 요약한 한 문장 모델
 2. 컴포넌트 관계, 요청·데이터·제어 흐름 다이어그램과 시퀀스 다이어그램
-3. 최소 실행 가능한 YAML과 `kubectl` 예시
+3. 최소 실행 가능하거나 안전하게 검토 가능한 shell·YAML·HCL·SQL 예시
 4. 필드와 동작 원리를 연결한 상세 해설
 5. 흔한 실패 상태, 오류 메시지와 복구 순서
 6. 개발 환경과 프로덕션 환경의 선택 차이
@@ -25,9 +25,9 @@ GitHub Pages에서 여러 기술 주제를 차례로 제공하는 한국어 학�
 
 Markdown의 `mermaid` 코드 블록은 사이트가 함께 배포하는 Mermaid 번들로 직접 렌더링한다. 외부 CDN에 의존하지 않으며 관계도와 시퀀스가 문서 안에 표시된다.
 
-새 학습 주제를 시작할 때는 `docs-site/content/<topic>/`에 독립된 목차와 본문을 만들고 `catalog.json`에 새 주제 카드를 등록한다. Kubernetes 목차와 다른 주제의 내용은 섞지 않는다.
+각 주제는 `docs-site/content/<topic>/`에 독립된 로드맵과 본문을 두고 `catalog.json`에 명시적으로 등록한다. 카탈로그 순서는 Linux 기반에서 선언·배포, 운영·데이터, 신뢰성과 Karpenter 심화로 이어지는 선수 관계를 따른다.
 
-Kubernetes 이후의 공개 과정은 [Infra Specialist 공개 학습 경로 스펙](../docs/specs/2026-09-03-infra-specialist-public-learning-path.md)에 정의한다. Linux·네트워크·AWS에서 시작해 Terraform·Helm/GitOps, 관측성·SRE, PostgreSQL·Redis·DynamoDB, 보안·메시징·DR·FinOps로 이어지며, 심화 제품 topic은 Karpenter 하나만 계획한다. 각 단계의 본문과 검증이 끝나기 전에는 빈 주제 카드를 공개하지 않는다.
+전체 과정은 [Infra Specialist 공개 학습 경로 스펙](../docs/specs/2026-09-03-infra-specialist-public-learning-path.md)을 구현한다. 각 신규 topic은 로드맵·운영 모델·실습 3개 문서로 완결했으며, Karpenter만 `Advanced`로 구분한다. AWS 실습은 Local·Plan only·AWS optional 등급과 비용·권한·cleanup 경계를 명시한다.
 
 ## 로컬 실행
 
