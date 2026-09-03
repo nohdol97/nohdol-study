@@ -30,9 +30,13 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   const payload = await buildSite({ outputPath });
   const expectedCount = payload.topics.reduce((total, topic) => total + topic.documentIds.length, 0);
 
+  assert.equal(payload.topics.length, 1);
+  assert.equal(payload.topics[0].id, 'kubernetes');
+  assert.equal(expectedCount, 11);
   assert.equal(payload.documents.length, expectedCount);
   assert.equal(new Set(payload.documents.map((document) => document.id)).size, expectedCount);
   assert.ok(payload.documents.every((document) => document.searchText.length > 0));
+  assert.ok(payload.documents.every((document) => document.path.startsWith('docs-site/content/kubernetes/')));
   assert.ok(payload.documents.every((document) => !/^(?:vault|_workspace)(?:\/|$)/.test(document.path)));
 
   const index = await readFile(path.join(outputPath, 'index.html'), 'utf8');
@@ -41,17 +45,18 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(index, /src="\.\/assets\/app\.js"/);
   assert.equal(content.documents.length, expectedCount);
 
-  const mapDocument = content.documents.find((document) => document.id === 'documentation-map');
-  assert.match(mapDocument.html, /href="#doc=telegram-guide"/);
-  const changelog = content.documents.find((document) => document.id === 'harness-changelog');
-  assert.doesNotMatch(changelog.html, /<script>/i);
-  assert.match(changelog.html, /&lt;script&gt;/i);
+  const roadmap = content.documents.find((document) => document.id === 'kubernetes-roadmap');
+  assert.match(roadmap.html, /href="#doc=kubernetes-first-cluster"/);
+  assert.match(roadmap.html, /href="#doc=kubernetes-api-objects"/);
+  assert.ok(content.documents.every((document) => !/<script>/i.test(document.html)));
+  assert.equal(content.documents.some((document) => document.id === 'project-overview'), false);
+  assert.equal(content.documents.some((document) => document.id === 'operating-rules'), false);
 });
 
 test('rejects duplicate document ids', async () => {
   const directory = await temporaryDirectory();
   const catalog = await clonedCatalog();
-  catalog.topics[1].documents[0].id = catalog.topics[0].documents[0].id;
+  catalog.topics[0].documents[1].id = catalog.topics[0].documents[0].id;
   const catalogPath = await writeCatalog(directory, catalog);
 
   await assert.rejects(

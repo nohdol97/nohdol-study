@@ -1,188 +1,84 @@
 {
   "site": {
-    "title": "nohdol study docs",
-    "eyebrow": "STUDY HARNESS",
-    "description": "AI와 함께 지식을 수집하고, 검증하고, 오래 남기는 방법을 주제별로 공부합니다.",
+    "title": "Study Gateway",
+    "eyebrow": "CURATED LEARNING PATHS",
+    "description": "현재는 공식 Kubernetes 문서를 따라가며 개념의 연결·실행 예시·실패 상황을 중심으로 다시 배웁니다. 새로운 기술 주제도 차례로 추가됩니다.",
     "repository": "https://github.com/nohdol97/nohdol-study"
   },
   "topics": [
     {
-      "id": "start",
-      "number": "01",
-      "label": "Start here",
-      "title": "처음 시작하기",
-      "description": "프로젝트의 목적과 전체 문서 지도를 훑고, 내 컴퓨터에 적용할 흐름을 잡습니다.",
-      "accent": "lime",
-      "documents": [
-        {
-          "id": "project-overview",
-          "title": "프로젝트 개요와 빠른 시작",
-          "summary": "nohdol-study가 해결하는 문제, 주요 기능, 설치와 사용 흐름을 한 번에 봅니다.",
-          "path": "README.md"
-        },
-        {
-          "id": "documentation-map",
-          "title": "전체 문서 지도",
-          "summary": "가이드, ADR, 스펙, 검토 기록을 목적에 따라 찾아갑니다.",
-          "path": "docs/README.md"
-        },
-        {
-          "id": "project-direction",
-          "title": "프로젝트 방향과 단계",
-          "summary": "Markdown 정본, 휴대 가능한 하네스, 단계별 확장 방향을 이해합니다.",
-          "path": "docs/proposals/2026-07-25-nohdol-study-direction.md"
-        }
-      ]
-    },
-    {
-      "id": "principles",
-      "number": "02",
-      "label": "Core rules",
-      "title": "설계 원칙과 안전 경계",
-      "description": "정본, 근거, 개인정보, 외부 전송, 파생물의 역할을 결정한 핵심 원칙입니다.",
+      "id": "kubernetes",
+      "number": "K8S",
+      "label": "Kubernetes",
+      "title": "쿠버네티스",
+      "description": "컨테이너 기초에서 시작해 API와 제어 루프, 워크로드, 네트워크, 스토리지, 스케줄링, 보안과 운영까지 순서대로 이해합니다.",
       "accent": "blue",
       "documents": [
         {
-          "id": "operating-rules",
-          "title": "운영 규칙 요약",
-          "summary": "세션마다 지켜야 할 지식·검증·보안·호환성 규칙을 읽습니다.",
-          "path": "AGENTS.ko.md"
+          "id": "kubernetes-roadmap",
+          "title": "전체 학습 로드맵",
+          "summary": "공식 문서의 설치·개념·태스크·튜토리얼·레퍼런스를 이해 순서로 재배열한 전체 목차입니다.",
+          "path": "docs-site/content/kubernetes/00-roadmap.md"
         },
         {
-          "id": "initial-architecture",
-          "title": "초기 하네스 아키텍처",
-          "summary": "파일 기반 지식 루트와 휴대 가능한 설치 구조를 선택한 이유를 봅니다.",
-          "path": "docs/adr/001-initial-study-harness.md"
+          "id": "kubernetes-first-cluster",
+          "title": "01. 왜 Kubernetes인가와 첫 클러스터",
+          "summary": "컨테이너 오케스트레이션이 필요한 이유를 이해하고 로컬 학습 환경과 kubectl을 준비합니다.",
+          "path": "docs-site/content/kubernetes/01-why-and-first-cluster.md"
         },
         {
-          "id": "derived-workflows",
-          "title": "수집과 파생 워크플로",
-          "summary": "원문, 노트, 그래프와 외부 도구 사이의 책임을 구분합니다.",
-          "path": "docs/adr/002-phase2-derived-workflows.md"
+          "id": "kubernetes-api-objects",
+          "title": "02. API와 오브젝트",
+          "summary": "선언형 구성, desired state, spec과 status, labels와 namespaces를 하나의 모델로 연결합니다.",
+          "path": "docs-site/content/kubernetes/02-api-and-objects.md"
         },
         {
-          "id": "egress-guard",
-          "title": "외부 런타임 유출 게이트",
-          "summary": "도구 승인과 데이터 반출 승인이 왜 다른지 사례로 이해합니다.",
-          "path": "docs/adr/005-egress-guard-for-external-runtimes.md"
-        }
-      ]
-    },
-    {
-      "id": "workflows",
-      "number": "03",
-      "label": "Hands-on",
-      "title": "운영 워크플로",
-      "description": "로컬 포털, 모바일 학습, 피드 수집을 실제로 연결하고 운영합니다.",
-      "accent": "orange",
-      "documents": [
-        {
-          "id": "workspace-portal-guide",
-          "title": "Workspace Portal 사용법",
-          "summary": "로컬 학습 사이트를 한 진입점에서 열고 등록·검사하는 방법입니다.",
-          "path": "examples/workspace_portal/README.md"
+          "id": "kubernetes-architecture",
+          "title": "03. 클러스터 아키텍처와 제어 루프",
+          "summary": "컨트롤 플레인과 노드 컴포넌트가 상태를 관찰하고 조정하는 흐름을 이해합니다.",
+          "path": "docs-site/content/kubernetes/03-cluster-architecture.md"
         },
         {
-          "id": "workspace-portal-decision",
-          "title": "단일 로컬 포털 결정",
-          "summary": "여러 사이트를 하나의 document root로 모은 설계 배경을 읽습니다.",
-          "path": "docs/adr/007-single-workspace-site-portal.md"
+          "id": "kubernetes-workloads",
+          "title": "04. Pod와 워크로드",
+          "summary": "Pod를 출발점으로 Deployment, StatefulSet, DaemonSet, Job의 책임과 수명주기를 구분합니다.",
+          "path": "docs-site/content/kubernetes/04-pods-and-workloads.md"
         },
         {
-          "id": "telegram-guide",
-          "title": "모바일 텔레그램 학습",
-          "summary": "읽기 전용 모바일 학습 표면의 설치와 안전 경계를 따라갑니다.",
-          "path": "docs/guides/mobile-telegram-bot.md"
+          "id": "kubernetes-networking",
+          "title": "05. Service와 네트워킹",
+          "summary": "Pod 네트워크, Service, DNS, Ingress와 Gateway API를 요청 흐름으로 연결합니다.",
+          "path": "docs-site/content/kubernetes/05-services-and-networking.md"
         },
         {
-          "id": "feed-guide",
-          "title": "피드 스크래퍼 운영",
-          "summary": "RSS 소스를 선택하고 원문 수집을 자동화하는 운영 절차입니다.",
-          "path": "docs/guides/feed-scraper.md"
-        }
-      ]
-    },
-    {
-      "id": "specs",
-      "number": "04",
-      "label": "Build contracts",
-      "title": "구현 스펙",
-      "description": "완료 기준부터 읽으며 각 단계가 무엇을 보장하고 무엇을 하지 않는지 확인합니다.",
-      "accent": "violet",
-      "documents": [
-        {
-          "id": "phase1-spec",
-          "title": "Phase 1 — 기본 하네스",
-          "summary": "설치, 지식 구조, 노트 계약과 세션 컨텍스트의 실행 기준입니다.",
-          "path": "docs/specs/2026-07-25-phase1-study-harness.md"
+          "id": "kubernetes-storage-config",
+          "title": "06. 스토리지와 애플리케이션 구성",
+          "summary": "Volume, PV/PVC, StorageClass와 ConfigMap, Secret의 수명과 책임 경계를 배웁니다.",
+          "path": "docs-site/content/kubernetes/06-storage-and-configuration.md"
         },
         {
-          "id": "phase2-spec",
-          "title": "Phase 2 — 수집과 그래프",
-          "summary": "웹·논문·영상 수집과 결정적 지식 그래프의 요구사항입니다.",
-          "path": "docs/specs/2026-07-25-phase2-ingest-notebooklm-graph.md"
+          "id": "kubernetes-scheduling-scaling",
+          "title": "07. 스케줄링과 리소스·오토스케일링",
+          "summary": "requests와 limits, 노드 선택, affinity, taint, eviction, HPA를 배치 결정의 관점에서 이해합니다.",
+          "path": "docs-site/content/kubernetes/07-scheduling-and-autoscaling.md"
         },
         {
-          "id": "phase2b-spec",
-          "title": "Phase 2b — CLI 학습 연동",
-          "summary": "코드 분석, Obsidian, 외부 도구 pin과 격리 경계를 정의합니다.",
-          "path": "docs/specs/2026-07-25-phase2b-cli-learning-integrations.md"
+          "id": "kubernetes-security",
+          "title": "08. 보안과 정책",
+          "summary": "인증·인가, ServiceAccount, RBAC, Pod Security, NetworkPolicy와 Secret 보호를 연결합니다.",
+          "path": "docs-site/content/kubernetes/08-security-and-policy.md"
         },
         {
-          "id": "portal-spec",
-          "title": "Workspace Portal 스펙",
-          "summary": "로컬 포털의 manifest, 경로 안전성, 검증 기준을 확인합니다.",
-          "path": "docs/specs/2026-08-16-workspace-site-portal.md"
-        }
-      ]
-    },
-    {
-      "id": "reviews",
-      "number": "05",
-      "label": "Trade-offs",
-      "title": "도구 검토와 선택",
-      "description": "새 도구를 무엇 때문에 채택하거나 보류했는지 증거와 비용을 따라가며 읽습니다.",
-      "accent": "pink",
-      "documents": [
-        {
-          "id": "additional-tools-review",
-          "title": "추가 도구 도입 검토",
-          "summary": "검색·메모리·Obsidian 연동 후보의 적합성과 위험을 비교합니다.",
-          "path": "docs/reviews/2026-07-25-additional-tools-review.md"
+          "id": "kubernetes-operations",
+          "title": "09. 관측과 트러블슈팅",
+          "summary": "이벤트·로그·메트릭과 probe, rollout, 장애 진단을 증상에서 원인으로 추적하는 순서로 배웁니다.",
+          "path": "docs-site/content/kubernetes/09-observability-and-troubleshooting.md"
         },
         {
-          "id": "security-review",
-          "title": "CLI 연동 보안 검토",
-          "summary": "NotebookLM과 Understand Anything 도입 판단의 보안 근거를 봅니다.",
-          "path": "docs/reviews/2026-07-25-notebooklm-understand-anything-security.md"
-        },
-        {
-          "id": "phase2c-review",
-          "title": "Phase 2c 파일럿 결과",
-          "summary": "후보 도구가 원본 불변 조건을 만족했는지 실제 결과로 판정합니다.",
-          "path": "docs/reviews/2026-07-25-phase2c-pilot-status.md"
-        }
-      ]
-    },
-    {
-      "id": "history",
-      "number": "06",
-      "label": "Project memory",
-      "title": "변경 기록과 맥락",
-      "description": "현재 규칙만으로 보이지 않는 변화의 순서와 다음 작업의 맥락을 확인합니다.",
-      "accent": "teal",
-      "documents": [
-        {
-          "id": "harness-changelog",
-          "title": "하네스 변경 이력",
-          "summary": "사용자 관점의 변화와 검증 방법을 최신순으로 살펴봅니다.",
-          "path": "docs/harness-changelog.md"
-        },
-        {
-          "id": "next-session-handoff",
-          "title": "프로젝트 인계 기록",
-          "summary": "초기 구현 이후의 상태, 결정 근거와 후속 작업을 복원합니다.",
-          "path": "docs/handoffs/2026-07-25-next-session.md"
+          "id": "kubernetes-production-extension",
+          "title": "10. 프로덕션 운영과 확장",
+          "summary": "클러스터 구축·업그레이드·백업과 CRD, Operator, Helm, Kustomize, API 레퍼런스 활용법을 정리합니다.",
+          "path": "docs-site/content/kubernetes/10-production-and-extension.md"
         }
       ]
     }

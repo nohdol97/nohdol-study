@@ -6,7 +6,7 @@
 
 | 가이드 | 대상 | 요지 |
 |---|---|---|
-| [공개 문서 사이트](../docs-site/README.md) | GitHub Pages 문서 게이트웨이 | 명시적 주제·문서 카탈로그, 검색·Markdown 읽기 화면, 로컬 빌드와 Pages artifact 배포 |
+| [공개 학습 가이드](../docs-site/README.md) | 확장 가능한 GitHub Pages 주제 게이트웨이 | 현재 Kubernetes 공식 문서를 재구성한 11개 문서 목차, 향후 주제·링크 확장 원칙, 검색·Markdown 읽기 화면과 Pages 배포 |
 | [Workspace Portal](../examples/workspace_portal/README.md) | `_workspace`의 사용자용 다이내믹 HTML 사이트 | `_workspace/sites/<slug>/` 경로와 명시적 manifest, 단일 server root, portal 초기화·등록·검사 |
 | [모바일 텔레그램 스터디 브리지](guides/mobile-telegram-bot.md) | 스마트폰 텔레그램 ↔ Mac 하네스 연동 (읽기 전용) | 지식 루트를 읽기만 하는 조회·문답 표면, 모바일 소크라테스 학습, 인라인 버튼 제어, MessageEntity 기반 무결점 서식 렌더링 및 로컬 URL 정제, launchd 부팅 시 자동 시작, AGENTS.md 보안 화이트리스트 준수 |
 | [피드 스크래퍼](guides/feed-scraper.md) | RSS 소스 → vault 자동 수집 | 카탈로그(추적)와 컴퓨터별 선택(비추적) 분리, `feed`는 제목·링크만 쌓아 API 호출 0, `geeknews`는 점수 게이트 후 요약·분류, 마커 기반 중복 방지, launchd 자동 실행 |
@@ -15,7 +15,7 @@
 
 | ADR | 날짜 | 상태 | 제목 |
 |---|---|---|---|
-| [008](adr/008-public-docs-gateway.md) | 2026-09-03 | 활성 | 공개 문서는 명시적 카탈로그를 거쳐 GitHub Pages에 배포 |
+| [008](adr/008-public-docs-gateway.md) | 2026-09-03 | 활성 | 주제별 학습 문서는 명시적 카탈로그를 거쳐 GitHub Pages에 배포 |
 | [001](adr/001-initial-study-harness.md) | 2026-07-25 | 활성 | 파일 기반 공부 하네스 Phase 1 구조 |
 | [002](adr/002-phase2-derived-workflows.md) | 2026-07-25 | 활성 | Phase 2 수집·NotebookLM·그래프 파생 워크플로 |
 | [003](adr/003-cli-learning-integrations.md) | 2026-07-25 | 부분 대체(→004) | Understand Anything 전체 스킬과 선택적 학습 연동의 project-local 채택 |
@@ -28,7 +28,7 @@
 
 | 스펙 | 상태 | 대상 |
 |---|---|---|
-| [2026-09-03-public-docs-gateway](specs/2026-09-03-public-docs-gateway.md) | 구현됨 | GitHub Pages 게이트웨이, 주제 탐색·검색·문서 뷰어, 공개 범위 게이트 |
+| [2026-09-03-public-docs-gateway](specs/2026-09-03-public-docs-gateway.md) | 구현됨 | 확장 가능한 주제 게이트웨이, 현재 Kubernetes 11개 학습 문서, 검색·문서 뷰어와 공개 범위 게이트 |
 | [2026-07-25-phase1-study-harness](specs/2026-07-25-phase1-study-harness.md) | 구현됨 | 설치기, 지식 구조, 공용 스킬, 세션 훅 |
 | [2026-07-25-phase2-ingest-notebooklm-graph](specs/2026-07-25-phase2-ingest-notebooklm-graph.md) | 구현됨 | 웹·논문·영상 ingest, NotebookLM export, 그래프 기준 파서 |
 | [2026-07-25-phase2b-cli-learning-integrations](specs/2026-07-25-phase2b-cli-learning-integrations.md) | 2b-A~2b-D 구현, 2b-E는 ADR 004로 철회 | Understand Anything 9종, Obsidian 4종, NotebookLM CLI bridge |

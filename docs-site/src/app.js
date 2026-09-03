@@ -47,7 +47,7 @@ function renderHome() {
     <section class="hero shell">
       <div class="hero-copy">
         <p class="eyebrow"><span></span>${escapeHtml(content.site.eyebrow)}</p>
-        <h1>무엇을<br /><em>공부할까요?</em></h1>
+        <h1>쿠버네티스를<br /><em>쉽게, 깊게</em></h1>
         <p class="hero-description">${escapeHtml(content.site.description)}</p>
         <button class="hero-search-trigger" type="button" data-focus-search>
           <span>궁금한 키워드로 찾아보기</span>
@@ -57,24 +57,24 @@ function renderHome() {
       <div class="hero-orbit" aria-hidden="true">
         <div class="orbit-ring orbit-ring-one"></div>
         <div class="orbit-ring orbit-ring-two"></div>
-        <span class="orbit-core">N</span>
-        <span class="orbit-label orbit-label-one">collect</span>
-        <span class="orbit-label orbit-label-two">verify</span>
-        <span class="orbit-label orbit-label-three">connect</span>
+        <span class="orbit-core">K</span>
+        <span class="orbit-label orbit-label-one">desired state</span>
+        <span class="orbit-label orbit-label-two">observe</span>
+        <span class="orbit-label orbit-label-three">reconcile</span>
       </div>
       <div class="hero-stats" aria-label="문서 사이트 현황">
         <div><strong>${content.topics.length}</strong><span>topics</span></div>
         <div><strong>${documentCount}</strong><span>documents</span></div>
-        <div><strong>1</strong><span>source of truth</span></div>
+        <div><strong>1</strong><span>official source</span></div>
       </div>
     </section>
     <section class="topics-section shell" aria-labelledby="topics-title">
       <div class="section-heading">
         <div>
           <p class="eyebrow"><span></span>CHOOSE A PATH</p>
-          <h2 id="topics-title">관심 주제로 시작하세요</h2>
+          <h2 id="topics-title">쿠버네티스 학습 목차</h2>
         </div>
-        <p>순서대로 읽어도 좋고, 지금 필요한 주제부터 골라도 좋습니다.</p>
+        <p>전체 로드맵을 먼저 본 뒤, 기초부터 운영까지 한 장씩 확장합니다.</p>
       </div>
       <div class="topic-grid">
         ${content.topics
@@ -101,9 +101,9 @@ function renderHome() {
     </section>
     <section class="principle-strip">
       <div class="shell principle-inner">
-        <p>이 사이트는 문서를 복제하지 않습니다.</p>
-        <strong>Tracked Markdown → explicit catalog → GitHub Pages</strong>
-        <span>개인 vault는 빌드 범위 밖에 있습니다.</span>
+        <p>공식 문서를 학습 가능한 설명으로 바꿉니다.</p>
+        <strong>Official docs → mental model → diagram → runnable example</strong>
+        <span>링크를 받을 때마다 한 장씩 깊어집니다.</span>
       </div>
     </section>`;
 }
@@ -133,7 +133,7 @@ function renderTopic(topic) {
           <p class="eyebrow"><span></span>READING ORDER</p>
           <h2 id="topic-documents-title">이 순서로 읽어보세요</h2>
         </div>
-        <p>각 문서는 원본 Markdown에서 빌드됩니다.</p>
+        <p>공식 문서를 이해 순서에 맞춰 다시 구성합니다.</p>
       </div>
       <div class="document-list">
         ${documents.map(documentCard).join('')}

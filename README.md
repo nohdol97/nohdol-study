@@ -39,7 +39,8 @@
 ### 5. 🌐 GitHub Pages 공개 문서
 [**공개 문서 사이트 바로 열기 →**](https://nohdol97.github.io/nohdol-study/)
 
-- **주제별 게이트웨이**: 첫 화면의 주제 카드에서 학습 경로를 선택하고 문서 순서·예상 읽기 시간을 확인
+- **현재 주제는 Kubernetes 하나**: 공식 한국어 문서의 설치·개념·태스크·튜토리얼·레퍼런스를 전체 로드맵과 10개 장으로 재구성
+- **링크 단위 확장**: 사용자가 지정한 공식 문서를 다이어그램, 실행 가능한 YAML·`kubectl` 예시, 실패 사례와 복구 흐름이 있는 설명으로 발전
 - **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
 - **공개 범위 게이트**: `docs-site/catalog.json`에 명시한 Git 추적 Markdown만 빌드하며 `vault/`·`REGISTRY.md`·`_workspace/`는 거부
 - **Pages artifact 배포**: 생성물은 커밋하지 않고 GitHub Actions가 테스트한 `docs-site/dist/`만 배포
@@ -77,7 +78,7 @@ npm run build
 npm run preview
 ```
 
-브라우저에서 `http://127.0.0.1:4174/`를 연다. 공개 문서 추가와 Pages 설정은 [공개 문서 사이트 안내](docs-site/README.md)를 따른다.
+브라우저에서 `http://127.0.0.1:4174/`를 연다. Kubernetes 링크를 목차에 반영하는 방식과 Pages 설정은 [공개 학습 가이드 안내](docs-site/README.md)를 따른다.
 
 ### 1단계: 하네스 설치 및 Vault 연결
 AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거나 셸 스크립트를 직접 실행한다:
@@ -160,7 +161,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 이 프로젝트의 세부 아키텍처 결정(ADR), 단계별 구현 스펙(Specs), 보안 검토 보고서는 모두 `docs/` 디렉터리에 체계적으로 정리되어 있다.
 
 - **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
-- **[공개 문서 사이트](docs-site/README.md)**: 주제 카탈로그, 로컬 빌드와 GitHub Pages 배포 방법
+- **[공개 학습 가이드](docs-site/README.md)**: 현재 Kubernetes 11개 문서 목차, 향후 주제·링크 확장 원칙, 로컬 빌드와 GitHub Pages 배포 방법
 - **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드 (읽기 전용 — 조회·문답만)
 - **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차
 - **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록

@@ -7,8 +7,8 @@
   --line: #d9ddd4;
   --line-strong: #b8c0b8;
   --navy: #162722;
-  --green: #b7ef4a;
-  --green-dark: #73a719;
+  --green: #326ce5;
+  --green-dark: #326ce5;
   --blue: #a9d9ff;
   --orange: #ffc27a;
   --violet: #c8b7ff;
@@ -29,7 +29,7 @@
   --line: #2e3b33;
   --line-strong: #4a5c50;
   --navy: #eaf3ed;
-  --green-dark: #b7ef4a;
+  --green-dark: #82b1ff;
   --shadow: 0 28px 80px rgb(0 0 0 / 28%);
 }
 
@@ -117,7 +117,7 @@ input {
   place-items: center;
   border-radius: 11px 11px 11px 3px;
   background: var(--green);
-  color: #122015;
+  color: #ffffff;
   font-size: 24px;
   font-weight: 900;
   font-family: Georgia, serif;
@@ -249,6 +249,7 @@ kbd {
 .hero-copy {
   position: relative;
   z-index: 2;
+  min-width: 0;
 }
 
 .eyebrow {
@@ -445,6 +446,11 @@ kbd {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+
+.topic-card:only-child {
+  grid-column: 1 / -1;
+  min-height: 360px;
 }
 
 .topic-card {
@@ -788,8 +794,8 @@ kbd {
   .header-search kbd,
   .github-link { display: none; }
   .hero { min-height: auto; padding-top: 54px; gap: 22px; }
-  .hero h1 { font-size: clamp(58px, 18vw, 82px); }
-  .hero-description { font-size: 16px; }
+  .hero h1 { font-size: clamp(50px, 13vw, 64px); line-height: 0.94; }
+  .hero-description { max-width: 100%; font-size: 16px; word-break: normal; overflow-wrap: anywhere; }
   .hero-orbit { min-height: 300px; transform: scale(0.82); margin: -12px 0; }
   .orbit-label { display: none; }
   .orbit-ring-one { width: 320px; height: 320px; }
