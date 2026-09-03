@@ -733,6 +733,19 @@ kbd {
   color: #17211b;
 }
 .markdown-body pre.mermaid svg { max-width: 100%; height: auto; }
+.markdown-body pre.mermaid:not([data-processed='true']):not(.diagram-error) {
+  position: relative;
+  color: transparent;
+}
+.markdown-body pre.mermaid:not([data-processed='true']):not(.diagram-error)::before {
+  content: '다이어그램을 그리는 중입니다.';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #526159;
+  font: 600 14px/1.5 Inter, Pretendard, sans-serif;
+}
 .markdown-body pre.mermaid.diagram-error { place-items: start; white-space: pre-wrap; color: #8a2d24; }
 .markdown-body table { width: 100%; margin: 28px 0; border-collapse: collapse; display: block; overflow-x: auto; }
 .markdown-body th,
