@@ -40,6 +40,7 @@
 [**공개 문서 사이트 바로 열기 →**](https://nohdol97.github.io/nohdol-study/)
 
 - **현재 주제는 Kubernetes 하나**: 공식 한국어 문서의 설치·개념·태스크·튜토리얼·레퍼런스를 전체 로드맵과 10개 장으로 재구성
+- **다음 경로는 Infra Specialist**: Linux·네트워크·AWS → Terraform·Helm/GitOps → 운영·데이터·보안·신뢰성 순으로 확장하고 심화 제품은 Karpenter 하나만 계획. 상세 범위와 완료 기준은 [스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)에 고정
 - **링크를 내부 문서로 전환**: 사용자가 지정한 공식 페이지를 외부 링크로 연결하지 않고, 관계·시퀀스 다이어그램, 실행 가능한 YAML·`kubectl` 예시, 실패 사례와 복구 흐름이 있는 자립형 설명으로 발전
 - **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
 - **공개 범위 게이트**: `docs-site/catalog.json`에 명시한 Git 추적 Markdown만 빌드하며 `vault/`·`REGISTRY.md`·`_workspace/`는 거부
@@ -162,6 +163,7 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 
 - **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
 - **[공개 학습 가이드](docs-site/README.md)**: 현재 Kubernetes 11개 문서 목차, 향후 주제·링크 확장 원칙, 로컬 빌드와 GitHub Pages 배포 방법
+- **[Infra Specialist 공개 학습 경로 스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)**: Linux·네트워크·AWS부터 Terraform·Helm/GitOps·운영·데이터·Karpenter까지의 범위, 실습 안전 계약과 완료 기준
 - **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드 (읽기 전용 — 조회·문답만)
 - **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차
 - **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록

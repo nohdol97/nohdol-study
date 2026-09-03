@@ -28,6 +28,7 @@
 
 | 스펙 | 상태 | 대상 |
 |---|---|---|
+| [2026-09-03-infra-specialist-public-learning-path](specs/2026-09-03-infra-specialist-public-learning-path.md) | 계획됨 | Kubernetes 이후 Linux·네트워크·AWS·Terraform·Helm/GitOps·운영·데이터·보안·신뢰성을 잇고 Karpenter 하나만 심화로 두는 공개 Infra Specialist 학습 경로 |
 | [2026-09-03-public-docs-gateway](specs/2026-09-03-public-docs-gateway.md) | 구현됨 | 확장 가능한 주제 게이트웨이, 현재 Kubernetes 11개 학습 문서, 검색·문서 뷰어와 공개 범위 게이트 |
 | [2026-07-25-phase1-study-harness](specs/2026-07-25-phase1-study-harness.md) | 구현됨 | 설치기, 지식 구조, 공용 스킬, 세션 훅 |
 | [2026-07-25-phase2-ingest-notebooklm-graph](specs/2026-07-25-phase2-ingest-notebooklm-graph.md) | 구현됨 | 웹·논문·영상 ingest, NotebookLM export, 그래프 기준 파서 |

@@ -3,7 +3,7 @@
 - 날짜: 2026-09-03
 - 상태: 활성
 - 대상: `docs-site/`, `.github/workflows/docs-pages.yml`, `AGENTS.md` 7절
-- 관련 스펙: [Public Docs Gateway](../specs/2026-09-03-public-docs-gateway.md)
+- 관련 스펙: [Public Docs Gateway](../specs/2026-09-03-public-docs-gateway.md), [Infra Specialist 공개 학습 경로](../specs/2026-09-03-infra-specialist-public-learning-path.md)
 
 ## 맥락
 

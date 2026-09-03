@@ -27,6 +27,8 @@ Markdown의 `mermaid` 코드 블록은 사이트가 함께 배포하는 Mermaid 
 
 새 학습 주제를 시작할 때는 `docs-site/content/<topic>/`에 독립된 목차와 본문을 만들고 `catalog.json`에 새 주제 카드를 등록한다. Kubernetes 목차와 다른 주제의 내용은 섞지 않는다.
 
+Kubernetes 이후의 공개 과정은 [Infra Specialist 공개 학습 경로 스펙](../docs/specs/2026-09-03-infra-specialist-public-learning-path.md)에 정의한다. Linux·네트워크·AWS에서 시작해 Terraform·Helm/GitOps, 관측성·SRE, PostgreSQL·Redis·DynamoDB, 보안·메시징·DR·FinOps로 이어지며, 심화 제품 topic은 Karpenter 하나만 계획한다. 각 단계의 본문과 검증이 끝나기 전에는 빈 주제 카드를 공개하지 않는다.
+
 ## 로컬 실행
 
 Node.js 20 이상이 필요하며 CI는 Node.js 22를 사용한다.
