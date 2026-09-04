@@ -11,6 +11,7 @@
 | 클러스터(cluster) | Kubernetes가 함께 관리하는 control plane과 여러 server의 집합 |
 | 노드(Node) | container가 실제로 실행되는 server |
 | 파드(Pod) | Kubernetes가 한 Node에 함께 배치하고 관리하는 container 묶음 |
+| 네임스페이스(Namespace) | 한 cluster 안에서 관련 resource의 이름·조회·권한·정책 범위를 나누는 논리적 경계 |
 | kubectl | 사용자가 Kubernetes API에 조회·변경 요청을 보내는 명령행 도구 |
 | 원하는 상태(desired state) | “Pod 세 개가 계속 준비돼 있어야 한다”처럼 사용자가 선언한 목표 |
 

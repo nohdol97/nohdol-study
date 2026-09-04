@@ -92,6 +92,7 @@ test('builds every catalog document into a relative-path Pages artifact', async 
 
   const roadmap = content.documents.find((document) => document.id === 'kubernetes-roadmap');
   const firstCluster = content.documents.find((document) => document.id === 'kubernetes-first-cluster');
+  const apiObjects = content.documents.find((document) => document.id === 'kubernetes-api-objects');
   assert.match(roadmap.html, /href="#doc=kubernetes-first-cluster"/);
   assert.match(roadmap.html, /href="#doc=kubernetes-api-objects"/);
   assert.match(roadmap.html, /처음 보는 사람을 위한 출발점/);
@@ -99,6 +100,11 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(roadmap.html, /운영 판단으로 확장하기/);
   assert.equal([...roadmap.html.matchAll(/<pre class="mermaid">/g)].length, 2);
   assert.equal([...firstCluster.html.matchAll(/<pre class="mermaid">/g)].length, 2);
+  assert.match(apiObjects.html, /Namespace는 무엇을 나누는가/);
+  assert.match(apiObjects.html, /자체만으로는 보안 경계를 완성하지 않는다/);
+  assert.match(apiObjects.html, /kubectl api-resources --namespaced=true/);
+  assert.match(apiObjects.html, /namespace-demo-a/);
+  assert.match(apiObjects.html, /ResourceQuota와 LimitRange/);
   const detailedChapters = content.documents.filter((document) => /^0[2-9]\. |^10\. /.test(document.title));
   assert.equal(detailedChapters.length, 9);
   for (const chapter of detailedChapters) {

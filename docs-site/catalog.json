@@ -71,7 +71,7 @@
         {
           "id": "kubernetes-api-objects",
           "title": "02. API와 오브젝트",
-          "summary": "YAML에 적은 목표가 API에 저장되고 실제 상태가 그 목표에 맞춰지는 과정을 배웁니다.",
+          "summary": "YAML의 목표가 API에 저장되는 과정과 Namespace로 이름·조회·정책 범위를 나누는 방법을 배웁니다.",
           "path": "docs-site/content/kubernetes/02-api-and-objects.md"
         },
         {
