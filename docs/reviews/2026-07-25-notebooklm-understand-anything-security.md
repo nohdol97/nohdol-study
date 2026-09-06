@@ -1,181 +1,181 @@
-# NotebookLM CLI·Understand Anything 보안 검토
+# NotebookLM CLI·Understand Anything Security Review
 
-- 날짜: 2026-07-25
-- 검토 범위:
-  - `teng-lin/notebooklm-py` 안정 릴리스 `v0.7.3`
-    (`a6c54417058bd5e43e0162dd93a390308d2f99f6`)과 main
+- Date: 2026-07-25
+- Review Scope:
+  - `teng-lin/notebooklm-py` stable release `v0.7.3`
+    (`a6c54417058bd5e43e0162dd93a390308d2f99f6`) and main
     (`45fd4258e608fbb9685496f26cfcea48810c44ee`)
-  - `Egonex-AI/Understand-Anything` 안정 릴리스 `v2.9.0`
-    (`f08763d11d0202a8a8f52b5dedda6d1b2e2ebac8`)과
+  - `Egonex-AI/Understand-Anything` stable release `v2.9.0`
+    (`f08763d11d0202a8a8f52b5dedda6d1b2e2ebac8`) and
     `/understand-knowledge`
-- 판정:
-  - NotebookLM: **조건부 채택, 현재 v0.7.3 자동 설치 보류**
-  - Understand Anything: **9개 스킬 전체 채택, upstream 전역 installer는
-    사용하지 않고 project-local 안전 어댑터 필요**
+- verdict:
+  - NotebookLM: **Conditional adoption, currently pending automatic installation of v0.7.3**
+  - Understand Anything: Adoption of all 9 skills, upstream global installer
+    Requires project-local safe adapter without using
 
-## 확인 방법
+## How to check
 
-- 릴리스·commit·보안 정책·설치 문서 확인
-- 인증 저장, path validation, source upload, download redirect, 공유·삭제
-  확인 코드 검토
-- `notebooklm-py`의 frozen lock과 현재 허용 범위 dependency를 각각
-  `pip-audit`로 검사
-- Understand Anything v2.9.0의 installer, 9개 skill, parser, merge,
-  analyzer, dashboard·Figma 경계, lock을 검토
-- upstream knowledge parser 테스트 실행: `8 passed, 1 skipped`
-- 현재 vault에 upstream parser 실행: `md_count=1`이라 의도대로 실패,
-  원본 변경 없음
+- Check release·commit·security policy·installation document
+- Authentication storage, path validation, source upload, download redirect, sharing/delete
+  Review verification code
+- `notebooklm-py` frozen lock and current allowable dependency respectively
+  Scan with `pip-audit`
+- Understand Anything v2.9.0 installer, 9 skills, parser, merge,
+  Review analyzer, dashboard·Figma boundaries, and locks
+- Run upstream knowledge parser test: `8 passed, 1 skipped`
+- Running the upstream parser in the current vault: `md_count=1` failed as intended,
+  No changes to the original
 
-## NotebookLM 발견 사항
+## NotebookLM findings
 
-### N1. 비공식 내부 API — 높음, 수용 필요
+### N1. Unofficial internal API — High, needs acceptance
 
-Google이 문서화하지 않은 consumer NotebookLM RPC를 사용한다. API가 예고
-없이 깨지거나 비정상 사용으로 rate limit·계정 제한이 생길 수 있다. 공식
-consumer API나 Google의 보안 보증으로 표현하면 안 된다.
+It uses consumer NotebookLM RPC, which Google does not document. API is announced
+Rate limits or account restrictions may occur due to broken or abnormal use. official
+It should not be expressed as a consumer API or Google's security guarantee.
 
-### N2. 인증 파일은 bearer credential — 높음, 완화 가능
+### N2. Authentication file has bearer credential — high, mitigable
 
-`storage_state.json`을 가진 사람은 NotebookLM 범위에서 사용자를 가장할 수
-있다. 코드는 POSIX profile 디렉터리 `0700`, credential 파일 `0600`, atomic
-write를 구현한다. 그러나 파일 암호화는 아니므로 저장소·vault·Google Drive
-밖의 전용 profile에 두어야 한다.
+Anyone with `storage_state.json` can impersonate a user in the NotebookLM scope.
+there is. The code is POSIX profile directory `0700`, credential file `0600`, atomic
+Implement write. However, it is not file encryption, so storage, vault, and Google Drive
+It must be placed in a dedicated external profile.
 
-browser-cookie import는 Chrome/Firefox의 기존 Google cookie 저장소를 읽는다.
-macOS Chrome은 Keychain 접근을 요구할 수 있다. 자동 설치·자동 refresh로
-실행하지 않고 사용자가 정확한 browser profile을 승인한 한 번의 인증
-작업으로 제한한다.
+browser-cookie import reads the existing Google cookie storage in Chrome/Firefox.
+macOS Chrome may require Keychain access. Automatic installation and automatic refresh
+One-time authentication where the user approves the correct browser profile without execution
+Limited to work.
 
-master-token 구현은 upstream 코드도 “full-account, durable,
-infostealer-grade”라고 경고한다. 개인 기본 경로에서는 금지한다.
+The master-token implementation also requires upstream code to be “full-account, durable,
+It warns, “infostealer-grade.” It is prohibited in the personal default path.
 
-### N3. v0.7.3 download redirect 방어 누락 — 높음, 설치 차단
+### N3. v0.7.3 download redirect Missing defenses — high, blocking installation
 
-v0.7.3은 초기 URL의 HTTPS와 Google host를 검사하지만
-`follow_redirects=True` 뒤의 각 hop을 다시 검사하지 않는다. 수정 commit
-`0a6e28a0522b3542695e6666054e88060ef3de48`은 main에는 있으나 검토한
-v0.7.3 tag에는 없다. 공격자가 영향을 주는 Google redirect가 임의 host를
-가리키면 그 응답 byte가 지정 output path에 기록될 수 있다. cookie는 domain
-scoped라 비-Google host로 전송되지 않는다는 upstream 분석과 별개로,
-artifact download를 쓰는 이번 요구에는 릴리스 게이트가 필요하다.
+v0.7.3 checks for HTTPS and Google host in the initial URL, but
+Each hop after `follow_redirects=True` is not rechecked. edit commit
+`0a6e28a0522b3542695e6666054e88060ef3de48` is in main but has not been reviewed.
+There is no v0.7.3 tag. Google redirects affected by attackers target random hosts
+When pointed, the response byte can be written to the specified output path. cookie is domain
+Separate from the upstream analysis that it is scoped and is not transmitted to a non-Google host,
+This request using artifact download requires a release gate.
 
-### N4. dependency 상태 — 중간
+### N4. dependency status — medium
 
-- v0.7.3 frozen lock의 `click 8.3.1`에서
-  `PYSEC-2026-2132` 1건을 확인했다. 그대로 재현 설치하면 안 된다.
-- v0.7.3의 허용 범위를 2026-07-25 현재 다시 해석한 browser set과 cookies
-  set은 각각 `pip-audit`에서 알려진 취약점 0건이었다.
-- “현재 취약점 0건”은 미래 안전을 보장하지 않는다. 실제 설치 직전에 exact
-  lock을 다시 만들고 감사해야 한다.
+- From `click 8.3.1` in v0.7.3 frozen lock
+  One case of `PYSEC-2026-2132` was confirmed. Do not re-install as is.
+- Browser set and cookies reinterpreted the allowable range of v0.7.3 as of 2026-07-25
+  The set had 0 known vulnerabilities in each `pip-audit`.
+- “0 current vulnerabilities” does not guarantee future security. exact before actual installation
+  The lock must be recreated and audited.
 
-### N5. 좋은 기본 방어 — 확인
+### N5. Good basic defense — check
 
-- profile path traversal 방지와 atomic credential write
-- CLI file upload의 symlink 기본 거부
-- localhost·private·link-local source URL 기본 거부
-- artifact download의 Google host allowlist와 main의 per-hop guard
-- delete의 confirmation 및 MCP의 two-step confirmation
-- download 임시 파일과 실패 시 정리
+- Prevention of profile path traversal and atomic credential write
+- Default deny symlink in CLI file upload
+- localhost·private·link-local source URL default deny
+- Google host allowlist in artifact download and per-hop guard in main
+- Confirmation of delete and two-step confirmation of MCP
+- Temporary download files and cleanup on failure
 
-### N6. upstream skill의 자율성은 과함 — 중간
+### N6. Autonomy of upstream skills is excessive — medium
 
-upstream skill은 notebook 생성과 source add를 확인 없이 자동 실행하도록
-허용한다. nohdol-study에서는 둘 다 외부 state 변경이며, source add는 Google
-전송이므로 자동 규칙을 가져오지 않는다. public sharing은 v0.7.3 CLI에서
-별도 확인 없이 활성화할 수 있어 wrapper allowlist 밖에 둔다.
+The upstream skill automatically executes notebook creation and source addition without confirmation.
+Allowed. In nohdol-study, both are external state changes, and source add is Google
+Because it is a transfer, no automatic rules are imported. public sharing is in v0.7.3 CLI
+It can be activated without separate confirmation, so it is placed outside the wrapper allowlist.
 
-### N7. 안전한 사용 형태
+### N7. safe form of use
 
-- 기존 `notebooklm-export` packet만 upload
-- vault가 symlink이므로 `vault/...`를 직접 넘기지 않음
+- Upload only the existing `notebooklm-export` packet
+- Since the vault is a symlink, do not pass `vault/...` directly
 - `--follow-symlinks`, `--allow-internal`, master-token, MCP/server,
-  impersonate extra 금지
-- 외부 전송과 mutation을 실행 전 승인
-- 생성물은 `_workspace/`에 회수하고 독립 근거로 사용하지 않음
+  impersonate extra prohibited
+- Approval before executing external transmission and mutation
+- The product is recovered at `_workspace/` and is not used as independent evidence.
 
-## Understand Anything 발견 사항
+## Understand Anything Discoveries
 
-### U1. 9개 스킬 모두 nohdol-study 학습 범위에 해당 — 채택
+### U1. All 9 skills fall under nohdol-study learning scope — adopted
 
-`understand`·`chat`·`diff`·`domain`·`explain`·`onboard`는 코드와 제품
-도메인을 공부하는 서로 다른 관점을 제공한다. `knowledge`는 Markdown 지식
-베이스, `figma`는 설계, `dashboard`는 큰 그래프의 시각 탐색에 쓸 수 있다.
-이 프로젝트는 지식 노트에만 한정되지 않으므로 9개를 모두 채택한다.
+`understand`·`chat`·`diff`·`domain`·`explain`·`onboard` are codes and products
+It provides a different perspective to study the domain. `knowledge` is Markdown knowledge
+Base, `figma` can be used for design, and `dashboard` can be used for visual exploration of large graphs.
+Since this project is not limited to knowledge notes, all nine are adopted.
 
-단, graph-derived 설명이 확정 근거는 아니다. chat·domain·explain·onboard·
-diff의 답은 관련 source file을 다시 열어 대조해야 한다.
+However, graph-derived explanations are not definitive evidence. chat·domain·explain·onboard·
+The diff's answer must be compared by reopening the relevant source file.
 
-### U2. 전체 installer의 범위가 과함 — 높음
+### U2. Overall installer coverage is excessive — high
 
-installer는 main branch를 clone/pull하고 `~/.agents/skills` 등에 여러
-Understand Anything 스킬을 `ln -sfn`으로 연결한다. exact release pin이 없고
-기존 이름 충돌을 덮을 수 있다. 문제는 스킬 범위가 아니라 설치 scope와
-재현성이다. exact commit의 project-local checkout과 adapter를 사용한다.
+The installer clones or pulls the main branch and places multiple items under `~/.agents/skills` and other locations.
+Connect the Understand Anything skill to `ln -sfn`. There is no exact release pin
+Can cover up existing name conflicts. The problem is not the skill scope, but the installation scope and
+It is reproducibility. Use project-local checkout and adapter of exact commit.
 
-### U3. knowledge parser 자체는 무의존·결정적 — 양호
+### U3. The knowledge parser itself is non-dependent and deterministic — good
 
-parser와 merge는 Python 표준 라이브러리만 사용하고 shell command를
-본문에서 실행하지 않는다. upstream parser 테스트도 통과했다. explicit
-wikilink·backlink·category 기반은 현 기준 parser를 확장할 좋은 토대다.
+Parser and merge use only the Python standard library and shell commands.
+Do not run it in the text. The upstream parser test also passed. explicit
+The wikilink·backlink·category base is a good foundation for expanding the current standard parser.
 
-### U4. 구현과 문서의 형식 지원 범위가 다름 — 중간
+### U4. Implementation and documentation vary in scope of format support — Medium
 
-설계 문서는 Obsidian 등 여러 Markdown 형식 자동 탐지를 말하지만 v2.9.0의
-실제 skill은 Karpathy pattern만 지원한다. `index.md`와 Markdown 3개 이상을
-요구한다. 현재 nohdol-study vault는 `wiki/` 1개라 실패한다. “Obsidian
-vault면 바로 작동”한다고 문서화하면 잘못된 정보다.
+The design documentation speaks of automatic detection of several Markdown formats, including Obsidian, but in v2.9.0
+The actual skill supports only the Karpathy pattern. `index.md` and 3 or more Markdown
+I demand it. Currently, nohdol-study vault fails because there is only 1 `wiki/`. “Obsidian
+Documenting that “it works right away with vault” is incorrect information.
 
-### U5. 본문 사본이 최종 graph에 남음 — 높음
+### U5. A copy of the body remains in the final graph — High
 
-parser는 각 article의 첫 3,000자를 `knowledgeMeta.content`에 넣고 merge가
-이를 최종 graph까지 보존한다. `.ua/`가 Google Drive vault 안에 생기면
-private note 일부가 불필요하게 중복·동기화된다. nohdol-study 어댑터는
-출력을 `_workspace/`로 바꾸고 최종 graph에서 본문을 제거해야 한다.
+The parser puts the first 3,000 characters of each article into `knowledgeMeta.content` and merges them.
+This is preserved until the final graph. Once `.ua/` is in the Google Drive vault
+private note Some parts are unnecessarily duplicated and synchronized. The nohdol-study adapter is
+We need to change the output to `_workspace/` and remove the body from the final graph.
 
-### U6. 모델 추론의 근거 추적이 부족 — 높음
+### U6. Lack of evidence tracking for model inference — High
 
-article-analyzer는 보수적 추출과 prompt-injection 무시를 명시하지만,
-entity·claim·암묵 edge schema에는 source span, evidence anchor,
-verification state가 없다. merge도 허용 type과 node 존재만 검사한다.
-사용자가 중시하는 정확성을 충족하려면 근거 없는 claim을 버리고 inferred와
-verified를 분리해야 한다.
+article-analyzer specifies conservative extraction and ignores prompt-injection, but
+Entity·claim·implicit edge schema includes source span, evidence anchor,
+There is no verification state. Merge is also allowed and only checks the type and node existence.
+To meet the accuracy that users value, abandon claims without evidence and use inferred and
+Verified must be separated.
 
-### U7. dashboard·Figma·정리 삭제 경계 — 중간
+### U7. dashboard · Figma · Organize Delete Boundary — Medium
 
-skill은 완료 후 dashboard를 자동 실행하고 `.ua/intermediate`를 `rm -rf`로
-정리한다. dashboard 기능 자체는 채택하되 자동 실행을 제거하고 사용자가
-요청할 때만 loopback viewer를 연다. 중간물은 명시적 cleanup 또는 교체
-가능한 temp directory로 관리한다.
+The skill automatically runs the dashboard after completion and changes `.ua/intermediate` to `rm -rf`.
+Organize. Adopt the dashboard function itself, but remove automatic execution and allow the user to
+Open the loopback viewer only when requested. Intermediates must be explicitly cleanup or replaced
+Manage with temp directory whenever possible.
 
-Figma skill은 `FIGMA_TOKEN`과 `api.figma.com` 외부 호출이 필요하다. token은
-저장소·vault에 저장하지 않고, 분석할 file key와 전송 목적을 실행별
-승인받는다.
+Figma skill requires external calls `FIGMA_TOKEN` and `api.figma.com`. token is
+Rather than storing it in the storage/vault, the file key to be analyzed and the purpose of transmission are specified by execution.
+Get approved.
 
-### U8. 전체 monorepo dependency audit — 높음, 전체 설치 차단 근거
+### U8. Full monorepo dependency audit — high, evidence blocking entire install
 
-v2.9.0 lock의 production audit에서 high 10건을 포함한 21건이 보고됐다.
-여기에는 homepage/dashboard/build 계층 의존성이 섞여 있어 모든 스킬이
-각 취약점에 도달한다는 뜻은 아니다. 하지만 그대로 `pnpm install`하기보다
-실제 필요한 package만 exact lock으로 분리·감사해야 한다. 해결되지 않은
-high 취약점이 있는 Node 경로는 자동 설치하지 않는다.
+In the production audit of v2.9.0 lock, 21 cases, including 10 high cases, were reported.
+This has a mix of homepage/dashboard/build layer dependencies, so all skills
+This does not mean that each vulnerability will be reached. But rather than just doing `pnpm install`
+Only packages that are actually needed should be separated and audited using exact lock. unresolved
+Node paths with high vulnerabilities are not automatically installed.
 
-## 최종 게이트
+## final gate
 
-| 항목 | 지금 허용 | 차단 조건 |
+| item | allow now | blocking conditions |
 |---|---|---|
-| 기존 결정적 `knowledge-graph` | 예 | 없음 |
-| UA 9개 project-local adapter 개발 | 예 | main 자동 pull·전역 skill 덮어쓰기 |
-| UA Node 기반 스킬 실사용 | dependency gate 뒤 | high 취약점·불일치 lock |
-| UA semantic enrichment | 어댑터 이후 opt-in | evidence 없는 claim·prompt 실행 |
-| UA dashboard | 명시 요청·loopback에서 | 자동 open·외부 bind |
-| UA Figma | token·file 전송 승인 뒤 | token 저장·무승인 전송 |
-| UA upstream installer | 아니오 | main 추적·전역 symlink |
-| NotebookLM 수동 export | 예 | manifest/hash 불일치 |
-| notebooklm-py 설치·실사용 | 아직 아니오 | 수정 미포함 릴리스, 취약 exact lock |
-| browser-cookie 인증 | 설치 게이트 뒤 명시 승인 시 | 자동 실행, profile 불명, 권한 불량 |
-| master-token/MCP/server/public share | 아니오 | 기본 경로에서 허용하지 않음 |
+| Original deterministic `knowledge-graph` | Yes | doesn't exist |
+| Developed 9 UA project-local adapters | Yes | main automatic pull/overwrite global skill |
+| Actual use of UA Node-based skills | Behind the dependency gate | high vulnerability/inconsistency lock |
+| UA semantic enrichment | opt-in after adapter | Execute claim/prompt without evidence |
+| UA dashboard | In explicit request/loopback | Automatic open/external bind |
+| UA Figma | After approval of token·file transmission | Token storage/unauthorized transmission |
+| UA upstream installer | No | main tracking/global symlink |
+| NotebookLM manual export | Yes | manifest/hash mismatch |
+| Notebooklm-py installation and actual use | Not yet | Unfixed release, vulnerable to exact lock |
+| browser-cookie authentication | Upon explicit approval behind installation gate | Automatic execution, unknown profile, poor permissions |
+| master-token/MCP/server/public share | No | Not allowed in default route |
 
-## 외부 근거
+## external evidence
 
 - NotebookLM CLI: <https://github.com/teng-lin/notebooklm-py>
 - NotebookLM security policy:

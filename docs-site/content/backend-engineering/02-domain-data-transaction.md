@@ -1,57 +1,57 @@
-# 도메인 불변식과 데이터 트랜잭션
+# Domain invariants and data transactions
 
 <!-- source: https://www.postgresql.org/docs/current/transaction-iso.html | checked: 2026-09-03 -->
 <!-- source: https://www.postgresql.org/docs/current/ddl-constraints.html | checked: 2026-09-03 -->
 <!-- source: https://www.postgresql.org/docs/current/sql-insert.html | checked: 2026-09-03 -->
 
-주문 금액은 음수가 아니어야 하고, 같은 쿠폰은 한 주문에 한 번만 적용되며, 재고는 승인된 정책 아래에서만 감소해야 한다. 이런 불변식은 정상 요청 하나가 아니라 동시 요청, process 종료와 재시도에서도 지켜져야 한다. 코드 검증, DB constraint와 transaction은 서로 대체재가 아니라 다른 실패 지점의 방어선이다.
+Order amount must be non-negative, the same coupon can only be applied once per order, and inventory must be reduced only under approved policies. These invariants must be maintained not only across normal requests, but also across concurrent requests, process termination, and retries. Code verification, DB constraints, and transactions are not substitutes for each other, but are lines of defense against different points of failure.
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-| 말 | 이 장에서의 뜻 |
+| word | Meaning in this chapter |
 |---|---|
-| 불변식 | transaction 전후에 반드시 참이어야 하는 업무 규칙 |
-| aggregate | 함께 일관되게 바꿔야 하는 업무 상태의 경계 |
-| constraint | DB가 모든 쓰기 경로에 강제하는 구조·값·관계 규칙 |
-| isolation | 동시 transaction이 서로의 중간 상태를 얼마나 보게 할지 정한 규칙 |
-| write skew | 각 transaction이 읽은 조건은 맞지만 함께 commit한 결과가 규칙을 깨는 현상 |
-| outbox | 업무 상태와 발행 예정 event를 같은 commit에 기록하는 table |
+| invariant | Business rules that must be true before and after a transaction |
+| aggregate | Boundaries of work status that must be consistently changed together |
+| constraint | Structure, value, and relationship rules that DB enforces on all write paths |
+| isolation | Rules that determine how much concurrent transactions can see each other's intermediate states |
+| write skew | A phenomenon in which the read conditions of each transaction are correct, but the result of committing them together breaks the rule. |
+| outbox | A table that records work status and events scheduled to be issued in the same commit. |
 
-1. 먼저 자연어 업무 규칙을 경쟁하는 두 요청으로 바꾼다.
-2. 그다음 어느 규칙을 DB가 강제하고 어느 충돌을 application이 재시도할지 정한다.
+1. First, we transform the natural language task rule into two competing requests.
+2. Next, decide which rules the DB will enforce and which conflicts the application will retry.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-실제 production DB는 필요 없다. 아래 주문·재고 예시를 종이에 두 개 transaction으로 나눠도 된다. SQL을 실행한다면 disposable PostgreSQL database와 test data만 사용하고, 결과를 production 설정으로 일반화하지 않는다.
+There is no need for an actual production DB. You can divide the order and inventory example below into two transactions on paper. If you run SQL, only use a disposable PostgreSQL database and test data, and do not generalize the results to a production setup.
 
-## 먼저 이해하기
+## Understand the model first
 
-검증의 위치는 실패 범위를 정한다. API handler의 `if`는 빠르고 친절한 오류를 만들지만 다른 worker, migration과 admin query를 막지 못한다. `NOT NULL`, `CHECK`, `UNIQUE`, `FOREIGN KEY` 같은 constraint는 그 table에 들어오는 모든 쓰기에 적용된다. 여러 row와 외부 시스템을 아우르는 규칙은 transaction, lock·compare-and-set 또는 workflow 상태가 추가로 필요하다.
+The location of verification determines the scope of failure. The API handler's `if` creates fast and friendly errors, but does not block other workers, migration, and admin queries. Constraints such as `NOT NULL`, `CHECK`, `UNIQUE`, and `FOREIGN KEY` apply to all writes to that table. Rules that span multiple rows and external systems require additional transaction, lock·compare-and-set, or workflow states.
 
 ```mermaid
 flowchart TD
-    R[업무 요청] --> V[application validation]
-    V --> T[transaction에서 현재 상태 확인]
-    T --> W[조건부 write]
-    W --> C[DB constraint 최종 방어]
-    C --> O[업무 상태와 outbox commit]
+    R[work request] --> V[application validation]
+    V --> T[Check current status in transaction]
+    T --> W[conditional write]
+    W --> C[DB constraint final defense]
+    C --> O[Task status and outbox commit]
     O --> P[event relay]
 ```
 
-## 주문 불변식 표
+## Ordered invariant table
 
-| 규칙 | 가장 가까운 방어선 | 동시성 검토 |
+| rule | nearest line of defense | Concurrency Review |
 |---|---|---|
-| 수량은 1 이상 | `CHECK (quantity > 0)` | 모든 쓰기 경로에 동일 적용 |
-| request key는 tenant 안에서 유일 | `UNIQUE (tenant_id, request_key)` | concurrent insert 중 하나만 성공 |
-| 주문은 존재하는 customer를 참조 | foreign key 또는 명시적 lifecycle | 삭제 정책과 lock 영향 검토 |
-| 재고는 정책상 음수가 될 수 없음 | 조건부 `UPDATE`와 affected rows | 읽고 나중에 쓰는 경쟁 방지 |
-| 결제 승인 뒤 상태 전이는 허용 순서만 | current state 조건이 있는 `UPDATE` | stale command 거부 |
-| 주문 commit 뒤 event 누락 금지 | order와 outbox 같은 transaction | relay 중복 허용·consumer 멱등 필요 |
+| Quantity is 1 or more | `CHECK (quantity > 0)` | Same applies to all write paths |
+| The request key is unique within the tenant | `UNIQUE (tenant_id, request_key)` | Only one of the concurrent inserts succeeds |
+| Order refers to an existing customer | foreign key or explicit lifecycle | Review deletion policy and lock impact |
+| Inventory cannot be negative by policy | Conditional `UPDATE` and affected rows | Prevent competition between reading and writing later |
+| After payment approval, status transitions are allowed only in the order permitted. | `UPDATE` with current state condition | refuse stale command |
+| Avoid missing events after order commit | Transactions such as order and outbox | Relay overlap allowed, consumer idempotence required |
 
-## 읽고 쓰기보다 조건부 쓰기
+## Conditional writing rather than reading and writing
 
-다음처럼 재고를 먼저 읽고 application에서 계산한 뒤 저장하면 두 transaction이 같은 값 1을 읽어 모두 성공했다고 판단할 수 있다.
+If you read the inventory first, calculate it in the application, and save it as shown below, both transactions can be judged successful by reading the same value of 1.
 
 ```sql
 UPDATE inventory
@@ -60,13 +60,13 @@ WHERE sku = 'book-01'
   AND available >= 1;
 ```
 
-application은 affected row count가 1인지 확인한다. 0이면 현재 상태가 precondition을 만족하지 않았다는 뜻이다. 이 패턴이 모든 불변식을 해결하지는 않지만, 같은 row의 비교와 변경을 DB statement 하나로 묶는다.
+The application checks whether the affected row count is 1. If it is 0, it means that the current state does not satisfy the precondition. Although this pattern does not solve all invariants, it bundles comparison and modification of the same row into one DB statement.
 
-격리 수준의 이름만 보고 안전을 선언하지 않는다. PostgreSQL의 Read Committed에서는 statement마다 snapshot이 달라질 수 있고, Repeatable Read와 Serializable은 다른 anomaly·abort 특성을 가진다. Serializable도 충돌 시 transaction이 실패할 수 있으므로 전체 transaction을 같은 입력과 idempotency 경계 안에서 재시도하는 정책이 필요하다. 자세한 실행·lock 진단은 [PostgreSQL 운영](#doc=postgresql-roadmap)으로 이어 간다.
+Do not declare a quarantine level safe just by looking at its name. In PostgreSQL's Read Committed, the snapshot can be different for each statement, and Repeatable Read and Serializable have different anomaly and abort characteristics. Serializable can also cause a transaction to fail in the event of a conflict, so a policy is needed to retry the entire transaction with the same input and within the idempotency boundary. For detailed execution and lock diagnosis, continue to [PostgreSQL Operation](#doc=postgresql-roadmap).
 
-## transaction 밖으로 나가는 순간
+## The moment you leave the transaction
 
-DB transaction 안에서 broker publish나 HTTP 호출을 먼저 수행하면 rollback 뒤 외부 효과만 남을 수 있다. DB commit 뒤 publish하면 process가 그 사이에 죽어 event가 빠질 수 있다. outbox는 업무 row와 event intent를 한 transaction에 기록하고 별도 relay가 publish한다.
+If a broker publish or HTTP call is performed first within a DB transaction, only external effects may remain after rollback. If you publish after DB commit, the process may die in the meantime and the event may be missed. Outbox records business rows and event intent in one transaction, and a separate relay publishes them.
 
 ```sql
 BEGIN;
@@ -80,39 +80,39 @@ VALUES ('evt-981', 'order-204', 'OrderPlaced', '{"orderId":"order-204"}');
 COMMIT;
 ```
 
-relay는 publish 성공 뒤 mark 과정에서 실패할 수 있으므로 같은 `event_id`를 다시 보낼 수 있다. 따라서 outbox는 event 누락 창을 줄이지만 end-to-end exactly-once를 자동으로 만들지 않는다. [메시징과 이벤트 인프라](#doc=messaging-roadmap)와 [부분 실패와 분산 워크플로](#doc=backend-engineering-distributed-workflow)에서 consumer의 중복 처리까지 닫는다.
+Since the relay may fail in the mark process after successful publish, the same `event_id` can be sent again. Therefore, outbox reduces the event missing window, but does not automatically create end-to-end exactly-once. [Messaging and event infrastructure](#doc=messaging-roadmap) and [Partial failure and distributed workflow](#doc=backend-engineering-distributed-workflow) close the duplicate processing of consumers.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-| 관찰 결과 | 뜻 | 다음 행동 |
+| Observation Results | Meaning | next action |
 |---|---|---|
-| unique violation | 같은 request key 경쟁 또는 재시도 | 기존 업무 결과를 조회해 수렴 |
-| affected rows 0 | 현재 상태가 precondition 불충족 | conflict 반환, blind retry 금지 |
-| serialization failure | 동시 실행 순서를 DB가 확정하지 못함 | bounded retry와 전체 transaction 재실행 |
-| order 있음, outbox 없음 | write 경로가 원자적이지 않음 | schema·transaction boundary 수정 |
-| outbox 중복 publish | 예상 가능한 relay 실패 | consumer inbox·dedupe 확인 |
-| DB commit, 사용자 실패 지속 | 저장 성공과 업무 결과가 다름 | dependency·event·read path 조사 |
+| unique violation | Same request key competition or retry | Check and collect existing work results |
+| affected rows 0 | Current state does not meet precondition | Conflict return, blind retry prohibited |
+| serialization failure | DB could not confirm the concurrent execution order | Bounded retry and re-executing the entire transaction |
+| With order, without outbox | write path is not atomic | Modify schema·transaction boundary |
+| outbox duplicate publish | Predictable relay failure | Check consumer inbox·dedupe |
+| DB commit, user failure persists | Save success and work results are different | Investigate dependency·event·read path |
 
-## 설계 검토 순서
+## Design review sequence
 
-1. 규칙을 “항상”, “최대 하나”, “상태 A 뒤에만 B” 형태로 적는다.
-2. 두 요청이 동시에 같은 전제조건을 읽는 schedule을 그린다.
-3. 단일 row·table 규칙은 constraint와 조건부 write로 최대한 내린다.
-4. transaction 격리와 abort·retry 동작을 실제 DB에서 검증한다.
-5. 외부 효과는 intent를 commit하고 relay·consumer의 중복을 설계한다.
-6. tenant·subject는 [인프라 보안](#doc=infrastructure-security-trust)의 신뢰 경계에서 DB 정책과 audit까지 전달한다.
-7. outcome SLI는 row 수가 아니라 사용자가 받은 주문 결과로 둔다.
+1. Write rules in the form “Always,” “At most one,” or “B only after state A.”
+2. Draw a schedule in which two requests read the same precondition at the same time.
+3. Single row·table rules are reduced as much as possible with constraints and conditional writes.
+4. Transaction isolation and abort/retry operations are verified in the actual DB.
+5. External effects commit intent and design overlap between relay and consumer.
+6. tenant·subject transfers DB policy and audit from the trust boundary of [infrastructure security](#doc=infrastructure-security-trust).
+7. The outcome SLI is set as the result of the order received by the user, not the number of rows.
 
-## 완료
+## Completion criteria
 
-- 업무 규칙을 동시 요청에서 반증할 수 있는 불변식으로 썼다.
-- application validation과 DB constraint의 책임을 나눴다.
-- 조건부 write, isolation abort와 재시도 경계를 구분했다.
-- 업무 row와 outbox를 같은 transaction에 두고 중복 publish를 후속 계약으로 남겼다.
+- The business rules were written as invariant expressions that could be falsified across concurrent requests.
+- Responsibilities for application validation and DB constraints were divided.
+- Distinguish between conditional write, isolation abort, and retry boundaries.
+- The task row and outbox were placed in the same transaction, and a duplicate publish was left as a follow-up contract.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- handler의 사전 조회만으로 재고 음수 방지를 보장할 수 없는 이유는 무엇인가?
-- constraint 오류를 무조건 `500`으로 반환하면 API 계약에서 무엇을 잃는가?
-- outbox가 event 중복까지 제거하지 않는 이유는 무엇인가?
-- DB commit 성공과 주문 업무 성공을 각각 어떤 증거로 판정할 것인가?
+- Why can't we guarantee the prevention of negative inventory numbers just by looking at the handler's dictionary?
+- What is lost in the API contract if constraint errors are unconditionally returned as `500`?
+- Why doesn't outbox remove event duplicates?
+- What evidence will be used to judge DB commit success and order task success?

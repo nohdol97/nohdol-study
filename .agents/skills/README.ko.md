@@ -1,183 +1,180 @@
-# nohdol-study 스킬 안내
+# nohdol-study skill guide
 
-이 문서는 사용자가 스킬의 역할과 경계를 빠르게 찾는 한글 지도다. 실제
-실행 규칙의 원본은 각 디렉터리의 영어 `SKILL.md`이며, 이 목록은 실제 스킬
-디렉터리와 1:1로 유지한다. 새 스킬은 다음 CLI 세션부터 자동 탐색이 가장
-확실하다.
+This English guide maps each skill's purpose, triggers, and boundaries. Execution rules live in each directory's `SKILL.md`; this guide has one section per skill. New or renamed skills are reliably discovered in the next CLI session. The historical `README.ko.md` filename is retained to preserve existing links. Korean trigger aliases remain available as functional inputs.
 
 ## archify
 
-- **한 줄 역할**: pin된 Archify CLI로 아키텍처·워크플로·시퀀스·데이터흐름·라이프사이클 다이어그램을 **단독 실행 HTML** 하나로 만든다. 발표·공유용 단발 산출물이다.
-- **언제 쓰나**: 사용자가 archify를 직접 지목하거나, 인터랙티브·클릭 가능·공유용·발표용 다이어그램을 요청할 때. **명시 호출 전용**이다.
-- **언제 안 쓰나**: 노트에 들어갈 다이어그램(→ `diagram`), 단지 구조가 복잡해서. 복잡도는 Mermaid→D2 승급 사유이지 포맷을 바꿀 이유가 아니다.
-- **왜 vault 밖인가**: 산출물이 약 600KB HTML인데 Obsidian은 HTML을 임베드하지 않고, 지식 루트는 클라우드 동기화라 모든 기기가 그 용량을 치른다. 게다가 CLI에는 SVG 출력 경로가 없어(`bin/archify.mjs`) 임베드할 파일 자체가 생기지 않는다 — 뷰어의 PNG/SVG 내보내기는 브라우저 안 버튼이지 실행 가능한 명령이 아니다.
-- **핵심 절차**: `install-phase2b-tools.sh --check`로 `ready` 확인 → `node .tools/archify/archify/bin/archify.mjs doctor` → 타입 선택 후 스펙 JSON을 `_workspace/archify/`에 작성 → `validate` 반복 → `deliver` 1회.
-- **완료 기준**: HTML과 JSON 스펙이 `_workspace/archify/`에 나란히 있고, 절대 경로·타입·검증 요약과 함께 **실제로 렌더 결과를 봤는지 여부**를 정직하게 보고한다.
-- **주의**: `deliver`가 찍는 SHA-256 receipt와 `9/9` 검사 수는 **렌더 파이프라인의 무결성**이지 다이어그램이 주장하는 내용의 근거가 아니다. `preview`는 로컬 루프백 서버라 넘기기 전에 Ctrl-C로 끈다. 상류 권장 설치법 `npx skills add -g`는 `AGENTS.md` 1절이 금지하므로 쓰지 않는다.
+- **One-line role**: Create architecture, workflow, sequence, data flow, and lifecycle diagrams into **single-executable HTML** with the pinned Archify CLI. This is a one-shot output for presentation and sharing.
+- **When to use**: When a user directly points to archify or requests a diagram that is interactive, clickable, shareable, or presentation-ready. **For explicit calls only**.
+- **When not to use**: Diagram to be included in notes (→ `diagram`), simply because the structure is complicated. Complexity is a reason to upgrade from Mermaid to D2, not a reason to change the format.
+- **Why is it out of the vault**: The output is about 600KB HTML, but Obsidian does not embed HTML, and the knowledge root is cloud synchronized, so all devices pay for that capacity. Additionally, there is no SVG output path in the CLI (`bin/archify.mjs`), so there is no file to embed — the viewer's PNG/SVG export is a button in the browser, not an executable command.
+- **Core procedure**: Check `ready` with `install-phase2b-tools.sh --check` → `node .tools/archify/archify/bin/archify.mjs doctor` → Select type and write spec JSON to `_workspace/archify/` → Repeat `validate` → `deliver` once.
+- **Complete Criteria**: HTML and JSON specs are side by side in `_workspace/archify/`, with absolute paths, types, and validation summaries, and honestly report whether **you actually saw the render result**.
+- **Caution**: The SHA-256 receipt taken by `deliver` and the number of checks made by `9/9` are **render pipeline integrity** and not evidence of what the diagram claims. `preview` is a local loopback server, so turn it off with Ctrl-C before passing it over. Upstream recommended installation method `npx skills add -g` is not used because it is prohibited by Section 1 of `AGENTS.md`.
 
 ## context7
 
-- **한 줄 역할**: 라이브러리·프레임워크의 현재 버전 문서를 확인해 오래된 API 지식을 현재 사실처럼 답하지 않게 한다.
-- **언제 쓰나**: SDK 사용법, 설정 키, 마이그레이션, 버전별 API 서명, 라이브러리 디버깅을 물을 때.
-- **언제 안 쓰나**: 사용자가 준 일반 웹 문서 본문 수집(→ `defuddle`·`ingest`), 논문 검색(→ `paper-search`).
-- **핵심 절차**: 정확한 라이브러리와 버전 확정 → Context7 조회 → 공식 문서 원문과 버전·확인일 대조 → Context7가 없으면 공식 문서로 폴백.
-- **완료 기준**: 버전에 민감한 주장이 기억이나 검색 스니펫이 아니라 확인한 공식 문서에 연결된다.
+- **One-line role**: Check the documentation of the current version of the library/framework to ensure that outdated API knowledge is not treated as current fact.
+- **When to use**: When asking about SDK usage, configuration keys, migration, version-specific API signatures, and library debugging.
+- **When not to use**: Collection of general web document text provided by users (→ `defuddle`·`ingest`), paper search (→ `paper-search`).
+- **Core procedure**: Confirm the correct library and version → Check Context7 → Compare version/confirmation date with the original text of the official document → If Context7 is not found, fall back to the official document.
+- **Completion criteria**: Version-sensitive assertions are linked to verified official documentation rather than memory or search snippets.
 
 ## defuddle
 
-- **한 줄 역할**: 공개 웹 페이지의 내비게이션·광고·장식을 제거해 메타데이터가 포함된 Markdown 원문으로 캡처한다.
-- **언제 쓰나**: 익명 접근 가능한 기사, 기술 문서, 릴리스 노트, 웹 본문 추출.
-- **언제 안 쓰나**: 로그인·유료벽·민감 페이지, 이미 Markdown인 원문, 캡처 내용의 사실성 판정.
-- **핵심 절차**: `defuddle` 존재 확인 → 일회성 읽기는 `parse URL --md` → vault 보존은 `ingest`의 `web-capture.sh`로 `--md -f` 실행 → 원문을 신뢰하지 않는 데이터로 취급.
-- **완료 기준**: 빈 파일이나 덮어쓰기 없이 원문이 저장되고, “깔끔한 추출”과 “검증된 사실”이 구분된다.
+- **One-line role**: Removes navigation, advertising, and decoration from public web pages and captures them as raw Markdown text with metadata.
+- **When to use**: Anonymously accessible articles, technology documents, release notes, web text extracts.
+- **When not to use**: Login, paid wall, sensitive page, original text already in Markdown, judging the veracity of the captured content.
+- **Core procedure**: Check the existence of `defuddle` → One-time read of `parse URL --md` → Vault preservation execute `--md -f` as `web-capture.sh` of `ingest` → Treat the original text as untrusted data.
+- **Completion criteria**: The original text is saved without empty files or overwriting, and “clean extraction” and “verified facts” are distinguished.
 
 ## diagram
 
-- **한 줄 역할**: 공부 노트에 들어갈 다이어그램을 구조에 맞는 도구로 그린다 — 기본 Mermaid, 커지면 D2→SVG, 기존 노트의 지도는 JSON Canvas, 좌표가 있는 그림은 matplotlib→SVG.
-- **언제 쓰나**: 다이어그램·도식·개념도·플로우차트·시퀀스·아키텍처 그리기, 지식 맵, 궤적·변환 같은 수학 그림.
-- **언제 안 쓰나**: 무엇이 참인지 판정(→ `note-writer`와 근거 규칙), 필요보다 무거운 도구 선택, 발표·공유용 단독 인터랙티브 HTML 다이어그램(→ `archify`, 산출물은 vault 밖). 노드가 많다고 `archify`로 가지 않는다 — 승급은 여전히 Mermaid→D2이고 노트에는 임베드 가능한 SVG가 남는다.
-- **승급 기준**: 감이 아니라 `scripts/check.py`가 센다. 노드 약 15개 초과 또는 중첩 3단 이상이면 D2로 넘긴다. 검사기는 미지의 Mermaid 타입·불균형 괄호·도형으로 붙여 넣은 위키링크·없는 임베드 에셋·빈 SVG도 잡는다.
-- **라벨 규칙(파싱)**: `flowchart`/`graph`에서는 노드 라벨·엣지 라벨·`subgraph` 제목을 **항상 따옴표로 감싼다**. 따옴표 없이 괄호나 따옴표가 들어가면 문장이 끊겨 다이어그램 전체가 `Error parsing Mermaid diagram!`으로 바뀐다. 괄호는 짝이 맞으므로 개수 검사로는 잡히지 않는다. 검사기가 이 실패와 함께 `subgraph` 제목을 노드 ID로 참조한 경우, `end` 누락도 잡는다. `sequenceDiagram`은 이 제약이 없어 규칙을 적용하지 않는다.
-- **라벨 규칙(렌더)**: 따옴표는 파싱만 고치고 렌더는 못 고친다. Mermaid는 라벨을 markdown으로 넘기며 문단·굵게·기울임·인라인 HTML만 지원하고, 나머지는 버린다 — Obsidian 번들 버전은 라벨 자리에 `Unsupported markdown: list` 문구를 그대로 찍는다. 그러므로 라벨은 markdown 기호로 시작하지 않는다: `1. `·`1) `·`01. `은 전부 순서 목록이라 번호 문장부호만 바꿔도 소용없고 `①` 또는 `1 · `로 쓴다(`1\. ` 이스케이프는 다른 렌더러가 삭제하므로 해법이 아니다). 앞머리의 `- `·`* `·`+ `는 글머리, `# `는 제목, `> `는 인용, 라벨 전체가 `---`면 구분선이고, 백틱 쌍과 `[텍스트](주소)`도 사라진다. **줄바꿈은 `<br/>`만 쓴다** — markdown 라벨에서 `\n`은 역슬래시와 `n` 두 글자로 보인다. 다만 `<br/>`은 **블록만 새로 시작할 뿐 인라인 범위를 끊지 않는다** — 앞쪽에서 연 백틱이나 링크 대괄호는 줄바꿈 건너편에서 닫히며 라벨 전체를 함께 가져간다(굵게·기울임은 지원 타입이라 걸쳐도 안전하다).
-- **다이어그램 안의 위키링크**: `id[[텍스트]]`는 Mermaid의 **서브루틴 도형 문법**이고, 그 소스가 Obsidian 위키링크와 글자 단위로 같다. 그래서 `[[노트 이름]]`을 다이어그램에 붙여 넣으면 오류 없이 파싱되어 노트 제목이 이중 테두리 상자로 그려지는데, Obsidian은 코드 펜스 안의 링크를 해석하지 않는다 — **연결된 것처럼 보이지만 실제 연결은 0이고, 렌더 결과를 봐도 드러나지 않는다**(상자 모양이 의도한 것과 같다). 따옴표가 둘을 가른다: 평범한 상자는 `["노트 이름"]`으로 쓰고 **링크는 본문에 둔다**(엣지가 되는 곳은 본문뿐이다 — `knowledge-graph`는 노트 본문만 읽고 프론트매터는 읽지 않으므로 `related`에만 있는 링크는 그래프·`vault-gardening`·Stop 훅 도달 검사 어디에도 보이지 않는다). 서브루틴 도형이 정말 필요하면 `[["노트 이름"]]`으로 쓴다. 검사기는 이 한 도형에 한해 Mermaid가 그냥 파싱하는 라벨에도 따옴표를 요구한다.
-- **한계**: Mermaid 파서는 JS라 무의존 원칙상 **사전 점검일 뿐**이다. 통과해도 렌더링은 실패할 수 있으니 Obsidian에서 눈으로 확인한다.
-- **에셋 규약**: 소스와 SVG를 노트 옆 `assets/`에 같은 이름으로 둔다. 소스 없는 렌더 결과는 고칠 수 없고 다시 그리는 수밖에 없다. `d2`가 없으면 설치하지 말고 Mermaid로 남긴다.
-- **완료 기준**: 다이어그램이 근거가 아니라 설명임을 유지하고(그렸다고 관계가 성립하지 않는다), 생성 이미지는 출처와 설명용임을 노트에 기록한다.
+- **One-line role**: Draw the diagram to be included in the study note using a tool that fits the structure — the default Mermaid, D2→SVG for larger maps, JSON Canvas for maps in existing notes, and matplotlib→SVG for maps with coordinates.
+- **When to use**: Mathematical drawings such as diagrams, schematics, concept maps, flowcharts, sequences, architecture drawings, knowledge maps, trajectories, and transformations.
+- **When not to use**: Determining what is true (→ `note-writer` and evidence rules), choosing tools that are heavier than necessary, standalone interactive HTML diagrams for presentation and sharing (→ `archify`, output outside the vault). If you have a lot of nodes, don't go to `archify` — the promotion is still Mermaid → D2, and you're left with an embeddable SVG in your notes.
+- **Promotion criteria**: `scripts/check.py` counts, not intuition. If there are more than about 15 nodes or more than 3 layers of overlap, it is passed on to D2. The checker also catches unknown Mermaid types, unbalanced parentheses, wiki links pasted as shapes, missing embedded assets, and empty SVGs.
+- **Label rule (parsing)**: In `flowchart`/`graph`, the node label, edge label, and `subgraph` title are **always enclosed in quotation marks**. If parentheses or quotation marks are entered without quotation marks, the sentence is broken and the entire diagram changes to `Error parsing Mermaid diagram!`. Since the parentheses are matched, they cannot be detected by the count test. If the checker references the `subgraph` title as a node ID along with this failure, it also catches the missing `end`. `sequenceDiagram` does not have this restriction, so the rule does not apply.
+- **Label Rule (Render)**: Quotation marks only fix the parsing, not the render. Mermaid passes labels as markdown, supporting only paragraphs, bold, italics, and inline HTML, and discards the rest — the Obsidian bundled version puts the text `Unsupported markdown: list` in place of the label. Therefore, the label does not start with a markdown symbol: `1. `·`1) `·`01. ` are all ordered lists, so just changing the number punctuation is useless, so write them as `①` or `1 · ` (the `1\. ` escape is not a solution because other renderers delete it). `- `·`* `·`+ ` at the beginning are bullets, `# ` is the title, `> ` is a quotation, and if the entire label is `---`, it is a dividing line, and backtick pairs and `[텍스트](주소)` also disappear. **Only `<br/>` is used for line breaks** — In the markdown label, `\n` appears as two characters: a backslash and `n`. However, `<br/>` **only starts a new block and does not break the inline range** — the backtick or link bracket opened at the front is closed across the line break and takes the entire label with it (bold and italic are supported types, so it is safe to cross them).
+- **Wiki link in diagram**: `id[[텍스트]]` is Mermaid's **subroutine diagram grammar**, and its source is letter-by-character identical to the Obsidian wiki link. So when I paste `[[노트 이름]]` into a diagram, it is parsed without error and the note title is drawn as a double bounding box, but Obsidian doesn't interpret the links inside the code fence — **they appear to be connected, but the actual connection is 0 and is not visible in the render** (the box shape is as intended). A quotation mark separates the two: Write `["노트 이름"]` in a plain box **Put the link in the text** (The only edge is the text — `knowledge-graph` only reads the text of the note and not the front matter, so links that only exist in `related` are nowhere to be seen in the graph·`vault-gardening`·Stop hook arrival check). If you really need the subroutine geometry, write it as `[["노트 이름"]]`. For this one shape only, the validator also requires quotes in the label, which Mermaid simply parses.
+- **Limitations**: Mermaid parser is JS, so it is **only a preliminary check** due to the principle of no dependency. Even if it passes, rendering may fail, so check it visually in Obsidian.
+- **Asset convention**: Place the source and SVG with the same name in `assets/` next to the note. Render results without a source cannot be corrected and the only way to do this is to redraw. If `d2` is not present, do not install it and leave it as Mermaid.
+- **Completion criteria**: Maintain that the diagram is an explanation, not evidence (the relationship is not established just because it is drawn), and record in the notes that the created image is for source and explanation purposes only.
 
 ## ingest
 
-- **한 줄 역할**: 공부할 자료를 웹·논문·영상 유형에 맞는 캡처 경로로 보내고, 불변 원문에서 검증 노트까지 연결한다.
-- **언제 쓰나**: “자료 저장”, “웹 문서 노트화”, “논문 가져와”, “영상 공부”, “vault에 지식으로 쌓아”.
-- **언제 안 쓰나**: 이미 캡처된 개념을 노트로만 정리(→ `note-writer`), 하네스 설치(→ `study-install`).
-- **핵심 절차**: 소스 유형 판정 → 웹은 `defuddle`, 논문은 `paper-search`, 영상은 `study-video` → `raw/`에 새 스냅샷 → 실제 원문 확인·검증 → `note-writer` → index/log/hot 갱신.
-- **배치 모드**: 압축 폴더·강의 자료처럼 한 컨텍스트에 안 들어가는 분량은 `scripts/queue.py --vault vault --raw raw/courses/이름`으로 진행률을 본다. 진행률을 체크박스가 아니라 **노트가 그 파일을 실제로 인용하는지**로 계산하므로, 세션이 끊겨도 노트에서 그대로 재개된다. 대기 목록의 경로는 **복사해서** `sources:`에 넣는다 — 기억으로 다시 타이핑한 경로가 실제로 6건 어긋나 있었다.
-- **배치는 순차로**: 주제가 달라도 세션을 나눠 병렬로 돌리지 않는다. 링크를 제대로 걸려면 양쪽 노트의 현재 상태가 한 컨텍스트에 있어야 한다.
-- **완료 기준**: 캡처 경로·출처·검증 상태가 남고, 단순 다운로드를 학습 완료로 오인하지 않는다. 대기 목록에 있다고 해서 노트를 써야 하는 것은 아니다(설정 파일·빌드 산출물은 인용되지 않는 게 정상).
+- **One-line role**: Send study materials to a capture path appropriate for the type of web, paper, or video, and connect from the immutable original text to verification notes.
+- **When to use**: “Save data”, “Making notes on web documents”, “Bring papers”, “Study videos”, “Build up knowledge in vault”.
+- **When not to use**: Organize already captured concepts into notes (→ `note-writer`), install harness (→ `study-install`).
+- **Core procedure**: Source type determination → `defuddle` for web, `paper-search` for paper, `study-video` for video → New snapshot in `raw/` → Check/verify actual original text → `note-writer` → index/log/hot update.
+- **Batch mode**: For amounts that do not fit into one context, such as compressed folders or lecture materials, the progress is viewed as `scripts/queue.py --vault vault --raw raw/courses/이름`. Progress is calculated based on **whether the note actually cites the file**, rather than a checkbox, so even if the session is interrupted, it is resumed from the note as is. **Copy** the path to the waiting list and put it in `sources:` — the path I retyped from memory was actually wrong in 6 cases.
+- **Arrangement is sequential**: Even if the topic is different, sessions are not divided and run in parallel. For a link to work properly, the current state of both notes must be in one context.
+- **Completion criteria**: Capture path, source, and verification status remain, and a simple download is not mistaken for completion of learning. Just because you're on the waiting list doesn't mean you have to write notes (normally configuration files and build output are not cited).
 
 ## knowledge-graph
 
-- **한 줄 역할**: `wiki/` Markdown에서 article·topic·source 타입 그래프를 결정적으로 재생성하고, 모델이 추론한 entity·claim은 근거가 실제로 해석될 때만 받아들인다.
-- **언제 쓰나**: 지식 그래프 재생성, 깨진 링크·백링크·고아 노트 점검, 주제 분류 확인, 추론 항목의 근거 검증.
-- **언제 안 쓰나**: JSON을 직접 편집하거나 지식 원본으로 사용, 범위·원본 hash 검사 없이 다른 인덱스와 비교.
-- **핵심 절차**: 표준 라이브러리 파서 실행 → 중복 제목 오류 먼저 해결 → `missing_targets`·`orphans` 검토 → Markdown 수정 후 재생성. 추론 항목은 `--semantic`으로 따로 넣어 검증한다.
-- **`raw/` 캡처는 깨진 링크가 아니다**: `--raw vault/raw`를 주면 `raw/`의 **파일 이름**으로 해석되는 링크를 `missing_targets`에서 뺀다. Obsidian은 위키링크를 vault 전체에서 해석하므로 캡처를 이름으로 인용한 노트의 링크는 앱에서 정상 동작하는데, `wiki/`만 보는 그래프는 이를 깨진 것으로 보고했다(실 vault 3건 중 **2건이 오탐**이었다). 이름만 읽고 그 안의 무엇도 노드가 되지 않으며 본문은 파싱하지 않는다.
-- **코드는 링크가 아니다**: 펜스 블록과 인라인 코드 안의 위키링크는 엣지가 아니다. 코드 스팬은 **줄 끝에서 닫히지 않고** 같은 길이의 백틱을 다음 줄에서 만나 닫히므로, 줄바꿈에 걸친 스팬 안의 링크도 코드로 본다(한 줄씩 읽으면 닫는 백틱을 못 봐서 멀쩡한 노트가 깨진 링크로 보고된다). 빈 줄은 블록을 끊으므로 스팬이 그 너머까지 가지 않는다.
-- **타입**: `article`(노트), `topic`(`index.md`의 분류 — 위키링크가 없고 하위에 링크를 가진 최상위 항목만), `source`(frontmatter `sources`, `raw/` 경로는 실재 여부까지). 엣지는 `links_to`·`categorized_under`·`cites`라 노트가 1개여도 유효한 그래프가 나온다.
-- **근거 규율**: 추론 record는 `source_path`·`evidence_anchor`·`extractor`·`confidence`·`verification`이 필수이고, 앵커가 인용 노트에서 해석되지 않으면 낮은 신뢰도로 남기지 않고 **버린다**. `verified`와 `inferred`는 따로 집계한다.
-- **다른 인덱스 비교**: `scripts/pilot.py --corpus PATH --candidate '읽기 전용 명령'`이 실행 전후 corpus 해시를 대조해 **하나라도 바뀌면 후보를 실격**시킨다. `write`·`format`·`reset`·`sync` 세그먼트를 가진 명령은 실행 전에 거부한다. 후보 명령은 인자로 받는다 — 설치해 help를 읽지 않은 CLI의 명령줄을 기억으로 적지 않는다.
-- **주요 산출물**: 미추적 `_workspace/knowledge-graph.json`; 동일 입력은 동일 바이트를 내고, 노트 본문은 담기지 않으며 근거는 앵커와 excerpt hash로만 남는다.
+- **One-line role**: `wiki/` Deterministically regenerates the article·topic·source type graph in Markdown, and accepts entity·claims inferred by the model only when the evidence is actually interpreted.
+- **When to use**: Recreate the knowledge graph, check broken links, backlinks, and orphan notes, check topic classification, and verify evidence of inference items.
+- **When not to use**: Edit JSON directly or use it as a knowledge source, comparing it to other indexes without checking the range or original hash.
+- **Core procedure**: Run the standard library parser → Resolve duplicate title errors first → Review `missing_targets`·`orphans` → Modify Markdown and regenerate. Inference items are separately entered and verified as `--semantic`.
+- **`raw/` capture is not a broken link**: If you give `--raw vault/raw`, the link interpreted as the **file name** of `raw/` is subtracted from `missing_targets`. Obsidian interprets wiki links throughout the vault, so links in notes that cite capture by name work normally in the app, but graphs that only view `wiki/` reported this as broken (**2 out of 3 actual vault cases were false positives**). It only reads the name, nothing inside becomes a node, and the body is not parsed.
+- **Code is not a link**: Wikilinks in fence blocks and inline code are not edges. Since code spans **are not closed at the end of a line** but are closed by backticks of the same length on the next line, links within spans that span line breaks are also considered code (if you read them line by line, you won't see the closing backticks, so otherwise healthy notes will be reported as broken links). An empty line breaks a block, so the span does not extend beyond it.
+- **Type**: `article` (note), `topic` (category of `index.md` — no wikilinks, only top-level items with links below), `source` (frontmatter `sources`, `raw/` paths are real or not). Edge is `links_to`, `categorized_under`, and `cites`, so even if there is only one note, a valid graph appears.
+- **evidence discipline**: Inference records require `source_path`·`evidence_anchor`·`extractor`·`confidence`·`verification`, and if the anchor is not interpreted in the citation note, it is **discarded** rather than left due to low confidence. `verified` and `inferred` are counted separately.
+- **Comparison of other indices**: `scripts/pilot.py --corpus PATH --candidate '읽기 전용 명령'` compares the corpus hash before and after execution and **disqualifies the candidate** if even one changes. Instructions with segments `write`·`format`·`reset`·`sync` are rejected before execution. Candidate commands are accepted as arguments — Do not memorize command lines from the CLI that you have not installed and read help for.
+- **Key deliverables**: Untracked `_workspace/knowledge-graph.json`; The same input produces the same bytes, the note body is not included, and only the anchor and excerpt hash remain as evidence.
 
 ## metaskill
 
-- **한 줄 역할**: `nohdol-study` 하네스 자체의 AGENTS 규칙·스킬·훅·설치기·ADR·스펙을 일관된 방식으로 만들고 개선한다.
-- **언제 쓰나**: “metaskill”, “하네스 개선”, “스킬 만들어/보강해”, 다른 하네스 패턴 이식, 트리거·규칙·설치 절차 변경.
-- **언제 안 쓰나**: 일반 공부 노트 작성(→ `note-writer`), 자료 수집(→ `ingest`), 설치처 초기화(→ `study-install`).
-- **핵심 절차**: `REGISTRY.md` 개인/사내 게이트 → 현재 문서·테스트 관찰 → 상시 규칙/선택 절차 배치 → 행동 변경은 테스트 우선 → README·한글 뷰·MOC·변경 이력 동기화 → 전체 검증.
-- **완료 기준**: 스킬 frontmatter·경계·이유·명령·with/without이 갖춰지고, 실제 동작하지 않은 새 세션·외부 서비스 상태는 미검증으로 보고한다.
+- **One-line role**: Creates and improves the `nohdol-study` harness's own AGENTS rules, skills, hooks, installers, ADR, and specifications in a consistent manner.
+- **When to use**: “metaskill”, “harness improvement”, “create/reinforce skills”, porting different harness patterns, changing triggers/rules/installation procedures.
+- **When not to use**: Writing general study notes (→ `note-writer`), collecting data (→ `ingest`), resetting the installation location (→ `study-install`).
+- **Core procedures**: `REGISTRY.md` personal/in-house gate → Observation of current documents/tests → Placement of regular rules/selection procedures → Testing priority for behavior changes → Synchronization of README, rules summary, MOC, and change history → Full verification.
+- **Completion criteria**: Skills frontmatter, boundary, reason, command, with/without are met, and new session and external service status that are not actually running are reported as unverified.
 
 ## note-writer
 
-- **한 줄 역할**: 재사용할 이해를 원자적 노트로 만들면서 flat YAML, 위키링크, 주장별 근거, 불확실성, index/log/hot 정합을 집행한다.
-- **언제 쓰나**: “기록해”, “정리해”, “노트화해”, “지식으로 저장해”, 공부 결과가 다음 세션에도 쓸 만할 때.
-- **언제 안 쓰나**: 일회성 대화, 이미 같은 의미의 노트가 충분한 경우, 사용자가 보존을 원하지 않는 자료.
-- **핵심 절차**: 기존 노트 검색 → 개선/신규 원자 노트 선택 → 필요 원문 `raw/` 보존 → 근거 프로토콜 적용 → `wiki/` 작성·양방향 링크 → index/log/hot 갱신 → 스키마·출처 재검사 → 줄바꿈 검사 → 다이어그램이 있으면 `diagram` 검사 실행.
-- **줄바꿈**: 문단·목록 항목·인용문은 **한 줄에 하나**다. 본문을 특정 열에서 접지 않는다 — 마크다운에서 문단 안 줄바꿈은 공백으로 렌더링되므로 읽는 쪽은 아무 차이가 없고, 쓰는 쪽만 값을 치른다(단어 하나 고치면 문단 전체가 다시 접히고, diff가 재접기 잡음으로 덮이며, Obsidian 편집기는 어차피 창 너비로 다시 접어 파일과 화면이 어긋난다). 줄바꿈은 제목·목록·표·코드블록·프론트매터 키·명시적 하드 브레이크(끝의 공백 두 칸 또는 역슬래시)처럼 **구조일 때만** 쓴다. 검사는 `python3 .agents/skills/note-writer/scripts/unwrap.py --vault vault`, 적용은 `--write`.
-- **index 정책**: `references/index-policy.md`를 따른다. index는 목록이 아니라 진입점이므로 **주제당 허브 노트 한 줄**만 넣고 원자 노트는 허브를 통해 도달하게 한다. 노트 묶음을 만들면 index 줄을 늘리는 게 아니라 허브 노트(`type: topic`)를 만든다. "최근 갱신"은 다섯 줄 안팎으로 자르고 정본은 `log.md`임을 명시한다. index 줄을 지우는 것은 지식을 지우는 것이 아니라 길 안내만 바꾸는 것이다.
-- **다이어그램**: 노트에 그림이나 임베드가 있으면 마무리 전에 `python3 .agents/skills/diagram/scripts/check.py "vault/wiki/노트.md"`를 돌린다. 깨진 다이어그램은 `Error parsing Mermaid diagram!`으로 렌더되거나 라벨 자리에 `Unsupported markdown: list`가 찍히는데, 두 경우 모두 소스는 멀쩡해 보이므로 다른 단계로는 잡히지 않는다.
-- **완료 기준**: 중요한 주장마다 확인한 근거 또는 명시적 미확인·추론·가설·논쟁 상태가 있고, 존재하지 않는 인용이나 관계가 없으며, 다이어그램이 에러 블록이 아니라 그림으로 렌더되고, `unwrap.py`가 합칠 줄을 보고하지 않는다.
+- **One-line role**: Executes flat YAML, wikilinks, per-argument evidence, uncertainty, and index/log/hot matching while creating atomic notes of understanding for reuse.
+- **When to use it**: “Record it”, “Organize it”, “Make notes”, “Save it as knowledge”, when the study results can be used in the next session as well.
+- **When not to use**: One-off conversations, when there are already enough notes with the same meaning, material that the user does not want to keep.
+- **Core procedure**: Search existing notes → Select improvement/new atomic notes → Preserve required original text `raw/` → Apply evidence protocol → Create `wiki/`/two-way link → Update index/log/hot → Recheck schema/source → Check line breaks → If diagram exists, run check `diagram`.
+- **Line breaks**: Paragraphs, list items, and quotations are **one per line**. Don't fold the text at specific columns — In Markdown, line breaks inside paragraphs are rendered as spaces, so it doesn't make any difference to the reading side, and only the writing side pays (if you change a single word, the entire paragraph is refolded, the diff is covered with refold noise, and the Obsidian editor folds back to the window width anyway, misaligning the file and the screen). Line breaks are used **only** in structures such as titles, lists, tables, code blocks, front matter keys, and explicit hard breaks (two spaces or backslashes at the end). Inspection is `python3 .agents/skills/note-writer/scripts/unwrap.py --vault vault`, application is `--write`.
+- **index policy**: Follows `references/index-policy.md`. Since the index is not a list but an entry point, only **one line of hub notes per topic** is inserted and atomic notes are reached through the hub. When you create a bundle of notes, instead of increasing the index line, you create a hub note (`type: topic`). “Recent update” is truncated to around five lines and the source of truth is specified as `log.md`. Deleting the index line does not delete the knowledge, but only changes the directions.
+- **Diagram**: If there is a picture or embed in the note, run `python3 .agents/skills/diagram/scripts/check.py "vault/wiki/노트.md"` before finishing. The broken diagram is either rendered as `Error parsing Mermaid diagram!` or `Unsupported markdown: list` is stamped in place of the label. In both cases, the source appears to be fine, so it is not captured in other steps.
+- **Complete Criteria**: There is confirmed evidence or explicit unconfirmed, inferred, hypothesis, or disputed states for each important claim, there are no non-existent citations or relationships, the diagram is rendered as a picture rather than an error block, and `unwrap.py` does not report merge lines.
 
 ## obsidian
 
-- **한 줄 역할**: Obsidian 고유 형식(Markdown 확장·Bases·JSON Canvas)을 작성·검증하고, 실행 중인 vault를 공식 CLI로 조작한다. 4개 mode를 내부 라우팅한다.
-- **언제 쓰나**: 위키링크·콜아웃·임베드·프론트매터 속성 작성, 캔버스·마인드맵·지식 맵 제작, `.base` 테이블·카드 뷰와 필터, Obsidian CLI로 vault 읽기·변경.
-- **언제 안 쓰나**: 노트 내용의 사실성 판단(→ `note-writer`와 근거 규칙), 지식 그래프 재생성(→ `knowledge-graph`), 무엇이 바뀌는지 말하지 않은 CLI 쓰기.
-- **라우팅**: `obsidian-markdown`(노트 문법), `obsidian-bases`(뷰), `json-canvas`(캔버스)는 **Obsidian 없이도 동작**하고, `obsidian-cli`만 앱 실행이 필요해 없으면 `unavailable`로 보고한다. mode별 절차는 `references/modes.md`에 있다.
-- **핵심 절차**: pin 상태 확인 → mode 선택 → 상류 워크플로를 경계 안에서 수행 → `scripts/validate.py`로 검증 후 완료.
-- **검증 범위**: 캔버스는 JSON Canvas 1.0(노드 타입·좌표·id 중복·엣지가 실제 노드를 가리키는지), Markdown은 미닫힘·빈 위키링크와 미지의 콜아웃 타입(목록은 pin된 참조에서 읽어 상류와 동기), `.base`는 로드 실패를 부르는 구조 오류. **base 검사는 YAML 검증기가 아니라 구조 사전 점검**이므로 "명백히 깨지지는 않았다"로 보고한다.
-- **완료 기준**: 만든 파일이 검증을 통과하고, 상시 노트를 형식에 맞추려 임의로 고치지 않으며, CLI 쓰기 전에 대상 vault와 파일을 밝힌다.
+- **One-line role**: Write and verify Obsidian native formats (Markdown extension, Bases, JSON Canvas) and manipulate the running vault with the official CLI. Internal routing in 4 modes.
+- **When to use**: Creating wiki link, callout, embed, and front matter properties, creating canvas, mind map, and knowledge map, `.base` table and card views and filters, and reading and changing vault with Obsidian CLI.
+- **When not to use**: Judging the veracity of note content (→ `note-writer` and evidence rules), regenerating the knowledge graph (→ `knowledge-graph`), writing CLI without saying what will change.
+- **Routing**: `obsidian-markdown` (note syntax), `obsidian-bases` (view), and `json-canvas` (canvas) **operate without Obsidian**, and only `obsidian-cli` does not require app execution, so if it is not required, it is reported as `unavailable`. Procedures for each mode are in `references/modes.md`.
+- **Core procedure**: Check pin status → select mode → perform upstream workflow within the boundary → complete after verification with `scripts/validate.py`.
+- **Verification Scope**: Canvas is JSON Canvas 1.0 (node ​​type, coordinates, id duplicate, edge points to actual node), Markdown is unclosed, empty wiki link and unknown callout type (list is read from pinned reference and synchronized with upstream), `.base` is structural error causing load failure. **The base check is not a YAML verifier but a structural pre-check**, so it is reported as "not obviously broken."
+- **Completion criteria**: The created file passes verification, regular notes are not arbitrarily modified to fit the format, and the target vault and file are revealed before writing the CLI.
 
 ## paper-search
 
-- **한 줄 역할**: 공개 학술 소스에서 논문을 검색·다운로드·텍스트 추출하고 출판 상태·버전·정정·철회 여부까지 확인해 노트로 연결한다.
-- **언제 쓰나**: 논문 검색, 최신 연구 찾기, arXiv·DOI·저자·주제 기반 문헌 탐색, 논문 PDF 노트화.
-- **언제 안 쓰나**: 제목·초록만으로 결론 확정, preprint를 심사 논문으로 표기, Sci-Hub 등 비공식 우회.
-- **핵심 절차**: `sources` 확인 → 좁은 다중 소스 `search` → 정확한 ID 선택 → `download`로 PDF 보존·`read`는 추출 보조 → 공식 메타데이터·PDF 방법/한계 대조 → `note-writer`.
-- **완료 기준**: 실제 PDF 또는 합법적 접근 한계, 식별자·버전·venue·peer-review 상태와 중요한 주장의 근거 범위가 기록된다.
+- **One-line role**: Search, download, and text extract papers from open academic sources, check publication status, version, correction, and withdrawal, and link them to notes.
+- **When to use**: Search for papers, find the latest research, search literature based on arXiv, DOI, author, and topic, and make notes on paper PDFs.
+- **When not to use**: Confirming conclusion only with title and abstract, marking preprint as reviewed paper, bypassing unofficial information such as Sci-Hub.
+- **Key Steps**: Check `sources` → Narrow multi-source `search` → Select correct ID → Preserve PDF with `download`·`read` assist extraction → Official metadata·PDF method/limit collation → `note-writer`.
+- **Complete Criteria**: Actual PDF or legal access limits, identifier, version, venue, peer-review status, and scope of evidence for significant claims are recorded.
 
 ## recall
 
-- **한 줄 역할**: 검증된 노트를 간격 반복 카드로 만들되, 각 카드가 온 노트와 구절로 되짚어지게 유지한다.
-- **언제 쓰나**: 복습, 플래시카드·암기 카드 제작, 반복 학습, 예전에 공부한 것이 흐려질 때.
-- **언제 안 쓰나**: `unverified` 노트로 카드 만들기, 인용 노트에 없는 답을 쓴 카드, 카드 통과를 주장이 여전히 참이라는 근거로 취급.
-- **형식**: 노트 옆 Markdown. 질문 / `?` / 답 / `<!-- from: 노트.md#앵커 -->`. 출처 comment는 필수이고, 스케줄 comment(`<!--SR:...-->`)는 리뷰 도구 것이니 손대지 않는다.
-- **검사**: `scripts/cards.py --wiki vault/wiki CARDS.md`가 모든 카드의 출처를 해석한다 — 노트가 wiki에 있어야 하고 앵커가 그 안에서 실제로 잡혀야 하며(지식 그래프의 앵커 규칙 그대로), 안 잡히면 거부한다. 노트를 고친 뒤 다시 돌린다. 앵커가 깨지는 시점이 곧 카드를 재검토할 시점이다.
-- **완료 기준**: 카드가 전부 추적 가능하고, 복습 통과를 "기억함"으로만 읽으며 "여전히 참"과 구분한다.
+- **One-Line Role**: Turn verified notes into spaced repetition cards, but keep each card looping back to the notes and passages that came with it.
+- **When to use**: Review, making flashcards/memorization cards, repeated study, when what you studied before becomes blurry.
+- **When not to use**: `unverified` Create a card with notes, use a card with answers that are not in the quote note, and treat passing the card as evidence that the claim is still true.
+- **Format**: Markdown next to the note. Question / `?` / Answer / `<!-- from: 노트.md#앵커 -->`. The source comment is required, and the schedule comment (`<!--SR:...-->`) is a review tool, so do not touch it.
+- **Check**: `scripts/cards.py --wiki vault/wiki CARDS.md` interprets the origin of all cards — the note must be in the wiki and the anchor must actually be caught in it (as per the anchor rules for the knowledge graph), otherwise it is rejected. After correcting the note, run it again. The moment the anchor breaks is the time to reexamine the card.
+- **Complete Criteria**: Cards are fully traceable, and review passes are read only as “remembered” and distinguished from “still true.”
 
 ## study-install
 
-- **한 줄 역할**: 컴퓨터마다 다른 지식 루트·프로필·동기화 방식을 선택하고 vault 심링크와 로컬 도구 상태를 안전하게 초기화한다.
-- **언제 쓰나**: 첫 설치, `REGISTRY.md`/`vault` 누락, 지식 저장 위치 연결, Obsidian vault 연동, Phase 2·2b 도구 설치·상태 점검.
-- **언제 안 쓰나**: 기존 vault 대량 마이그레이션, vault Git 초기화·원격 설정, 승인 없는 Obsidian·자격증명 설치, upstream 전역 installer 실행.
-- **핵심 절차**: 기존 경로·심링크·충돌 관찰 → 지식 루트/개인·사내/sync 인터뷰 → create-if-missing bootstrap → Phase 2 도구 check/install → Phase 2b 소스 pin check/install → 심링크·기준 파일·Git 비추적 검증.
-- **완료 기준**: 기존 지식은 보존되고, 설치처 정보는 미추적 `REGISTRY.md`에만 있으며, 누락 도구와 실환경 미검증 항목이 명시된다.
-- **Phase 2b pin**: `install-phase2b-tools.sh`가 미추적 `.tools/`에 정확한 upstream commit을 받아 tree hash가 일치할 때만 배치하며, 사용자의 상시 승인 결정에 따라 의존성 설치 및 빌드가 자동 진행된다. 전역 스킬·vault는 건드리지 않는다. hash 불일치·미충족 runtime·파싱 불가 pin·`python3` 부재는 fail-closed이고, 기존 체크아웃이 다르면 덮어쓰지 않고 보고한다. 이동한 tag도 막지만 이는 변조 신호라 API 미도달 시에는 보고 후 진행한다. Obsidian 부재는 실패가 아니라 `unavailable` 기록이다.
-- **로컬 임베딩 서버**: `install-embedding.sh --check|--install`이 `vault-search`용 임베딩 서버를 설치한다. 설치 메모리에 맞춰 모델을 고르고 무엇을 골랐는지 보고하며 `--model`로 덮어쓸 수 있다. **기준은 하드웨어가 아니라 노트 언어다** — 정답 노트를 아는 한국어 질의 8건으로 재보니 영어 중심 `nomic-embed-text`는 10위 안 적중이 **8건 중 2건**(MRR 0.067)이었고, "배포 전에 자동으로 막는 방법"에 GeekNews의 "고객 이탈을 막는법"을 더 위에 올렸다(의미가 아니라 `막다`에 걸린 것). 그래서 메모리가 허용하면 다국어 모델이 기본이고, 작은 영어 모델은 약점을 숨기지 않고 보고하는 폴백이다. **`brew services`로 설치하지 않는다** — 그 plist가 `OLLAMA_KV_CACHE_TYPE=q8_0`을 강제하는데 인코더 모델엔 그 캐시가 없어 `/api/version`은 답하면서 모델이 영원히 안 올라온다(하드웨어 한계처럼 보이지만 아니다). 스크립트는 포트가 아니라 **실제 임베딩 응답**으로 검증한다.
-- **Colab MCP 서버(프로필 게이트)**: 공식 `googlecolab/colab-mcp`를 선택 항목으로 확인한다. 코드·데이터가 Google 런타임에서 실행되는 외부 전송이므로 `corporate` 설치처에는 설치·등록하지 않고 `blocked-by-profile`로 기록하며, `personal`에서만 명시 동의를 받아 `claude mcp add --scope user`로 등록하고 결정을 `REGISTRY.md`에 남긴다. 첫 사용 시 OAuth 승인, 도구는 다음 세션부터 반영. vault 내용은 이 서버로 보내지 않는다.
-- **선택적 로컬 자동화**: `examples/` 아래 레퍼런스 구현(`feed_scraper`, 읽기 전용 조회 표면인 `telegram_bot`)을 안내만 하고 기본 설치하지 않는다. 요청이 있을 때만 `_workspace/`로 복사해 구성하며, 이 설치처가 실제로 돌리는 자동화는 `REGISTRY.md`에 기록한다. 피드 스크래퍼는 소스 카탈로그만 추적하고 어떤 소스를 켤지는 비추적 `sources.local.toml`이 정한다.
+- **One-line role**: Select a different knowledge root, profile, and synchronization method for each computer and securely initialize vault symlinks and local tool states.
+- **When to use**: First installation, missing `REGISTRY.md`/`vault`, connecting knowledge storage location, linking Obsidian vault, installing Phase 2·2b tools and checking status.
+- **When not to use**: Bulk migration of existing vault, vault Git initialization/remote configuration, installation of Obsidian/credentials without authorization, running upstream global installer.
+- **Core procedure**: Observe existing path/symlink/conflict → Knowledge root/individual/in-house/sync interview → create-if-missing bootstrap → Phase 2 tool check/install → Phase 2b source pin check/install → Symlink/standard file/Git non-tracking verification.
+- **Complete Criteria**: Existing knowledge is preserved, installation location information is located only in the untracked `REGISTRY.md`, and missing tools and unverified items in the real world are specified.
+- **Phase 2b pin**: `install-phase2b-tools.sh` receives the correct upstream commit to the untracked `.tools/` and deploys it only when the tree hash matches, and dependency installation and build are automatically carried out according to the user's constant approval decision. Global skills and vaults are not touched. Hash mismatch·unsatisfied runtime·unparsable pin·`python3` Absence is fail-closed, and if the existing checkout is different, it is reported without overwriting. Moved tags are also blocked, but since this is a tampering signal, if the API is not reached, it is reported before proceeding. Obsidian's absence is not a failure, but a `unavailable` record.
+- **Local Embedding Server**: `install-embedding.sh --check|--install` installs the embedding server for `vault-search`. You can choose a model according to your installed memory, report what you chose, and overwrite it with `--model`. **The standard is not the hardware, but the note language** — When measuring the 8 Korean questions that know the correct answer note, the English-centered `nomic-embed-text` was ranked in the top 10 in **2 out of 8** (MRR 0.067), and GeekNews' "How to prevent customer churn" was ranked higher than "How to automatically prevent customer churn before deployment" (not meaning, but `막다`). So, if memory allows, the multilingual model is the default, and the small English model is a fallback that reports weaknesses without hiding them. **Do not install with `brew services`** — That plist forces `OLLAMA_KV_CACHE_TYPE=q8_0`, but the encoder model does not have that cache, so `/api/version` is answered, and the model will never be loaded (it seems like a hardware limitation, but it is not). The script is verified with the **actual embedding response**, not the port.
+- **Colab MCP Server (Profile Gate)**: Check the official `googlecolab/colab-mcp` as a selection. Since the code and data are externally transmitted and run on Google Runtime, it is not installed and registered at the `corporate` installation location, but is recorded as `blocked-by-profile`, and explicit consent is received only from `personal`, registered as `claude mcp add --scope user`, and the decision is left at `REGISTRY.md`. OAuth authorization is granted on first use, and the tool is reflected from the next session. The vault contents are not sent to this server.
+- **Optional Local Automation**: The reference implementations below `examples/` (`feed_scraper`, `telegram_bot`, which is a read-only query surface) are provided only and are not installed by default. It is copied and configured as `_workspace/` only when requested, and the automation actually run by this installation is recorded in `REGISTRY.md`. The feed scraper only tracks the source catalog, and non-tracking `sources.local.toml` determines which sources to turn on.
 
 ## study-video
 
-- **한 줄 역할**: 강의·기술 영상을 자막만으로 전체 파악하고, 화면이 답해야 할 질문이 생겼을 때만 해당 시점 프레임을 확인해 노트화한다.
-- **언제 쓰나**: 영상 URL·로컬 영상에서 강의 구조, 설명, 데모, 도표를 학습하고 영구 노트를 만들 때.
-- **언제 안 쓰나**: 사용자가 요청하지 않은 고비용 프레임 분석, 승인 없는 Whisper 오디오 외부 전송, 삽화 목적의 프레임 저장.
-- **핵심 절차**: `watch`·미디어 도구 preflight → `--detail transcript --no-whisper`(자막만, 영상 미다운로드) → 트랜스크립트 통독 → **화면이 답할 질문이 있을 때만** `--timestamps`로 그 지점만 확인 → 트랜스크립트만 `raw/`에 보존하고 프레임은 확인 결과를 문장으로 남긴 뒤 버림 → 화자 주장과 외부 근거 분리 → `note-writer`.
-- **완료 기준**: `ko.*,en.*` 자막 우선순위, 원본 타임스탬프, 사용한 전사 방식, 검증 한계가 노트에 남는다.
+- **One-line role**: Understand the entire lecture/technology video with only subtitles, and only when a question that needs to be answered appears on the screen, check the frame at that point and make a note.
+- **When to use**: When learning the lecture structure, explanations, demos, and diagrams from video URLs/local videos and making permanent notes.
+- **When not to use**: Expensive frame analysis not requested by the user, sending Whisper audio externally without permission, storing frames for illustration purposes.
+- **Core procedure**: `watch`·Media tool preflight → `--detail transcript --no-whisper` (subtitles only, video not downloaded) → Read the entire transcript → **Only when the screen has a question to answer** Check only that point with `--timestamps` → Only the transcript is saved in `raw/` and the frame is discarded after leaving the confirmation result as a sentence → Separated from the speaker's claim and external → `note-writer`.
+- **Completion criteria**: `ko.*,en.*` Subtitle priority, original timestamp, transcription method used, and verification limits are left in the notes.
 
 ## study-session
 
-- **한 줄 역할**: 설명하는 대신 물어서 가르친다 — 한 번에 한 질문, 사용자가 이미 재구성할 수 있는 것부터, 빈틈을 드러낸 뒤에야 채운다.
-- **언제 쓰나**: “공부하자”, “가르쳐줘”, 이해 확인, 퀴즈, 파인만 기법, 쓸 수 있을 만큼 이해하고 싶을 때.
-- **언제 안 쓰나**: 그냥 답이 필요한 사실 조회(그건 바로 답한다), 사용자가 빠져나올 수 없는 퀴즈로 만드는 것.
-- **핵심 절차**: 기존 노트 먼저 검색 → 재구성 가능한 지점부터 한 질문씩 → 답을 따라가며 깊이 이동 → 틀리면 바로 고치지 말고 모순이 보이는 질문 → 못 닿은 부분만 설명 → 적용으로 확인 → 미해결 질문 기록 → 보존 가치 있으면 `note-writer` 제안.
-- **정직성 규칙**: 유창한 재진술을 이해로 인정하지 않기(적용·경계 사례·예측을 묻는다), 채점 못 할 질문 안 하기, 질문에 답 숨기지 않기, 사용자를 걸리게 하려고 틀린 답을 지어내지 않기. 빈틈을 채우는 주장에도 근거 규칙이 그대로 적용된다.
-- **완료 기준**: 답을 조립한 주체가 사용자이고, 언제든 멈출 수 있으며, 남은 질문이 기록된다.
+- **One-line role**: Teach by asking instead of explaining — one question at a time, starting with what the user can already reconstruct, and filling in the gaps only after revealing them.
+- **When to use**: “Let’s study”, “Teach”, comprehension check, quiz, Feynman technique, when you want to understand enough to write.
+- **When not to use**: Just a fact check that needs an answer (answer it right away), or turning it into a quiz that the user can't escape.
+- **Core procedure**: Search existing notes first → One question at a time, starting from a point that can be reorganized → Move deeper while following the answers → If you get something wrong, don’t correct it right away, but ask questions that show contradictions → Explain only the parts you couldn’t reach → Confirm with application → Record unresolved questions → If it is worth preserving, suggest `note-writer`.
+- **Honesty Rules**: Don't count fluent restatements as understanding (ask for applications, boundary cases, and predictions), don't ask ungradable questions, don't hide answers to questions, and don't make up wrong answers to try to catch the user. The rules of evidence also apply to claims that fill in the gaps.
+- **Complete Criteria**: The user is the one who assembled the answer, can stop at any time, and the remaining questions are recorded.
 
 ## understand
 
-- **한 줄 역할**: pin된 Understand Anything 9개 entry point를 한 스킬에서 내부 라우팅해 코드베이스와 Markdown 지식 베이스를 분석한다.
-- **언제 쓰나**: 코드베이스·아키텍처 파악, 기능 위치 찾기, 개념·흐름 설명, 온보딩 순서, 변경 영향 범위, 도메인 관점, 지식 베이스 typed 추출, 그래프 시각화, 승인된 Figma 분석.
-- **언제 안 쓰나**: 이 vault의 결정적 위키링크 그래프(→ `knowledge-graph`), 소스 파일을 열지 않은 사실 답변, 이번 턴의 명시 요청 없는 dashboard 실행이나 Figma 전송.
-- **라우팅**: 요청 목적으로 mode를 고른다 — `understand`(그래프 생성), `-chat`(위치 찾기), `-explain`(설명), `-onboard`(학습 순서), `-diff`(변경 영향), `-domain`(도메인), `-knowledge`(지식 베이스), `-dashboard`(뷰어), `-figma`(디자인). 모호하면 고른 mode와 이유를 먼저 말하고, 여러 개에 걸치면 답이 되는 가장 싼 것을 돌린다.
-- **공통 경계**: `references/adapter-contract.md` 하나가 운반한다 — 그래프는 탐색 수단이지 근거가 아니라 사실 답변은 소스 파일 확인 뒤에만 완료하고, vault 분석은 `_workspace/understand-anything/`로 돌리며, dashboard·Figma는 실행별 명시 요청·승인 대상이다. mode별 절차는 `references/modes.md`에 있다.
-- **런타임 계층**: `-knowledge`는 `python3`만으로 돌고, 그래프 소비형 5종은 먼저 만들어진 그래프가 필요하며, `understand`·`-figma`·`-dashboard`는 빌드된 의존성이 필요하다. (사용자의 상시 의존성 설치 승인 결정에 따라 `study-install` 시 NPM 의존성이 자동 설치 및 빌드된다.) 런타임이 안 되면 도구 출력을 흉내 내지 않고 대안을 제시한다.
-- **완료 기준**: 고른 mode와 근거가 드러나고, 사실 답변은 연 파일과 줄에 근거하며, 미충족 런타임은 설치 시도 없이 unavailable로 보고된다.
+- **One-line role**: Analyzes the code base and Markdown knowledge base by internally routing the 9 pinned Understand Anything entry points in one skill.
+- **When to use**: Understanding the codebase/architecture, locating features, explaining concepts/flow, onboarding sequence, change impact scope, domain perspective, knowledge base typed extraction, graph visualization, approved Figma analysis.
+- **When not to use**: This vault's definitive wikilink graph (→ `knowledge-graph`), the fact that the source file has not been opened, the answer, running the dashboard or sending Figma without an explicit request this turn.
+- **Routing**: Choose a mode for the request purpose — `understand` (create graph), `-chat` (find location), `-explain` (description), `-onboard` (training sequence), `-diff` (change impact), `-domain` (domain), `-knowledge` (Knowledge Base), `-dashboard` (Viewer), `-figma` (Design). If it's ambiguous, first state the mode you chose and the reason, and if you ask multiple questions, choose the cheapest one that provides the answer.
+- **Common boundary**: `references/adapter-contract.md` is carried by one — the graph is a means of exploration, not evidence. In fact, the answer is completed only after checking the source file, the vault analysis is run by `_workspace/understand-anything/`, and dashboard and Figma are subject to explicit request and approval for each execution. Procedures for each mode are in `references/modes.md`.
+- **Runtime layer**: `-knowledge` runs only with `python3`, the five graph consumption types require a graph created first, and `understand`·`-figma`·`-dashboard` require built dependencies. (Depending on the user's decision to approve permanent dependency installation, NPM dependencies are automatically installed and built during `study-install`.) If runtime does not work, an alternative is presented without imitating the tool output.
+- **Complete Criteria**: The selected mode and evidence are revealed, factual answers are evidenced in the opened files and lines, and unmet runtimes are reported as unavailable without an installation attempt.
 
 ## vault-gardening
 
-- **한 줄 역할**: 지식 루트에서 어긋난 것을 보고한다 — 대상 없는 링크, **아무도 가리키지 않는 노트**, 노트 계약을 어긴 frontmatter, `raw/`에 없는 인용 출처, 예산 초과 세션 캐시, 목록으로 비대해진 index.
-- **언제 쓰나**: vault 점검, 깨진 링크·고아 노트 찾기, 인덱스 비대화 확인, 노트 상태 점검, 주기적 정리.
-- **언제 안 쓰나**: 자동으로 링크를 추가하거나 노트를 고치는 것, 빈 리포트를 "지식이 옳다"는 근거로 읽는 것.
-- **핵심 절차**: `scripts/garden.py --vault vault` 실행 → 항목마다 하나씩 판단 → 바꾼 것은 `note-writer`로 index/log/hot까지 정합.
-- **범위**: `wiki/`·파생 3파일·`raw/` 존재 확인과 **`raw/` 파일 이름**만 본다. **지식 루트의 나머지는 훑지 않는다** — 실제 vault에는 무관한 디렉터리가 있고 클라우드 저장소에서 전체 순회는 느리고 무의미하다. `raw/` 이름을 읽는 것은 캡처를 가리키는 링크를 깨진 것으로 오인하지 않기 위해서다.
-- **도달 가능성의 정의**: 노트를 **가리키는 것**이 있어야 도달 가능하다 — 백링크 또는 index 주제 분류. 자기가 내보내는 링크는 발견 가능성과 무관하므로, 여섯 곳을 인용하면서 아무도 인용하지 않는 노트도 보고된다. index의 「최근 갱신」에 이름이 있는 것도 근거로 치지 않는다 — 그 목록은 몇 건만 남기고 밀어낸다.
-- **판단 원칙**: 고아는 실제 관계가 있을 때만 연결한다. **목록을 비우려고 링크를 추가하지 않는다** — 장식용 링크는 그래프가 거짓을 말하게 해서 정직한 고아보다 나쁘다. `checked` 날짜 누락은 오늘 날짜를 쓰는 게 아니라 다시 확인해서 고친다. index 링크 수 초과(`--index-link-budget`, 기본 15)는 항목을 지워서 숫자를 맞추는 게 아니라 주제에 허브 노트를 주고 그 뒤로 옮겨서 푼다. 문법 예시로 적힌 링크(펜스·코드 스팬, 줄바꿈에 걸친 스팬 포함)는 진입 경로가 아니므로 세지 않는다 — 그래프가 읽는 것과 같은 본문으로 센다.
-- **완료 기준**: 리포트가 구조만 말한다는 것을 유지한다 — 내용이 참인지·최신인지는 근거 규칙으로 원문을 다시 읽어야 판단된다.
+- **One-line role**: Reports deviations from the knowledge root — links without targets, **notes pointing to no one**, frontmatter breaking note contracts, citation sources not in `raw/`, session caches over budget, indexes bloated with lists.
+- **When to use**: Vault check, find broken links and orphaned notes, check index bloat, check note status, and periodically organize.
+- **When not to use**: Automatically adding links or editing notes, reading blank reports as evidence that “knowledge is correct.”
+- **Core procedure**: Execute `scripts/garden.py --vault vault` → Judge each item one by one → Match the changes to index/log/hot with `note-writer`.
+- **Scope**: Only check the existence of `wiki/`·3 derived files·`raw/` and **`raw/` file name**. **Do not traverse the rest of the knowledge root** — There are irrelevant directories in the actual vault, and full traversal in cloud storage is slow and pointless. Reading the name `raw/` is to avoid mistaking the link pointing to the capture as broken.
+- **Definition of Reachability**: A note must **point to** to be reachable — a backlink or index topic classification. Since the links you send are irrelevant to discoverability, notes that cite six places but cite no one are also reported. Even names listed in the index’s “Recent Updates” are not considered evidence — the list is pushed down to only a few items.
+- **Judgment Principle**: Orphans only connect when there is a real relationship. **Do not add links to empty the list** — Cosmetic links are worse than honest orphans because they make the graph lie. `checked` If the date is missing, check again and correct it instead of using today's date. If the number of index links is exceeded (`--index-link-budget`, default 15), rather than correcting the number by deleting the item, it is solved by giving a hub note to the topic and moving it to the back. Links written as grammar examples (including fences, code spans, and spans spanning line breaks) are not entry paths and do not count — they count as text as the graph reads them.
+- **Complete Criteria**: Maintain that the report only describes the structure — Whether the content is true or up-to-date is determined by re-reading the original text using the evidence rule.
 
 ## using-study
 
-- **한 줄 역할**: 공부 세션마다 기존 지식을 먼저 검색하고 새 추론과 저장 지식을 구분하며, 가치 있는 이해만 선택적으로 남기게 한다.
-- **언제 쓰나**: 지식 질문, 개념 설명, 자료 학습, “무엇을 알고 있지?”, 기억·정리·노트 요청이 있는 모든 공부 세션.
-- **언제 안 쓰나**: 하네스 구조 변경(→ `metaskill`)이나 설치(→ `study-install`) 자체를 대신하지 않는다.
-- **핵심 절차**: index/wiki 우선 검색 → 레거시 노트 보조 검색 → 모순·가정·빈틈을 드러내며 설명 → 중요한 주장은 상시 근거 규칙 적용 → 재사용 가치가 있을 때만 `note-writer` → index/log/hot 동기화.
-- **개념 질문이면 `vault-search`**: 노트가 어떤 단어를 썼는지 짐작해야 grep을 걸 수 있는 상황이면 의미 검색을 쓴다. 키워드 검색이 놓친 것과 지식이 없는 것은 구분이 안 되고, 그 지점에서 기억으로 답하는 것이 이 규칙이 막으려는 실패다.
-- **완료 기준**: 기존 지식·새 자료·모델의 추론이 섞이지 않고, `hot.md`를 권위가 아닌 탐색 캐시로 취급한다.
+- **One-line role**: In each study session, existing knowledge is retrieved first, new inferences are distinguished from stored knowledge, and only valuable understanding is selectively retained.
+- **When to use it**: Any study session with knowledge questions, concept explanations, learning material, “What do you know?”, and requests for memory, organization, and notes.
+- **When not to use**: It does not replace the harness structure change (→ `metaskill`) or installation (→ `study-install`) itself.
+- **Core procedure**: Search index/wiki first → Secondary search of legacy notes → Explanation by revealing contradictions, assumptions, and loopholes → Always apply evidence rules to important claims → `note-writer` only when it is worth reusing → Synchronize index/log/hot.
+- **If it is a conceptual question, `vault-search`**: If you have to guess what word the note used to run grep, use semantic search. It is impossible to distinguish between what a keyword search misses and what you do not have knowledge about, and answering from memory at that point is the failure that this rule is trying to prevent.
+- **Completion criteria**: Inference from existing knowledge, new data, and models is not mixed, and `hot.md` is treated as a discovery cache rather than an authority.
 
 ## vault-search
 
-- **한 줄 역할**: `wiki/` 노트를 **의미로** 찾는다. 로컬 임베딩 인덱스를 쓰며 노트가 이 컴퓨터 밖으로 나가지 않는다.
-- **언제 쓰나**: 노트가 쓴 단어를 모를 때, 새 노트를 쓰기 전 “이미 정리했나” 확인, 비슷한 노트·관련 노트 찾기, 외부 소스가 다루는 개념이 vault에 있는지 확인.
-- **언제 안 쓰나**: 정확한 문자열·경로·파일명(→ `rg`), 링크·백링크·고아 노트(→ `knowledge-graph`), 무엇이 참인지 판정(→ 노트 원문과 그 노트가 인용한 출처).
-- **핵심 절차**: `semantic.py query --vault vault "질문"` 하나면 된다 — **바뀐 노트를 먼저 다시 임베딩한 뒤** 검색하므로 재빌드를 따로 기억할 필요가 없다. 결과는 후보 목록이므로 **쓸 노트는 열어서 읽는다**. `status`로 인덱스 상태를 본다.
-- **결과는 근거가 아니다**: 유사도 점수는 두 문단이 임베딩 공간에서 가깝다는 뜻이지 어느 쪽이 참이라는 뜻이 아니다. 지식 그래프와 같은 규칙이다. 결과가 비었다고 지식이 없다고 단정하지 말고 `rg`와 `index.md`로 확인한다.
-- **밖으로 안 나간다**: vault에 이직 자료와 사적인 노트가 있으므로 루프백이 아닌 엔드포인트는 설정이 아니라 **스크립트가 거부**한다. 인덱스는 동기화되는 지식 루트 밖 `_workspace/`에 둔다.
-- **완료 기준**: 임베딩 서버가 없으면 조용히 나쁜 검색으로 대체되지 않고 그렇다고 말하며 실행 명령을 알려준다.
+- **One-line role**: Find note `wiki/` **by meaning**. It uses a local embedding index and the notes never leave this computer.
+- **When to use**: When you don't know the words written in a note, check "Have I already organized it?" before writing a new note, find similar and related notes, and check if the concept covered by an external source is in the vault.
+- **When not to use**: Exact strings, paths, file names (→ `rg`), links, backlinks, orphan notes (→ `knowledge-graph`), determining what is true (→ the original text of the note and the sources it cites).
+- **Key Step**: All you need is `semantic.py query --vault vault "질문"` — **changed notes are re-embedded first and then retrieved**, so you don't have to remember to rebuild them. The result is a list of candidates, so **open and read the notes you want to write**. View the index status with `status`.
+- **Results are not evidence**: The similarity score means that two paragraphs are close in the embedding space, not that one is true. This is the same rule as the knowledge graph. Do not assume that you have no knowledge just because the result is empty, but check with `rg` and `index.md`.
+- **Does not go out**: Since the vault contains turnover data and private notes, non-loopback endpoints are **rejected** by the script, not set. The index is placed at `_workspace/` outside the synchronized knowledge root.
+- **Complete Criteria**: If there is no embedding server, it will not silently fall back on a bad search, but will say so and tell you the command to run it.

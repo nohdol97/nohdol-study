@@ -1,79 +1,81 @@
-# Public Docs Gateway 스펙
+# Public Docs Gateway Specification
 
-- 날짜: 2026-09-03
-- 상태: 구현됨
-- 관련 결정: [ADR 008](../adr/008-public-docs-gateway.md)
+- Date: 2026-09-03
+- Status: Implemented
+- Related Decision: [ADR 008](../adr/008-public-docs-gateway.md)
 
-## 목표
+## Goal
 
-- GitHub Pages에서 선택한 기술 주제를 배우기 좋은 한국어 정적 사이트를 제공한다.
-- 게이트웨이 초기 구현은 Kubernetes 하나로 시작해 공식 문서를 이해 순서로 재구성한 전체 로드맵과 10개 장을 제공한다. 이후 주제 확장은 [DevOps 공개 학습 경로](2026-09-03-infra-specialist-public-learning-path.md)와 [AIOps 공개 학습 경로](2026-09-03-aiops-public-learning-path.md)가 정의한다.
-- 이후 사용자가 제공하는 공식 링크를 원자료로 읽고, 외부 링크 연결 대신 해당 장에 자립형 설명·다이어그램·실행 예시·실패 사례를 축적한다.
-- 공개할 문서를 명시적으로 선택하여 개인 vault와 하네스 운영 문서의 우발적 노출을 막는다.
+- GitHub Pages provides an English static site for learning selected technology topics.
+- The initial implementation of the gateway starts with Kubernetes alone and provides a full roadmap and 10 chapters that reorganize the official documentation into order of understanding. Subsequent topic extensions are defined by [DevOps Public Learning Path](2026-09-03-infra-specialist-public-learning-path.md) and [AIOps Public Learning Path](2026-09-03-aiops-public-learning-path.md).
+- Afterwards, the official link provided by the user is read as source material, and instead of linking to external links, self-supporting explanations, diagrams, implementation examples, and failure cases are accumulated in the relevant chapters.
+- Prevent accidental exposure of personal vault and harness operation documents by explicitly selecting documents to be disclosed.
 
-## 비목표
+## non-goal
 
-- nohdol-study 자체를 학습 주제로 제공하는 일
-- `docs/`의 ADR·스펙·가이드를 공개 교육과정으로 게시하는 일
-- `vault/`의 학습 노트를 자동 게시하는 기능
-- Kubernetes 공식 문서를 통째로 복제하거나 번역 미러를 만드는 일
-- 인증이 필요한 비공개 문서 호스팅이나 로컬 `_workspace` 포털 대체
+- Providing nohdol-study itself as a learning topic
+- Posting `docs/`'s ADR, specifications, and guides as an open curriculum
+- Ability to automatically post study notes in `vault/`
+- Replicating the entire Kubernetes official documentation or creating a translation mirror
+- Alternative to private document hosting or local `_workspace` portal that requires authentication
 
-## 요구사항
+## Requirements
 
-### R1. 확장 가능한 주제 게이트웨이와 현재 범위
+### R1. Extensible topic gateway and current scope
 
-첫 화면은 사이트 목적, 전체 문서 검색과 카탈로그에 등록된 학습 영역 카드를 제공한다. 영역을 선택하면 그 영역의 주제 카드가 선수 순서로 나타난다. 새 주제는 독립된 콘텐츠 디렉터리와 목차를 가지며 정확히 한 영역에 배치한다. 초기 카탈로그의 Kubernetes 카드를 선택하면 다음 11개 문서가 이 순서로 나타나고 언제든 영역과 주제 게이트웨이로 돌아올 수 있다.
+The first screen provides the site purpose, full document search, and study area cards registered in the catalog. When you select an area, the subject cards for that area appear in prerequisite order. New topics have independent content directories and tables of contents and are placed in exactly one area. When you select the Kubernetes card in the initial catalog, the following 11 documents appear in this order, and you can return to the zones and topic gateways at any time.
 
-1. 전체 학습 로드맵
-2. 왜 Kubernetes인가와 첫 클러스터
-3. API와 오브젝트
-4. 클러스터 아키텍처와 제어 루프
-5. Pod와 워크로드
-6. Service와 네트워킹
-7. 스토리지와 애플리케이션 구성
-8. 스케줄링과 리소스·오토스케일링
-9. 보안과 정책
-10. 관측과 트러블슈팅
-11. 프로덕션 운영과 확장
+1. Full Learning Roadmap
+2. Why Kubernetes and your first cluster
+3. API and objects
+4. Cluster architecture and control loop
+5. Pods and workloads
+6. Service and networking
+7. Storage and application configuration
+8. Scheduling and resource/autoscaling
+9. Security and Policy
+10. Observation and troubleshooting
+11. Production operations and expansion
 
-### R2. 주제별 독립 학습 콘텐츠
+### R2. Independent learning content by topic
 
-공개 본문은 `docs-site/content/<topic>/` 아래에서 주제별로 분리한다. 초기 Kubernetes 본문은 `docs-site/content/kubernetes/`에 둔다. 각 문서는 선수·후속 장의 관계를 밝힌다. 링크를 상세화할 때는 한 문장 모델, 관계 및 시퀀스 다이어그램, 최소 실행 예시, 상세 해설, 실패 예시와 복구, 운영 판단, 복습 질문을 기본 구조로 사용한다.
+The public text is separated by topic under `docs-site/content/<topic>/`. The initial Kubernetes body is placed in `docs-site/content/kubernetes/`. Each document identifies the relationship between prerequisites and subsequent chapters. When detailing links, use one-sentence models, relationship and sequence diagrams, minimal running examples, detailed explanations, failure examples and recovery, operational judgments, and review questions as the basic structure.
 
-원자료 URL·확인일·번역 경고는 Markdown HTML 주석에 기록하고 빌드된 본문에서 제거한다. 공개 본문에는 Kubernetes 공식 페이지로 이동하는 학습 링크를 만들지 않으며, 독립적으로 이해하고 실습할 수 있어야 한다.
+Original data URL, confirmation date, and translation warnings are recorded in Markdown HTML comments and removed from the built text. A learning link to the Kubernetes official page is not created in the public text, and must be able to be understood and labed independently.
 
-한국어 페이지가 오래된 번역일 수 있다고 표시된 경우 최신성이 중요한 API·버전·동작은 현재 영어 원문이나 API 레퍼런스도 확인한다.
+If a Korean page is flagged as possibly being an outdated translation, check the current English original text or API reference for APIs/versions/operations where up-to-dateness is important.
 
-### R3. 문서 읽기와 검색
+### R3. Reading and searching documents
 
-문서는 제목·요약·예상 읽기 시간·원본 경로를 표시한다. 제목·요약·본문을 한 번에 검색하고 Markdown의 제목, 목록, 표, 코드, 인용과 내부 링크를 읽기 좋은 HTML로 렌더링한다. `mermaid` 코드 블록은 관계도와 시퀀스 다이어그램 SVG로 렌더링한다. 주제와 문서는 URL hash로 직접 열 수 있고 브라우저 뒤로 가기와 모바일 한 열 레이아웃이 동작한다.
+The public interface, catalog titles and summaries, article prose, and diagram labels are English. The page declares `lang="en"`; search, reading-time labels, accessibility text, loading and error states, and diagram controls use English. Language changes preserve document IDs, routes, executable examples, link targets, and evidence-check metadata. Build tests reject Korean text in the published interface and content payload.
 
-### R4. 공개 범위 게이트
+Documents display the title, summary, estimated reading time, and source path. It searches the title, summary, and body at once and renders Markdown titles, lists, tables, codes, citations, and internal links into readable HTML. `mermaid` code blocks are rendered as relationship diagrams and sequence diagrams SVG. Topics and documents can be opened directly by URL hash, and browser back and mobile one-column layouts work.
 
-카탈로그 경로는 저장소 내부의 Git 추적 Markdown이어야 한다. 절대 경로, `..`, 중복 ID, 존재하지 않는 파일, `vault/`, `REGISTRY.md`, `_workspace/`를 빌드 실패로 처리한다. 빌드 과정은 vault 심링크를 순회하지 않는다.
+### R4. public range gate
 
-### R5. 재현 가능한 정적 빌드
+The catalog path must be a Git traceable Markdown inside the repository. Absolute paths, `..`, duplicate IDs, non-existent files, `vault/`, `REGISTRY.md`, and `_workspace/` are treated as build failures. The build process does not traverse vault symlinks.
 
-Node.js 22에서 잠금 파일로 의존성을 설치하고 `docs-site/dist/`를 만든다. Mermaid 11.17.2 브라우저 번들을 artifact에 복사하며 외부 CDN을 사용하지 않는다. 사이트의 URL과 asset은 프로젝트 Pages 하위 경로에서도 동작하는 상대 URL이어야 한다.
+### R5. Reproducible static builds
 
-### R6. Pages 배포
+Install dependencies with lock file in Node.js 22 and create `docs-site/dist/`. Copy the Mermaid 11.17.2 browser bundle to the artifact and do not use an external CDN. The site's URL and assets must be relative URLs that also work in the project Pages subpath.
 
-`main`의 공개 문서·사이트 변경과 수동 실행에 반응하는 GitHub Actions workflow가 테스트와 빌드를 거쳐 Pages artifact를 배포한다. 배포 job은 `pages: write`와 `id-token: write`만 추가로 사용한다.
+### R6. Pages deployment
 
-### R7. 직접 전달
+GitHub Actions workflow, which responds to `main`'s public document/site changes and manual execution, deploys Pages artifacts through testing and building. The deployment job additionally uses only `pages: write` and `id-token: write`.
 
-완료하고 새로 검증한 일반 변경은 별도 승인 단계 없이 commit하여 `origin/main`에 push한다. workflow 성공과 공개 URL의 HTTP 응답을 확인한다. force push·히스토리 재작성·파괴적 Git 작업·릴리스·시크릿·다른 원격이나 브랜치는 범위 밖이다.
+### R7. direct delivery
 
-## 완료 기준
+Completed and newly verified general changes are committed and pushed to `origin/main` without a separate approval step. Check the success of the workflow and the HTTP response of the public URL. Force pushes, history rewrites, destructive Git operations, releases, secrets, other remotes or branches are out of scope.
 
-- 현재 카탈로그에는 `kubernetes` 주제 하나와 지정한 순서의 11개 문서만 있으며 게이트웨이는 추가 주제를 렌더링할 수 있다.
-- 모든 공개 소스 경로는 `docs-site/content/kubernetes/` 아래의 Git 추적 Markdown이다.
-- 검색 데이터에 제목·요약·본문 텍스트가 있고 하네스 주제와 비공개 경로 문서가 포함되지 않는다.
-- 로드맵의 상대 Markdown 링크가 사이트 내부 문서 링크로 바뀐다.
-- 공개 문서 HTML에는 Kubernetes 외부 학습 링크와 근거 주석이 없고, Mermaid 코드 블록은 렌더링 대상으로 변환된다.
-- 전체 로드맵과 첫 클러스터 문서에 관계도·시퀀스, 실행 가능한 YAML, 정상·실패 관찰과 복습 질문이 있다.
-- 잘못된 경로, 미추적 파일과 중복 ID를 결정적 테스트가 거부한다.
-- 로컬 HTTP 서버에서 게이트웨이, 주제, 문서, 검색과 모바일 레이아웃을 확인한다.
-- 전체 하네스 검증이 통과한다.
-- push 뒤 Pages workflow가 성공하고 공개 URL이 HTTP 200을 반환한다.
+## Completion criteria
+
+- Currently, the catalog only has one topic, `kubernetes`, and 11 documents in the specified order, and the gateway can render additional topics.
+- All open source paths are Git trace Markdown under `docs-site/content/kubernetes/`.
+- Search data includes title, summary, and body text, and does not include harness topics and private path documents.
+- Relative Markdown links in the roadmap are replaced with links to internal site documents.
+- The public document HTML lacks Kubernetes external learning links and evidence annotations, and Mermaid code blocks are converted to render targets.
+- The overall roadmap and first cluster document contain relationships/sequences, executable YAML, normal/failure observations, and review questions.
+- Deterministic tests reject invalid paths, untracked files and duplicate IDs.
+- Check gateways, topics, documents, search and mobile layouts on your local HTTP server.
+- The entire harness verification passes.
+- After the push, the Pages workflow succeeds and the public URL returns HTTP 200.

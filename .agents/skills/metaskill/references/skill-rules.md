@@ -18,7 +18,7 @@ Apply these rules to every skill in this workspace.
 7. For behavioral disciplines, test a realistic pressure or failure case. For
    deterministic scripts, use executable tests. Reference-only skills do not
    need artificial pressure tests.
-8. Author model-read assets in English and update the Korean summary view in
+8. Author model-read assets in English and update the English summary view in
    the same change.
 9. Skill edits are reliably discovered on the next CLI session. Report this
    when a new or renamed skill was added.
@@ -26,10 +26,10 @@ Apply these rules to every skill in this workspace.
 For `.agents/skills/README.ko.md`, every actual skill directory gets one
 `## <skill-name>` section with:
 
-- 한 줄 역할
-- 언제 쓰나
-- 언제 안 쓰나
-- 핵심 절차
-- 주요 산출물 또는 완료 기준
+- One-line purpose
+- When to use
+- When not to use
+- Core procedure
+- Main deliverables or completion criteria
 
 The summary is a user-readable map, not a copy of the full skill.

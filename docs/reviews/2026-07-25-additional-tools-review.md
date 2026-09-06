@@ -1,97 +1,97 @@
-# nohdol-study 추가 도구 도입 검토
+# nohdol-study Review of additional tool introduction
 
-- 날짜: 2026-07-25
-- 범위: local retrieval, 논문 RAG, agent memory/graph, Obsidian skill·API,
+- Date: 2026-07-25
+- Scope: local retrieval, paper RAG, agent memory/graph, Obsidian skill·API,
   spaced repetition, diagram
-- 판정 기준: nohdol-study의 실제 학습 효용, Markdown source-of-truth 보존,
-  근거 추적, 설치처 이식성, 외부 전송, 운영 복잡도
+- Judgment criteria: nohdol-study's actual learning utility, Markdown source-of-truth preservation,
+  Evidence tracking, installation portability, external transmission, operational complexity
 
-## 결론
+## conclusion
 
-| 후보 | 판정 | 다음 행동 |
+| candidate | verdict | next action |
 |---|---|---|
-| basic-memory | Phase 2c 제한 파일럿 채택 | 지정 corpus를 read/search 중심으로 index하고 원본 hash·검색 품질 비교 |
-| PaperQA2 | 조건부 채택 | 사용자가 지정한 논문 묶음의 심층 질의에서 provider·전송 승인 후 사용 |
-| kepano/obsidian-skills | 4종 채택 | markdown, bases, json-canvas, obsidian-cli를 exact pin으로 project-local 도입 |
-| spaced-repetition | Phase 3 채택 | recall Markdown 포맷을 플러그인 호환으로 설계 |
-| D2·Mermaid·JSON Canvas·matplotlib | 채택 | `diagram` skill의 용도별 router로 구현 |
-| Graphiti | 보류 | temporal fact/history 질의가 반복 요구가 되면 재검토 |
-| Mem0 | 보류 | 개인화 agent memory가 명시 요구가 되면 재검토 |
-| Cognee | 보류 | 다중 데이터 memory pipeline과 agent trace 기억이 필요해지면 재검토 |
-| Kuzu | 신규 도입 제외 | 아카이브된 DB 대신 유지보수되는 후보만 검토 |
-| Obsidian Local REST API/MCP | 기본 경로 보류 | 공식 CLI로 불가능한 live-app/원격 client 요구가 있을 때만 |
+| basic-memory | Phase 2c limited pilot adoption | Index the designated corpus with a read/search focus and compare the original hash and search quality |
+| PaperQA2 | Conditional adoption | Used after provider/transmission approval in in-depth query of user-specified paper bundle |
+| kepano/obsidian-skills | 4 types adopted | Introduced project-local with exact pin for markdown, bases, json-canvas, and obsidian-cli |
+| spaced-repetition | Phase 3 adoption | Recall Markdown format designed to be plug-in compatible |
+| D2·Mermaid·JSON Canvas·matplotlib | adopted | Implementation of `diagram` skill as a router for each purpose |
+| Graphiti | hold | Reexamine when temporal fact/history queries require repetition |
+| Mem0 | hold | Reconsideration when personalized agent memory becomes an explicit request |
+| Cognee | hold | Reexamine when multiple data memory pipeline and agent trace memory becomes necessary |
+| Kuzu | Excluding new introductions | Review only maintained candidates instead of archived DB |
+| Obsidian Local REST API/MCP | Hold default route | Only when there is a live-app/remote client request that is not possible with the official CLI. |
 
-## 1. basic-memory — 작은 제한 파일럿
+## 1. basic-memory — small limited pilot
 
-Basic Memory는 Markdown 파일을 원본으로 유지하고 SQLite를 파생 index로
-사용한다. CLI에서 검색·노트 조회를 제공하고 watcher로 파일 변경을
-동기화할 수 있다. 이 구조는 nohdol-study의 “Markdown 원본, DB 파생물”
-원칙과 맞는다.
+Basic Memory keeps the Markdown file as the original and SQLite as the derived index.
+Use it. Provides search and note inquiry in CLI and file changes with watcher
+You can synchronize. This structure is “Markdown original, DB derivative” by nohdol-study
+It fits the principle.
 
-이전의 “curated note 100개 이후” 조건에는 도구가 유용해지는 정확한
-근거가 없다. 노트 수 대신 다음의 작은 실험으로 판단한다.
+The previous “after 100 curated notes” condition included the exact amount of time the tool becomes useful.
+There is no evidence. Instead of counting notes, judge by the following small experiment.
 
-1. 사용자가 지정한 vault 하위 경로만 대상으로 한다.
-2. 실행 전후 Markdown path와 SHA-256 집합을 비교한다.
-3. 파일럿에서는 `bm format`, 자동 write, reset 같은 원본 변경 기능을
-   wrapper allowlist 밖에 둔다.
-4. 미리 만든 사실·관계·부정 질문으로 현재 `knowledge-graph`, Understand
-   Anything, basic-memory의 precision, source 추적, latency, noise를
-   비교한다.
-5. 결과가 낫지 않으면 SQLite index를 지우는 것으로 완전히 철회할 수 있어야
-   한다.
+1. Only the vault subpath specified by the user is targeted.
+2. Compare the Markdown path and SHA-256 set before and after execution.
+3. In Pilot, original change functions such as `bm format`, automatic write, and reset are available.
+   Place it outside the wrapper allowlist.
+4. Currently `knowledge-graph`, Understand with pre-made facts, relationships, and denial questions
+   Anything, basic-memory precision, source tracking, latency, noise
+   Compare.
+5. If the results do not improve, you should be able to completely withdraw by clearing the SQLite index.
+   Do it.
 
-Basic Memory는 AGPL-3.0이므로 upstream 코드를 이 저장소에 복사·수정해
-배포하지 않고 별도 설치한 도구로 호출한다.
+Basic Memory is AGPL-3.0, so copy and modify the upstream code to this repository.
+Instead of deploying, it is called using a separately installed tool.
 
-근거:
+Evidence:
 
 - [Technical information](https://docs.basicmemory.com/reference/technical-information)
 - [CLI reference](https://docs.basicmemory.com/reference/cli-reference/)
 - [Local CLI basics](https://docs.basicmemory.com/local/cli-basics)
 - [GitHub repository](https://github.com/basicmachines-co/basic-memory)
 
-## 2. PaperQA2 — 논문 심층 질의용
+## 2. PaperQA2 — for in-depth questioning of papers
 
-PaperQA2는 PDF와 text corpus에서 답을 구성하고 citation을 붙이는 논문 RAG
-도구다. 일상적인 한 편 ingest는 현재 `paper-search`와 `note-writer`로
-충분하지만, 여러 논문의 방법·결과·한계를 반복 비교할 때는 보완 가치가
-있다.
+PaperQA2 is a paper RAG that constructs answers from PDF and text corpus and adds citations.
+It's a tool. The routine meanwhile ingest is currently `paper-search` and `note-writer`.
+Sufficient, but has complementary value when repeatedly comparing methods, results, and limitations of multiple papers.
+there is.
 
-기본 설정은 외부 model·embedding provider를 사용할 수 있다. 실행 전 corpus,
-provider, 외부 전송 여부를 보여주고 승인받는다. 답의 citation은 해당 PDF
-원문에서 다시 확인하며 PaperQA 답변 자체를 verified note의 근거로 쓰지
-않는다.
+The default setting is to use an external model·embedding provider. Corpus before execution,
+Provider, shows whether external transmission is available and is approved. The answer's citation is in the PDF
+Check the original text again and use the PaperQA answer itself as evidence in the verified note.
+No.
 
-근거:
+Evidence:
 
 - [FutureHouse PaperQA2](https://github.com/Future-House/paper-qa)
 
-## 3. Obsidian skills와 API
+## 3. Obsidian skills and API
 
-`kepano/obsidian-skills`의 다음 4개는 파일 기반 학습에 직접 도움이 되므로
-채택한다.
+The next four of `kepano/obsidian-skills` directly help with file-based learning, so
+adopt.
 
-- `obsidian-markdown`: Obsidian wikilink, embed, callout, properties 작성
-- `obsidian-bases`: `.base` YAML view·filter·formula 작성
-- `json-canvas`: 공개 JSON Canvas 1.0 형식의 지식 맵 작성
-- `obsidian-cli`: 공식 CLI를 통한 검색·파일·property·command 작업
+- `obsidian-markdown`: Create Obsidian wikilink, embed, callout, properties
+- `obsidian-bases`: Create `.base` YAML view·filter·formula
+- `json-canvas`: Creating knowledge maps in open JSON Canvas 1.0 format.
+- `obsidian-cli`: Search·file·property·command operations via official CLI
 
-upstream `defuddle` skill은 현재 nohdol-study의 immutable capture,
-evidence, authenticated-source 금지 경계보다 단순하므로 교체하지 않는다.
-4개 skill은 사용자 전역 위치가 아니라 exact commit의 project-local
-source로 설치한다.
+The upstream `defuddle` skill is currently nohdol-study's immutable capture,
+evidence, authenticated-source It is simpler than the prohibition boundary, so it is not replaced.
+The 4 skills are not user-global, but project-local in the exact commit.
+Install from source.
 
-공식 Obsidian CLI는 Obsidian 1.12 installer와 실행 중인 앱이 필요하다.
-2026-07-25 이 Mac의 `/Applications/Obsidian.app`은 1.10.6이므로 현재는
-CLI만 `unavailable`이며, Markdown/Bases/Canvas skill에는 영향이 없다.
+The official Obsidian CLI requires the Obsidian 1.12 installer and a running app.
+2026-07-25 `/Applications/Obsidian.app` on this Mac is 1.10.6, so currently
+Only CLI is `unavailable` and has no effect on Markdown/Bases/Canvas skills.
 
-Local REST API 플러그인은 API key와 self-signed HTTPS 또는 loopback HTTP,
-실행 중인 Obsidian을 요구하고 파일 변경·command 실행까지 노출한다. 공식
-CLI가 충족하지 못하는 remote client 또는 live app metadata 요구가 없으므로
-기본 경로에는 넣지 않는다.
+The Local REST API plugin uses an API key and self-signed HTTPS or loopback HTTP,
+It requests Obsidian to be running and even exposes file changes and command execution. official
+Because there are no remote client or live app metadata needs that the CLI cannot meet.
+Do not put it in the default path.
 
-근거:
+Evidence:
 
 - [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills)
 - [Obsidian CLI help](https://obsidian.md/help/cli)
@@ -101,49 +101,49 @@ CLI가 충족하지 못하는 remote client 또는 live app metadata 요구가 �
 
 ## 4. Graphiti·Mem0·Cognee·Kuzu
 
-세 memory/graph 도구는 기능상 사용할 수 없어서가 아니라 현재 요구보다
-운영 계층이 크기 때문에 보류한다.
+It's not that the three memory/graph tools are functionally unusable, but because they are faster than current needs.
+It is held back because the operational layer is large.
 
-- Graphiti는 temporal knowledge graph에 적합하지만 Neo4j, FalkorDB 또는
-  Neptune 같은 graph backend와 LLM provider가 필요하다.
-- Mem0 open source는 LLM, embedder, vector store를 조합하는 agent memory다.
-- Cognee는 vector, graph, relational 계층과 model 설정을 묶은 memory
-  pipeline이며 agent interaction까지 capture할 수 있다.
+- Graphiti is suitable for temporal knowledge graphs, but Neo4j, FalkorDB or
+  A graph backend and LLM provider such as Neptune are required.
+- Mem0 open source is an agent memory that combines LLM, embedder, and vector store.
+- Cognee is a memory that bundles vector, graph, relational layers and model settings.
+  It is a pipeline and can even capture agent interactions.
 
-현재 nohdol-study의 핵심은 사용자가 소유한 Markdown과 주장별 근거다.
-상시 agent memory가 추가되면 “왜 기억됐는가”와 삭제·동기화·외부 전송
-정책까지 별도 운영해야 한다. temporal fact history, 개인화 agent memory,
-다중 데이터/trace memory가 실제 반복 요구가 될 때 각각 재검토한다.
+Currently, the core of nohdol-study is user-owned Markdown and evidence for each claim.
+When permanent agent memory is added, “Why was it remembered?” and deletion, synchronization, and external transfer
+Even policies must be operated separately. temporal fact history, personalized agent memory,
+Multiple data/trace memories are re-examined individually when actual repetition is required.
 
-Kuzu는 공식 저장소가 2025-10 아카이브되어 신규 DB 선택지에서 제외한다.
-이는 파일 형식이나 기존 데이터 사용 금지가 아니라 새 핵심 의존성으로
-선택하지 않는다는 뜻이다.
+Kuzu is excluded from the new DB selection as the official repository is archived in 2025-10.
+This is not a ban on file types or existing data, but rather a new core dependency.
+It means not choosing.
 
-근거:
+Evidence:
 
 - [Graphiti](https://github.com/getzep/graphiti)
 - [Mem0 open-source overview](https://docs.mem0.ai/open-source/overview)
 - [Cognee installation](https://docs.cognee.ai/getting-started/installation)
 - [Kuzu repository](https://github.com/kuzudb/kuzu)
 
-## 5. 복습과 다이어그램
+## 5. Review and diagram
 
-`obsidian-spaced-repetition`은 질문/답, cloze, note review를 Markdown 안에
-보존할 수 있어 Phase 3 `recall` 출력 대상으로 적합하다. plugin 설치는
-Obsidian 사용 설치처의 선택 사항이며 복습 schedule은 하네스 Git에 넣지
-않는다.
+`obsidian-spaced-repetition` contains questions/answers, clozes, and note reviews in Markdown.
+Because it can be preserved, it is suitable for Phase 3 `recall` output. Plugin installation is
+It is optional for the installation location using Obsidian, and the review schedule is not included in harness Git.
+No.
 
-다이어그램은 하나의 도구로 통일하지 않는다.
+Diagrams are not unified as a single tool.
 
-- Mermaid: Obsidian 안에서 바로 렌더되는 기본 text diagram
-- D2: 큰 architecture를 CLI에서 SVG로 렌더
-- JSON Canvas: vault note를 연결하는 지식 맵
-- matplotlib: 좌표·궤적·3D처럼 수치 정확성이 필요한 SVG
+- Mermaid: A basic text diagram that renders directly within Obsidian.
+- D2: Rendering large architectures from CLI to SVG
+- JSON Canvas: Knowledge map linking vault notes
+- matplotlib: SVG that requires numerical accuracy such as coordinates, trajectory, and 3D
 
-D2는 브라우저 없이 text를 SVG로 만들 수 있지만 현재 이 Mac에는 설치돼
-있지 않다. `diagram` skill을 구현하면서 optional dependency로 설치한다.
+D2 can convert text to SVG without a browser, but it is currently installed on this Mac.
+There is not. Installs as an optional dependency while implementing the `diagram` skill.
 
-근거:
+Evidence:
 
 - [Obsidian Spaced Repetition](https://github.com/st3v3nmw/obsidian-spaced-repetition)
 - [D2 installation](https://d2lang.com/tour/install/)

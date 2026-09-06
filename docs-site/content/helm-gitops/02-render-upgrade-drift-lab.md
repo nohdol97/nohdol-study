@@ -1,42 +1,42 @@
-# Render, upgrade와 drift 실습
+# Render, upgrade and drift lab
 
-> 실습 등급: render 단계는 **Local**, install·upgrade는 **Local Kubernetes**다. 공개 registry에 push하지 않으며 AWS 비용은 없다.
+> Lab level: render stage is **Local**, install·upgrade is **Local Kubernetes**. There is no push to a public registry and there are no AWS costs.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-- **도구**: `helm version`과 `kubectl version --client`가 성공해야 한다.
-- **cluster**: install 단계까지 하려면 kind나 minikube 같은 disposable local Kubernetes가 필요하다. cluster가 없으면 render 단계까지만 진행한다.
-- **현재 대상 확인**: `kubectl config current-context`로 운영 cluster가 아닌지 반드시 확인한다.
-- **directory**: 빈 실습 directory에서 시작한다. `helm create`가 `sample-api/` 전체를 생성한다.
-- **관찰 순서**: chart 검사 → 최종 YAML 생성 → Kubernetes 형식 검사 → 실제 설치 순서로 진행한다.
-- **정리 대상**: Helm release, `infra-study` namespace, `sample-api/` directory와 `rendered.yaml`이다.
+- **Tool**: `helm version` and `kubectl version --client` should succeed.
+- **cluster**: To reach the install stage, a disposable local Kubernetes such as kind or minikube is required. If there is no cluster, it only proceeds to the render stage.
+- **Check current target**: Make sure it is not an operating cluster with `kubectl config current-context`.
+- **directory**: Start from an empty lab directory. `helm create` creates the entire `sample-api/`.
+- **Observation order**: Proceed in the following order: chart inspection → final YAML creation → Kubernetes format inspection → actual installation.
+- **Cleanup target**: Helm release, `infra-study` namespace, `sample-api/` directory and `rendered.yaml`.
 
-처음에는 `helm lint`와 `helm template`까지만 실행해도 된다. 생성된 YAML에서 image와 replica 수를 직접 찾을 수 있을 때 cluster 설치로 넘어간다.
+At first, you only need to run up to `helm lint` and `helm template`. When you can find the image and replica number directly in the generated YAML, proceed to cluster installation.
 
-## 먼저 이해하기
+## Understand the model first
 
-이 실습은 같은 chart를 네 단계에서 확인한다. lint는 chart 자체의 기본 오류를 찾고, template은 values가 적용된 최종 YAML을 보여 준다. Kubernetes dry-run은 API 형식과 일부 admission 조건을 확인하며 실제 install은 controller가 Pod를 만들어 readiness에 도달하는지 확인한다. 앞 단계가 뒤 단계의 성공을 보장하지 않는다.
+This lab checks the same chart in four steps. Lint finds basic errors in the chart itself, and template shows the final YAML with values ​​applied. Kubernetes dry-run checks the API format and some admission conditions, and the actual install checks whether the controller creates a Pod and reaches readiness. Previous steps do not guarantee the success of later steps.
 
-| gate | 성공의 의미 | 아직 모르는 것 |
+| gate | meaning of success | What you don't know yet |
 |---|---|---|
-| `helm lint` | chart 관례·일부 template 검사 통과 | 특정 values의 모든 결과 |
-| `helm template` | 원하는 YAML 생성 | cluster API·admission 수용 여부 |
-| client dry-run | local schema 처리 가능 | server CRD·policy·quota |
-| install/upgrade | release action 완료 | 사용자 요청과 외부 dependency 정상 |
-| rollout check | controller readiness 달성 | SLO와 business 결과 |
+| `helm lint` | Passed chart convention/some template inspection | All results for specific values |
+| `helm template` | Create the desired YAML | Whether to accept cluster API/admission |
+| client dry-run | Local schema processing possible | server CRD·policy·quota |
+| install/upgrade | release action completed | User requests and external dependencies are normal |
+| rollout check | Achieve controller readiness | SLO and business results |
 
-각 명령 뒤에 “성공”만 적지 말고 무엇을 새로 알았고 무엇은 아직 모르는지 기록한다.
+Rather than just writing “success” after each command, write down what you learned and what you still don’t know.
 
-## 1. Chart 생성과 최소화
+## 1. Chart creation and minimization
 
 ```bash
 helm create sample-api
 find sample-api -maxdepth 2 -type f | sort
 ```
 
-학습에 필요 없는 template는 제거하고 Deployment와 Service만 남긴다. 삭제 전 `helm template`로 어떤 object가 사라지는지 확인한다.
+Templates that are not needed for learning are removed, leaving only Deployment and Service. Before deleting, check which object disappears with `helm template`.
 
-`values.yaml`의 image는 mutable tag보다 검증한 digest를 받을 수 있게 설계한다.
+The image of `values.yaml` is designed to receive a verified digest rather than a mutable tag.
 
 ```yaml
 replicaCount: 1
@@ -47,7 +47,7 @@ service:
   port: 80
 ```
 
-template에서는 repository와 digest를 명시적으로 결합한다.
+The template explicitly combines repository and digest.
 
 ```yaml
 image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
@@ -64,11 +64,11 @@ helm template sample-api sample-api \
 kubectl apply --dry-run=client -f rendered.yaml
 ```
 
-`helm lint`는 chart 관례와 일부 오류를 검사하고 `helm template`은 최종 YAML을 보여 준다. client dry-run은 cluster admission·CRD·version compatibility까지 보장하지 않는다. production gate에서는 server-side dry-run 또는 disposable cluster 검증을 추가한다.
+`helm lint` checks chart conventions and some errors, and `helm template` shows the final YAML. Client dry-run does not guarantee cluster admission·CRD·version compatibility. Add server-side dry-run or disposable cluster verification at the production gate.
 
-## 3. Install, upgrade와 rollback
+## 3. Install, upgrade and rollback
 
-검증한 digest를 넣은 뒤 local cluster에서 실행한다.
+After inserting the verified digest, run it on the local cluster.
 
 ```bash
 kubectl create namespace infra-study
@@ -80,7 +80,7 @@ helm history sample-api -n infra-study
 kubectl get deployment,pod,service -n infra-study
 ```
 
-replica 수를 2로 바꾸어 upgrade한 뒤 rollout을 확인한다.
+Change the replica number to 2, upgrade, and check rollout.
 
 ```bash
 helm upgrade sample-api sample-api -n infra-study --set replicaCount=2 --wait
@@ -88,18 +88,18 @@ kubectl rollout status deployment/sample-api -n infra-study
 helm history sample-api -n infra-study
 ```
 
-의도적인 잘못된 image digest로 upgrade할 때는 `--atomic`과 timeout의 효과를 별도 local 실험으로 확인한다. 실패 뒤 release revision, Pod event와 실제 Deployment image를 기록한다.
+When upgrading to an intentionally incorrect image digest, check the effects of `--atomic` and timeout through a separate local experiment. After failure, release revision, Pod event, and actual deployment image are recorded.
 
 ```bash
 helm rollback sample-api 1 -n infra-study --wait
 kubectl rollout status deployment/sample-api -n infra-study
 ```
 
-rollback 성공 판정은 Helm status뿐 아니라 workload readiness와 요청 성공을 포함한다.
+Rollback success judgment includes not only Helm status but also workload readiness and request success.
 
-## 4. GitOps drift 사고 실험
+## 4. GitOps drift thought experiment
 
-Argo CD가 관리하는 Deployment를 직접 scale했다고 가정한다.
+Assume that you directly scaled the deployment managed by Argo CD.
 
 ```bash
 kubectl scale deployment/sample-api -n infra-study --replicas=3
@@ -111,13 +111,13 @@ flowchart TD
     B[Live replicas 3] --> C
     C --> D[OutOfSync]
     D --> E{selfHeal enabled?}
-    E -->|예| F[2로 되돌림]
-    E -->|아니오| G[manual sync 대기]
+    E -->|Yes| F[revert to 2]
+    E -->|No| G[wait for manual sync]
 ```
 
-긴급 조치가 필요한 조직은 self-heal을 끄는 대신 변경 TTL·승인·Git 반영 절차를 정할 수 있다. 중요한 것은 drift를 숨기지 않고 누가 언제 target state에 반영할지 정하는 것이다.
+Organizations that need urgent action can set change TTL, approval, and Git reflection procedures instead of turning off self-heal. The important thing is not to hide drift and to decide who will reflect on the target state and when.
 
-## 정리
+## Cleanup
 
 ```bash
 helm uninstall sample-api -n infra-study
@@ -125,21 +125,21 @@ kubectl delete namespace infra-study
 rm -f rendered.yaml
 ```
 
-CRD나 cluster-scoped resource가 chart에 있었다면 namespace 삭제만으로 정리되지 않는다. 이 실습 chart에는 넣지 않는다.
+If a CRD or cluster-scoped resource was in the chart, it will not be cleaned up just by deleting the namespace. It is not included in this lab chart.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-`helm template` 결과에서 image, replica, label selector와 Service port를 먼저 찾는다. chart source가 복잡해도 cluster가 받는 것은 이 manifest다. 예상한 value가 보이지 않으면 cluster를 조사하기 전에 values precedence와 template reference를 고친다.
+First find the image, replica, label selector, and service port in the `helm template` results. Even if the chart source is complex, what the cluster receives is this manifest. If you don't see the expected value, fix the values ​​precedence and template reference before examining the cluster.
 
-`helm history`에 새 revision이 생겼다는 사실은 release 기록이 갱신됐다는 뜻이다. `kubectl rollout status`가 실패하면 Pod event, image pull, probe와 quota를 확인한다. `--atomic`이 rollback을 수행했더라도 외부 database migration이나 hook side effect가 원래 상태로 돌아왔는지는 별도다.
+The fact that a new revision has been created in `helm history` means that the release record has been updated. If `kubectl rollout status` fails, check Pod event, image pull, probe and quota. Even if `--atomic` performed a rollback, it is separate from whether external database migration or hook side effects have returned to their original state.
 
-Argo CD가 `OutOfSync`를 보이면 compare가 drift를 발견한 것이다. self-heal로 replica가 돌아와도 긴급 변경의 이유가 Git과 incident 기록에 남지 않으면 운영 경로는 닫히지 않았다.
+If Argo CD shows `OutOfSync`, compare has found drift. Even if the replica returns with self-healing, the operating path is not closed unless the reason for the emergency change is recorded in Git and the incident record.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. `helm lint`, client dry-run과 실제 cluster admission이 각각 잡지 못하는 것은 무엇인가?
-2. Helm rollback 후에도 외부 DB migration이 남을 수 있는 이유는 무엇인가?
-3. auto-sync, prune과 self-heal을 독립적으로 검토해야 하는 이유는 무엇인가?
+1. `helm lint`, what does client dry-run and actual cluster admission fail to capture?
+2. Why can external DB migration remain even after Helm rollback?
+3. Why should auto-sync, prune and self-heal be reviewed independently?
 
 <!-- source: https://helm.sh/docs/helm/helm_lint/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
 <!-- source: https://helm.sh/docs/helm/helm_template/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->

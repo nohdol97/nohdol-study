@@ -1,49 +1,49 @@
-# ADR 008 — 주제별 학습 문서는 명시적 카탈로그를 거쳐 GitHub Pages에 배포한다
+# ADR 008 — Subject-specific learning documents are deployed to GitHub Pages through an explicit catalog.
 
-- 날짜: 2026-09-03
-- 상태: 부분 대체(루트 topic 나열은 ADR 009로 대체)
-- 대상: `docs-site/`, `.github/workflows/docs-pages.yml`, `AGENTS.md` 7절
-- 관련 스펙: [Public Docs Gateway](../specs/2026-09-03-public-docs-gateway.md), [DevOps 공개 학습 경로](../specs/2026-09-03-infra-specialist-public-learning-path.md), [AIOps 공개 학습 경로](../specs/2026-09-03-aiops-public-learning-path.md)
+- Date: 2026-09-03
+- Status: Partially replaced (root topic listing replaced by ADR 009)
+- Subject: `docs-site/`, `.github/workflows/docs-pages.yml`, `AGENTS.md` Section 7
+- Related specs: [Public Docs Gateway](../specs/2026-09-03-public-docs-gateway.md), [DevOps Public Learning Path](../specs/2026-09-03-infra-specialist-public-learning-path.md), [AIOps Public Learning Path](../specs/2026-09-03-aiops-public-learning-path.md)
 
-> 첫 화면에서 모든 topic을 직접 나열하는 구조는 [ADR 009](009-public-docs-root-learning-paths.md)가 학습 영역 path 구조로 대체한다. 명시적 catalog, 공개 범위와 Pages artifact 결정은 계속 유효하다.
+> The structure of directly listing all topics on the first screen is [ADR 009](009-public-docs-root-learning-paths.md) replaced by the learning area path structure. Explicit catalog, disclosure, and Pages artifact decisions remain in effect.
 
-## 맥락
+## context
 
-처음 만든 공개 사이트는 nohdol-study 저장소의 ADR·스펙·가이드를 주제별로 보여줬다. 그러나 사용자가 원하는 공개 학습 대상은 하네스 자체가 아니라 별도로 선택한 기술 주제다. 첫 주제는 Kubernetes였으며, [Kubernetes 한국어 문서](https://kubernetes.io/ko/docs/home/)를 출발점으로 학습 목차를 만들고 이후 사용자가 지정하는 링크를 다이어그램과 상세 예시가 있는 설명으로 확장해야 했다. 같은 게이트웨이는 후속 DevOps 주제로 확장할 수 있어야 했다.
+The first public site created showed ADR, specifications, and guides from the nohdol-study repository by topic. However, the public learning object desired by the user is not the harness itself, but a separately selected technology topic. The first topic was Kubernetes, and we had to create a learning table of contents starting from the [Kubernetes Korean document ](https://kubernetes.io/ko/docs/home/) and then expand the links specified by the user into explanations with diagrams and detailed examples. The same gateway had to be extensible to subsequent DevOps topics.
 
-별도의 로컬 `_workspace` 포털은 반복 이용하는 개인용 사이트를 모으는 표면이며 인터넷 배포를 목표로 하지 않는다. 실제 지식 루트인 `vault/`는 개인정보와 비공개 학습 자료를 포함할 수 있고 Git에서 제외되어 있으므로 GitHub Actions가 읽거나 공개 문서에 자동 포함해서는 안 된다.
+The separate local `_workspace` portal is a surface for collecting repeatedly used personal sites and is not aimed at Internet deployment. The actual knowledge root, `vault/`, may contain personal information and private learning materials and is excluded from Git, so it should not be read by GitHub Actions or automatically included in public documents.
 
-## 결정
+## decision
 
-공개 문서 사이트의 소스는 `docs-site/`에 두고 여러 주제를 지원하는 게이트웨이 구조를 유지한다. 카탈로그는 Kubernetes와 [DevOps 스펙](../specs/2026-09-03-infra-specialist-public-learning-path.md)이 정한 후속 topic을 명시적으로 노출한다. 각 본문은 `docs-site/content/<topic>/`에 독립적으로 작성하며, 하네스 운영 문서인 `docs/`를 공개 교육과정으로 사용하지 않는다.
+The source of the public document site is located at `docs-site/` and maintains a gateway structure that supports multiple topics. The catalog explicitly exposes Kubernetes and subsequent topics defined by [DevOps specification](../specs/2026-09-03-infra-specialist-public-learning-path.md). Each text is written independently of `docs-site/content/<topic>/`, and the harness operation document `docs/` is not used as an open curriculum.
 
-- 공식 문서의 설치·개념·태스크·튜토리얼·레퍼런스를 개념 의존성에 따라 11개 문서로 재배열한다.
-- 새 주제는 `docs-site/content/<topic>/`에 독립된 목차를 두고 카탈로그에 주제 카드를 명시적으로 추가한다.
-- 공개 대상은 `docs-site/catalog.json`에 저장소 상대 경로로 명시한다.
-- 빌드는 Git이 추적하는 Markdown만 허용하고 `vault/`, `REGISTRY.md`, `_workspace/`와 경로 이탈을 거부한다.
-- 공식 원문을 복제하거나 외부 링크 모음으로 만들지 않는다. 원자료 링크는 작성 근거로만 사용하고, 공개 본문은 문제 모델·관계 및 시퀀스 다이어그램·실행 예시·상세 해설·실패 사례·운영 판단·복습 질문을 갖춘 독립 문서로 작성한다.
-- 근거 URL·확인일·번역 경고는 Markdown HTML 주석에 남겨 추적하되 빌드가 공개 본문에서 제거한다.
-- Mermaid 11.17.2 브라우저 번들을 사이트 artifact에 포함해 다이어그램을 내부 렌더링하며 외부 CDN에 의존하지 않는다.
-- 한국어 문서가 원문보다 오래되었다고 표시된 경우 최신성이 중요한 내용은 현재 영어 문서와 API 레퍼런스로 재확인한다.
-- 생성된 `docs-site/dist/`는 추적하지 않고 GitHub Actions의 Pages artifact로만 전달한다.
-- `_workspace` 포털은 로컬 다이내믹 사이트, `docs-site`는 인터넷에 공개하는 추적 학습 문서라는 경계를 유지한다.
+- The official documentation's installation, concept, task, tutorial, and reference are rearranged into 11 documents according to concept dependency.
+- The new topic has an independent table of contents in `docs-site/content/<topic>/` and explicitly adds a topic card to the catalog.
+- The disclosure target is specified as a storage relative path in `docs-site/catalog.json`.
+- The build only allows Markdown tracked by Git and rejects `vault/`, `REGISTRY.md`, and `_workspace/` and path deviations.
+- Do not duplicate the official original text or create a collection of external links. Links to the original data are used only as writing evidence, and the public text is written as an independent document with problem model, relationship and sequence diagram, execution example, detailed explanation, failure case, operational judgment, and review questions.
+- Evidence URL, confirmation date, and translation warnings are tracked by leaving them in Markdown HTML comments, but the build removes them from the public body.
+- The Mermaid 11.17.2 browser bundle is included in the site artifact to render diagrams internally and does not depend on an external CDN.
+- If the Korean document is marked as being older than the original, re-check the current English document and API reference for content where up-to-dateness is important.
+- The generated `docs-site/dist/` is not tracked and is only delivered as a Pages artifact in GitHub Actions.
+- The `_workspace` portal maintains the boundary of being a local dynamic site, and `docs-site` is a tracking learning document published on the Internet.
 
-## 링크 추가 운영
+## Add link operation
 
-사용자가 현재 주제의 링크를 주면 독자를 그 주소로 보내는 항목을 추가하지 않는다. 해당 본문을 읽고 검증한 뒤 기존 학습 목차에서 가장 가까운 장을 자립형 설명으로 갱신한다. 한 링크가 독립된 학습 단계가 필요할 때만 문서를 추가하며, 카탈로그 순서는 선수 개념을 반영한다. 사실 주장은 해당 공식 페이지의 실제 본문에서 확인하고 출처와 확인 시점을 비노출 메타데이터로 남긴다.
+If the user gives you a link to the current topic, don't add an item that will send readers to that address. After reading and verifying the text, the closest chapter in the existing study table of contents is updated with a self-supporting explanation. Documents are added only when a link requires an independent learning step, and the catalog order reflects the concept of prerequisite. In fact, claims are confirmed in the actual text of the official page, and the source and confirmation time are left as non-disclosed metadata.
 
-## 배포 운영
+## deployment operation
 
-이 저장소는 완료하고 새로 검증한 일반 변경을 별도 확인 없이 commit하여 `origin/main`에 push해도 된다는 사용자 상시 승인을 갖는다. Pages workflow까지 성공하고 공개 URL이 응답해야 배포가 완료된 것이다. force push, 히스토리 재작성, 파괴적 Git 작업, 릴리스, 시크릿, 다른 원격·브랜치는 이 승인에 포함하지 않는다.
+This repository has constant user approval to commit and push completed and newly verified general changes to `origin/main` without separate confirmation. The deployment is complete only when the Pages workflow is successful and the public URL responds. This authorization does not include force pushes, history rewrites, destructive Git operations, releases, secrets, or other remote branches.
 
-## 왜 vault나 하네스 문서를 자동 게시하지 않는가
+## Why not automatically publish vault or harness documents?
 
-Pages 배포는 공개 동작이다. 디렉터리 스캔은 새 파일이 생겼다는 이유만으로 공개 범위를 넓힌다. 특히 `vault/`는 비공개 지식 경계를 무력화하고, `docs/`는 독자의 Kubernetes 학습 목표와 무관한 하네스 구현 세부를 섞는다. 명시적 카탈로그와 전용 콘텐츠 디렉터리는 공개 의도를 코드 리뷰 가능한 변경으로 만든다.
+Pages deployment is a public operation. Directory scans expand the scope of disclosure simply because new files have been created. In particular, `vault/` neutralizes private knowledge boundaries, and `docs/` mixes harness implementation details that are irrelevant to the reader's Kubernetes learning goals. Explicit catalogs and dedicated content directories make public intent a code-reviewable change.
 
-## 결과
+## result
 
-- 방문자는 첫 화면에서 Kubernetes와 DevOps 후속 과정의 전체 학습 순서를 보고 주제를 선택할 수 있다.
-- 47개 문서가 이후 링크 기반 상세 학습의 안정된 위치가 된다.
-- 독자는 외부 문서를 열지 않고도 개념 설명, 다이어그램, 실행과 실패 실습을 한 화면에서 따라갈 수 있다.
-- 각 주제는 독립된 콘텐츠 경로를 가지며 공개 범위가 카탈로그와 Git 추적 상태로 제한된다.
-- 로컬 vault 없이도 CI에서 같은 사이트를 만들 수 있다.
+- On the first screen, visitors can view the entire learning sequence of the Kubernetes and DevOps follow-up course and select a topic.
+- The 47 documents then become stable locations for link-based detailed learning.
+- Readers can follow concept explanations, diagrams, and run and fail labs on one screen without having to open external documents.
+- Each topic has an independent content path and its public scope is limited to its catalog and Git tracked state.
+- You can create the same site in CI without a local vault.

@@ -1,21 +1,21 @@
-# AI Transformation 전체 필러 로드맵
+# AI Transformation: the four-pillar roadmap
 
 <!-- source: https://arxiv.org/abs/2309.06180 | checked: 2026-09-03 -->
 <!-- source: https://www.kubeflow.org/docs/components/pipelines/overview/ | checked: 2026-09-03 -->
 <!-- source: https://modelcontextprotocol.io/specification/2025-11-25/architecture | checked: 2026-09-03 -->
 
-AI Transformation은 model API를 도입하는 일이 아니라 data 수집, 학습·평가, artifact 승급, serving, 권한 있는 tool 실행과 비용 책임을 하나의 운영 체계로 바꾸는 일이다. vault의 AI Transformation 내용을 네 필러로 묶고, AI Specialist의 모델 지식을 AIOps의 관측·진단·복구 폐루프로 전달한다.
+AI Transformation is not about introducing a model API, but about changing data collection, learning and evaluation, artifact promotion, serving, authoritative tool execution, and cost responsibility into a single operating system. The contents of the vault's AI Transformation are grouped into four pillars, and the model knowledge of the AI ​​Specialist is delivered to the AIOps observation, diagnosis, and recovery closed loop.
 
-## 처음 보는 사람을 위한 출발점
+## Starting point for beginners
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
+| New term | Plain-language meaning |
 |---|---|
-| AI infrastructure | GPU·network·storage·scheduler·serving runtime을 운영하는 기반 |
-| MLOps / LLMOps | dataset·model·prompt·index·평가와 배포 이력을 재현하는 체계 |
-| continuous training | 새 data와 기준에 따라 학습 후보를 반복 생성하는 과정 |
-| model serving | 여러 요청이 model inference를 안전한 latency와 capacity로 공유하는 계층 |
-| capability bundle | model뿐 아니라 prompt·tool·policy·workflow와 runtime을 함께 고정한 배포 단위 |
-| receipt | 누가 무엇을 어떤 입력·정책·결과로 실행했는지 남긴 검증 기록 |
+| AI infrastructure | Foundation for operating GPU·network·storage·scheduler·serving runtime |
+| MLOps / LLMOps | A system that reproduces dataset·model·prompt·index·evaluation and deployment history |
+| continuous training | The process of repeatedly generating learning candidates based on new data and criteria |
+| model serving | A layer where multiple requests share model inference with safe latency and capacity |
+| capability bundle | A deployment unit that fixes not only the model but also the prompt·tool·policy·workflow and runtime together. |
+| receipt | Verification record of who implemented what and with what inputs, policies, and results |
 
 ```mermaid
 flowchart LR
@@ -27,47 +27,47 @@ flowchart LR
     A -. production feedback .-> M
 ```
 
-## 네 필러
+## Four pillars
 
-1. [AI 인프라·분산 학습과 LLM 서빙](#doc=ai-transformation-platform-infrastructure): GPU memory, topology, scheduling과 inference queue를 SLO에 맞춘다.
-2. [MLOps·LLMOps와 평가 가능한 수명주기](#doc=ai-transformation-platform-mlops): dataset에서 deployment까지 lineage와 gate를 만든다.
-3. [AI DevOps·플랫폼과 FinOps](#doc=ai-transformation-platform-devops): IaC·Kubernetes·GitOps·quota·telemetry를 운영 제품으로 제공한다.
-4. [Enterprise AI와 안전한 에이전트 실행](#doc=ai-transformation-platform-agents): RAG·gateway·MCP·workflow·identity·sandbox·approval을 한 operation으로 묶는다.
+1. [AI infrastructure/distributed learning and LLM serving](#doc=ai-transformation-platform-infrastructure): Match GPU memory, topology, scheduling and inference queue to SLO.
+2. [MLOps·LLMOps and evaluable life cycle](#doc=ai-transformation-platform-mlops): Create lineage and gate from dataset to deployment.
+3. [AI DevOps·Platform and FinOps](#doc=ai-transformation-platform-devops): Provides IaC·Kubernetes·GitOps·quota·telemetry as operating products.
+4. [Enterprise AI and safe agent execution](#doc=ai-transformation-platform-agents): Bundles RAG·gateway·MCP·workflow·identity·sandbox·approval into one operation.
 
-## AI Transformation 전체 내용 연결표
+## AI Transformation Full Content Connection Table
 
-vault의 AI Transformation 허브와 하위 49개 노트가 다루는 기술 항목을 네 필러의 공개 장에 연결했다. 사내 구조 서술이나 credential·개인 data는 옮기지 않고, 공개 가능한 일반 메커니즘과 실패 경계만 공식 자료로 다시 검증한다.
+The technology items covered by the vault's AI Transformation hub and the lower 49 notes were linked to the public chapters of the four pillars. The in-house structure description, credentials, and personal data are not transferred, and only the general mechanisms and failure boundaries that can be disclosed are verified again with official data.
 
-| 필러 | 포함한 전체 세부 내용 | 공개 학습 연결 |
+| pillar | Full details including | Open Learning Connections |
 |---|---|---|
-| AI infrastructure·학습 | GPU architecture·HBM·NVLink, GPU 성능 산술·MFU, NCCL collective와 parallelism 배치, DeepSpeed·ZeRO, Ray 분산 compute, Kubernetes GPU Operator·MIG, Kueue quota·gang scheduling, GPU 탄력 확보·반납 | [AI 인프라·serving](#doc=ai-transformation-platform-infrastructure), [AI DevOps·FinOps](#doc=ai-transformation-platform-devops) |
-| LLM serving | vLLM·PagedAttention, KV cache·continuous batching, serving engine 선택, TTFT·TPOT·throughput·queue, LiteLLM gateway·virtual key·사용량 통제, backend streaming·fallback·circuit breaker | [AI 인프라·serving](#doc=ai-transformation-platform-infrastructure), [백엔드 용량](#doc=backend-engineering-runtime-capacity) |
-| MLOps | MLflow experiment·model registry, Kubeflow pipeline orchestration, dataset→run→checkpoint→model lineage, continuous training과 promotion | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops) |
-| LLMOps·RAG | hybrid vector search, vector database 운영, prompt registry·Langfuse, LLM trace·OpenTelemetry, evaluation metric·guardrail, golden dataset·eval instrumentation, evaluation gate·CI/CD 차단 | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops), [RAG·MCP](#doc=ai-specialist-core-rag-mcp) |
+| AI infrastructure·learning | GPU architecture·HBM·NVLink, GPU performance arithmetic·MFU, NCCL collective and parallelism deployment, DeepSpeed·ZeRO, Ray distributed compute, Kubernetes GPU Operator·MIG, Kueue quota·gang scheduling, securing and returning GPU elasticity | [AI Infrastructure·serving](#doc=ai-transformation-platform-infrastructure), [AI DevOps·FinOps](#doc=ai-transformation-platform-devops) |
+| LLM serving | vLLM·PagedAttention, KV cache·continuous batching, serving engine selection, TTFT·TPOT·throughput·queue, LiteLLM gateway·virtual key·usage control, backend streaming·fallback·circuit breaker | [AI infrastructure·serving](#doc=ai-transformation-platform-infrastructure), [backend capacity](#doc=backend-engineering-runtime-capacity) |
+| MLOps | MLflow experiment·model registry, Kubeflow pipeline orchestration, dataset→run→checkpoint→model lineage, continuous training and promotion | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops) |
+| LLMOps·RAG | Hybrid vector search, vector database operation, prompt registry·Langfuse, LLM trace·OpenTelemetry, evaluation metric·guardrail, golden dataset·eval instrumentation, evaluation gate·CI/CD blocking | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops), [RAG·MCP](#doc=ai-specialist-core-rag-mcp) |
 | AI DevOps·platform | Terraform·IaC, Helm·Kustomize, Argo CD·ML GitOps, CI/CD/CT pipeline, Prometheus·DCGM GPU monitoring, model·prompt·tool bundle deployment | [AI DevOps·FinOps](#doc=ai-transformation-platform-devops), [DevOps GitOps](#doc=helm-gitops-roadmap) |
-| FinOps·성과 | AI 비용의 계산 단위, GPU 자원 비용 최적화, workload quota·autoscaling, AI project 성과·ROI 기준 | [AI DevOps·FinOps](#doc=ai-transformation-platform-devops), [신뢰성·FinOps](#doc=reliability-finops-roadmap) |
-| Enterprise integration | LLM service backend 통합, Keycloak OIDC realm·identity, MCP agent tool 통합·trust boundary, code 접근 없는 contract 수집·교차 검증 | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [백엔드 API 계약](#doc=backend-engineering-api-contract) |
-| Agent orchestration | LangGraph state graph·memory·session, Temporal durable execution, A2A task lifecycle, tool calling·idempotency, Structured Outputs·JSON Schema | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [분산 workflow](#doc=backend-engineering-distributed-workflow) |
-| Agent security·governance | prompt injection·tool authorization, sandbox·code execution isolation, workload identity·delegated authority, OPA/Rego policy, MCP OAuth, Plan/Commit·물리 작업 승인 | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [인프라 보안](#doc=infrastructure-security-roadmap) |
-| Agent delivery·evaluation | capability bundle·compatibility gate, repository eval wiring·dispatch, multi-agent integrated eval·deployment block, 검증 가능성·jagged intelligence의 한계 | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops), [AIOps 진단](#doc=aiops-diagnosis-roadmap), [AIOps 복구](#doc=aiops-remediation-roadmap) |
-| Edge·physical AI | robot edge inference runtime·model deployment gate, target별 graph·precision·accelerator bundle과 rollback | [On-device 모델 압축](#doc=ai-specialist-core-edge), [AIOps 복구](#doc=aiops-remediation-state-machine) |
+| FinOps·Performance | AI cost calculation unit, GPU resource cost optimization, workload quota·autoscaling, AI project performance·ROI criteria | [AI DevOps·FinOps](#doc=ai-transformation-platform-devops), [Reliability·FinOps](#doc=reliability-finops-roadmap) |
+| Enterprise integration | LLM service backend integration, Keycloak OIDC realm/identity, MCP agent tool integration/trust boundary, contract collection/cross-validation without code access | [Enterprise agent operation](#doc=ai-transformation-platform-agents), [Backend API contract](#doc=backend-engineering-api-contract) |
+| Agent orchestration | LangGraph state graph·memory·session, Temporal durable execution, A2A task lifecycle, tool calling·idempotency, Structured Outputs·JSON Schema | [Enterprise agent operation](#doc=ai-transformation-platform-agents), [distributed workflow](#doc=backend-engineering-distributed-workflow) |
+| Agent security·governance | prompt injection·tool authorization, sandbox·code execution isolation, workload identity·delegated authority, OPA/Rego policy, MCP OAuth, Plan/Commit·physical task approval | [Enterprise agent operation](#doc=ai-transformation-platform-agents), [Infrastructure security](#doc=infrastructure-security-roadmap) |
+| Agent delivery·evaluation | Capability bundle·compatibility gate, repository eval wiring·dispatch, multi-agent integrated eval·deployment block, verifiability·jagged intelligence limitations | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops), [AIOps Diagnostic](#doc=aiops-diagnosis-roadmap), [AIOps Recovery](#doc=aiops-remediation-roadmap) |
+| Edge·physical AI | Robot edge inference runtime·model deployment gate, target-specific graph·precision·accelerator bundle and rollback | [On-device model compression](#doc=ai-specialist-core-edge), [AIOps recovery](#doc=aiops-remediation-state-machine) |
 
-`Ray`, `Kueue`, `LiteLLM`, `LangGraph`, `Temporal`, `A2A`, `OPA/Rego` 같은 제품 이름은 독립적인 성공 기준이 아니다. 각 도구가 관리하는 state와 permission, failure mode, receipt를 해당 필러의 공통 계약으로 비교한다.
+Product names such as `Ray`, `Kueue`, `LiteLLM`, `LangGraph`, `Temporal`, `A2A`, `OPA/Rego` are not independent success criteria. The state, permission, failure mode, and receipt managed by each tool are compared with the common contract of the corresponding pillar.
 
-## 전체 artifact 흐름
+## Entire artifact flow
 
-| 단계 | 정본 | 통과 증거 | 실패 시 돌아갈 곳 |
+| Step | Source of truth | Evidence to proceed | Recovery point on failure |
 |---|---|---|---|
-| data 준비 | versioned dataset·feature schema | quality·privacy checks | ingestion revision |
-| 학습 | run config·code·base artifact | reproducible metrics | prior run |
-| 평가 | immutable suite·policy | threshold와 slice 결과 | candidate rejected |
+| data preparation | versioned dataset·feature schema | quality·privacy checks | ingestion revision |
+| learning | run config·code·base artifact | reproducible metrics | prior run |
+| evaluation | immutable suite·policy | threshold and slice results | candidate rejected |
 | packaging | content-addressed bundle | compatibility·signature | prior bundle |
 | serving | deployment revision | readiness + user SLI | bounded rollback |
 | agent action | plan·approval·operation | policy·precondition·outcome | reconciliation·escalation |
 
-`latest`, mutable model tag와 prompt text만으로는 어느 조합이 사용자 결과를 만들었는지 재구성할 수 없다. 최소한 model, tokenizer, prompt, retrieval index, tool schema, policy, runtime과 evaluation suite를 식별한다.
+`latest`, it is not possible to reconstruct which combination created the user result using only the mutable model tag and prompt text. At a minimum, it identifies the model, tokenizer, prompt, retrieval index, tool schema, policy, runtime, and evaluation suite.
 
-## 기존 학습 경로와 연결
+## Connect with existing learning paths
 
 ```mermaid
 flowchart TD
@@ -81,26 +81,26 @@ flowchart TD
     E --> F
 ```
 
-- cluster·workload 기초는 [Kubernetes](#doc=kubernetes-roadmap), GPU node의 생성·축소는 [Karpenter](#doc=karpenter-roadmap)에 연결한다.
-- model·tokenizer·KV cache의 계산 전제는 [AI Specialist의 LLM 구조와 효율화](#doc=ai-specialist-core-llm)에서 받는다.
-- deployment 선언과 drift는 [Helm과 GitOps](#doc=helm-gitops-roadmap), identity와 network 경계는 [인프라 보안](#doc=infrastructure-security-roadmap)에서 확인한다.
-- LLM trace는 [Observability와 SRE](#doc=observability-sre-roadmap)의 signal 원칙을 따르고 [AIOps evidence graph](#doc=aiops-foundations-evidence-graph)로 들어간다.
-- 비용은 GPU 할당 시간이 아니라 성공한 training run·validated output·업무 결과 같은 단위로 [신뢰성·FinOps](#doc=reliability-finops-roadmap)와 연결한다.
+- The cluster·workload basis is connected to [Kubernetes](#doc=kubernetes-roadmap), and the creation and reduction of GPU nodes is connected to [Karpenter](#doc=karpenter-roadmap).
+- The calculation premise of model·tokenizer·KV cache is obtained from [AI Specialist's LLM Structure and Efficiency](#doc=ai-specialist-core-llm).
+- Deployment declaration and drift can be checked in [Helm and GitOps](#doc=helm-gitops-roadmap), and identity and network boundaries can be checked in [Infrastructure Security](#doc=infrastructure-security-roadmap).
+- The LLM trace follows the signal principles of [Observability and SRE](#doc=observability-sre-roadmap) and goes into [AIOps evidence graph](#doc=aiops-foundations-evidence-graph).
+- The cost is linked to [Reliability·FinOps](#doc=reliability-finops-roadmap) in units such as successful training run·validated output·business result rather than GPU allocation time.
 
-## 처음 이해했는지 확인
+## Check your understanding
 
-- model registry의 artifact 하나만으로 production 응답을 재현할 수 없는 이유는 무엇인가?
-- GPU utilization이 높다는 사실과 유용한 token 처리 비용이 낮다는 사실은 어떻게 다른가?
-- evaluation 통과와 안전한 tool 실행 승인이 별도 gate인 이유는 무엇인가?
-- AIOps feedback을 training data로 넣기 전에 어떤 lineage·label 검증이 필요한가?
+- Why can't I reproduce the production response with just one artifact from the model registry?
+- What is the difference between high GPU utilization and low useful token processing cost?
+- Why are passing evaluation and approving safe tool execution separate gates?
+- What lineage/label verification is needed before incorporating AIOps feedback into training data?
 
-## 완료
+## Completion criteria
 
-- 네 필러의 정본·owner·artifact·receipt를 구분했다.
-- AI Specialist의 모델 bundle을 운영 플랫폼의 배포 단위로 연결했다.
-- Kubernetes·GitOps·보안·SRE와 중복되지 않는 AI-specific 경계를 표시했다.
-- production feedback이 AIOps에서 평가 dataset으로 돌아가는 경로를 만들었다.
+- The four pillars' source of truth·owner·artifact·receipt were distinguished.
+- AI Specialist's model bundle was connected to the deployment unit of the operating platform.
+- AI-specific boundaries that do not overlap with Kubernetes, GitOps, security, and SRE were marked.
+- We created a path for production feedback to return to the evaluation dataset in AIOps.
 
-## 운영 판단으로 확장하기
+## Develop operational judgment
 
-플랫폼의 성공은 설치한 도구 수가 아니라 새 candidate를 같은 절차로 재현하고, 위험한 조합을 차단하며, incident에서 실제 bundle까지 추적하고, 실패한 action을 안전하게 수렴시키는 시간으로 평가한다. 각 필러의 도구 선택은 이 계약을 구현하는 수단이다.
+The success of a platform is not measured by the number of tools installed, but by the time it takes to recreate new candidates through the same process, block dangerous combinations, track incidents from actual bundles, and safely converge failed actions. Each pillar's tool selection is a means of implementing this contract.

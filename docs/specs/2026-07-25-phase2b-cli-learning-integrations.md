@@ -1,181 +1,181 @@
-# nohdol-study Phase 2b — project-local 학습 연동 스펙
+# nohdol-study Phase 2b — project-local learning integration specifications
 
-- 날짜: 2026-07-25
-- 상태: R1~R10·R16 구현. **R11~R15(NotebookLM bridge)는 [ADR 004](../adr/004-remove-notebooklm-export.md)로 철회** — export 스킬 자체가 제거됐다
-- 관련 결정: [ADR 003](../adr/003-cli-learning-integrations.md)
-- 보안 검토: [NotebookLM·Understand Anything](../reviews/2026-07-25-notebooklm-understand-anything-security.md)
+- Date: 2026-07-25
+- Status: R1~R10·R16 implemented. **R11~R15 (NotebookLM bridge) withdrawn with [ADR 004](../adr/004-remove-notebooklm-export.md)** — The export skill itself has been removed
+- Related Decision: [ADR 003](../adr/003-cli-learning-integrations.md)
+- Security Review: [NotebookLM·Understand Anything](../reviews/2026-07-25-notebooklm-understand-anything-security.md)
 
-## 목표
+## Goal
 
-- Understand Anything의 9개 스킬을 코드·도메인·설계·지식 학습에 모두
-  사용할 수 있게 하되 nohdol-study의 정확성·출력·외부 전송 경계에 맞춘다.
-- Obsidian Markdown·Bases·JSON Canvas·공식 CLI skill을 project-local로
-  제공한다.
-- 검증된 NotebookLM export packet을 웹 UI 없이 consumer NotebookLM에
-  전달하고 학습 자료를 회수할 수 있는 선택적 CLI 경로를 제공한다.
-- 어느 연동도 Markdown 원본, 설치처 이식성, 외부 전송 승인 규칙을
-  약화하지 않게 한다.
+- All 9 skills of Understand Anything for code, domain, design, and knowledge learning
+  It can be used, but meets the accuracy, output, and external transmission boundaries of nohdol-study.
+- Obsidian Markdown, Bases, JSON Canvas, and official CLI skills to project-local
+  Provides.
+- Verified NotebookLM export packet to consumer NotebookLM without web UI
+  Provides an optional CLI path to deliver and retrieve learning materials.
+- Any integration requires Markdown source, portability, and external transfer approval rules.
+  Do not weaken it.
 
-## 비목표
+## non-goal
 
-- upstream main을 자동 pull하거나 사용자 전역 skill을 덮어쓰는 설치
-- dashboard 자동 실행 또는 Figma token 자동 탐색
-- consumer NotebookLM의 공식 API 또는 상시 동기화라고 주장
-- vault 전체 업로드
-- 모델이 추론한 claim·관계를 자동으로 사실 확정
-- NotebookLM public share·협업자 초대 자동화
+- Installation that automatically pulls upstream main or overwrites user global skills
+- Auto-launch dashboard or auto-discovery of Figma token
+- Claims to be the official API of consumer NotebookLM or always synchronized
+- Upload all vaults
+- Automatically confirms claims and relationships inferred by the model
+- NotebookLM public share/collaborator invitation automation
 - headless master token, MCP/server, browser impersonation transport
 
-## R1. 외부 skill source pin
+## R1. External skill source pin
 
-Understand Anything과 kepano/obsidian-skills는 upstream release/commit,
-license, 원본 경로와 source hash를 기록한다. 미추적 project-local 도구
-경로에 설치하고 nohdol-study adapter를 통해 노출한다. `curl | bash`,
-upstream main 자동 pull, `~/.agents/skills` 전역 link는 사용하지 않는다.
-upstream fixture를 유지하고 로컬 변경은 patch 목록과 테스트로 설명한다.
+Understand Anything and kepano/obsidian-skills are upstream release/commit,
+Record the license, original path, and source hash. Untracked project-local tool
+Install it in the path and expose it through nohdol-study adapter. `curl | bash`,
+Upstream main automatic pull, `~/.agents/skills` global link is not used.
+Maintain upstream fixtures and account for local changes with patch lists and tests.
 
-## R2. Understand Anything 전체 skill routing
+## R2. Understand Anything overall skill routing
 
-다음 9개 entry point를 모두 제공한다.
+All of the following 9 entry points are provided.
 
-| entry point | 필수 동작 |
+| entry point | Required action |
 |---|---|
-| `understand` | 코드 graph·tour 생성 |
-| `understand-chat` | graph 탐색 후 source 재확인 |
-| `understand-dashboard` | 명시 요청 시에만 localhost viewer |
-| `understand-diff` | 기준 graph에 변경 overlay 생성 |
-| `understand-domain` | 코드 근거가 있는 actor·workflow·rule 분석 |
-| `understand-explain` | source-first 개념·flow 설명 |
-| `understand-figma` | 승인된 Figma file만 외부 API로 분석 |
+| `understand` | Generate code graph/tour |
+| `understand-chat` | Recheck the source after exploring the graph |
+| `understand-dashboard` | localhost viewer only when explicitly requested |
+| `understand-diff` | Create change overlay on base graph |
+| `understand-domain` | Actor·workflow·rule analysis with code evidence |
+| `understand-explain` | source-first concept/flow explanation |
+| `understand-figma` | Only approved Figma files are analyzed using external API |
 | `understand-knowledge` | Markdown typed knowledge graph |
-| `understand-onboard` | source 링크가 있는 학습 순서·walkthrough |
+| `understand-onboard` | Learning sequence/walkthrough with source link |
 
-graph consumer가 답을 생성할 때 관련 source file을 직접 열지 않았다면
-완료로 처리하지 않는다.
+If the graph consumer did not directly open the relevant source file when generating the answer,
+Do not process it as complete.
 
-9개는 `understand` 스킬 하나가 내부 라우팅으로 제공한다(사용자 결정
-2026-07-25). 요구는 entry point 제공이지 스킬 개수가 아니며, 공통 경계를
-아홉 번 반복하면 서로 어긋나기 때문이다.
+9 are provided by one `understand` skill through internal routing (user decision)
+2026-07-25). The requirement is to provide an entry point, not the number of skills, and to establish a common boundary.
+This is because if you repeat it nine times, it will be out of sync.
 
 ## R3. Node dependency gate
 
-`study-install --check`는 Node 22+와 pnpm 10+를 관찰한다. 설치 시
-실제로 필요한 package만 exact lock으로 고정하고 production dependency를
-감사한다. 해결되지 않은 high 취약점이나 lock 불일치는 자동 설치를
-차단한다. monorepo 전체 install은 기본 경로가 아니다.
+`study-install --check` observes Node 22+ and pnpm 10+. Upon installation
+Only the packages that are actually needed are locked with an exact lock and production dependencies are secured.
+Thank you. Unresolved high vulnerabilities or lock mismatches require automatic installation.
+Block it. Monorepo full install is not the default path.
 
-## R4. 출력과 외부 실행 경계
+## R4. Output and external execution boundaries
 
-- 코드 저장소 `.ua/`: 실행 전 target root, ignore 상태, 예상 산출물을
-  보여주고 해당 저장소 안에서만 쓴다.
-- vault: `_workspace/understand-anything/`로 리디렉션하고 vault에 `.ua/`를
-  만들지 않는다.
-- dashboard: 자동 open하지 않는다. 요청 시 loopback에만 bind한다.
-- Figma: token을 repo·vault에 기록하지 않는다. file key와
-  `api.figma.com` 전송을 실행별 승인받는다.
-- intermediate cleanup: 명시적 target guard 없이 recursive delete하지
-  않는다.
+- Code repository `.ua/`: Check target root, ignore status, and expected output before execution.
+  It is displayed and used only within the relevant repository.
+- vault: redirect to `_workspace/understand-anything/` and add `.ua/` to vault
+  don't make
+- dashboard: Does not open automatically. Binds only to loopback when requested.
+- Figma: Do not record tokens in repo·vault. file key and
+  `api.figma.com` transmission is approved on a per-execution basis.
+- intermediate cleanup: do not recursive delete without an explicit target guard
+  No.
 
-## R5. nohdol-study 형식 탐지
+## R5. nohdol-study format detection
 
-지식 루트의 `index.md`·`log.md`·`raw/`와 `wiki/**/*.md`를 인식한다.
-`wiki/`가 1개 이상이면 빈 그래프가 아닌 유효한 파생 graph를 만들며,
-기존 Obsidian 레거시 디렉터리는 명시적으로 범위에 넣지 않는 한 스캔하지
-않는다.
+Recognizes `index.md`·`log.md`·`raw/` and `wiki//*.md` of the knowledge root.
+If there is more than one `wiki/`, a valid derived graph is created rather than an empty graph.
+Existing Obsidian legacy directories will not be scanned unless explicitly put in scope.
+No.
 
-## R6. 결정적 explicit graph
+## R6. deterministic explicit graph
 
-article, topic, source와 explicit wikilink·backlink·category·missing·orphan을
-동일 입력에서 동일 바이트로 만든다. 코드 fence 안 링크, 중복 제목,
-경로 alias와 한글 파일명을 회귀 테스트한다.
+Article, topic, source and explicit wikilink·backlink·category·missing·orphan
+Create the same bytes from the same input. Code fence not a link, duplicate title,
+Regression test path alias and Korean file name.
 
-## R7. 파생물 격리
+## R7. Derivative isolation
 
-출력 루트는 하네스의 `_workspace/understand-anything/`로 주입한다.
-vault에 `.ua/`·`.understand-anything/`을 만들지 않는다. 실행 전후 vault
-Markdown의 경로와 SHA-256 집합이 동일해야 한다.
+The output root is injected into `_workspace/understand-anything/` of the harness.
+Do not create `.ua/`·`.understand-anything/` in the vault. vault before and after execution
+The Markdown path and SHA-256 set must be the same.
 
-## R8. 본문 최소화
+## R8. Minimize text
 
-중간 분석 입력은 필요한 범위에서만 메모리 또는 미추적 임시 파일로
-사용한다. 최종 graph에는 노트 본문 사본을 포함하지 않고 source path,
-heading/block anchor, 짧은 evidence excerpt hash만 남긴다.
+Intermediate analysis input is sent to memory or untracked temporary files only to the extent necessary.
+Use it. The final graph does not include a copy of the note body, but rather the source path,
+Only heading/block anchor and short evidence excerpt hash are left.
 
 ## R9. semantic enrichment
 
-semantic 단계는 별도 opt-in이다. 노트 본문은 untrusted data로 취급하고
-그 안의 명령·정책·prompt를 실행하지 않는다. 새 entity·claim·edge에는
+The semantic stage is a separate opt-in. The main text of the note is treated as untrusted data.
+Do not execute commands, policies, or prompts within it. The new entity·claim·edge has
 `source_path`, `evidence_anchor`, `extractor`, `confidence`,
-`verification`이 필수다. evidence가 없는 항목은 버리고, inferred와
-verified를 별도 집계한다.
+`verification` is required. Items without evidence are discarded and inferred and
+Verified is counted separately.
 
 ## R10. Obsidian skills
 
-`obsidian-markdown`, `obsidian-bases`, `json-canvas`, `obsidian-cli`를
-project-local skill로 노출한다. upstream defuddle는 설치하지 않고 기존
-nohdol-study defuddle를 유지한다. Markdown/Bases/Canvas는 Obsidian 앱 없이
-파일 형식 생성·검증에 사용할 수 있어야 한다. CLI는 앱 installer 1.12.7+
-및 실행 중인 앱 조건을 확인하고, 충족하지 않으면 `unavailable`로 보고하되
-설치 전체를 실패시키지 않는다.
+`obsidian-markdown`, `obsidian-bases`, `json-canvas`, `obsidian-cli`
+Exposed as project-local skill. upstream defuddle is not installed but existing
+nohdol-study maintains defuddle. Markdown/Bases/Canvas without Obsidian app
+It must be usable for file format creation and verification. CLI app installer 1.12.7+
+and running app conditions, and report to `unavailable` if not met.
+Doesn't cause the entire installation to fail.
 
 ## R11. NotebookLM release gate
 
-설치기는 최신 안정 릴리스가 감사한 보안 수정과 요구 기능을 포함하는지
-검사한다. 정확 버전의 browser/cookies 최소 dependency set을 `pip-audit`
-하고 high 이상 취약점이 있거나 lock이 재현되지 않으면 설치하지 않는다.
+The installer ensures that the latest stable release includes audited security fixes and required features.
+inspect. Correct version of browser/cookies minimum dependency set is `pip-audit`
+And do not install it if it has a high or higher vulnerability or if the lock is not reproduced.
 
-## R12. NotebookLM 인증
+## R12. NotebookLM Certification
 
-인증은 `study-install`의 자동 단계가 아니다. 사용자가 선택한 전용 profile에
-대해 한 번 실행하고, 저장 경로가 저장소·vault 밖인지와 POSIX permission을
-검사한다. master-token과 auth JSON 출력·로그·복사는 금지한다.
+Authentication is not an automatic step for `study-install`. To a dedicated profile selected by the user
+Run it once and check whether the storage path is outside the storage/vault and the POSIX permission.
+inspect. Printing/logging/copying master-token and auth JSON is prohibited.
 
 ## R13. Packet-only upload
 
-bridge는 `notebooklm-export`가 만든 packet의 manifest와 hash를 다시
-검증한다. packet 안의 명시된 파일만 upload하며 symlink와 범위 밖 path를
-거부한다. 전송 전에 notebook 이름, 파일 목록, 총 크기, Google 전송 사실을
-보여준다.
+The bridge re-creates the manifest and hash of the packet created by `notebooklm-export`.
+Verify. Only files specified in the packet are uploaded, and symlinks and paths outside the range are uploaded.
+I refuse. Before sending, please enter the notebook name, file list, total size, and Google transfer facts.
+It shows.
 
-## R14. 외부 변경 승인
+## R14. External change approval
 
-create, upload, generate, download 각각의 실행 계획을 사용자에게 보여주고
-승인받는다. public share, collaborator 변경, delete, logout은 일반 학습
-흐름에서 호출하지 않으며 별도 명시 요청이 있어야 한다.
+Show the user the execution plan for each create, upload, generate, and download
+Get approved. General learning about public share, collaborator change, delete, and logout
+It is not called in the flow and must be separately explicitly requested.
 
-## R15. 생성물 회수와 검증
+## R15. Product recovery and verification
 
-quiz, flashcard, infographic, mind map, report, Q&A 결과는
-`_workspace/notebooklm/<topic>/artifacts/`에 저장한다. manifest에는 notebook
-ID, source IDs, artifact ID/type, 생성 시각, 사용한 source packet hash를
-남긴다. vault로 들여올 때는 원 출처와 대조하고 검증 상태를 새로 부여한다.
+The results of quiz, flashcard, infographic, mind map, report, and Q&A are
+Save it in `_workspace/notebooklm/<topic>/artifacts/`. Notebook in manifest
+ID, source IDs, artifact ID/type, creation time, source packet hash used
+leave it When imported into the vault, it is compared with the original source and given a new verification status.
 
-## R16. 설치처 상태
+## R16. Installation location status
 
-`study-install --check`는 `notebooklm` CLI, 감사 버전, auth 파일 존재 여부와
-Understand Anything 9개 adapter·Node/pnpm·Obsidian skill·공식 CLI 준비
-상태를 관찰해 `REGISTRY.md`에 기록한다.
-계정 유효성은 네트워크 검증을 실제 실행하지 않았다면 `unverified`로 쓴다.
+`study-install --check` is `notebooklm` CLI, audit version, auth file existence and
+Understand Anything 9 adapter·Node/pnpm·Obsidian skill·Official CLI preparation
+Observe the status and record it in `REGISTRY.md`.
+Account validity is written as `unverified` if network verification has not actually been performed.
 
-## 완료 기준
+## Completion criteria
 
-- upstream knowledge parser fixture와 기존 graph 회귀가 모두 통과한다.
-- Understand Anything 9개 entry point가 project-local pin을 사용하고
-  사용자 전역 skill과 설정을 변경하지 않는다.
-- code graph의 chat/explain/domain/onboard/diff fixture는 source를 다시
-  읽은 기록 없이 사실 답변을 완료하지 않는다.
-- dashboard는 명시 요청 전 열리지 않고 loopback 외 주소에 bind하지 않는다.
-- Figma fixture는 token 부재·승인 부재·허용되지 않은 host에서 각각
-  fail-closed 한다.
-- 현재 vault의 1개 `wiki/`에서도 graph를 만들고 원본 hash가 변하지 않는다.
-- 최종 graph에 `knowledgeMeta.content`나 노트 본문 사본이 없다.
-- prompt-like 문장이 든 fixture에서 semantic 출력이 명령을 실행하지 않고
-  evidence 없는 claim을 거부한다.
-- NotebookLM installer는 취약·미수정 릴리스를 거부하고 안전한 exact
-  dependency set만 허용한다.
-- packet 밖 파일, symlink, hash 불일치, 미검증 note, 승인 없는 upload를
-  각각 거부한다.
-- 인증 파일·계정 식별자·notebook ID가 Git 추적 파일이나 vault에 남지 않는다.
-- Obsidian 앱이 없어도 markdown/bases/canvas skill은 동작하고 CLI만
-  unavailable로 보고한다.
-- 전체 metaskill 검증과 문서 링크 검사가 통과한다.
+- Both the upstream knowledge parser fixture and the existing graph regression pass.
+- Understand Anything 9 entry points use project-local pins
+  Does not change user global skills and settings.
+- The chat/explain/domain/onboard/diff fixture in the code graph redirects the source.
+  Do not complete a factual response without a reading record.
+- The dashboard is not opened before an explicit request and does not bind to addresses other than loopback.
+- Figma fixture operates in the absence of token, absence of approval, and unauthorized host, respectively.
+  fail-closed.
+- A graph is also created from one `wiki/` in the current vault, and the original hash does not change.
+- There is no copy of `knowledgeMeta.content` or note text in the final graph.
+- In fixtures containing prompt-like statements, semantic output does not execute the command.
+  Reject claims without evidence.
+- NotebookLM installer rejects vulnerable and unfixed releases and provides secure exact
+  Only dependency sets are allowed.
+- Files outside the packet, symlink, hash mismatch, unverified note, upload without approval
+  Each refuses.
+- Authentication files, account identifiers, and notebook IDs are not stored in Git trace files or vaults.
+- Even without the Obsidian app, the markdown/bases/canvas skill works and only the CLI
+  Report as unavailable.
+- Full metaskill verification and document link checking pass.

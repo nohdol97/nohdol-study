@@ -1,44 +1,44 @@
-# MVCC, WAL과 query plan
+# MVCC, WAL and query plan
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-- **commit**: transaction의 변경을 최종 성공으로 확정하는 동작이다.
-- **rollback**: transaction에서 수행한 변경을 취소하고 시작 전 상태로 돌아가는 동작이다.
-- **MVCC**: 동시에 실행되는 transaction이 서로에게 어떤 버전의 row를 보여 줄지 관리하는 방식이다.
-- **WAL**: data file을 바꾸기 전에 변경 내용을 순서대로 남기는 로그다. 장애 복구와 복제의 기반이 된다.
-- **VACUUM**: 더 이상 어떤 transaction에도 필요하지 않은 예전 row 공간을 다시 사용할 수 있게 정리하는 작업이다.
-- **query plan**: PostgreSQL이 SQL을 실행하기 위해 선택한 table 접근 순서와 방법이다.
+- **commit**: This is an action that confirms the transaction change as final success.
+- **rollback**: This is an action to cancel changes made in a transaction and return to the state before starting.
+- **MVCC**: This is a method of managing which versions of rows are shown to each other by transactions executing simultaneously.
+- **WAL**: A log that records changes in order before changing the data file. It serves as the basis for failure recovery and replication.
+- **VACUUM**: This is the task of organizing old row space that is no longer needed for any transaction so that it can be used again.
+- **query plan**: The table access order and method chosen by PostgreSQL to execute SQL.
 
-처음에는 `BEGIN → SQL 실행 → COMMIT` 한 흐름만 따라간다. MVCC는 “무엇이 보이는가”, WAL은 “장애 뒤 무엇을 다시 만들 수 있는가”에 답하므로 같은 기능으로 합치지 않는다.
+At first, only follow one flow: `BEGIN → execute SQL → COMMIT`. MVCC answers “what is visible” and WAL answers “what can be recreated after a failure,” so they are not combined into the same function.
 
-## 먼저 이해하기
+## Understand the model first
 
-두 사용자가 같은 계좌 row를 거의 동시에 읽고 수정한다고 생각해 보자. database는 단순히 파일의 한 줄을 즉시 덮어쓰지 않는다. transaction마다 어떤 row version을 볼 수 있는지 정하고, 변경 복구에 필요한 WAL을 남기며, 더는 보이지 않는 과거 version을 나중에 정리한다. MVCC·WAL·VACUUM은 서로 다른 단계의 문제를 해결한다.
+Imagine that two users read and modify the same account row at almost the same time. A database does not simply overwrite a single line of a file immediately. It determines which row versions can be seen for each transaction, leaves WAL necessary for change recovery, and cleans up past versions that are no longer visible later. MVCC, WAL, and VACUUM solve problems at different levels.
 
-| 개념 | 답하는 질문 | 혼동하기 쉬운 것 |
+| concept | question to answer | easy to confuse |
 |---|---|---|
-| snapshot | 이 transaction이 어떤 version을 볼 수 있는가? | disk backup 시점 |
-| MVCC | reader와 writer가 row version을 어떻게 공유하는가? | 모든 lock 제거 |
-| WAL | crash 뒤 committed change를 어떻게 재현하는가? | query audit log |
-| checkpoint | recovery가 시작할 기준점을 어떻게 전진시키는가? | 매 transaction backup |
-| VACUUM | 오래된 version을 언제 재사용 가능하게 하는가? | table을 항상 축소하는 작업 |
+| snapshot | What version can I see for this transaction? | When to disk backup |
+| MVCC | How do readers and writers share row versions? | Remove all locks |
+| WAL | How to reproduce committed changes after a crash? | query audit log |
+| checkpoint | How do we advance the baseline from which recovery begins? | Every transaction backup |
+| VACUUM | When do I make an old version reusable? | Always shrinking the table |
 
-예를 들어 transaction A가 오래 열린 채 과거 snapshot을 유지하면, 다른 transaction이 row를 여러 번 UPDATE해도 VACUUM은 A에게 보일 수 있는 version을 함부로 제거할 수 없다. application의 “idle in transaction”이 storage 증가와 transaction ID 위험으로 이어질 수 있는 이유다.
+For example, if transaction A is open for a long time and maintains past snapshots, VACUUM cannot arbitrarily remove the version visible to A even if other transactions UPDATE a row several times. This is why an application’s “idle in transaction” can lead to increased storage and transaction ID risk.
 
-## 데이터 변경 하나를 한 단계씩 따라가기
+## Follow each data change step by step
 
-1. client가 database connection을 열고 transaction을 시작한다.
-2. `UPDATE`가 대상 row를 찾고 충돌하는 변경이 있으면 필요한 lock을 기다린다.
-3. PostgreSQL은 기존 row를 바로 모든 reader에게 덮어씌우는 대신 새 row version을 만든다.
-4. 변경을 복구할 수 있도록 관련 WAL record가 만들어진다.
-5. commit이 성공하면 다른 transaction이 isolation 규칙에 따라 새 값을 볼 수 있게 된다.
-6. checkpoint는 변경된 memory page를 data file에 쓰는 작업을 진행하고, VACUUM은 더는 필요 없는 예전 row version을 정리한다.
+1. The client opens a database connection and begins a transaction.
+2. `UPDATE` searches for the target row and waits for the necessary lock if there are conflicting changes.
+3. PostgreSQL creates a new row version instead of immediately overwriting the existing row for all readers.
+4. A relevant WAL record is created so that changes can be recovered.
+5. If the commit is successful, other transactions can see the new value according to the isolation rules.
+6. Checkpoint writes changed memory pages to the data file, and VACUUM cleans up old row versions that are no longer needed.
 
-“사용자에게 보인다”, “commit이 성공했다”, “data file에 반영됐다”는 같은 순간을 뜻하지 않는다. WAL과 recovery 규칙 때문에 이 차이를 나누어 이해해야 한다.
+“Visible to the user,” “commit was successful,” and “reflected in the data file” do not mean the same moment. Because of WAL and recovery rules, this difference must be understood separately.
 
-## 한 변경이 보이고 남는 과정
+## The process by which a change is visible and remains
 
-PostgreSQL은 각 statement가 어떤 row version을 볼 수 있는지 snapshot과 isolation 규칙으로 정한다. 변경된 page가 data file에 기록되기 전에 WAL record가 durable storage에 먼저 기록되는 write-ahead 규칙은 crash recovery의 기반이다.
+PostgreSQL determines which row versions each statement can see using snapshot and isolation rules. The write-ahead rule, in which WAL records are written to durable storage first before changed pages are written to data files, is the basis for crash recovery.
 
 ```mermaid
 sequenceDiagram
@@ -47,32 +47,32 @@ sequenceDiagram
     participant W as WAL
     participant D as Data files
     C->>T: UPDATE
-    T->>T: 새 row version
+    T->>T: new row version
     T->>W: WAL record
     W-->>C: COMMIT durable
-    T->>D: dirty page는 이후 flush
+    T->>D: Dirty pages are later flushed
 ```
 
-checkpoint는 recovery가 시작할 WAL 지점을 전진시키지만, 너무 잦으면 write pressure가 커질 수 있고 너무 드물면 crash recovery 시간이 늘 수 있다. WAL 생성률·storage latency·recovery 목표를 함께 본다.
+Checkpoints advance the WAL point where recovery begins, but if they are too frequent, write pressure can increase, and if they are too rare, the crash recovery time can increase. WAL creation rate, storage latency, and recovery goals are viewed together.
 
-## VACUUM의 책임
+## VACUUM Responsibilities
 
-UPDATE와 DELETE로 더는 어떤 transaction에도 보이지 않는 row version이 생긴다. VACUUM은 이를 재사용 가능하게 하고 visibility map과 transaction ID wraparound 방지에 관여한다. 일반 VACUUM과 table을 다시 쓰며 더 강한 lock을 요구하는 `VACUUM FULL`을 동일하게 취급하지 않는다.
+UPDATE and DELETE create row versions that are no longer visible in any transactions. VACUUM makes it reusable and is involved in visibility map and transaction ID wraparound prevention. General VACUUM and `VACUUM FULL`, which rewrites the table and requires a stronger lock, are not treated the same.
 
-long-running transaction이나 방치된 replication slot은 cleanup과 WAL 보존을 지연시킬 수 있다. table size만 보지 말고 transaction age, dead tuple, autovacuum activity와 slot의 retained WAL을 관찰한다.
+Long-running transactions or neglected replication slots can delay cleanup and WAL retention. Don't just look at table size, but also observe transaction age, dead tuple, autovacuum activity, and retained WAL of slots.
 
-## Query plan은 가설과 실측을 나눈다
+## Query plan divides hypothesis and actual measurements
 
 ```sql
 EXPLAIN SELECT * FROM orders WHERE customer_id = 42;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
 ```
 
-`EXPLAIN ANALYZE`는 query를 실제 실행하므로 변경 query나 큰 workload에서 영향 범위를 먼저 확인한다. estimated rows와 actual rows 차이는 statistics, data skew와 predicate correlation 문제를 드러낼 수 있다. index가 존재해도 selectivity와 I/O cost에 따라 sequential scan이 더 저렴할 수 있다.
+Since `EXPLAIN ANALYZE` actually executes queries, it first checks the scope of influence in change queries or large workloads. Differences between estimated rows and actual rows can reveal statistics, data skew, and predicate correlation problems. Even if an index exists, sequential scan may be cheaper depending on selectivity and I/O cost.
 
-## Connection과 lock
+## Connection and lock
 
-각 backend connection은 자원을 소비한다. pool은 connection storm을 완충하지만 transaction을 오래 잡거나 session state를 오용하면 병목을 숨길 수 있다.
+Each backend connection consumes resources. A pool buffers connection storms, but holding transactions for too long or misusing session state can hide bottlenecks.
 
 ```sql
 SELECT pid, state, wait_event_type, wait_event, xact_start, query_start
@@ -80,13 +80,13 @@ FROM pg_stat_activity
 WHERE datname = current_database();
 ```
 
-blocking query를 종료하기 전 owner, transaction 내용, rollback 비용과 재시도 가능성을 확인한다. lock waiter만 죽이면 blocker가 남아 장애가 반복된다.
+Before ending a blocking query, check the owner, transaction contents, rollback cost, and retry possibility. If only the lock waiter is killed, a blocker remains and the failure repeats.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. COMMIT 응답 시점에 모든 변경 page가 data file에 기록되지 않아도 되는 이유는 무엇인가?
-2. estimated rows와 actual rows 차이가 join 전략에 어떤 영향을 줄 수 있는가?
-3. idle in transaction session이 단순한 idle connection보다 위험할 수 있는 이유는 무엇인가?
+1. Why is it not necessary for all changed pages to be recorded in the data file at the time of COMMIT response?
+2. How can differences between estimated rows and actual rows affect join strategies?
+3. Why is an idle in transaction session more dangerous than a simple idle connection?
 
 <!-- source: https://www.postgresql.org/docs/18/mvcc-intro.html | checked: 2026-09-03 | version: PostgreSQL 18 -->
 <!-- source: https://www.postgresql.org/docs/18/wal-intro.html | checked: 2026-09-03 | version: PostgreSQL 18 -->

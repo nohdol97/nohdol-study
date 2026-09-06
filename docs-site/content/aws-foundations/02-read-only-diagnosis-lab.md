@@ -1,53 +1,53 @@
-# Read-only AWS 진단 실습
+# Read-only AWS diagnostic lab
 
-> 실습 등급: **Plan only에 준하는 read-only 조회**. AWS resource를 생성·변경하지 않지만 API 호출 권한과 credential이 필요하다. 출력의 account ID와 ARN은 공개 저장소에 복사하지 않는다.
+> Lab grade: **Read-only inquiry equivalent to Plan only**. It does not create or change AWS resources, but requires API call permission and credentials. The account ID and ARN in the output are not copied to the public repository.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-- **환경**: AWS 계정과 AWS CLI가 필요하다. 계정이 없다면 명령을 실행하지 않고 출력 예시를 읽는 단계까지만 진행한다.
-- **신원**: root user나 장기 access key를 새로 만들지 않는다. 조직이 제공한 SSO 또는 temporary role을 사용한다.
-- **권한**: STS caller 조회와 EC2 VPC·subnet·route table 목록 조회만 허용된 read-only role을 사용한다.
-- **범위**: 사용할 profile과 Region 이름을 운영자가 확인한 뒤 명시한다.
-- **변경 여부**: 이 장의 명령은 조회만 한다. `create`, `modify`, `delete`가 들어간 AWS 명령은 실행하지 않는다.
-- **기록 보호**: account ID, ARN, 내부 CIDR과 resource ID는 공개 문서나 issue에 그대로 붙이지 않는다.
+- **Environment**: Requires an AWS account and AWS CLI. If you do not have an account, do not run the command and just proceed to reading the example output.
+- **Identity**: Do not create a new root user or long-term access key. Use SSO or temporary role provided by the organization.
+- **Permissions**: Use a read-only role that allows only viewing of STS caller and EC2 VPC·subnet·route table list.
+- **Range**: The operator confirms and then specifies the profile and region names to be used.
+- **Change or not**: The commands in this chapter only perform queries. AWS commands containing `create`, `modify`, and `delete` are not executed.
+- **Record Protection**: Account ID, ARN, internal CIDR and resource ID are not attached to public documents or issues.
 
-첫 명령의 목적은 VPC를 보는 것이 아니라 “지금 어떤 신원과 Region을 보고 있는가”를 고정하는 것이다. 이 값이 예상과 다르면 이후 명령을 진행하지 않는다.
+The purpose of the first command is not to look at the VPC, but to fix “what identity and region are we looking at?” If this value is different from expected, further commands do not proceed.
 
-## 먼저 이해하기
+## Understand the model first
 
-이 실습은 AWS 구성을 바꾸지 않고 “내가 지금 어느 계정에서 무엇을 보고 있는가”부터 확인한다. cloud 장애 조사에서 흔한 실수는 이름이 같은 dev/prod resource나 다른 region을 보고도 올바른 대상을 조사한다고 믿는 것이다. 그래서 첫 증거는 VPC가 아니라 caller identity와 region이다.
+This lab does not change the AWS configuration, but starts by checking “what account I am looking at now.” A common mistake in cloud failure investigation is believing that you are investigating the correct target even when you see a dev/prod resource with the same name or a different region. So the first evidence is not the VPC, but the caller identity and region.
 
-`public subnet`도 설정 하나로 판정하지 않는다. 인터넷에서 instance에 도달하려면 public address, internet gateway로 향하는 route, 허용하는 security policy, listening process와 return path가 모두 필요하다. `MapPublicIpOnLaunch`는 새 instance에 public address를 자동 할당할지에 관한 subnet 속성일 뿐이다.
+`public subnet` also does not judge with just one setting. To reach an instance on the Internet, a public address, a route to the internet gateway, an acceptable security policy, a listening process, and a return path are all required. `MapPublicIpOnLaunch` is just a subnet property that determines whether to automatically assign a public address to the new instance.
 
-| 층 | 수집할 것 | 아직 결론 내리면 안 되는 것 |
+| floor | What to collect | Things that shouldn't be concluded yet |
 |---|---|---|
-| identity context | account, role session, region | 실제 resource 접근 허용 전체 |
-| declared network | VPC, subnet, route, gateway | packet이 실제로 왕복했다는 사실 |
-| runtime endpoint | address, SG, listener, health | application 내부 정상 여부 |
+| identity context | account, role session, region | Allow actual resource access All |
+| declared network | VPC, subnet, route, gateway | The fact that the packet actually made a round trip |
+| runtime endpoint | address, SG, listener, health | Is the application internally normal? |
 
-## 준비
+## preparation
 
-- AWS CLI가 설치되어 있다.
-- root user가 아닌 학습용 role 또는 federated profile을 사용한다.
-- profile과 region은 자신의 환경에 맞게 정한다.
+- AWS CLI is installed.
+- Use a learning role or federated profile rather than a root user.
+- The profile and region are determined according to your environment.
 
 ```bash
 export AWS_PROFILE="study-readonly"
 export AWS_REGION="ap-northeast-2"
 ```
 
-문서나 shell history에 access key를 직접 넣지 않는다. profile이 SSO나 temporary role session을 사용하도록 구성한다.
+Do not enter the access key directly into the document or shell history. Configure the profile to use SSO or temporary role session.
 
-## 1. 현재 principal 확인
+## 1. Check current principal
 
 ```bash
 aws sts get-caller-identity
 aws configure list
 ```
 
-성공 기준은 기대한 account와 assumed role identity가 출력되는 것이다. 이 단계가 어긋나면 뒤의 resource 조회를 진행하지 않는다.
+The success criterion is that the expected account and assumed role identity are output. If this step is violated, subsequent resource searches will not proceed.
 
-## 2. VPC와 route를 inventory로 만들기
+## 2. Inventory VPCs and routes
 
 ```bash
 aws ec2 describe-vpcs \
@@ -63,55 +63,55 @@ aws ec2 describe-route-tables \
   --output json
 ```
 
-`MapPublicIpOnLaunch=true` 하나로 public reachability를 판정하지 않는다. subnet association, default route의 target, instance address, security group과 실제 listener가 추가로 필요하다.
+`MapPublicIpOnLaunch=true` alone does not determine public reachability. A subnet association, default route target, instance address, security group, and actual listener are additionally required.
 
 ```mermaid
 flowchart TD
-    A[caller identity 확인] --> B[VPC와 CIDR]
-    B --> C[subnet과 AZ]
-    C --> D[연결된 route table]
+    A[Check caller identity] --> B[VPCs and CIDRs]
+    B --> C[subnets and AZs]
+    C --> D[connected route table]
     D --> E[gateway·NAT·endpoint target]
     E --> F[security policy]
-    F --> G[실제 reachability 관찰]
+    F --> G[Observe actual reachability]
 ```
 
-## 3. `AccessDenied`를 읽는 순서
+## 3. Order of reading `AccessDenied`
 
-권한이 없는 read-only profile이라면 일부 명령이 실패할 수 있다. 권한을 무작정 넓히지 말고 다음을 기록한다.
+If you have a read-only profile without permission, some commands may fail. Instead of expanding your authority blindly, record the following.
 
-1. caller ARN과 account
-2. 거부된 API action
-3. 대상 resource 또는 scope
-4. explicit deny 여부를 확인할 policy 계층
-5. 실습에 필요한 최소 read action
+1. caller ARN and account
+2. Rejected API action
+3. Target resource or scope
+4. Policy layer to check for explicit deny
+5. Minimum read action required for lab
 
-IAM 변경이 필요하면 이 read-only 실습 범위를 벗어난다. 관리자에게 최소 action과 resource scope를 제안하고 별도 승인 흐름을 따른다.
+If IAM changes are required, they are beyond the scope of this read-only lab. Propose the minimum action and resource scope to the administrator and follow a separate approval flow.
 
-## 4. 결과 표 만들기
+## 4. Create a table of results
 
-| Subnet | AZ | CIDR | Default route | 분류가 아니라 근거 |
+| Subnet | AZ | CIDR | Default route | Not a classification but evidence |
 |---|---|---|---|---|
-| 예시 값 | 예시 값 | 예시 값 | IGW/NAT/없음 | address·route·policy·listener 추가 확인 필요 |
+| Example value | Example value | Example value | IGW/NAT/None | Address·route·policy·listener additional confirmation required |
 
-account ID, 실제 resource ID와 내부 CIDR은 조직 정책에 따라 민감할 수 있으므로 공개 학습 기록에는 비식별화한다.
+Account ID, actual resource ID, and internal CIDR may be sensitive depending on organizational policy, so they are de-identified in public learning records.
 
-## 비용과 정리
+## cost and organization
 
-이 장의 `sts`·`describe` 명령은 resource를 만들지 않는다. 다만 API 호출 기록은 CloudTrail 등 조직의 audit 경로에 남을 수 있다. export한 shell 변수는 terminal 종료 시 사라지며 별도 cloud cleanup은 없다.
+The `sts`·`describe` commands in this chapter do not create resources. However, API call records may remain in the organization's audit path, such as CloudTrail. Exported shell variables disappear when the terminal is closed, and there is no separate cloud cleanup.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-route table의 `0.0.0.0/0 → igw-...`는 연결된 subnet traffic의 기본 next hop을 말한다. 모든 destination이 internet gateway로 간다는 뜻도 아니고 instance가 public address를 가진다는 뜻도 아니다. 더 구체적인 prefix route가 있으면 longest-prefix match가 우선하며 security group과 network ACL도 별도로 적용된다.
+`0.0.0.0/0 → igw-...` in the route table refers to the basic next hop of connected subnet traffic. This does not mean that all destinations go to an internet gateway, nor does it mean that an instance has a public address. If there is a more specific prefix route, the longest-prefix match takes precedence, and security group and network ACLs are also applied separately.
 
-NAT gateway route는 보통 private address를 가진 resource가 외부로 나가는 경로에 쓰인다. 외부가 그 NAT를 통해 임의로 connection을 시작할 수 있다는 의미는 아니다. VPC endpoint가 있으면 AWS service traffic이 NAT 대신 private path를 사용할 수도 있다.
+NAT gateway route is usually used for routes where resources with private addresses go out. This does not mean that external parties can arbitrarily initiate connections through the NAT. If you have a VPC endpoint, AWS service traffic may use a private path instead of NAT.
 
-`describe-*` 성공은 control-plane API를 읽을 권한이 있다는 뜻이다. 그 명령을 실행한 laptop에서 application endpoint까지 data-plane traffic이 성공했다는 증거는 아니다. reachability는 실제 source 위치에서 별도로 확인한다.
+`describe-*` success means you have permission to read the control-plane API. It is not evidence that data-plane traffic was successful from the laptop that executed the command to the application endpoint. Reachability is checked separately at the actual source location.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. `get-caller-identity`를 첫 명령으로 두는 이유는 무엇인가?
-2. subnet을 public 또는 private이라고 부르기 전에 어떤 증거를 모아야 하는가?
-3. `AccessDenied` 해결을 위해 wildcard admin policy를 붙이지 않고 요청할 최소 정보는 무엇인가?
+1. Why put `get-caller-identity` as the first command?
+2. What evidence should we gather before calling a subnet public or private?
+3. What is the minimum information to request without adding a wildcard admin policy to resolve `AccessDenied`?
 
 <!-- source: https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html | checked: 2026-09-03 -->
 <!-- source: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-vpcs.html | checked: 2026-09-03 -->

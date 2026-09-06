@@ -94,7 +94,7 @@ function documentCard(document, index) {
         <strong>${escapeHtml(document.title)}</strong>
         <span>${escapeHtml(document.summary)}</span>
       </span>
-      <span class="reading-time">${document.readingMinutes}분</span>
+      <span class="reading-time">${document.readingMinutes} min</span>
       <span class="arrow" aria-hidden="true">↗</span>
     </a>`;
 }
@@ -106,10 +106,10 @@ function renderHome() {
     <section class="hero shell">
       <div class="hero-copy">
         <p class="eyebrow"><span></span>${escapeHtml(content.site.eyebrow)}</p>
-        <h1>운영 기술을<br /><em>쉽게, 깊게</em></h1>
+        <h1>Learn operations.<br /><em>Go deeper.</em></h1>
         <p class="hero-description">${escapeHtml(content.site.description)}</p>
         <button class="hero-search-trigger" type="button" data-focus-search>
-          <span>궁금한 키워드로 찾아보기</span>
+          <span>Search a topic or keyword</span>
           <kbd>/</kbd>
         </button>
       </div>
@@ -121,7 +121,7 @@ function renderHome() {
         <span class="orbit-label orbit-label-two">connect</span>
         <span class="orbit-label orbit-label-three">operate</span>
       </div>
-      <div class="hero-stats" aria-label="문서 사이트 현황">
+      <div class="hero-stats" aria-label="Documentation overview">
         <div><strong>${content.paths.length}</strong><span>learning paths</span></div>
         <div><strong>${content.topics.length}</strong><span>topics</span></div>
         <div><strong>${documentCount}</strong><span>documents</span></div>
@@ -131,9 +131,9 @@ function renderHome() {
       <div class="section-heading">
         <div>
           <p class="eyebrow"><span></span>CHOOSE A PATH</p>
-          <h2 id="topics-title">배울 영역을 선택하세요</h2>
+          <h2 id="topics-title">Choose your learning path</h2>
         </div>
-        <p>DevOps의 백엔드 요청·데이터 경로와 AIOps의 모델·운영 플랫폼은 관측·진단·복구 문서에서 서로의 선수 지식으로 다시 연결됩니다.</p>
+        <p>Connect DevOps request and data flows with AIOps models and platforms through observability, diagnosis, and recovery.</p>
       </div>
       <div class="path-grid">
         ${content.paths
@@ -153,7 +153,7 @@ function renderHome() {
                 <p>${escapeHtml(learningPath.description)}</p>
               </div>
               <div class="topic-card-footer">
-                <span>${topics.length}개 주제 · ${pathDocumentCount}개 문서</span>
+                <span>${topics.length} topics · ${pathDocumentCount} documents</span>
                 <span class="topic-line"></span>
               </div>
             </a>`;
@@ -164,9 +164,9 @@ function renderHome() {
     </section>
     <section class="principle-strip">
       <div class="shell principle-inner">
-        <p>처음 만나는 용어부터 정상 실행·실패·복구를 거쳐 전문가의 판단 순서를 배웁니다.</p>
-        <strong>문제 상황 → 쉬운 용어 → 정상 관찰 → 실패 → 복구 → 운영 판단</strong>
-        <span>쉬운 설명은 출발점이고, 전문 용어는 실제 증거와 연결해 익힙니다.</span>
+        <p>Build operational judgment through essential terms, working examples, failures, and recovery.</p>
+        <strong>Problem → Key terms → Baseline → Failure → Recovery → Operational judgment</strong>
+        <span>Start with plain explanations and connect technical terms to observable evidence.</span>
       </div>
     </section>`;
 }
@@ -177,7 +177,7 @@ function renderPath(learningPath) {
   main.innerHTML = `
     <section class="topic-hero accent-${escapeHtml(learningPath.accent)}">
       <div class="shell">
-        <a class="back-link" href="#"><span aria-hidden="true">←</span> 모든 학습 영역</a>
+        <a class="back-link" href="#"><span aria-hidden="true">←</span> All learning paths</a>
         <div class="topic-hero-grid">
           <div>
             <p class="eyebrow"><span></span>${escapeHtml(learningPath.number)} / ${escapeHtml(learningPath.label)}</p>
@@ -185,7 +185,7 @@ function renderPath(learningPath) {
           </div>
           <div class="topic-intro">
             <p>${escapeHtml(learningPath.description)}</p>
-            <span>${topics.length}개 주제 · ${topics.reduce((total, topic) => total + topic.documentIds.length, 0)}개 문서</span>
+            <span>${topics.length} topics · ${topics.reduce((total, topic) => total + topic.documentIds.length, 0)} documents</span>
           </div>
         </div>
       </div>
@@ -194,16 +194,16 @@ function renderPath(learningPath) {
       <div class="section-heading">
         <div>
           <p class="eyebrow"><span></span>CHOOSE A TOPIC</p>
-          <h2 id="path-topics-title">${escapeHtml(learningPath.title)} 학습 경로</h2>
+          <h2 id="path-topics-title">${escapeHtml(learningPath.title)} learning path</h2>
         </div>
-        <p>각 주제는 문제와 용어에서 시작해 정상 관찰, 실패 분리, 복구 증명과 운영 판단으로 이어집니다.</p>
+        <p>Each topic moves from problems and terms to observing a baseline, isolating failures, verifying recovery, and making operational decisions.</p>
       </div>
-      <ol class="learning-ladder" aria-label="초심자에서 전문가 판단까지의 학습 단계">
-        <li><strong>1. 문제와 용어</strong><span>왜 필요한지 보고 낯선 말을 먼저 풉니다.</span></li>
-        <li><strong>2. 정상 관찰</strong><span>작은 예제를 실행하고 정상 상태의 증거를 남깁니다.</span></li>
-        <li><strong>3. 실패 분리</strong><span>조건 하나를 바꾸고 어느 단계에서 멈췄는지 찾습니다.</span></li>
-        <li><strong>4. 복구 증명</strong><span>명령 성공이 아니라 사용자 결과가 돌아왔는지 확인합니다.</span></li>
-        <li><strong>5. 운영 판단</strong><span>보안·신뢰성·성능·비용의 선택 근거를 설명합니다.</span></li>
+      <ol class="learning-ladder" aria-label="Learning stages from foundations to operational judgment">
+        <li><strong>1. Problems and terms</strong><span>Understand the problem and unpack unfamiliar terms.</span></li>
+        <li><strong>2. Observe the baseline</strong><span>Run a small example and record evidence of normal behavior.</span></li>
+        <li><strong>3. Isolate the failure</strong><span>Change one condition and find where the flow stops.</span></li>
+        <li><strong>4. Verify recovery</strong><span>Check that the expected user outcome has been restored.</span></li>
+        <li><strong>5. Operational judgment</strong><span>Explain tradeoffs in security, reliability, performance, and cost.</span></li>
       </ol>
       <div class="topic-grid">
         ${topics
@@ -219,7 +219,7 @@ function renderPath(learningPath) {
                 <h3>${escapeHtml(topic.title)}</h3>
                 <p>${escapeHtml(topic.description)}</p>
               </div>
-              <div class="topic-card-footer"><span>${topic.documentIds.length}개 문서</span><span class="topic-line"></span></div>
+              <div class="topic-card-footer"><span>${topic.documentIds.length} documents</span><span class="topic-line"></span></div>
             </a>`,
           )
           .join('')}
@@ -242,7 +242,7 @@ function renderTopic(topic) {
           </div>
           <div class="topic-intro">
             <p>${escapeHtml(topic.description)}</p>
-            <span>${documents.length}개 문서 · 약 ${documents.reduce((sum, item) => sum + item.readingMinutes, 0)}분</span>
+            <span>${documents.length} documents · About ${documents.reduce((sum, item) => sum + item.readingMinutes, 0)} min</span>
           </div>
         </div>
       </div>
@@ -251,9 +251,9 @@ function renderTopic(topic) {
       <div class="section-heading compact">
         <div>
           <p class="eyebrow"><span></span>READING ORDER</p>
-          <h2 id="topic-documents-title">이 순서로 읽어보세요</h2>
+          <h2 id="topic-documents-title">Follow this reading order</h2>
         </div>
-        <p>로드맵의 초심자 설명부터 읽고, 개념과 실습을 순서대로 진행하세요.</p>
+        <p>Start with the roadmap, then work through the concepts and labs in order.</p>
       </div>
       <div class="document-list">
         ${documents.map(documentCard).join('')}
@@ -272,7 +272,7 @@ function renderDocument(currentDocument) {
 
   main.innerHTML = `
     <div class="reader-shell shell">
-      <aside class="reader-sidebar" aria-label="${escapeHtml(topic.title)} 문서 목록">
+      <aside class="reader-sidebar" aria-label="${escapeHtml(topic.title)} documents">
         <a class="back-link" href="#topic=${encodeURIComponent(topic.id)}"><span aria-hidden="true">←</span> ${escapeHtml(topic.title)}</a>
         <p class="reader-sidebar-label">${escapeHtml(topic.number)} / ${escapeHtml(topic.label)}</p>
         <nav>
@@ -293,21 +293,21 @@ function renderDocument(currentDocument) {
           <h1>${escapeHtml(currentDocument.title)}</h1>
           <p class="article-summary">${escapeHtml(currentDocument.summary)}</p>
           <div class="article-meta">
-            <span>약 ${currentDocument.readingMinutes}분</span>
+            <span>About ${currentDocument.readingMinutes} min</span>
             <span>${escapeHtml(currentDocument.path)}</span>
-            <a href="${escapeHtml(content.site.repository)}/blob/main/${encodeURI(currentDocument.path)}">원본 Markdown ↗</a>
+            <a href="${escapeHtml(content.site.repository)}/blob/main/${encodeURI(currentDocument.path)}">Markdown source ↗</a>
           </div>
         </header>
         <div class="markdown-body">${currentDocument.html}</div>
-        <nav class="article-pagination" aria-label="이전 및 다음 문서">
+        <nav class="article-pagination" aria-label="Previous and next documents">
           ${
             previous
-              ? `<a class="previous" href="#doc=${encodeURIComponent(previous.id)}"><span>이전 문서</span><strong>← ${escapeHtml(previous.title)}</strong></a>`
+              ? `<a class="previous" href="#doc=${encodeURIComponent(previous.id)}"><span>Previous document</span><strong>← ${escapeHtml(previous.title)}</strong></a>`
               : '<span></span>'
           }
           ${
             next
-              ? `<a class="next" href="#doc=${encodeURIComponent(next.id)}"><span>다음 문서</span><strong>${escapeHtml(next.title)} →</strong></a>`
+              ? `<a class="next" href="#doc=${encodeURIComponent(next.id)}"><span>Next document</span><strong>${escapeHtml(next.title)} →</strong></a>`
               : '<span></span>'
           }
         </nav>
@@ -348,11 +348,11 @@ async function renderMermaidDiagrams(root) {
 function decorateDiagram(node) {
   if (node.querySelector('.diagram-expand-button')) return;
   node.classList.add('diagram-interactive');
-  node.title = '클릭해서 크게 보기';
+  node.title = 'Click to expand';
   const button = document.createElement('button');
   button.className = 'diagram-expand-button';
   button.type = 'button';
-  button.innerHTML = '<span aria-hidden="true">↗</span> 크게 보기';
+  button.innerHTML = '<span aria-hidden="true">↗</span> Expand';
   button.addEventListener('click', (event) => {
     event.stopPropagation();
     openDiagramViewer(node);
@@ -390,7 +390,7 @@ function openDiagramViewer(node) {
   if (!svg) return;
   enlargedDiagram = svg.cloneNode(true);
   enlargedDiagram.removeAttribute('style');
-  enlargedDiagram.setAttribute('aria-label', '확대된 다이어그램');
+  enlargedDiagram.setAttribute('aria-label', 'Enlarged diagram');
   diagramNaturalWidth = diagramWidth(svg);
   diagramCanvas.replaceChildren(enlargedDiagram);
   if (!diagramViewer.open) diagramViewer.showModal();
@@ -405,13 +405,13 @@ function closeDiagramViewer() {
 }
 
 function searchDocuments(query) {
-  const terms = query.toLocaleLowerCase('ko').split(/\s+/).filter(Boolean);
+  const terms = query.toLocaleLowerCase('en').split(/\s+/).filter(Boolean);
   if (!terms.length) return [];
   return content.documents
     .map((document) => {
-      const title = document.title.toLocaleLowerCase('ko');
-      const summary = document.summary.toLocaleLowerCase('ko');
-      const body = document.searchText.toLocaleLowerCase('ko');
+      const title = document.title.toLocaleLowerCase('en');
+      const summary = document.summary.toLocaleLowerCase('en');
+      const body = document.searchText.toLocaleLowerCase('en');
       if (!terms.every((term) => title.includes(term) || summary.includes(term) || body.includes(term))) return null;
       const score = terms.reduce(
         (total, term) => total + (title.includes(term) ? 4 : 0) + (summary.includes(term) ? 2 : 0) + (body.includes(term) ? 1 : 0),
@@ -420,20 +420,20 @@ function searchDocuments(query) {
       return { document, score };
     })
     .filter(Boolean)
-    .sort((left, right) => right.score - left.score || left.document.title.localeCompare(right.document.title, 'ko'))
+    .sort((left, right) => right.score - left.score || left.document.title.localeCompare(right.document.title, 'en'))
     .map(({ document }) => document);
 }
 
 function renderSearch(query) {
   const results = searchDocuments(query);
-  document.title = `“${query}” 검색 — ${content.site.title}`;
+  document.title = `“${query}” search — ${content.site.title}`;
   main.innerHTML = `
     <section class="search-results shell">
-      <a class="back-link" href="#"><span aria-hidden="true">←</span> 게이트웨이</a>
+      <a class="back-link" href="#"><span aria-hidden="true">←</span> Gateway</a>
       <div class="search-results-heading">
         <p class="eyebrow"><span></span>SEARCH ALL DOCUMENTS</p>
         <h1>“${escapeHtml(query)}”</h1>
-        <p>${results.length}개의 문서를 찾았습니다.</p>
+        <p>${results.length} documents found.</p>
       </div>
       <div class="search-result-list">
         ${
@@ -447,11 +447,11 @@ function renderSearch(query) {
                       <span class="search-result-topic">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</span>
                       <strong>${escapeHtml(document.title)}</strong>
                       <p>${escapeHtml(document.summary)}</p>
-                      <span class="reading-time">약 ${document.readingMinutes}분</span>
+                      <span class="reading-time">About ${document.readingMinutes} min</span>
                     </a>`;
                 })
                 .join('')
-            : `<div class="empty-state"><strong>일치하는 문서가 없습니다.</strong><p>다른 표현이나 더 짧은 키워드로 찾아보세요.</p></div>`
+            : `<div class="empty-state"><strong>No matching documents.</strong><p>Try different wording or a shorter keyword.</p></div>`
         }
       </div>
     </section>`;
@@ -497,7 +497,7 @@ async function initialize() {
     });
     renderRoute();
   } catch (error) {
-    main.innerHTML = `<div class="error-state"><strong>문서를 불러오지 못했습니다.</strong><p>${escapeHtml(error.message)}</p></div>`;
+    main.innerHTML = `<div class="error-state"><strong>Could not load the documents.</strong><p>${escapeHtml(error.message)}</p></div>`;
   }
 }
 

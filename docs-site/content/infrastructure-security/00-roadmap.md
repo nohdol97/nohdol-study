@@ -1,23 +1,23 @@
-# 인프라 보안 로드맵
+# Infrastructure Security Roadmap
 
-## 처음 보는 사람을 위한 출발점
+## Starting point for beginners
 
-프로그램이 데이터베이스에 접속할 수 있다고 해서 모든 데이터를 삭제할 권한까지 필요한 것은 아니다. 보안의 첫 질문은 “누구인가?”이고 두 번째 질문은 “무엇을 해도 되는가?”다. 여기에 비밀번호 같은 비밀 정보와 배포 파일이 바뀌지 않았다는 증거를 관리하는 일이 이어진다.
+Just because a program can access a database doesn't mean it needs the authority to delete all data. The first question of security is “Who is it?” and the second question is “What can we do?” This involves managing secret information such as passwords and evidence that the deployment file has not been changed.
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
+| New term | Plain-language meaning |
 |---|---|
-| 신원(identity) | 요청을 보낸 사람이나 프로그램이 누구인지 나타내는 정보 |
-| 인증(authentication) | 주장한 신원이 맞는지 확인하는 과정 |
-| 인가(authorization) | 확인된 신원이 특정 작업을 해도 되는지 판단하는 과정 |
-| 정책(policy) | 어떤 조건에서 어떤 작업을 허용하거나 거부할지 적은 규칙 |
-| 비밀 정보(secret) | 노출되면 다른 사람이 권한을 사용할 수 있는 값 |
-| 산출물(artifact) | 배포할 container image나 package처럼 빌드 결과로 나온 파일 |
+| identity | Information indicating who the person or program is that sent the request |
+| authentication | The process of verifying that the claimed identity is correct |
+| authorization | The process of determining whether a confirmed identity can perform a specific task |
+| policy | Rules that state which actions will be allowed or denied under what conditions |
+| secret information | Values ​​that, if exposed, may allow others to use the privileges |
+| artifact | Files resulting from build, such as container image or package to be deployed |
 
-처음에는 읽기 한 작업만 허용하고 다른 작업은 실제로 거부되는지 확인한다. 이후 secret 교체와 image 검증을 같은 “누가 만들고, 누가 사용하며, 언제 폐기하는가”의 수명주기로 확장한다.
+Initially, allow only one read operation and ensure that the other operations are actually denied. Afterwards, secret replacement and image verification are extended to the same life cycle of “who creates it, who uses it, and when is it disposed of?”
 
-## 무엇을 해결하는가
+## What does it solve
 
-보안은 배포 마지막의 scan 한 번이 아니다. identity가 어떤 권한으로 artifact와 secret을 받아 workload를 실행하고, 그 행위가 어떤 audit evidence로 남는지 수명주기 전체를 연결해야 한다.
+Security is not just one scan at the end of a deployment. The entire life cycle must be connected to determine with what authority the identity receives artifacts and secrets, executes workloads, and what audit evidence that action leaves behind.
 
 ```mermaid
 flowchart LR
@@ -31,41 +31,41 @@ flowchart LR
     P --> L
 ```
 
-## 선수 지식
+## prerequisite knowledge
 
-- AWS account·IAM·STS와 VPC boundary
+- AWS account·IAM·STS and VPC boundary
 - Kubernetes ServiceAccount·RBAC·Secret
-- image registry와 CI/CD의 기본 흐름
+- Basic flow of image registry and CI/CD
 
-## 학습 순서
+## learning sequence
 
-1. **Identity·secret·artifact model**: least privilege와 trust boundary를 설계한다.
-2. **Allow/deny 검증 실습**: 허용 동작과 명시적 거부를 모두 관찰하고 credential 수명주기를 추적한다.
+1. **Identity·secret·artifact model**: Design least privilege and trust boundary.
+2. **Allow/deny verification lab**: Observe both allow behavior and explicit deny and track the credential life cycle.
 
-## 완료 조건
+## Completion criteria
 
-이 주제는 한 번 읽고 끝내지 않는다. 먼저 용어 표를 자신의 말로 바꾸고, 개념 장에서 한 요청의 흐름을 따라간다. 실습에서는 정상 상태를 먼저 기록한 뒤 조건 하나만 바꿔 실패를 만들고, 증거로 원인을 설명한 뒤 복구한다. 마지막으로 아래 운영 판단 질문에 답하면서 더 복잡한 환경으로 확장한다.
+This topic is not something you read once and then stop. First, convert the terminology table into your own words and follow the flow of requests made in the concepts chapter. In the lab, the normal state is first recorded, then a failure is created by changing only one condition, and the cause is explained with evidence before recovery. Finally, expand to more complex environments by answering the operational judgment questions below.
 
-- human, CI와 workload identity를 분리한다.
-- policy의 resource·action·condition을 설명하고 deny를 재현한다.
-- secret rotation과 signed artifact 검증 실패 시의 차단 지점을 지정한다.
+- Separate human, CI and workload identity.
+- Describe the resource·action·condition of the policy and reproduce the deny.
+- Specifies the blocking point when secret rotation and signed artifact verification fail.
 
-## 범위 밖
+## out of range
 
-독립 Vault 운영, 모든 compliance framework와 penetration testing 과정은 포함하지 않는다.
+Independent Vault operation, does not include any compliance framework and penetration testing processes.
 
-## 처음 이해했는지 확인
+## Check your understanding
 
-1. authentication과 authorization은 각각 무엇을 확인하는가?
-2. read 작업이 성공하는 것뿐 아니라 write가 거부되는 것도 시험해야 하는 이유는 무엇인가?
+1. What do authentication and authorization each check?
+2. Why should we test for write rejections as well as successful read operations?
 
-**확인 기준:** 인증은 누구인지, 인가는 그 신원이 무엇을 해도 되는지 확인한다. 허용과 거부를 함께 봐야 권한 경계가 예상보다 넓지 않음을 알 수 있다.
+**Verification criteria:** Authentication confirms who is who, and authorization verifies what that identity can do. When you look at allow and deny together, you can see that the permission boundary is not as wide as expected.
 
-## 운영 판단으로 확장하기
+## Develop operational judgment
 
-1. private subnet만으로 workload가 안전하다고 결론 낼 수 없는 이유는 무엇인가?
-2. image scan과 signature verification이 서로 대체되지 않는 이유는 무엇인가?
-3. 짧은 수명의 credential도 과도한 권한이면 위험한 이유는 무엇인가?
+1. Why can't we conclude that a workload is safe from a private subnet alone?
+2. Why aren't image scan and signature verification replaced with each other?
+3. Why are short-lived credentials dangerous if they have excessive privileges?
 
 <!-- source: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html | checked: 2026-09-03 -->
 <!-- source: https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html | checked: 2026-09-03 -->

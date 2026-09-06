@@ -1,46 +1,46 @@
-# Pending Pod와 consolidation 실습
+# Pending Pod and consolidation lab
 
-> 실습 등급: **AWS optional**. EKS와 Karpenter가 설치된 격리 환경이 필요하며 EC2·EKS·network·log 비용이 발생할 수 있다. CI에서는 manifest 정적 검증만 수행한다.
+> lab level: **AWS optional**. An isolated environment with EKS and Karpenter installed is required, and EC2·EKS·network·log costs may be incurred. In CI, only manifest static verification is performed.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-이 실습은 Karpenter를 처음 설치하는 안내가 아니다. Kubernetes scheduling, AWS IAM·VPC·EC2와 EKS를 먼저 학습하고, 지워도 되는 test cluster에 공식 설치 절차로 Karpenter를 구성한 뒤 시작한다.
+This lab is not a guide to installing Karpenter for the first time. First learn Kubernetes scheduling, AWS IAM·VPC·EC2, and EKS, and start after configuring Karpenter through the official installation procedure on a test cluster that can be deleted.
 
-- **호환성**: 설치된 Kubernetes·EKS·Karpenter version 조합을 공식 문서에서 다시 확인한다.
-- **도구**: `kubectl`, AWS CLI와 현재 cluster의 Karpenter CRD가 필요하다.
-- **AWS 신원**: 예상 account·Region의 temporary role인지 확인하고 EC2 생성 비용·quota를 검토한다.
-- **파일**: 완전한 `EC2NodeClass`, `NodePool`, test Deployment와 PDB manifest가 필요하다.
-- **관측**: controller log, Kubernetes event, NodeClaim condition, EC2 instance 목록을 실험 전에 볼 수 있게 준비한다.
-- **중단 조건**: 예상보다 큰 instance, 허용하지 않은 subnet·zone, Pod 가용성 저하가 보이면 즉시 중단한다.
+- **Compatibility**: Check the official documentation for the installed Kubernetes·EKS·Karpenter version combination.
+- **Tools**: Requires `kubectl`, AWS CLI, and Karpenter CRD of current cluster.
+- **AWS Identity**: Check whether it is a temporary role in the expected account/Region and review the EC2 creation cost/quota.
+- **Files**: Complete `EC2NodeClass`, `NodePool`, test deployment and PDB manifest are required.
+- **Observation**: Prepare a list of controller logs, Kubernetes events, NodeClaim conditions, and EC2 instances so that they can be viewed before the experiment.
+- **Suspension conditions**: Immediately stop if there is a larger instance than expected, an unallowed subnet/zone, or a decrease in Pod availability.
 
-아래 NodePool은 구조 설명용 일부 예시다. 환경별 `EC2NodeClass`와 test Deployment가 없으므로 그대로 복사한 것만으로는 실습이 시작되지 않는다. 누락된 값을 추측하지 말고 공식 설치 결과와 cluster resource를 기준으로 채운다.
+The NodePool below is an example for explaining the structure. Since there is no `EC2NodeClass` and test deployment for each environment, the lab will not start just by copying it as is. Instead of guessing missing values, fill them in based on official installation results and cluster resources.
 
-## 먼저 이해하기
+## Understand the model first
 
-이 실습에는 두 방향의 수렴이 있다. workload를 늘리면 Pending Pod 요구를 만족하도록 capacity가 생겨야 하고, workload를 없애면 불필요한 capacity가 disruption policy 안에서 줄어야 한다. 빠른 scale-up만 확인하면 비용과 scale-down 안전성은 검증되지 않는다.
+There is convergence in two directions in this lab. When the workload is increased, capacity must be created to satisfy the Pending Pod demand, and when the workload is removed, unnecessary capacity must be reduced within the disruption policy. If only quick scale-up is confirmed, cost and scale-down safety cannot be verified.
 
-관찰 대상도 계층별로 다르다. Pod event는 scheduler가 왜 배치하지 못했는지, Karpenter log는 어떤 requirement와 offering을 검토했는지, NodeClaim condition은 launch·register·initialize 진행을, EC2 API는 실제 instance와 purchase option을 보여 준다.
+Observation targets also differ by class. Pod event shows why the scheduler failed to deploy, Karpenter log shows which requirements and offerings were reviewed, NodeClaim condition shows launch·register·initialize progress, and EC2 API shows actual instance and purchase option.
 
-| 상태 | 기대 관찰 | 오래 머물 때 볼 것 |
+| situation | expectation observation | What to see when you stay long |
 |---|---|---|
-| Pod Pending | unschedulable 이유 | request·affinity·taint·volume topology |
-| NodeClaim 생성 | 선택된 requirement | NodePool 교집합과 limit |
+| Pod Pending | Reason for unschedulable | request·affinity·taint·volume topology |
+| Create NodeClaim | selected requirement | NodePool intersection and limit |
 | launched | provider ID·instance | EC2 capacity·quota·IAM |
-| registered | Kubernetes Node 등장 | bootstrap·network·security group |
-| initialized | startup resource 준비 | CNI·CSI·DaemonSet readiness |
+| registered | Kubernetes Node appears | bootstrap·network·security group |
+| initialized | Prepare startup resources | CNI·CSI·DaemonSet readiness |
 | disrupting | taint·eviction·replacement | PDB·budget·grace period |
-| terminated | NodeClaim·Node·EC2 정리 | finalizer와 cloud resource 잔존 |
+| terminated | NodeClaim·Node·EC2 Summary | finalizer and cloud resource remaining |
 
-## 1. 실행 전 gate
+## 1. Gate before execution
 
-- Karpenter 설치 방식과 controller IAM 권한, EKS·Kubernetes 호환성을 현재 공식 문서에서 다시 확인한다.
-- NodePool·EC2NodeClass selector가 의도한 subnet, security group과 AMI만 찾는지 확인한다.
-- test namespace, tag, budget, rollback owner와 종료 시간을 정한다.
-- controller metric·log, Kubernetes event와 EC2 inventory를 먼저 수집한다.
+- Check the current official documentation for Karpenter installation method, controller IAM permissions, and EKS/Kubernetes compatibility.
+- Check that the NodePool·EC2NodeClass selector finds only the intended subnet, security group, and AMI.
+- Set the test namespace, tag, budget, rollback owner, and end time.
+- First collect controller metric·log, Kubernetes event, and EC2 inventory.
 
-## 2. 제한된 NodePool
+## 2. Limited NodePool
 
-아래는 구조를 설명하는 예다. AMI family, role과 discovery tag는 환경별 공식 설치 결과에 맞춰야 한다.
+Below is an example explaining the structure. AMI family, role, and discovery tag must match the official installation results for each environment.
 
 ```yaml
 apiVersion: karpenter.sh/v1
@@ -71,16 +71,16 @@ spec:
       - nodes: "1"
 ```
 
-API field와 default는 바뀔 수 있으므로 cluster CRD와 작성 시점 문서를 기준으로 server-side dry-run한다.
+Since API fields and defaults may change, server-side dry-run is performed based on the cluster CRD and documentation at the time of creation.
 
 ```bash
 kubectl apply --server-side --dry-run=server -f nodepool.yaml
 kubectl get nodepool,ec2nodeclass,nodeclaim
 ```
 
-## 3. Pending에서 capacity 수렴까지
+## 3. From pending to capacity convergence
 
-현재 node에 들어가지 않는 명시적 CPU request를 가진 disposable Deployment를 만든다. request는 account limit 안에서 한 node만 유도하도록 정한다.
+Creates a disposable deployment with an explicit CPU request that does not enter the current node. The request is determined to induce only one node within the account limit.
 
 ```bash
 kubectl scale deployment/capacity-demo -n infra-capstone --replicas=1
@@ -102,36 +102,36 @@ sequenceDiagram
     K-->>P: scheduler can place Pod
 ```
 
-완료는 Pod Running뿐 아니라 NodeClaim condition, node Ready, application request 성공과 예상한 instance capacity type·zone·tag의 일치를 포함한다.
+Completion includes not only Pod Running, but also NodeClaim condition, node Ready, application request success, and matching expected instance capacity type·zone·tag.
 
-## 4. Consolidation과 blocked disruption
+## 4. Consolidation and blocked disruption
 
-Deployment를 0으로 줄이고 `consolidateAfter` 이후 event, NodeClaim과 EC2 종료를 관찰한다. 그다음 PDB가 eviction을 막는 작은 workload에서 disruption이 blocked되는 이유를 event로 확인한다. production PDB를 수정해 실험하지 않는다.
+Reduce Deployment to 0 and observe the event, NodeClaim, and EC2 termination after `consolidateAfter`. Next, PDB checks the event to determine why disruption is blocked in a small workload that blocks eviction. Do not experiment by modifying the production PDB.
 
-성공 판정은 다음과 같다.
+The success judgment is as follows.
 
-- workload가 있는 동안 허용되지 않은 disruption이 발생하지 않는다.
-- workload 제거 후 budget 범위에서 대상 node가 정리된다.
-- rescheduled Pod의 readiness와 SLO가 유지된다.
-- Kubernetes node와 NodeClaim 삭제 뒤 EC2 instance·volume이 남지 않는다.
+- No unauthorized disruption occurs while the workload is present.
+- After workload removal, target nodes are cleaned up within the budget range.
+- The readiness and SLO of rescheduled Pods are maintained.
+- After deleting the Kubernetes node and NodeClaim, no EC2 instance·volume remains.
 
-## 정리
+## Cleanup
 
-test workload를 먼저 삭제하고 NodePool이 만든 NodeClaim 정리를 관찰한다. 그 뒤 test NodePool·EC2NodeClass와 관련 IAM·network·log artifact를 inventory 역순으로 정리한다. finalizer를 임의 제거하기 전에 controller와 cloud instance 상태를 조사한다.
+Delete the test workload first and observe the NodeClaim cleanup created by NodePool. Afterwards, the test NodePool·EC2NodeClass and related IAM·network·log artifacts are organized in reverse inventory order. Before arbitrarily removing a finalizer, check the controller and cloud instance status.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-Pod가 Pending에서 Running으로 바뀌었다면 end-to-end capacity path의 한 사례가 성공한 것이다. 하지만 NodeClaim이 예상한 zone·capacity type·instance 범위를 벗어났다면 policy 목표에는 실패했다. application request와 SLO도 함께 확인한다.
+If a Pod changes from Pending to Running, an example of an end-to-end capacity path is successful. However, if it is outside the range of zone·capacity type·instance expected by NodeClaim, the policy goal has been failed. Also check the application request and SLO.
 
-NodeClaim이 생겼지만 node가 register되지 않으면 scheduler 문제가 아니라 EC2 launch 이후 bootstrap 경계를 조사한다. subnet route, security group, instance role, cluster endpoint reachability와 startup log가 다음 증거다. NodeClaim 자체가 없다면 Pod와 NodePool requirement의 교집합, limit와 controller 권한을 먼저 본다.
+If a NodeClaim is created but the node is not registered, it is not a scheduler problem, but check the bootstrap boundary after EC2 launch. Subnet route, security group, instance role, cluster endpoint reachability and startup log are the next evidence. If there is no NodeClaim itself, look at the intersection of Pod and NodePool requirements, limit and controller authority first.
 
-scale-down 뒤 Kubernetes Node만 사라지고 EC2 instance가 남으면 cleanup은 끝나지 않았다. 반대로 node가 빨리 줄었지만 Pod가 readiness를 잃거나 PDB를 우회했다면 consolidation도 실패다. 비용 감소와 availability guardrail을 동시에 만족해야 한다.
+After scale-down, if only the Kubernetes Node disappears and the EC2 instance remains, the cleanup is not finished. Conversely, if the number of nodes decreases quickly, but the Pod loses readiness or bypasses the PDB, consolidation also fails. Cost reduction and availability guardrail must be satisfied simultaneously.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. pending Pod event와 controller log를 함께 봐야 하는 이유는 무엇인가?
-2. PDB가 consolidation을 막은 상황에서 PDB를 바로 완화하면 위험한 이유는 무엇인가?
-3. Node object 삭제만으로 cleanup 완료를 판정할 수 없는 이유는 무엇인가?
+1. Why do I need to view pending Pod events and controller logs together?
+2. Why is it dangerous to immediately relieve PDB in a situation where PDB has blocked consolidation?
+3. Why can't cleanup be determined to be complete just by deleting the node object?
 
 <!-- source: https://karpenter.sh/docs/concepts/nodepools/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
 <!-- source: https://karpenter.sh/docs/concepts/nodeclaims/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->

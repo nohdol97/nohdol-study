@@ -1,87 +1,87 @@
-# 피드 스크래퍼 가이드 (Feed Scraper)
+# Feed Scraper Guide
 
-RSS 소스를 연결된 vault로 자동 수집하는 도구다. 레퍼런스 구현은
-[`examples/feed_scraper/`](../../examples/feed_scraper/)에 있고, 실제 실행은
-비추적 영역인 `_workspace/feed_scraper/`에서 한다.
+It is a tool that automatically collects RSS sources into a connected vault. The reference implementation is
+[It is at `examples/feed_scraper/`](../../examples/feed_scraper/), and the actual execution is
+This is done in `_workspace/feed_scraper/`, a non-tracking area.
 
-## 왜 이 구조인가
+## Why this structure
 
-수집 도구는 **코드는 모든 컴퓨터에서 같고, 무엇을 수집할지는 컴퓨터마다 다르다.**
-이 둘을 한 파일에 두면 다른 기계에 옮길 때마다 코드를 고쳐야 하고, 고친 내용이
-하네스에 커밋되면 개인 선택이 추적 파일에 섞인다.
+The collection tool is **the code is the same on all computers, but what it collects varies from computer to computer**.
+If you put these two in one file, you will have to modify the code every time you move it to another machine, and the changes will be
+When committed to a harness, your personal choices are mixed into the trace file.
 
-그래서 셋으로 나눴다.
+So we divided it into three.
 
-| 무엇 | 어디 | 추적 |
+| what | where | tracking |
 |---|---|---|
-| 엔진과 소스 카탈로그 | `examples/feed_scraper/scrape.py` | O |
-| 이 컴퓨터의 선택 | `_workspace/feed_scraper/sources.local.toml` | X |
-| 자격 증명·수집 상태 | `_workspace/feed_scraper/{.env,data/}` | X |
+| Engine and Source Catalog | `examples/feed_scraper/scrape.py` | O |
+| Select this computer | `_workspace/feed_scraper/sources.local.toml` | X |
+| Credential/Collection Status | `_workspace/feed_scraper/{.env,data/}` | X |
 
-카탈로그에 있어도 `enabled`에 없으면 수집되지 않는다. 노트북에서는 로봇 소스만,
-데스크톱에서는 GeekNews까지 — 같은 코드로 다르게 돌릴 수 있다.
+Even if it is in the catalog, it will not be collected if it is not in `enabled`. On laptops, only the robot source is available.
+Even GeekNews on the desktop — the same code can be run differently.
 
-### 코드를 고쳤으면 사본으로 복사한다
+### Once you have modified the code, copy it as a copy.
 
-이 구조의 대가는 **엔진이 두 곳에 있다**는 것이다. 도는 것은 언제나 `_workspace/`
-사본이므로, `examples/`의 추적본을 고치고 복사하지 않으면 낡은 코드가 계속 돈다.
-2026-08-03에 실제로 그 일이 있었다 — 산출물을 `raw/`와 `wiki/` 두 층으로 가른
-변경이 사본에 오지 않아 하루치 수집분이 통째로 `wiki/`에 쌓였고, 그동안 로그는
-정상이라고 말하고 있었다.
+The cost of this structure is that **the engines are in two places**. What turns around is always `_workspace/`
+Since it is a copy, the old code will continue to run unless you edit and copy the trace copy of `examples/`.
+That actually happened on 2026-08-03 — the output was split into two layers: `raw/` and `wiki/`.
+Since changes were not made to the copy, the entire day's collection was accumulated in `wiki/`, and the log was
+They said it was normal.
 
 ```bash
 cp -p examples/feed_scraper/scrape.py _workspace/feed_scraper/scrape.py
 ```
 
-복사를 잊어도 조용히 지나가지 않는다. `run_scraper.sh`가 실행할 때마다
-`scrape.py`·`run_scraper.sh`·`requirements.txt`의 SHA-256을 추적본과 대조하고,
-어긋나면 로그 맨 앞에 파일 이름과 고치는 명령을 남긴다. 어긋나도 **멈추지는
-않는다** — 낡은 코드로 도는 것이 수집이 끊기는 것보다 낫다는 판단이다. 사본
-쪽을 먼저 고친 경우도 있으므로 복사 방향은 사람이 정한다.
+Even if you forget to copy, it will not pass quietly. Every time `run_scraper.sh` runs
+Compare the SHA-256 of `scrape.py`·`run_scraper.sh`·`requirements.txt` with the traceback,
+If there is a discrepancy, the file name and correction command are left at the beginning of the log. Even if it's off, it won't stop
+No — The judgment is that running with old code is better than losing collection. manuscript
+In some cases, the page is corrected first, so the direction of copying is determined by the person.
 
-`README.md`와 `sources.local.example.toml`은 대조하지 않는다. 갈라져도 수집
-결과가 달라지지 않는데 경고만 잦아지면 경고 자체를 읽지 않게 된다. 사본만 떼어
-다른 곳에 두면(`examples/`가 보이지 않으면) 검사는 조용히 건너뛴다.
+`README.md` and `sources.local.example.toml` do not collate. Collect even if divided
+If the results do not change but the warnings become more frequent, the warnings themselves will not be read. Just take a copy
+If you place it somewhere else (if `examples/` is not visible), the test will be quietly skipped.
 
-## 두 가지 파이프라인
+## two pipelines
 
-| 파이프라인 | 하는 일 | 외부 API | 산출물 |
+| pipeline | What you do | External API | output |
 |---|---|---|---|
-| `feed` | 제목과 링크만 쌓는다 | 없음 | 소스별 목록 문서 1개 |
-| `geeknews` | 점수 채점 → 기준 통과분 요약·분류 | Gemini | 날짜별 원본 + 월 인덱스 + 주제 문서 7종 |
+| `feed` | Just build titles and links | doesn't exist | 1 listing document per source |
+| `geeknews` | Scoring → Summary and classification of those that pass the standard | Gemini | Original by date + month index + 7 topic documents |
 
-### 산출물이 두 층에 나뉘는 이유
+### Why is the output divided into two layers?
 
-기준은 하나다 — **사람의 판단이 들어갔는가.**
+There is only one standard — **Was human judgment involved?**
 
-| 산출물 | 위치 | 만든 주체 |
+| output | location | Created by |
 |---|---|---|
-| 날짜별 원본 | `vault/raw/geeknews/<연월>/<날짜>.md` | 자동 |
-| 월 인덱스 | `vault/raw/geeknews/<연월> 인덱스.md` | 자동 |
-| 주제 문서 7종 | `vault/wiki/GeekNews/` | 분류는 자동, **무엇을 남기고 어느 원자 노트로 잇는지는 사람** |
-| `feed` 소스별 목록 | `vault/wiki/<카탈로그의 path>` | 자동 |
+| Original by date | `vault/raw/geeknews/<연월>/<날짜>.md` | automatic |
+| month index | `vault/raw/geeknews/<연월> 인덱스.md` | automatic |
+| 7 topic documents | `vault/wiki/GeekNews/` | Classification is automatic, **you have to decide what to leave and which atomic note** |
+| `feed` List by Source | `vault/wiki/<카탈로그의 path>` | automatic |
 
-날짜별 원본은 하루치에 서로 무관한 글이 여러 개 들어가는 불변 캡처이고, 월 인덱스는 그 폴더를 훑어 만든 링크 목록일 뿐이다. 둘 다 큐레이션 판단이 하나도 없으므로 `raw/`에 쌓는다. `wiki/`에 두면 원자 노트를 세는 모든 지표 — 고아 노트, `status` 분포, 지식 그래프 — 가 수집량에 휩쓸린다. 실제로 2026-08-02 이전에는 `wiki/` 305개 노트 중 177개가 이 캡처였고 `status: seed`의 61%가 여기서 나왔다.
+The original by date is an immutable capture of several unrelated posts in one day, and the monthly index is just a list of links created by scanning the folder. Since both have no curation judgment, they are stacked at `raw/`. If you place it in `wiki/`, all indicators that count atomic notes — orphan notes, `status` distribution, knowledge graph — will be swept away by the collection. In fact, before 2026-08-02, 177 of the 305 notes in `wiki/` were captured here, and 61% of `status: seed` were captured here.
 
-`wiki/GeekNews/`에는 주제 문서만 남는다. 그래서 하위 디렉터리를 두지 않는다 — 한 종류만 있는 폴더에 `주제/`를 한 겹 더 파면 경로만 길어진다.
+Only subject documents remain in `wiki/GeekNews/`. So there are no subdirectories — if you dig `주제/` one more layer into a folder with only one type, the path will only get longer.
 
-Obsidian은 wikilink를 vault 전체에서 이름으로 풀기 때문에 층이 갈려도 링크는 그대로 걸린다. 인덱스의 `[[2026-08-01]]`도, 허브의 `[[2026.8 인덱스]]`도 마찬가지다.
+Obsidian resolves wikilinks by name throughout the vault, so the links remain the same even if the floors are different. The same goes for `[[2026-08-01]]` in the index and `[[2026.8 인덱스]]` in the hub.
 
-> 월 인덱스 목록을 담은 `GeekNews 큐레이션 허브`의 표는 **손으로 관리한다.** 스크래퍼는 인덱스를 만들지만 허브 표에 행을 추가하지 않으므로, 달이 바뀌면 새 인덱스를 아무도 가리키지 않는다.
+> The table at `GeekNews 큐레이션 허브`, which contains a list of month indexes, is **maintained by hand.** The scraper creates the index but does not add any rows to the hub table, so when the month changes, no one points to the new index.
 
-### `feed`가 요약하지 않는 이유
+### Why `feed` does not summarize
 
-본문을 읽지 않으므로 API 호출이 0이다. **소스를 몇 개 붙이든 무료 티어 한도와
-무관하다.** 요약을 붙이면 소스마다 한도를 나눠 써야 하고, 그 요약은 검증되지
-않은 생성물이라 근거로 쓸 수도 없다. 읽을지 말지는 제목으로 충분히 정해진다.
+Since the body is not read, the API call is 0. No matter how many sources you add, there is a free tier limit and
+It is irrelevant. If you add a summary, the limit must be divided for each source, and the summary is not verified.
+Because it is an unused product, it cannot be used as evidence. The title is enough to determine whether or not you will read it.
 
-### `geeknews`가 요약하는 이유
+### Why `geeknews` summarizes
 
-GeekNews는 투표 점수가 있어 "무엇이 읽을 만한가"를 사이트가 이미 재고 있다.
-5P 게이트를 통과한 하루 8~12건만 남으므로 요약 비용이 감당된다. 주제 분류까지
-같은 호출에서 받아 주제 문서로 흘려보낸다.
+GeekNews has poll scores so the site is already measuring “what’s worth reading.”
+Since only 8 to 12 cases per day pass through the 5P gate, the summary cost is covered. Up to topic classification
+It is received in the same call and sent to the topic document.
 
-## 설치
+## installation
 
 ```bash
 mkdir -p _workspace/feed_scraper
@@ -98,38 +98,38 @@ echo 'GEMINI_API_KEY=...' > .env           # geeknews를 켰을 때만
 ./run_scraper.sh
 ```
 
-vault 경로는 적지 않는다. 스크립트가 위로 올라가며 `vault` 심링크를 가진
-하네스 루트를 찾는다. 표준 배치를 벗어난 곳에서 돌릴 때만
-`sources.local.toml`에 `study_root`를 적는다.
+There are quite a few vault paths. The script goes up and has a symlink of `vault`.
+Find the harness root. Only when running outside of the standard layout
+Write `study_root` in `sources.local.toml`.
 
-## 자동 실행 (macOS launchd)
+## Autorun (macOS launchd)
 
 ```bash
 launchctl load -w ~/Library/LaunchAgents/com.user.study.feedscraper.plist
 launchctl list | grep feedscraper
 ```
 
-`ProgramArguments`가 `_workspace/feed_scraper/run_scraper.sh`를 가리키면 된다.
-래퍼가 자신의 위치에서 로그·venv 경로를 유도하므로 plist에는 그 한 줄만 있으면
-충분하다.
+`ProgramArguments` should point to `_workspace/feed_scraper/run_scraper.sh`.
+Since the wrapper derives the log/venv path from its location, the plist only needs that one line.
+Enough.
 
-### 실행 시각
+### execution time
 
-`geeknews`를 켰다면 시각이 의미를 갖는다. Gemini 일일 한도(RPD)는 **태평양
-자정**에 리셋되고, PDT 기준 **KST 16:00**이다. 06시·08시 실행은 태평양 기준
-같은 날이라 한도를 공유하고, KST 17시 이후 실행은 다음 날 할당을 받는다.
+If you turn on `geeknews`, the time has meaning. Gemini daily limit (RPD) is Pacific
+It resets at midnight**, which is **KST 16:00 based on PDT. Execution at 06:00 and 08:00 is based on Pacific
+Since it is the same day, the limit is shared, and executions after 17:00 KST are allocated the next day.
 
-`feed` 소스만 쓴다면 호출이 없으므로 시각은 아무래도 좋다. 피드 창이 4일
-이상인 소스들이라 하루 한 번으로 충분하다.
+If you only use the `feed` source, the time is probably good because there is no call. Feed window is 4 days
+These sauces are more effective, so once a day is enough.
 
-## 소스 추가
+## add source
 
-`scrape.py`의 `SOURCES`에 항목을 더하고, `sources.local.toml`의 `enabled`에
-키를 적는다. 더하기 전에 두 가지를 실측한다.
+Add an entry to `SOURCES` in `scrape.py`, and to `enabled` in `sources.local.toml`.
+Write down your key. Measure two things before adding them.
 
-1. **`published_parsed` 유무** — 없으면 날짜를 적을 수 없어 건너뛴다
-2. **피드 창** — 가장 오래된 항목부터 최신까지의 시간 폭. `window_days`를
-   그보다 넉넉히 잡아야 하루 한 번 실행에서도 놓치지 않는다
+1. **Availability of `published_parsed`** — If not, the date cannot be written, so it is skipped.
+2. **Feed Window** — Time span from oldest to newest. `window_days`
+   You need to hold more than that so you don't miss out on running it once a day.
 
 ```python
 'my-source': {
@@ -143,61 +143,61 @@ launchctl list | grep feedscraper
 },
 ```
 
-재는 방법과 탈락한 후보(arXiv cs.RO, hnrss 등)는 vault의
-`[[로봇과 피지컬 AI 정보 소스]]` 노트에 있다.
+The measuring method and eliminated candidates (arXiv cs.RO, hnrss, etc.) are listed in the vault.
+It's in the `[[로봇과 피지컬 AI 정보 소스]]` note.
 
-### 주제 전용이 아닌 피드 거르기
+### Filter feeds that are not topic-specific
 
-`title_filter`를 주면 제목에 그 낱말 중 하나가 있는 항목만 받는다. Hugging
-Face 블로그처럼 관심 주제가 일부인 피드에 쓴다 — 실측에서 831건 중 로봇 관련은
-23건(2.8%)이라, 거르지 않으면 나머지가 목록을 덮는다.
+If you give `title_filter`, you will only get items with one of those words in the title. Hugging
+Used in feeds with some topics of interest, such as the Face blog — Among the 831 cases in the actual measurement, robot-related
+There are 23 items (2.8%), so if you don't filter them, the rest will cover the list.
 
 ```python
 'title_filter': ["robot", "lerobot", "embodied", "manipulat"],
 ```
 
-본문이 아니라 제목만 검사한다. 본문까지 보면 주제가 스쳐 지나간 글이 대거
-걸리고, 정작 찾던 글은 제목에 그 말이 있다는 것이 GeekNews 관심어에서 이미
-확인된 바다. 대신 **낱말 목록이 곧 재현율**이므로, 놓치는 글이 있다고 느껴지면
-목록을 넓히되 그만큼 다른 주제가 섞여 든다.
+Only the title is checked, not the body. If you look at the main text, there are many articles where the topic has passed by.
+I got caught, and the article I was looking for already had that word in the title on GeekNews' list of favorites.
+confirmed sea. Instead, the **word list is the recall**, so if you feel like you're missing something,
+The list expands, but different topics are mixed in.
 
-## 현재 카탈로그
+## current catalog
 
-| 키 | 소스 | 파이프라인 | 일평균 | 피드 창 |
+| key | sauce | pipeline | daily average | feed window |
 |---|---|---|---|---|
-| `geeknews` | GeekNews | `geeknews` | 8~12(게이트 후) | 33시간 |
-| `ieee-robotics` | IEEE Spectrum Robotics | `feed` | 0.4 | 67일 |
-| `the-robot-report` | The Robot Report | `feed` | 3.7 | 4.1일 |
-| `ros-discourse` | ROS Discourse | `feed` | 6.7 | 4.5일 |
-| `robohub` | Robohub | `feed` | 0.4 | 191일 |
-| `nvidia-robotics` | NVIDIA Robotics | `feed` | 0.2 | 118일 |
-| `huggingface-robotics` | Hugging Face (로봇) | `feed` | 0.35 중 2.8% | 넓음 |
+| `geeknews` | GeekNews | `geeknews` | 8~12 (after gate) | 33 hours |
+| `ieee-robotics` | IEEE Spectrum Robotics | `feed` | 0.4 | 67 days |
+| `the-robot-report` | The Robot Report | `feed` | 3.7 | 4.1 day |
+| `ros-discourse` | ROS Discourse | `feed` | 6.7 | 4.5 days |
+| `robohub` | Robohub | `feed` | 0.4 | 191 days |
+| `nvidia-robotics` | NVIDIA Robotics | `feed` | 0.2 | 118 days |
+| `huggingface-robotics` | Hugging Face (Robot) | `feed` | 2.8% of 0.35 | broadness |
 
-일평균과 창은 2026-07-26 실측이다. 발행 주기가 바뀌면 함께 바뀐다.
+The daily average and window are actual measurements from 2026-07-26. It changes as the issuance cycle changes.
 
-## 중복과 재실행
+## Duplicate and Redo
 
-모든 항목은 마커를 달고 저장된다 — `feed`는 `<!-- src:키:링크 -->`,
-`geeknews`는 `<!-- gn:topic_id -->`. 하루에 몇 번을 돌려도 같은 글이 두 번
-들어가지 않으므로, 실패한 실행은 그냥 다시 돌리면 된다.
+All entries are saved with a marker — `feed` is `<!-- src:키:링크 -->`,
+`geeknews` is `<!-- gn:topic_id -->`. No matter how many times you read it in a day, you will see the same article twice.
+Since it does not enter, you can simply rerun the failed execution.
 
-`geeknews`는 추가로 점수를 `data/pending/`에 캐시한다. 요약이 429로 막혀
-중단되어도 다음 실행이 점수를 다시 묻지 않고 요약만 이어서 한다.
+`geeknews` additionally caches the score in `data/pending/`. Summary is blocked at 429
+Even if it is interrupted, the next run does not ask for the score again and only continues with the summary.
 
-## 문제 해결
+## problem solving
 
-| 증상 | 원인 | 조치 |
+| symptoms | cause | action |
 |---|---|---|
-| `설정이 없습니다` | `sources.local.toml` 미생성 | example을 복사 |
-| `켜진 소스가 없습니다` | `enabled`가 비었거나 전부 주석 | 키를 적는다 |
-| `카탈로그에 없는 소스` | `enabled`의 오타 | 카탈로그 키와 대조 |
-| `venv python not found` | 가상환경 미생성 | 위 설치 절차 |
-| `GEMINI_API_KEY가 없어 건너뜁니다` | `.env` 없음 | 키를 넣거나 `geeknews`를 끈다 |
-| 특정 소스만 0건 | 피드 URL 변경 또는 창 밖 | 해당 RSS를 직접 열어 확인 |
+| `설정이 없습니다` | `sources.local.toml` not created | copy example |
+| `켜진 소스가 없습니다` | `enabled` is empty or completely commented out | write down the key |
+| `카탈로그에 없는 소스` | Typo in `enabled` | Matches catalog keys |
+| `venv python not found` | Virtual environment not created | Above installation procedure |
+| `GEMINI_API_KEY가 없어 건너뜁니다` | `.env` None | Insert key or turn off `geeknews` |
+| 0 specific sources only | Change feed URL or outside window | Open the RSS directly to check |
 
-## 산출물이 지식이 아니라는 점
+## The product is not knowledge
 
-수집된 목록은 **읽을 것을 고르는 대기열**이지 지식이 아니다. `feed` 문서의
-각 줄은 발행된 제목일 뿐이고, `geeknews`의 한 줄 요약은 검증되지 않은 AI
-생성물이다. 두 경우 모두 주장의 근거로 쓸 수 없다. 읽고 이해한 것은
-`note-writer`로 원자적 노트에 적고, 그 노트가 증거를 갖는다.
+The collected list is **a queue for picking things to read**, not knowledge. `feed` document
+Each line is just a published title, and the one-line summary of `geeknews` is an unverified AI
+It is a product. In both cases, it cannot be used as evidence for a claim. What I read and understood
+Write it down in an atomic note as `note-writer`, and that note holds the evidence.

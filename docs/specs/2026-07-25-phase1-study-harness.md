@@ -1,84 +1,84 @@
-# nohdol-study Phase 1 구축 스펙
+# nohdol-study Phase 1 construction specifications
 
-- 날짜: 2026-07-25
-- 상태: 구현됨
-- 관련 제안: [2026-07-25-nohdol-study-direction](../proposals/2026-07-25-nohdol-study-direction.md)
+- Date: 2026-07-25
+- Status: Implemented
+- Related suggestions: [2026-07-25-nohdol-study-direction](../proposals/2026-07-25-nohdol-study-direction.md)
 
-## 배경
+## background
 
-공부 대상과 저장 위치는 컴퓨터마다 달라진다. 하네스 저장소는 공용 규약과 도구 배선만 추적하고, 실제 지식은 설치처에서 선택한 외부 디렉터리에 저장해야 한다. Obsidian은 유용하지만 설치되지 않은 컴퓨터에서도 파일 기반 핵심 기능이 동작해야 한다.
+Study subjects and storage locations vary from computer to computer. The harness repository only tracks public conventions and tool wiring; the actual knowledge should be stored in an external directory chosen by the installer. Obsidian is useful, but its core file-based features need to work on computers that don't have it installed.
 
-## 목표
+## Goal
 
-- 기존 또는 신규 지식 디렉터리를 안전하게 연결하는 재실행 가능한 설치기를 제공한다.
-- 원문·정리 노트·인덱스·로그·핫 캐시를 분리한다.
-- Claude Code와 Codex가 동일한 스킬과 세션 컨텍스트를 사용한다.
-- 기존 vault 자료를 자동 변경하거나 하네스 Git에 포함하지 않는다.
+- Provides a re-runable installer that securely connects existing or new knowledge directories.
+- Separate original text, organizing notes, index, log, and hot cache.
+- Claude Code and Codex use the same skills and session context.
+- Existing vault data is not automatically changed or included in harness Git.
 
-## 비목표
+## non-goal
 
-- 기존 노트 245개 등 레거시 자료의 일괄 마이그레이션
-- Obsidian, CLI, 플러그인의 자동 설치
-- 웹·논문·영상 ingest 구현
-- basic-memory 또는 별도 그래프 인덱스 도입
-- vault Git 저장소 초기화
+- Batch migration of legacy materials, including 245 existing notes
+- Automatic installation of Obsidian, CLI, and plugins
+- Implementation of web/thesis/video ingest
+- Introducing basic-memory or separate graph indexes
+- Initialize vault Git repository
 
-## 요구사항
+## Requirements
 
-### R1. 설치처 분리
+### R1. Separate installation location
 
-`REGISTRY.md`, `vault`, `_workspace/`는 Git에서 제외한다. 추적 파일에는 설치처 절대경로나 프로필을 기록하지 않는다.
+`REGISTRY.md`, `vault`, and `_workspace/` are excluded from Git. The absolute installation path or profile is not recorded in the trace file.
 
-### R2. 지식 루트 선택
+### R2. Select knowledge root
 
-설치기는 절대경로로 전달된 기존 디렉터리 또는 새 디렉터리를 지원한다. 선택 경로는 기존 Obsidian vault, 그 하위 디렉터리, 일반 디렉터리 중 어느 것이어도 된다.
+The installer supports existing or new directories passed as absolute paths. The selected path can be any of the existing Obsidian vault, its subdirectories, or a general directory.
 
-### R3. 안전한 초기화
+### R3. Safe initialization
 
-설치기는 `raw/`, `wiki/`, `index.md`, `log.md`, `hot.md`를 없는 경우에만 생성한다. 같은 경로로 재실행해도 기존 파일 내용은 바뀌지 않는다. 같은 이름의 비호환 레거시 파일이 있으면 보존한 채 중단한다. 하네스 저장소 내부를 지식 루트로 지정하는 것은 디렉터리를 만들기 전에 거부한다.
+The installer creates `raw/`, `wiki/`, `index.md`, `log.md`, and `hot.md` only if they do not exist. Even if you rerun it using the same path, the existing file contents will not change. If there are incompatible legacy files with the same name, they are preserved and stopped. Designating the inside of the harness repository as the knowledge root is rejected before creating the directory.
 
-### R4. 연결 충돌 처리
+### R4. Connection conflict handling
 
-`vault`가 같은 경로를 가리키는 심링크면 유지한다. 다른 심링크면 명시적 `--replace-link` 없이는 거부한다. 실제 파일이나 디렉터리면 항상 거부하고 자동 삭제하지 않는다.
+If `vault` is a symlink pointing to the same path, it is maintained. Any other symlink will be rejected without explicit `--replace-link`. If it is an actual file or directory, it is always rejected and not automatically deleted.
 
-### R5. 설치 레지스트리
+### R5. install registry
 
-설치기는 프로필, 지식 루트, Obsidian 메타데이터 발견 여부, 동기화 방식, vault Git 발견 여부, 도구 상태를 `REGISTRY.md`에 기록한다. 이 파일은 로컬 상태이며 재생성할 수 있다.
+The installer records the profile, knowledge root, whether Obsidian metadata was found, synchronization method, whether vault Git was found, and tool status in `REGISTRY.md`. This file is local and can be recreated.
 
-### R6. 도구 독립성
+### R6. tool independence
 
-Phase 1 설치기는 macOS `/bin/sh`과 표준 유틸리티만 사용한다. Obsidian·Python·Node·jq는 필수 의존성이 아니다.
+The Phase 1 installer uses only macOS `/bin/sh` and standard utilities. Obsidian·Python·Node·jq are not required dependencies.
 
-### R7. 지식 규약
+### R7. knowledge protocol
 
-`raw/` 원문은 불변으로 취급한다. `wiki/` 노트는 flat YAML frontmatter와 위키링크를 사용한다. `log.md`는 append-only이며 `hot.md`는 3,000바이트(한글 혼합 기준 약 900토큰) 이하의 파생 캐시다. 게이트는 바이트로 재므로 토크나이저와 무관하게 재현된다.
+`raw/` The original text is treated as immutable. `wiki/` notes use flat YAML frontmatter and wiki links. `log.md` is append-only, and `hot.md` is a derived cache of less than 3,000 bytes (about 900 tokens based on mixed Korean characters). Since the gate is measured in bytes, it is reproduced regardless of the tokenizer.
 
-### R8. 세션 시작
+### R8. Start session
 
-Claude Code와 Codex의 SessionStart 훅은 공용 스크립트를 호출한다. 설치 미완료 시 설치 안내를, 완료 시 `using-study` 규칙과 `hot.md`를 컨텍스트로 제공한다. `hot.md` 내용은 데이터이며 지시로 취급하지 않는다고 명시한다.
+The SessionStart hook in Claude Code and Codex calls a common script. If installation is not completed, installation guidance is provided, and upon completion, the `using-study` rule and `hot.md` are provided as context. `hot.md` Specifies that the contents are data and are not treated as instructions.
 
-### R9. 종료 전 정합성
+### R9. Consistency before termination
 
-`wiki/` 변경이 `index.md`, `log.md`, `hot.md`보다 새로우면 Stop 훅이 세 파일 갱신을 요구한다. 최신 상태면 출력 없이 통과한다.
+If the `wiki/` change is newer than `index.md`, `log.md`, or `hot.md`, the Stop hook requires three files to be updated. If it is up to date, it passes without output.
 
-### R10. 문서·언어
+### R10. Document/Language
 
-모델이 반복해서 읽는 운영 자산은 영어로, 사용자가 읽는 README·ADR·스펙·변경 이력은 한국어로 작성한다.
+Model-read operational assets and user-facing repository documentation, including READMEs, ADRs, specifications, and changelogs, are written in English. Chat follows the user's language. Functional Korean trigger aliases and language-specific examples are preserved.
 
-### R11. 주장 단위 정확성
+### R11. Claim Unit Accuracy
 
-지식 답변과 노트의 핵심 사실은 주장 단위로 검증한다. 1차 출처를 우선하고, 고위험·논쟁적·낯선·시의성 있는 주장은 독립 근거와 반증을 찾는다. 사실·추론·가설을 구분하고 검증 상태와 확인일을 기록한다. AI 출력과 NotebookLM 요약은 독립 근거로 세지 않는다.
+Key facts in knowledge answers and notes are verified on a per-claim basis. Priority is given to primary sources, and independent evidence and counterevidence are sought for high-risk, controversial, unfamiliar, and timely claims. Distinguish between facts, inferences, and hypotheses, and record verification status and confirmation date. AI output and NotebookLM summaries are not counted as independent evidence.
 
-## 완료 기준
+## Completion criteria
 
-- 설치기 회귀 테스트가 신규 설치, 재실행 보존, 기존 Obsidian 감지, 내부 경로 거부, 연결 충돌 거부, 비호환 파일 보존·거부를 확인한다.
-- 훅 회귀 테스트가 미설치/설치 세션 출력과 stale/fresh 종료 판정을 확인한다.
-- 모든 셸 파일이 `sh -n`을 통과한다.
-- JSON은 파서로, TOML은 Python 3.11+ `tomllib`이 있는 환경에서 파싱 검증한다.
-- 실제 설치처에서 `vault`가 선택 경로를 가리키고 초기 다섯 항목이 생성된다.
-- `git status`에 `REGISTRY.md`, `vault`, `_workspace/`가 나타나지 않는다.
-- `AGENTS.md`가 근거 검증을 상시 요구하고, `note-writer`의 필수 참조와 노트 스키마가 검증 상태·확인일·주장별 근거를 포함한다.
+- Installer regression testing ensures that new installs, reruns are preserved, existing Obsidians are detected, internal paths are rejected, connection conflicts are rejected, and incompatible files are preserved or rejected.
+- Hook regression tests check non-installed/installed session output and stale/fresh termination decisions.
+- All shell files pass `sh -n`.
+- JSON is parsed, and TOML is parsed and verified in an environment with Python 3.11+ `tomllib`.
+- In the actual installation location, `vault` points to the selected path and the initial five items are created.
+- `REGISTRY.md`, `vault`, and `_workspace/` do not appear in `git status`.
+- `AGENTS.md` always requires evidence verification, and `note-writer`'s essential references and note schema include verification status, confirmation date, and evidence by claim.
 
-## 미검증 범위
+## Unverified range
 
-Claude Code와 Codex의 실제 새 세션 훅 주입은 각 CLI에서 새 세션을 열고 신뢰 승인 후 확인해야 한다. 자동 테스트는 설정 형식과 공용 스크립트 출력을 검증한다.
+Actual new session hook injection in Claude Code and Codex requires opening a new session in each CLI and confirming it after trust approval. Automated testing verifies configuration formats and common script output.

@@ -1,28 +1,28 @@
-# 호환 변경·테스트와 점진적 배포
+# Compatible changes, testing and gradual deployment
 
 <!-- source: https://spec.openapis.org/oas/ | checked: 2026-09-03 -->
 <!-- source: https://martinfowler.com/articles/practical-test-pyramid.html | checked: 2026-09-03 -->
 <!-- source: https://kubernetes.io/docs/tasks/run-application/update-deployment-rolling/ | checked: 2026-09-03 -->
 
-배포는 새 binary를 실행하는 순간이 아니라 구·신 코드, schema, event와 cache가 공존하는 기간이다. 변경 단위를 작게 만들고 각 단계에서 돌아갈 길과 사용자 결과를 확인해야 한다. unit test 수나 rollout 완료만으로 호환성을 증명할 수 없다.
+Deployment is not the moment of executing a new binary, but the period when old and new code, schema, events, and cache coexist. Make the units of change small and check the path and user outcome at each step. Compatibility cannot be proven solely through the number of unit tests or completion of rollout.
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-| 말 | 이 장에서의 뜻 |
+| word | Meaning in this chapter |
 |---|---|
-| expand-contract | 먼저 구·신 버전이 함께 쓸 표현을 추가하고 전환 뒤 오래된 표현을 제거하는 순서 |
-| contract test | provider와 consumer가 합의한 요청·응답을 실제 구현이 지키는지 확인하는 test |
-| shadow read | 새 경로의 결과를 사용자에게 쓰지 않고 기존 결과와 비교하는 검증 |
-| canary | 일부 traffic·tenant·resource에만 새 변경을 노출하는 단계 |
-| rollback | 실행 artifact를 이전 revision으로 되돌리는 작업 |
-| roll forward | 데이터·외부 효과 때문에 단순 rollback이 위험할 때 수정 버전을 전진 배포하는 것 |
+| expand-contract | First, add expressions that will be used together in the old and new versions, and then remove old expressions after conversion. |
+| contract test | A test to check whether the actual implementation adheres to the requests and responses agreed upon by the provider and consumer. |
+| shadow read | Validation that compares the results of a new path to existing results without writing them to the user. |
+| canary | Steps to expose new changes to only some traffic·tenant·resources |
+| rollback | Reverting an execution artifact to a previous revision |
+| roll forward | Forward deployment of a modified version when a simple rollback is risky due to data or external effects. |
 
-1. 변경 전후 공존 매트릭스를 만든다.
-2. 각 단계의 진입, 중단, rollback과 완료 증거를 정한다.
+1. Create a coexistence matrix before and after the change.
+2. Determine entry, interruption, rollback, and completion evidence for each step.
 
-## 먼저 이해하기
+## Understand the model first
 
-Kubernetes Deployment는 rolling update와 revision rollback을 제공하지만 application contract나 DB schema 역호환을 판단하지 않는다. Pod가 available이어도 새 응답을 old consumer가 읽지 못하거나 background migration이 업무 데이터를 잘못 바꿀 수 있다.
+Kubernetes Deployment provides rolling update and revision rollback, but does not determine application contract or DB schema backward compatibility. Even if the Pod is available, old consumers may not be able to read new responses, or background migration may incorrectly change business data.
 
 ```mermaid
 flowchart LR
@@ -35,14 +35,14 @@ flowchart LR
     C -. abort .-> D
 ```
 
-## 공존 매트릭스
+## coexistence matrix
 
 | producer / consumer | old consumer | new consumer |
 |---|---|---|
-| old producer | 기준선 | 새 consumer가 old payload를 읽어야 함 |
-| new producer | old consumer가 새 payload를 견뎌야 함 | 목표 조합 |
+| old producer | base line | New consumer must read old payload |
+| new producer | Old consumer must endure new payload | target combination |
 
-API의 optional field 추가, event enum 확장과 DB column 변경은 서로 다른 호환 규칙을 가진다. OpenAPI schema lint는 문서 구조를 확인하지만 의미 변화와 실제 consumer 행동을 모두 알지 못한다. contract fixture와 consumer test를 CI에서 함께 실행한다.
+Adding optional fields to the API, expanding event enums, and changing DB columns have different compatibility rules. OpenAPI schema lint checks the document structure, but is unaware of both semantic changes and actual consumer behavior. Contract fixture and consumer test are executed together in CI.
 
 ```yaml
 change_receipt:
@@ -59,32 +59,32 @@ change_receipt:
   rollbackMode: application_only_until_contract_cleanup
 ```
 
-## test를 실패 경계에 배치한다
+## Place test on failure boundary
 
-| test 층 | 빠르게 찾는 문제 | 찾지 못하는 문제 |
+| test layer | Quick search problem | Problem not finding |
 |---|---|---|
-| unit·property | 함수 규칙과 넓은 입력 반례 | 실제 DB·network 의미 |
-| integration | DB constraint, transaction, serialization | 실제 consumer 계약 전체 |
-| contract | provider와 consumer 표현 불일치 | production 용량과 데이터 분포 |
-| end-to-end | 핵심 사용자 흐름의 조합 오류 | 모든 fault와 tail behavior |
-| load·soak | saturation, leak와 tail latency | 업무 의미가 맞는지 자체 판단 |
-| fault injection | timeout·duplicate·dependency failure | 선택하지 않은 결함 |
+| unit·property | Function rules and wide input counterexamples | Actual DB·network meaning |
+| integration | DB constraint, transaction, serialization | All actual consumer contracts |
+| contract | Provider and consumer expression mismatch | Production capacity and data distribution |
+| end-to-end | Combination errors in core user flows | All faults and tail behavior |
+| load·soak | saturation, leak and tail latency | Self-determination of whether the work is meaningful |
+| fault injection | timeout·duplicate·dependency failure | defect not selected |
 
-test pyramid는 위로 갈수록 적게 둔다는 그림만이 아니라 피드백 비용과 실제 위험 범위를 맞추는 도구다. property-based test는 생성 입력으로 불변식을 흔들고, mutation test는 production code를 일부러 바꿔 test가 그 결함을 잡는지 본다. coverage 숫자가 높아도 assertion이 무의미하면 mutation이 살아남는다.
+The test pyramid is not just a picture of putting less money as you go up, but is also a tool to match the feedback cost and the actual risk range. A property-based test shakes up an invariant with a generated input, and a mutation test intentionally changes the production code to see whether the test catches the defect. Even if the coverage number is high, if the assertion is meaningless, the mutation survives.
 
-## online migration의 단계
+## Stages of online migration
 
-1. 새 nullable column·table·event field를 추가하고 old code가 계속 동작하는지 확인한다.
-2. new code가 old·new 표현을 모두 읽되 write 정본은 하나로 둔다.
-3. checkpoint와 rate limit이 있는 backfill을 실행하고 DB 부하를 관찰한다.
-4. shadow read로 old·new 결과를 key별 비교한다.
-5. canary에서 사용자·dependency SLI와 mismatch를 확인한다.
-6. 모든 writer·reader 전환과 보존 기간이 지난 뒤 old 표현을 제거한다.
-7. 제거는 별도 변경으로 수행하고 복구 가능 snapshot·receipt를 남긴다.
+1. Add a new nullable column·table·event field and check if the old code continues to work.
+2. The new code reads both old and new expressions, but leaves the write source of truth as one.
+3. Run backfill with checkpoint and rate limit and observe DB load.
+4. Compare old and new results by key using shadow read.
+5. Check user/dependency SLI and mismatch in canary.
+6. The old expression is removed after all writer/reader conversions and retention periods.
+7. Removal is performed as a separate change and leaves a recoverable snapshot·receipt.
 
-dual write는 두 저장소를 한 application call에서 순서대로 쓰는 것만으로 원자적이지 않다. 실패 창, repair queue와 정본을 분명히 한다. event capture와 outbox는 [도메인 불변식과 transaction](#doc=backend-engineering-domain-transaction), 결과 불명은 [분산 워크플로](#doc=backend-engineering-distributed-workflow)로 돌아가 검토한다.
+Dual write is not atomic as it simply writes two stores in order in one application call. Make clear the failure window, repair queue, and source of truth. Event capture and outbox are reviewed by [domain invariants and transaction](#doc=backend-engineering-domain-transaction), and unknown results are returned to [distributed workflow](#doc=backend-engineering-distributed-workflow).
 
-## 배포 gate와 관측
+## deployment gate and observation
 
 ```json
 {
@@ -98,18 +98,18 @@ dual write는 두 저장소를 한 application call에서 순서대로 쓰는 �
 }
 ```
 
-canary 성공은 자동으로 전체 확장을 뜻하지 않는다. scope 확대마다 새로운 blast radius와 관찰 window가 생긴다. GitOps가 desired revision을 되돌린 사실과 실제 사용자 결과가 회복된 사실도 구분한다. [Helm과 GitOps](#doc=helm-gitops-roadmap), [Observability와 SRE](#doc=observability-sre-roadmap), [AIOps 자동 복구](#doc=aiops-remediation-dry-run-lab)를 함께 사용한다.
+Canary success does not automatically mean full scaling. Each time the scope is expanded, a new blast radius and observation window are created. It also distinguishes between the fact that GitOps reverted the desired revision and the fact that the actual user result was recovered. [Helm and GitOps](#doc=helm-gitops-roadmap), [Observability and SRE](#doc=observability-sre-roadmap), and [AIOps automatic recovery](#doc=aiops-remediation-dry-run-lab) are used together.
 
-## 완료
+## Completion criteria
 
-- API·event·DB의 구·신 버전 공존 매트릭스를 만들었다.
-- test 층을 실제 실패 경계와 연결했다.
-- backfill·shadow read·canary·cleanup의 완료 조건을 나눴다.
-- rollout, rollback과 사용자 outcome 증거를 분리했다.
+- We created a coexistence matrix for old and new versions of API, event, and DB.
+- We connected the test layer to the actual failure boundary.
+- The completion conditions for backfill·shadow read·canary·cleanup were divided.
+- Rollout, rollback, and user outcome evidence were separated.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- optional field 추가가 모든 consumer에게 자동으로 호환되는 변경이 아닌 이유는 무엇인가?
-- backfill이 끝났다는 사실을 row count 하나로 판정하면 어떤 오류를 놓칠 수 있는가?
-- Pod rollout 성공과 application release 성공이 다른 이유는 무엇인가?
-- DB 변경 때문에 rollback보다 roll forward가 안전할 수 있는 경우는 언제인가?
+- Why isn't adding an optional field an automatically compatible change for all consumers?
+- What errors can be missed if the fact that backfill is finished is determined by row count alone?
+- Why is pod rollout success different from application release success?
+- When is roll forward safer than rollback due to DB changes?

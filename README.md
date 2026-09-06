@@ -1,66 +1,65 @@
-# nohdol-study — AI 에이전트 기반 휴대용 공부 하네스
+# nohdol-study — AI agent-based portable study harness
 
-`nohdol-study`는 Claude Code, Codex, 그리고 Gemini Antigravity CLI가 동일한 파일 규약으로 사용하는 **휴대용 AI 스터디 하네스(Portable Study Harness)**다. 
-수집한 원문은 `raw/`, 검증해 정리한 원자적 지식은 `wiki/`에 두며 **Markdown과 위키링크(`[[ ]]`)를 유일한 단일 원본(Single Source of Truth)**으로 삼는다.
+`nohdol-study` is a **portable AI study harness** that gives Claude Code, Codex, and Gemini Antigravity CLI a shared file contract. Captured sources live in `raw/`, verified atomic notes live in `wiki/`, and **Markdown and wikilinks (`[[ ]]`) are the source of truth**.
 
-> 💡 **설계 철학**: 하네스 저장소 자체는 지식 파일을 추적하지 않는다. 컴퓨터마다 다른 지식 저장소 경로는 실제 지식 루트를 가리키는 미추적 심링크(`vault/`)와 로컬 레지스트리(`REGISTRY.md`)를 통해 안전하게 연결된다.
-
----
-
-## 🌟 제공 기능 및 학습 환경 (Features)
-
-### 1. 🏗️ Phase 1: 기본 지식 하네스
-- **이식성 높은 설치**: 설치처(개인/사내 프로필, 동기화 방식)별 지식 디렉터리 선택 및 안전한 부트스트랩
-- **표준화된 구조**: `raw/` (불변 소스), `wiki/` (원자적 노트), `index.md` (지도), `log.md` (연대기), `hot.md` (세션 컨텍스트)
-- **노트 계약 (Note Contract)**: Flat YAML 프론트매터, 위키링크, 주장별 출처 및 검증 상태(`unverified` ~ `primary-confirmed`) 엄격 집행
-- **쓰기 시점 게이트 (`PostToolUse`)**: 노트를 저장하는 순간 다이어그램 렌더 실패·프론트매터 계약 위반·해석되지 않는 `sources:` 경로를 검사해 같은 턴에서 고치게 한다. 스킬을 거치지 않은 작성자에게도 파일 기준으로 적용된다
-- **마무리 게이트 (`Stop`)**: 이번 세션에 쓴 노트가 기록됐는지, **무엇이 그 노트를 가리키는지**, 새로 건 링크가 실제로 해석되는지 확인한다. 도달 가능성 판정은 `vault-gardening`과 같은 정의를 쓴다
-- **유출 게이트 (`PreToolUse`)**: 노트북 셀에 지식 루트 경로·위키링크·노트 프론트매터가 섞이면 막는다. 승인 프롬프트는 "이 도구를 실행할까"를 묻지 **페이로드에 노트가 들어 있는지**를 묻지 않기 때문에, 이 게이트만 대화형 세션에서도 켜져 있다. 공개 데이터셋에서 실측한 수치는 vault 자료가 아니므로 통과한다
-
-### 2. 🔍 Phase 2: 다중 매체 수집 및 지식 그래프
-- **웹 문서 캡처 (`defuddle`)**: 광고·내비게이션을 제거한 깨끗한 마크다운 불변 캡처
-- **학술 논문 탐색 (`paper-search`)**: arXiv·DOI 기반 논문 검색, PDF 다운로드 및 출판 메타데이터 검증
-- **영상 심층 학습 (`study-video`)**: 한국어·영어 자막 우선의 Transcript-first 학습. 영상 다운로드는 화면이 답해야 할 질문이 있을 때만
-- **결정적 지식 그래프 (`knowledge-graph`)**: `article`·`topic`·`source` 타입의 결정적 JSON 그래프 생성 및 모델 추론 근거 검증
-- **의미 검색 (`vault-search`)**: 노트가 쓴 단어를 몰라도 **의미로** 찾는다. 임베딩은 루프백 서버에서만 계산하고(그 외 엔드포인트는 스크립트가 거부), 인덱스는 동기화 밖 `_workspace/`에 둔다. 검색할 때 바뀐 노트만 자동으로 다시 임베딩하므로 재빌드를 기억할 필요가 없다. 결과는 근거가 아니라 **후보 목록**이다
-- **대량 문서화 큐 (`ingest` 배치 모드)**: 진행률을 체크박스가 아니라 **노트가 그 파일을 실제로 인용하는지**로 계산해, 세션이 끊겨도 노트에서 재개된다
-
-### 3. 🧠 Phase 2b: 코드·도메인 분석 및 Obsidian 연동
-- **Understand Anything 9개 모드 라우팅 (`understand`)**: 코드베이스 아키텍처 파악, 기능 위치 탐색, 개념 설명, 온보딩 가이드, 변경 영향 범위, 도메인 분석, 대시보드 뷰어
-- **Obsidian 형식 및 CLI 연동 (`obsidian`)**: 마크다운 확장, Bases(`.base`), JSON Canvas(`.canvas`) 작성 및 Obsidian CLI (4개 모드) 내부 라우팅
-- **발표용 인터랙티브 다이어그램 (`archify`)**: **명시 호출 시에만** pin된 CLI로 단독 실행 HTML 다이어그램을 만든다. Obsidian이 임베드할 수 없고 지식 루트는 동기화되므로 산출물은 `_workspace/`에만 두며, 노트에 들어갈 다이어그램은 `diagram`(Mermaid/D2)이 그대로 담당한다
-- **안전한 격리 런타임**: 외부 도구 트리는 `.tools/PINS.md`의 tree hash를 검증하여 배치하며, 승인 없는 의존성 설치 및 외부 전송을 철저히 차단
-
-### 4. 🖥️ 로컬 다이내믹 사이트 포털
-- **단일 진입점**: 반복 이용하는 HTML 학습 사이트는 `_workspace/sites/<slug>/`에 두고 `_workspace/index.html`에서 검색·접근
-- **서버 한 개**: `python3 examples/workspace_portal/portal.py serve`로 `_workspace` 전체를 한 번만 제공
-- **명시적 노출**: 지식 그래프·임시 분석물은 숨기고 사용자가 보는 사이트만 `sites.json`에 등록
-
-### 5. 🌐 GitHub Pages 공개 문서
-[**공개 문서 사이트 바로 열기 →**](https://nohdol97.github.io/nohdol-study/)
-
-- **루트 2개 학습 영역·20개 주제·77개 문서**: DevOps 15개 주제·57개 문서와 AIOps 5개 주제·20개 문서를 분리해 제공하고, 요청·데이터·모델·GPU·관측성·traffic·GitOps·security·incident 문서의 내부 링크로 두 영역을 연결
-- **백엔드와 AIOps 전체 경로**: 백엔드는 API 계약→불변식·transaction→용량→분산 workflow→cache·성능→호환 배포로, AIOps는 AI Specialist 5개 모듈→AI Transformation 4개 필러→incident evidence→진단→승인된 자동 복구로 이어짐
-- **생략 없는 개념→실행→복구 연결**: 각 신규 topic은 핵심 용어와 실제 상황부터 설명하고, 명령 결과가 증명하는 것과 아직 모르는 것을 구분한다. Local·Plan only·AWS optional 경계, 실패 판정과 cleanup은 [스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)에 맞춰 제공
-- **링크를 내부 문서로 전환**: 사용자가 지정한 공식 페이지를 외부 링크로 연결하지 않고, 관계·시퀀스 다이어그램, 실행 가능한 YAML·`kubectl` 예시, 실패 사례와 복구 흐름이 있는 자립형 설명으로 발전
-- **통합 검색과 읽기 화면**: 제목·요약·본문 검색, URL 직접 링크, 반응형 Markdown 뷰어와 다크 모드 제공
-- **공개 범위 게이트**: `docs-site/catalog.json`에 명시한 Git 추적 Markdown만 빌드하며 `vault/`·`REGISTRY.md`·`_workspace/`는 거부
-- **Pages artifact 배포**: 생성물은 커밋하지 않고 GitHub Actions가 테스트한 `docs-site/dist/`만 배포
-- **직접 전달**: 검증을 통과한 일반 변경은 별도 승인 대기 없이 `origin/main`에 push하고 Pages 배포까지 확인
-
-### 6. 📱 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge)
-- **이동 중 읽기 전용 학습**: 스마트폰 텔레그램 메신저로 언제 어디서든 기존 지식 볼트를 검색·조회·설명하고 소크라테스식 문답을 진행하며, 노트 작성·수정·삭제는 하지 않음
-- **클라우드 실시간 동기화**: Mac에서 생성·수정된 노트는 Google Drive를 통해 스마트폰 Obsidian 앱에 즉시 동기화
-- **인라인 버튼 및 메뉴 제어**: 좌측 하단 `[Menu]` 버튼과 터치 버튼으로 AI 모델(`Gemini 3.1 Pro` ↔ `2.5 Flash`) 및 추론 강도(`High/Med/Low`) 즉시 전환
-- **무결점 서식 렌더링 (`MessageEntity`)**: 마크다운 기호(`\`, `*`, `` ` ``) 노출 없이 스타일 속성 배열만 분리 전송하고 로컬 경로(`file://`)를 정제하는 방어 아키텍처 탑재
-- **맥 OS 부팅 시 자동 구동 (`launchd`)**: 재부팅 후에도 명령어 입력 없이 상시 구동되며 프로세스 종료 시 자동 복구(`KeepAlive`)
-- **AGENTS.md Rule 5 보안 경계**: 환경 변수 주입, Chat ID 화이트리스트, `STUDY_SURFACE=telegram` 도구 게이트로 vault 쓰기·삭제와 홈 디렉터리 스윕을 차단
+> 💡 **Design philosophy**: The harness repository itself does not track knowledge files. The knowledge repository path, which is different for each computer, is securely connected through an untracked symlink (`vault/`) and a local registry (`REGISTRY.md`) that point to the actual knowledge root.
 
 ---
 
-## 🚀 빠른 시작 (Quick Start)
+## 🌟 Provided features and learning environment (Features)
 
-### 로컬 다이내믹 사이트 포털
+### 1. 🏗️ Phase 1: Basic knowledge harness
+- **Highly portable installation**: Select knowledge directory by installation location (personal/company profile, synchronization method) and secure bootstrapping
+- **Standardized structure**: `raw/` (immutable source), `wiki/` (atomic note), `index.md` (map), `log.md` (chronology), `hot.md` (session context)
+- **Note Contract**: Flat YAML front matter, wiki link, strict enforcement of source and verification status for each claim (`unverified` ~ `primary-confirmed`)
+- **Write point gate (`PostToolUse`)**: At the moment of saving a note, diagram render failure, Frontmatter contract violation, and uninterpreted `sources:` path are checked and corrected in the same turn. Applies on a file basis even to authors who have not gone through the skill
+- **Finish Gate (`Stop`)**: Checks whether the notes written in this session have been recorded, **what points to those notes**, and whether the newly entered link is actually interpreted. The reachability judgment uses the same definition as `vault-gardening`.
+- **Egress gate (`PreToolUse`)**: Blocks notebook cells containing knowledge-root paths, wikilinks, or note frontmatter. An approval prompt asks whether to run a tool; it does not inspect whether the payload contains notes. This gate therefore also runs in interactive sessions. Measurements from public datasets are allowed because they are not vault material.
+
+### 2. 🔍 Phase 2: Multi-media collection and knowledge graph
+- **Web Document Capture (`defuddle`)**: Clean Markdown immutable capture without advertisements and navigation.
+- **Academic Paper Search (`paper-search`)**: arXiv·DOI-based paper search, PDF download, and publication metadata verification
+- **Deep video learning (`study-video`)**: Transcript-first learning with Korean and English subtitles first. Video downloads only occur when the screen has questions to answer.
+- **Deterministic Knowledge Graph (`knowledge-graph`)**: Generate deterministic JSON graph of type `article`·`topic`·`source` and verify model inference evidence
+- **Meaning Search (`vault-search`)**: Search **by meaning** even if you do not know the word written in the note. Embeddings are calculated only on the loopback server (other endpoints are rejected by the script), and the index is placed outside of synchronization at `_workspace/`. When you search, only changed notes are automatically re-embedded, so you don't have to remember to rebuild. The result is not evidence, but a **candidate list**
+- **Bulk Documentation Queue (`ingest` batch mode)**: Progress is calculated by **whether the note actually cites the file** rather than a checkbox, so even if the session is interrupted, it is resumed in the note.
+
+### 3. 🧠 Phase 2b: Code/domain analysis and Obsidian integration
+- **Understand Anything 9-Mode Routing (`understand`)**: Know your codebase architecture, explore feature locations, explain concepts, onboarding guide, scope of change impact, domain analysis, dashboard viewer.
+- **Obsidian format and CLI integration (`obsidian`)**: Markdown extension, Bases (`.base`), JSON Canvas (`.canvas`) creation and internal routing of Obsidian CLI (4 modes)
+- **Interactive diagram for presentation (`archify`)**: **Only when explicitly called** Creates a standalone HTML diagram with a pinned CLI. Since Obsidian cannot embed and the knowledge root is synchronized, the output is placed only in `_workspace/`, and the diagrams to be included in the notes are handled by `diagram` (Mermaid/D2).
+- **Secure isolation runtime**: The external tool tree is deployed by verifying the tree hash of `.tools/PINS.md`, and unauthorized installation of dependencies and external transfers are thoroughly blocked.
+
+### 4. 🖥️Local Dynamic Site Portal
+- **Single entry point**: Place the HTML learning site you use repeatedly in `_workspace/sites/<slug>/` and search and access it in `_workspace/index.html`
+- **One server**: `python3 examples/workspace_portal/portal.py serve` provides the entirety of `_workspace` once
+- **Explicit exposure**: Hide knowledge graph and temporary analysis and register only sites viewed by users to `sites.json`
+
+### 5. 🌐 GitHub Pages public documentation
+[**Open the public document site directly →**](https://nohdol97.github.io/nohdol-study/)
+
+- **root 2 learning areas, 20 topics, 77 documents**: DevOps 15 topics, 57 documents and AIOps 5 topics, 20 documents are provided separately, and the two areas are connected through internal links in the request, data, model, GPU, observability, traffic, GitOps, security, and incident documents.
+- **Complete backend and AIOps paths**: Backend follows API contracts → invariants and transactions → capacity → distributed workflows → caching and performance → compatible deployments. AIOps connects five AI Specialist modules and four AI Transformation pillars to incident evidence, diagnosis, and approved remediation.
+- **Unomitted concept→execution→recovery connection**: Each new topic is explained starting with key terms and actual situations, and distinguishes between what the command results prove and what is not yet known. Local·Plan only·AWS optional Boundary, failure judgment, and cleanup are provided according to [spec ](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)
+- **Convert links to internal documents**: Rather than linking user-specified official pages to external links, evolve them into self-contained explanations with relationship/sequence diagrams, executable YAML/`kubectl` examples, failure examples, and recovery flows.
+- **Integrated search and reading screen**: Title/summary/text search, URL direct link, responsive Markdown viewer and dark mode provided
+- **Public scope gate**: Only build Git tracking Markdown specified in `docs-site/catalog.json`, reject `vault/`·`REGISTRY.md`·`_workspace/`
+- **Pages artifact deployment**: Deploy only `docs-site/dist/` tested by GitHub Actions without committing the artifact.
+- **Direct delivery**: General changes that have passed verification are pushed to `origin/main` without waiting for separate approval and confirmed through Pages deployment.
+
+### 6. 📱 Mobile Telegram Study Bridge (Telegram Bot Bridge)
+- **Read-only learning on the go**: Search, query, and explain existing knowledge vaults anytime, anywhere using the smartphone Telegram messenger and conduct Socratic questions and answers, but do not write, edit, or delete notes.
+- **Cloud real-time synchronization**: Notes created and modified on Mac are immediately synchronized to the Obsidian smartphone app via Google Drive
+- **Inline buttons and menu controls**: Instantly switch between AI models (`Gemini 3.1 Pro` ↔ `2.5 Flash`) and inference strengths (`High/Med/Low`) with the bottom left `[Menu]` button and touch buttons.
+- **Flawless format rendering (`MessageEntity`)**: Equipped with a defense architecture that separates and transmits style attribute arrays without exposing markdown symbols (`\`, `*`, `` ` ``) and refines local paths (`file://`)
+- **Automatically runs when Mac OS boots (`launchd`)**: Always runs without entering commands even after rebooting and automatically recovers when the process ends (`KeepAlive`)
+- **AGENTS.md Rule 5 security perimeter**: Environment variable injection, Chat ID whitelist, `STUDY_SURFACE=telegram` tool gate blocks vault writes/deletes and home directory sweeps
+
+---
+
+## 🚀 Quick Start
+
+### Local Dynamic Site Portal
 
 ```sh
 python3 examples/workspace_portal/portal.py init
@@ -68,9 +67,9 @@ python3 examples/workspace_portal/portal.py check
 python3 examples/workspace_portal/portal.py serve
 ```
 
-브라우저에서 `http://127.0.0.1:4173/`을 열면 등록된 모든 사이트에 접근할 수 있다. 새 사이트 등록 방법은 [Workspace Portal 안내](examples/workspace_portal/README.md)를 따른다.
+If you open `http://127.0.0.1:4173/` in your browser, you can access all registered sites. To register a new site, follow [Workspace Portal Guide](examples/workspace_portal/README.md).
 
-### GitHub Pages 공개 문서
+### GitHub Pages public documentation
 
 ```sh
 cd docs-site
@@ -80,39 +79,39 @@ npm run build
 npm run preview
 ```
 
-브라우저에서 `http://127.0.0.1:4174/`를 연다. 루트의 DevOps·AIOps 학습 영역, 공식 출처를 내부 문서로 반영하는 방식과 Pages 설정은 [공개 학습 가이드 안내](docs-site/README.md)를 따른다.
+Open `http://127.0.0.1:4174/` in your browser. Root's DevOps·AIOps learning area, method of reflecting official sources as internal documents, and Page settings follow [Public Learning Guide Guide](docs-site/README.md).
 
-### 1단계: 하네스 설치 및 Vault 연결
-AI CLI(Claude Code, Codex, Gemini CLI 등)에서 다음과 같이 요청하거나 셸 스크립트를 직접 실행한다:
+### Step 1: Install harness and connect Vault
+Make the following request in AI CLI (Claude Code, Codex, Gemini CLI, etc.) or run the shell script directly:
 
 ```sh
-# CLI 대화창에서 요청 시
+# When requested in the CLI dialog
 "study-install로 이 컴퓨터에 하네스를 설치하고 vault를 연결해 줘."
 
-# 직접 부트스트랩 실행 시
+# When running bootstrap directly
 ./.agents/skills/study-install/scripts/bootstrap.sh \
   --vault "/absolute/path/to/my-obsidian-vault" \
   --profile personal \
   --sync google-drive
 ```
 
-### 2단계: 모바일 텔레그램 스터디 봇 구동 (선택 사항)
-폰에서 볼트를 **검색·조회·문답**하는 읽기 전용 브리지다. 노트 작성·수정·삭제는 하지 않으며, 그 경계는 안내문이 아니라 `.agents/hooks/study-tool-guard.py`가 강제한다. 텔레그램의 `@BotFather`에게서 봇 토큰을 발급받은 후, Mac 터미널에서 아래 명령어로 봇을 백그라운드에 구동한다:
+### Step 2: Run the mobile Telegram study bot (optional)
+It is a read-only bridge that **searches, queries, and answers** the vault on your phone. Notes are not created, modified, or deleted, and the boundaries are enforced by `.agents/hooks/study-tool-guard.py`, not by the notice. After receiving a bot token from `@BotFather` on Telegram, run the bot in the background using the following command in a Mac terminal:
 
 ```bash
 export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHI..."
 export TELEGRAM_ALLOWED_CHAT_ID="내_CHAT_ID_숫자"
 
-# 봇 상시 가동 (nohup 방식)
+# Bot always running (nohup method)
 nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&1 &
 
-# 또는 맥 부팅 시 자동 시작 (launchd 방식 - 추천)
+# Or automatically start when the Mac boots (launchd method - recommended)
 launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 ```
-> 📖 **상세 세팅 및 자동 시작 가이드**: [모바일 텔레그램 스터디 브리지 가이드](docs/guides/mobile-telegram-bot.md) 참조
+> 📖 **Detailed setup and auto-start guide**: [Refer to Mobile Telegram Study Bridge Guide](docs/guides/mobile-telegram-bot.md)
 
-### 3단계: 피드 스크래퍼 구동 (선택 사항)
-RSS 소스를 vault로 자동 수집한다. **어느 소스를 켤지는 컴퓨터마다 다르므로**, 코드(카탈로그)는 추적하고 선택은 비추적 설정 파일에 둔다:
+### Step 3: Drive the feed scraper (optional)
+Automatically collects RSS sources into the vault. **Which sources you turn on will vary from computer to computer**, so keep the tracking code (catalog) and the selection in a non-tracking configuration file:
 
 ```bash
 mkdir -p _workspace/feed_scraper
@@ -124,49 +123,49 @@ cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
 
 ./run_scraper.sh
 ```
-`feed` 소스(제목·링크만 수집)는 외부 API를 쓰지 않으므로 키가 필요 없다. `geeknews`만 Gemini 키를 `.env`에 넣어야 한다.
+The `feed` source (collects only titles and links) does not require a key because it does not use an external API. Only `geeknews` needs to put the Gemini key into `.env`.
 
-> 📖 **소스 추가 및 운영 가이드**: [피드 스크래퍼 가이드](docs/guides/feed-scraper.md) 참조
+> 📖 **Source addition and operation guide**: [Refer to Feed Scraper Guide](docs/guides/feed-scraper.md)
 
 ---
 
-## 🧩 스킬 구성 (Skills Map)
+## 🧩Skills Map (Skills Map)
 
-모든 스킬은 `.agents/skills/` 디렉터리에 위치하며, 세부 사용법과 경계는 [한글 스킬 안내(.agents/skills/README.ko.md)](.agents/skills/README.ko.md)에서 확인할 수 있다.
+All skills are located in the `.agents/skills/` directory, and detailed usage instructions and boundaries can be found in [Skill guide (.agents/skills/README.ko.md)](.agents/skills/README.ko.md).
 
 ```text
 .agents/skills/
-├── archify/             # 명시 호출 전용 단독 HTML 인터랙티브 다이어그램 (vault 밖)
-├── context7/            # 최신 버전 라이브러리 공식 문서 조회
-├── defuddle/            # 공개 웹 페이지 본문 마크다운 추출
-├── diagram/             # 구조별 다이어그램 도구 선택 (Mermaid / D2 / Canvas)
-├── ingest/              # 웹·논문·영상 매체별 수집 및 노트화 라우팅
-├── knowledge-graph/     # 결정적 지식 그래프 재생성 및 근거 검증
-├── metaskill/           # 하네스 규칙·스킬·설치기·스펙 자체 개선
-├── note-writer/         # 원자적 검증 노트 작성, 프론트매터·index 정책 집행
-├── obsidian/            # Obsidian 문법·캔버스·Bases 검증 및 CLI 제어
-├── paper-search/        # 공개 논문 탐색·다운로드·메타데이터 검증
-├── recall/              # 출처 추적 가능한 간격 반복 복습 카드 제작
-├── study-install/       # 설치처 부트스트랩 및 로컬 환경 검사
-├── study-session/       # 물어서 가르치는 소크라테스식 학습 대화
-├── study-video/         # 자막 우선 영상 학습, 프레임 확인은 조건부
-├── understand/          # Understand Anything 9개 모드 내부 라우팅
-├── using-study/         # 지식 우선 세션 운영 및 세션 컨텍스트 관리
-├── vault-gardening/     # 지식 루트 드리프트·고아/깨진 링크·index 비대화 점검
-└── vault-search/        # 로컬 임베딩으로 curated 노트를 의미 검색
+├── archify/ # Standalone HTML interactive diagram for explicit calls only (out of vault)
+├── context7/ # Check the official documentation of the latest version of the library
+├── defuddle/ # Extract public web page body markdown
+├── diagram/ # Select diagram tool by structure (Mermaid / D2 / Canvas)
+├── ingest/ # Collection and note-making routing by web, paper, and video media
+├── knowledge-graph/ # Deterministic knowledge graph regeneration and evidence verification
+├── metaskill/ # harness Self-improvement of rules, skills, installers, and specifications
+├── note-writer/ # Write atomic verification note, enforce frontmatter/index policy
+├── obsidian/ # Obsidian Grammar, Canvas, Bases verification and CLI control
+├── paper-search/ # Open paper search/download/metadata verification
+├── recall/ # Create spaced repetition review cards with source traceability
+├── study-install/ # Check installation destination bootstrap and local environment
+├── study-session/ # Socratic learning dialogue that teaches by asking questions
+├── study-video/ # Video study with subtitles first, frame confirmation is conditional
+├── understand/ # Understand Anything 9 modes internal routing
+├── using-study/ # Knowledge-first session operation and session context management
+├── vault-gardening/ # Check for knowledge root drift, orphans/broken links, and index hyperactivity
+└── vault-search/ # Semantic search of curated notes with local embedding
 ```
 
 ---
 
-## 📚 문서 지도 (Documentation Architecture)
+## 📚 Documentation Architecture
 
-이 프로젝트의 세부 아키텍처 결정(ADR), 단계별 구현 스펙(Specs), 보안 검토 보고서는 모두 `docs/` 디렉터리에 체계적으로 정리되어 있다.
+This project's detailed architecture decisions (ADRs), step-by-step implementation specifications (Specs), and security review reports are all systematically organized in the `docs/` directory.
 
-- **[문서 지도 (docs/README.md)](docs/README.md)**: 전체 ADR, 스펙, 제안 문서의 MOC(Map of Content)
-- **[공개 학습 가이드](docs-site/README.md)**: 루트 DevOps·AIOps 2개 영역, 20개 주제·77개 문서, 영역 간 내부 링크, 초심자 학습 사다리와 GitHub Pages 배포 방법
-- **[DevOps 공개 학습 경로 스펙](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)**: Linux·네트워크·AWS부터 백엔드·트래픽·운영·데이터·Karpenter까지 15개 주제·57개 문서의 범위와 검증 계약
-- **[AIOps 공개 학습 경로 스펙](docs/specs/2026-09-03-aiops-public-learning-path.md)**: AI Specialist·AI Transformation 전체 지도에서 신호·진단·승인된 자동 복구까지 이어지는 5개 주제·20개 문서의 연결·안전 계약
-- **[모바일 텔레그램 연동 가이드](docs/guides/mobile-telegram-bot.md)**: 스마트폰 ↔ Mac 하네스 브리지 구축 가이드 (읽기 전용 — 조회·문답만)
-- **[피드 스크래퍼 가이드](docs/guides/feed-scraper.md)**: RSS 소스 자동 수집, 컴퓨터별 소스 선택, 신규 소스 추가 절차
-- **[하네스 변경 이력 (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b 기능 업데이트 및 아키텍처 변경 기록
-- **운영 규칙 원본**: [AGENTS.md](AGENTS.md) (모든 AI 에이전트 및 CLI가 세션 시작 시 우선 준수하는 불변 규칙)
+- **[Document Map (docs/README.md)](docs/README.md)**: Map of Content (MOC) of entire ADR, specification, and proposal documents.
+- **[Open Learning Guide](docs-site/README.md)**: root DevOps·AIOps 2 areas, 20 topics, 77 documents, internal links between areas, beginner learning ladder and GitHub Pages deployment method
+- **[DevOps Open Learning Path Specification](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)**: Scope and verification agreement of 15 topics and 57 documents, from Linux, network, AWS to backend, traffic, operations, data, and Karpenter.
+- **[AIOps Open Learning Path Specification](docs/specs/2026-09-03-aiops-public-learning-path.md)**: AI Specialist·AI Transformation Linkage and safety contract of 5 topics and 20 documents from the entire map to signals, diagnosis, and approved automatic recovery
+- **[Mobile Telegram integration guide](docs/guides/mobile-telegram-bot.md)**: Guide to building a smartphone ↔ Mac harness bridge (read only — inquiry/Q&A only)
+- **[Feed Scraper Guide](docs/guides/feed-scraper.md)**: Automatic collection of RSS sources, selection of sources by computer, procedure for adding new sources
+- **[harness change history (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b feature updates and architecture change records
+- **Operating rules source**: [AGENTS.md](AGENTS.md) (Immutable rules that all AI agents and CLI respect first when starting a session)

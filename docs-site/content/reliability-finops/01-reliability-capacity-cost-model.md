@@ -1,47 +1,47 @@
-# Reliability, capacity와 cost model
+# Reliability, capacity and cost model
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-- **신뢰성(reliability)**: 필요한 기간 동안 시스템이 기대한 기능을 계속 수행하는 성질이다.
-- **SLI/SLO**: 실제 사용자 결과를 재는 방법과 그 측정값의 목표다.
-- **failure mode**: 무엇이 어떤 방식으로 실패할 수 있는지를 구체적으로 적은 시나리오다.
-- **복구(restore/recovery)**: backup이나 남은 시스템을 사용해 데이터와 서비스를 다시 사용 가능하게 만드는 과정이다.
-- **여유 용량(capacity margin)**: 평소 사용량을 넘는 급증이나 일부 장애를 견디기 위해 남겨 둔 처리 능력이다.
-- **FinOps**: cloud 비용을 기술·업무 소유권과 연결해 측정하고 개선하는 운영 방식이다.
+- **Reliability**: The property of a system to continue performing its expected function for a required period of time.
+- **SLI/SLO**: How to measure real user results and what the goals are for those measurements.
+- **failure mode**: A scenario that specifically describes what can fail and how.
+- **Restore/recovery**: The process of making data and services usable again using a backup or remaining system.
+- **Capacity margin**: Processing capacity reserved to withstand surges beyond normal usage or some failures.
+- **FinOps**: An operating method that measures and improves cloud costs by linking them with technology and business ownership.
 
-처음에는 작은 주문 API를 예로 들어 “30일 동안 요청의 몇 퍼센트가 성공해야 하는가?”, “database가 사라지면 언제까지 복구해야 하는가?” 두 질문에 숫자를 붙인다. 복잡한 architecture는 목표가 생긴 뒤에 선택한다.
+At first, using the small order API as an example, we asked questions such as “What percentage of requests should succeed in 30 days?” and “If the database disappears, how long do we have to recover from it?” Add numbers to both questions. Complex architectures are chosen after a goal has been established.
 
-## 먼저 이해하기
+## Understand the model first
 
-“항상 켜져 있어야 한다”는 요구는 설계 입력으로 쓰기 어렵다. 어느 사용자 요청을 성공으로 볼지, 얼마 동안의 실패를 허용할지, 장애 뒤 언제까지 서비스를 되살리고 어느 시점까지의 데이터를 복구해야 하는지를 측정 가능한 값으로 바꿔야 한다. 그래야 redundancy와 비용이 필요한 이유를 설명할 수 있다.
+The “always on” requirement is difficult to use as design input. Which user requests are considered successful, how long failures are allowed, how long service is restored after a failure, and to what point data must be recovered must be converted into measurable values. This will explain why redundancy and costs are necessary.
 
-예를 들어 주문 API의 30일 availability SLO가 99.9%, RTO가 15분, RPO가 5분이라고 하자. SLO는 평상시 전체 요청 결과를 평가하고, RTO는 특정 disruption 뒤 service level을 되찾는 시간을, RPO는 복구된 data가 장애 직전에서 얼마나 뒤로 물러날 수 있는지를 말한다. 세 값은 관련 있지만 같은 값이 아니다.
+For example, let's say that the ordering API's 30-day availability SLO is 99.9%, RTO is 15 minutes, and RPO is 5 minutes. SLO evaluates the overall request results under normal circumstances, RTO refers to the time to restore service level after a specific disruption, and RPO refers to how far the recovered data can move back from the brink of failure. The three values ​​are related but not the same.
 
-| 목표 | 설계를 바꾸는 질문 | 검증 증거 |
+| Goal | Questions that change design | verification evidence |
 |---|---|---|
-| availability SLO | 몇 개 failure를 흡수하고 언제 page하는가? | valid request 기반 SLI |
-| RTO | 어떤 event부터 어떤 readiness까지 재는가? | game-day timeline |
-| RPO | 마지막 recoverable data point는 언제인가? | marker data와 restore 결과 |
-| capacity margin | peak·AZ loss에서 얼마가 남는가? | load test와 queue·tail latency |
-| cost budget | 어느 owner와 unit이 비용을 만든가? | allocation과 unit cost trend |
+| availability SLO | How many failures do you absorb and when do you page? | valid request based SLI |
+| RTO | From what event and what readiness do you measure? | game-day timeline |
+| RPO | When was the last recoverable data point? | Marker data and restore results |
+| capacity margin | How much is left from peak·AZ loss? | load test and queue/tail latency |
+| cost budget | Which owner and unit creates the costs? | Allocation and unit cost trend |
 
-multi-AZ를 선택하면 비용이 늘지만 모든 장애가 해결되지는 않는다. 한 AZ 장애에는 강해질 수 있어도 잘못된 배포나 data corruption은 여러 AZ에 동시에 퍼질 수 있다. 비용 판단은 resource 수가 아니라 어떤 failure mode와 objective를 사는지 연결해야 한다.
+Choosing multi-AZ increases costs but does not solve all obstacles. Although it may be resistant to failures in one AZ, faulty deployment or data corruption can spread to multiple AZs simultaneously. Cost judgment should be related to which failure mode and objective are purchased, not the number of resources.
 
-## 막연한 요구를 검증 가능한 설계로 바꾸기
+## Turn vague demands into verifiable designs
 
-1. 먼저 사용자가 성공했다고 느끼는 결과를 정한다. 예: 유효한 주문 요청이 제한 시간 안에 성공한다.
-2. 그 결과를 성공률과 latency 같은 SLI로 측정한다.
-3. 30일 동안 허용할 실패 범위를 SLO로 정한다.
-4. database 손실이나 한 AZ 중단처럼 구체적인 failure mode를 고른다.
-5. 중복 구성, backup, autoscaling 같은 완화책과 필요한 capacity를 설계한다.
-6. test나 game day에서 실제 사용자 결과, RTO와 RPO를 측정한다.
-7. 목표를 만족한 근거와 그 설계의 지속 비용을 함께 검토한다.
+1. First, determine the outcome that makes the user feel successful. Example: A valid order request succeeds within the time limit.
+2. The results are measured by SLI such as success rate and latency.
+3. Set the SLO as the range of failures to be tolerated for 30 days.
+4. Choose a specific failure mode, such as database loss or one AZ outage.
+5. Design mitigation measures such as redundant configuration, backup, and autoscaling, as well as necessary capacity.
+6. Measure actual user results, RTO and RPO during test or game days.
+7. Evidence of meeting the goals is reviewed along with the ongoing costs of the design.
 
-비용을 먼저 줄이거나 resource를 먼저 늘리는 대신, 어떤 사용자 영향과 failure를 다루기 위한 선택인지 순서대로 연결한다.
+Instead of reducing costs first or increasing resources first, chain together choices to address user impact and failure first.
 
-## 목표부터 failure mode로 내려간다
+## From the goal, we go down to failure mode.
 
-availability target은 architecture 그림이 아니라 측정한 사용자 결과의 목표다. RPO는 복구 시 허용할 수 있는 data loss의 시간 범위, RTO는 disruption 이후 service level을 복원하기까지의 목표 시간이다. 둘 다 시작·종료 event와 측정 책임자가 필요하다.
+The availability target is not an architecture picture, but a target for measured user outcomes. RPO is the time range of data loss that can be tolerated during recovery, and RTO is the target time to restore service level after disruption. Both require start and end events and a person responsible for measurement.
 
 ```mermaid
 flowchart TD
@@ -49,47 +49,47 @@ flowchart TD
     F --> M[mitigation·backup]
     M --> E[evidence test]
     E --> R{target met?}
-    R -->|아니오| D[design·runbook 개선]
-    R -->|예| G[operational guardrail]
+    R -->|No| D[Design·runbook improvements]
+    R -->|Yes| G[operational guardrail]
     D --> F
 ```
 
-failure domain은 process, node, AZ, region, identity/control plane과 dependency로 나눈다. multi-AZ는 AZ failure 대응에 도움을 주지만 bad deployment, credential revocation, data corruption과 regional dependency를 자동으로 해결하지 않는다.
+The failure domain is divided into process, node, AZ, region, identity/control plane, and dependency. Multi-AZ helps respond to AZ failure, but does not automatically resolve bad deployment, credential revocation, data corruption, and regional dependency.
 
-## Backup과 restore의 계약
+## Backup and restore contract
 
-backup policy에는 source, frequency, retention, encryption, immutability 또는 deletion guard와 cross-account/region 필요성을 적는다. restore test에서는 다음을 측정한다.
+The backup policy includes source, frequency, retention, encryption, immutability or deletion guard, and the need for cross-account/region. The restore test measures the following:
 
-- 마지막 recoverable point와 실제 data gap
-- restore 요청 시각부터 dependency 포함 service readiness까지의 시간
-- schema·row·object integrity와 representative request
-- owner 승인과 cleanup 또는 promoted environment의 후속 상태
+- Last recoverable point and actual data gap
+- Time from restore request to service readiness including dependencies
+- schema·row·object integrity and representative request
+- Subsequent status of owner approval and cleanup or promoted environment
 
-## Capacity는 tail과 degraded mode를 본다
+## Capacity looks at tail and degraded mode
 
 ```text
 required capacity = forecast peak × safety margin × failure-mode factor
 ```
 
-이 식은 답이 아니라 가정을 드러내는 틀이다. traffic mix, p95/p99 latency, queue depth, dependency quota와 한 AZ 상실 시 남은 capacity를 load test로 검증한다. autoscaling은 늦게 반응할 수 있으므로 startup·warm-up 시간도 budget에 넣는다.
+This equation is not an answer, but a framework that reveals assumptions. Traffic mix, p95/p99 latency, queue depth, dependency quota, and remaining capacity when one AZ is lost are verified through load tests. Since autoscaling can respond slowly, startup and warm-up times are also included in the budget.
 
-## FinOps는 소유권과 단위를 연결한다
+## FinOps connects ownership and units
 
-| 요소 | 운영 질문 |
+| element | operational questions |
 |---|---|
-| allocation | account·tag·cost category로 owner와 workload를 찾을 수 있는가? |
-| unit cost | request, tenant, job 또는 GB당 비용이 어떻게 움직이는가? |
-| forecast | growth·seasonality·commitment를 어떤 가정으로 계산했는가? |
-| optimization | rightsizing이 SLO와 recovery margin을 침해하지 않는가? |
-| purchase | On-Demand·commitment·Spot 위험을 workload interruption tolerance와 맞췄는가? |
+| allocation | Can I find the owner and workload by account·tag·cost category? |
+| unit cost | How does cost per request, tenant, job or GB work? |
+| forecast | What assumptions were used to calculate growth·seasonality·commitment? |
+| optimization | Doesn't rightsizing violate SLO and recovery margin? |
+| purchase | Have you matched your On-Demand·commitment·Spot risk with workload interruption tolerance? |
 
-비용 숫자는 region, 시점과 usage에 따라 달라진다. 문서에 고정 가격을 박기보다 공식 pricing 도구와 실제 billing data의 확인 시점을 기록한다.
+Cost numbers vary depending on region, timing and usage. Rather than putting a fixed price in the document, record the confirmation time of the official pricing tool and actual billing data.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. backup frequency와 실제 RPO가 다를 수 있는 이유는 무엇인가?
-2. 한 AZ가 사라진 상태의 capacity를 따로 시험해야 하는 이유는 무엇인가?
-3. unit cost 상승이 infrastructure 단가 외에 어떤 신호일 수 있는가?
+1. Why can backup frequency and actual RPO be different?
+2. Why do we need to test capacity separately when one AZ is missing?
+3. Could the increase in unit cost be a signal other than the cost of infrastructure?
 
 <!-- source: https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/design-principles.html | checked: 2026-09-03 -->
 <!-- source: https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_planning_network_topology.html | checked: 2026-09-03 -->

@@ -1,33 +1,33 @@
-# Route 소유권과 retry storm 검토 실습
+# Route ownership and retry storm review lab
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-이 실습은 cluster나 proxy 설정을 바꾸지 않는 **Plan only** 검토다. 텍스트 편집기만 있으면 되고, YAML parser가 있으면 문법 확인에 사용할 수 있다. 예시는 실제 hostname이나 credential을 포함하지 않는다. 목표는 “적용이 성공하는가”가 아니라 “누가 무엇을 허용했고, 실패 시 추가 traffic과 중복 작업이 어디까지 늘 수 있는가”를 설명하는 것이다.
+This lab is a **Plan only** review that does not change cluster or proxy settings. All you need is a text editor, and if you have a YAML parser, you can use it to check the grammar. The example does not include the actual hostname or credentials. The goal is not “whether the application succeeds,” but rather “who allowed what, and how much additional traffic and duplication of work could result if it fails.”
 
-| 준비 항목 | 값 |
+| Preparation items | value |
 |---|---|
-| 변경 대상 | 없음 |
-| 입력 | Gateway·HTTPRoute·복원력 정책 초안 |
-| 관찰 증거 | attachment 조건, deadline 합, retry 비율, rollback pointer |
-| 중단 조건 | 소유자·멱등성·사용자 영향 지표 중 하나라도 없음 |
-| cleanup | 만든 임시 메모 파일만 삭제 |
+| change target | doesn't exist |
+| input | Gateway·HTTPRoute·Resiliency Policy Draft |
+| observation evidence | Attachment condition, deadline sum, retry rate, rollback pointer |
+| stopping condition | None of the following indicators: owner, idempotence, user influence |
+| cleanup | Delete only temporary note files you have created |
 
-## 먼저 이해하기
+## Understand the model first
 
-Route 검토와 retry 검토는 순서가 있다. 먼저 이 route가 어느 listener에 어떤 권한으로 붙는지 확인해야 한다. 그다음 실제 요청이 실패했을 때 누가 재시도하며, 시도 총시간과 동시 추가 요청량이 상한 안에 있는지 본다. `kubectl apply --dry-run=server`가 통과해도 이 업무 의미와 부하 예산을 증명하지 않는다.
+Route review and retry review are in order. First, you need to check which listener this route is attached to and with what authority. Next, see who retries when the actual request fails, and whether the total attempt time and the amount of concurrent additional requests are within the upper limit. Even if `kubectl apply --dry-run=server` passes, it does not prove the meaning of this task and the load budget.
 
 ```mermaid
 flowchart TB
-  R["Route attachment 검토"] --> I["업무 멱등성 확인"]
-  I --> T["전체 deadline과 시도 시간 계산"]
-  T --> B["retry와 circuit breaker 예산 확인"]
-  B --> O["사용자·upstream 관측 증거 연결"]
-  O --> D{"적용 가능?"}
-  D -->|"아니오"| X["변경 보류"]
-  D -->|"예"| P["제한된 cohort 계획"]
+  R[“Review Route attachment”] --> I[“Check task idempotence”]
+  I --> T["Calculate overall deadline and attempt times"]
+  T --> B[“Check retry and circuit breaker budget”]
+  B --> O[“Connecting users and upstream observational evidence”]
+  O --> D{“Applicable?”}
+  D -->|"no"| X["Pending changes"]
+  D -->|"yes"| P[“Limited cohort plan”]
 ```
 
-## 검토할 초안
+## Draft to review
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -67,9 +67,9 @@ spec:
           port: 8080
 ```
 
-첫 검토에서 `shop` namespace가 selector에 맞는 label을 갖는지 확인한다. Gateway와 Route의 hostname은 교집합이 있지만, namespace가 허용되지 않으면 붙지 않는다. cross-namespace backend 참조가 추가된다면 backend 쪽 소유자가 `ReferenceGrant`로 허용해야 한다. 객체가 존재한다는 사실만으로 다른 namespace 자원을 사용할 권한이 생기지 않는다.
+In the first review, check whether the `shop` namespace has a label that matches the selector. There is an intersection between the hostnames of the gateway and the route, but if the namespace is not allowed, they will not be combined. If a cross-namespace backend reference is added, the backend owner must allow `ReferenceGrant`. The mere existence of an object does not grant permission to use other namespace resources.
 
-다음 복원력 초안은 특정 proxy 제품에 바로 넣는 완성 설정이 아니라 리뷰용 계약이다.
+The following resiliency draft is a contract for review, not a finished configuration to be put directly into a specific proxy product.
 
 ```yaml
 requestPolicy:
@@ -97,42 +97,42 @@ evidence:
   rollbackPointer: route-policy-v17
 ```
 
-## 단계별 검토
+## Step-by-step review
 
-1. `outerDeadlineMs` 900 안에 연결 100, 두 번의 시도 250씩, backoff와 응답 여유가 들어가는지 적는다. 이 예시는 최소 300 ms 이상의 여유가 남지만 queue 대기가 정의되지 않았다.
-2. `maxAttempts: 2`가 “첫 시도 + 재시도 한 번”인지 “재시도 두 번”인지 구현별 의미를 고정한다. 이름만으로 추정하면 실제 시도량이 달라진다.
-3. 503이 업무 처리 전 반환된다는 보장이 있는지 확인한다. 결제 side effect 뒤 응답만 유실될 수 있다면 idempotency key 없이 retry하면 안 된다.
-4. 정상 1,000개 진행 요청에서 15% retry budget이 어떤 동시 추가량을 허용하는지 계산한다. static `maxRetries`와 함께 있을 때 어느 설정이 우선하는지도 구현 문서에서 확인한다.
-5. backend 절반이 공통 DB 장애로 5xx를 낼 때 host를 제외하는 것이 해결인지 검토한다. 공통 원인이라면 남은 host에 traffic이 몰릴 수 있다.
-6. `checkout_success_ratio`가 회복되지 않거나 pending request가 상승하면 자동 변경을 중단하고 이전 policy revision으로 돌아가도록 abort condition을 적는다.
+1. In `outerDeadlineMs` 900, write 100 for connection, 250 for two attempts, and whether backoff and response margin are included. In this example, at least 300 ms of space is left, but queue waiting is not defined.
+2. The meaning of `maxAttempts: 2` is fixed for each implementation, whether it is “first attempt + one retry” or “two retries”. If you estimate based on the name alone, the actual amount of attempts will vary.
+3. Make sure there is a guarantee that the 503 will be returned before processing. If only the response can be lost after the payment side effect, you should not retry without the idempotency key.
+4. Calculate how much concurrent addition a 15% retry budget will allow for a normal 1,000 ongoing requests. Check the implementation documentation to see which setting takes precedence when used with static `maxRetries`.
+5. When half of the backends show 5xx due to a common DB error, consider whether excluding the host is the solution. If it is a common cause, traffic may be concentrated on the remaining hosts.
+6. If `checkout_success_ratio` is not recovered or the pending request increases, write an abort condition to stop automatic change and return to the previous policy revision.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-| 관찰 | 의미 | 다음 행동 |
+| observation | meaning | next action |
 |---|---|---|
-| Route `Accepted=False` | traffic policy 이전에 attachment 계약이 실패 | status reason과 listener 허용 범위 확인 |
-| retry는 증가하고 성공률은 그대로 | 추가 시도가 복구 효과 없이 부하만 더함 | retry 축소 또는 차단, 원인 조사 |
-| ejection 뒤 성공률 상승·포화 안정 | 일부 host 실패를 격리했을 가능성 | 제외 host의 실제 원인과 복귀 조건 확인 |
-| ejection 뒤 pending 증가 | 남은 capacity가 부족하거나 공통 원인 | ejection 확대 중단, load shedding 검토 |
-| rollback 명령 성공 | spec이 이전 revision으로 바뀜 | 사용자 결과와 queue 회복은 별도 검증 |
+| Route `Accepted=False` | Attachment contract fails before traffic policy | Check status reason and listener allowable range |
+| Retry increases and success rate remains the same | Additional attempts only add to the load without any recovery effect | Reduce or block retry, investigate cause |
+| Increased success rate and stable saturation after ejection | Possibly isolated some host failures | Check the actual cause and return conditions of excluded hosts |
+| Pending increases after ejection | Insufficient remaining capacity or common cause | Stop ejection expansion, review load shedding |
+| rollback command success | spec changed to previous revision | User results and queue recovery are verified separately |
 
-이 표에서 가장 중요한 구분은 **완화 성공과 근본 원인 해결이 다르다**는 점이다. traffic을 되돌려 오류율이 낮아져도 새 release의 어떤 결함이 실패를 만들었는지는 postmortem과 재현 테스트로 남겨야 한다. 반대로 원인 후보를 맞혔더라도 사용자 오류가 계속되면 incident는 끝나지 않았다.
+The most important distinction in this table is that **mitigation success is different from root cause resolution**. Even if traffic is restored and the error rate is lowered, it is left to postmortem and replication testing to determine what defects in the new release caused the failure. Conversely, even if the candidate cause was correct, if the user error continued, the incident did not end.
 
-## 완료와 cleanup
+## completion and cleanup
 
-- Gateway owner, Route owner, backend owner와 정책 승인자를 적었다.
-- hostname·namespace·reference 조건을 모두 확인했다.
-- 전체 deadline과 최대 시도량을 계산했다.
-- 멱등하지 않은 요청의 retry를 금지하거나 idempotency 계약을 연결했다.
-- 사용자 증상, upstream 포화, retry·overflow 신호와 rollback pointer를 적었다.
-- 임시 검토 파일을 만들었다면 정확한 파일만 삭제했다.
+- I wrote down the gateway owner, route owner, backend owner, and policy approver.
+- All hostname·namespace·reference conditions were checked.
+- The total deadline and maximum number of attempts were calculated.
+- Forbid retry of non-idempotent requests or chained idempotency contracts.
+- I wrote down user symptoms, upstream saturation, retry/overflow signals, and rollback pointer.
+- If I created a temporary review file, I deleted only the correct file.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- server-side dry-run이 retry storm 가능성을 찾아주지 못하는 이유는 무엇인가?
-- `maxEjectionPercent: 50`이 안전 상한이지 정답인 threshold가 아닌 이유는 무엇인가?
-- 자동 rollback의 성공 판정을 rollout status 하나로 끝내면 무엇을 놓치는가?
-- 이 incident evidence를 [AIOps alert correlation](../aiops-diagnosis/02-alert-correlation-triage-lab.md)에 넘길 때 어떤 ID와 timestamp가 필요한가?
+- Why doesn't server-side dry-run find the possibility of a retry storm?
+- Why is `maxEjectionPercent: 50` a safe upper limit and not the correct threshold?
+- What are you missing if you end up determining the success of automatic rollback with just rollout status?
+- What ID and timestamp are needed when passing this incident evidence to [AIOps alert correlation](../aiops-diagnosis/02-alert-correlation-triage-lab.md)?
 
 <!-- source: https://gateway-api.sigs.k8s.io/docs/concepts/security/ | checked: 2026-09-03 -->
 <!-- source: https://gateway-api.sigs.k8s.io/docs/concepts/hostnames/ | checked: 2026-09-03 -->

@@ -1,75 +1,75 @@
-# 06. 스토리지와 애플리케이션 구성
+# 06. Storage and application configuration
 
-컨테이너 이미지에는 실행 코드와 기본값을 넣고, 환경별 설정과 지속돼야 할 데이터는 외부 자원으로 분리한다. 이 장의 핵심은 “어디에 저장할까?”보다 **데이터가 누구의 생애를 따라가야 하는가**를 먼저 결정하는 것이다.
+Executable code and default values ​​are placed in the container image, and environment-specific settings and data that must be persisted are separated into external resources. The key to this chapter is to first decide **whose life the data should follow** rather than “where should it be stored?”
 
-## 수명으로 저장소를 선택한다
+## Select storage by lifespan
 
 ```mermaid
 flowchart TD
-    Q{"이 데이터가 언제까지 남아야 하는가?"}
-    Q -->|"컨테이너 재시작까지만"| C["컨테이너 쓰기 계층"]
-    Q -->|"같은 Pod 생애 동안"| E["emptyDir 등 Pod volume"]
-    Q -->|"Pod 교체 뒤에도"| V["PVC를 통한 영속 volume"]
-    Q -->|"비민감 구성"| M["ConfigMap"]
-    Q -->|"민감한 값 전달"| S["Secret과 별도 보호"]
-    V --> B["백업·복구·일관성 설계"]
+    Q{“How long should this data last?”}
+    Q -->|“Until container restart”| C[“Container Write Layer”]
+    Q -->|"During the same Pod lifetime"| E["emptyDir, etc. Pod volume"]
+    Q -->|“Even after replacing the pod”| V[“Permanent volume through PVC”]
+    Q -->|"Non-sensitive configuration"| M["ConfigMap"]
+    Q -->|"Passing Sensitive Values"| S[“Separate protection from Secret”]
+    V --> B[“Backup, recovery, and consistency design”]
 ```
 
-- 컨테이너 쓰기 계층의 파일은 컨테이너가 교체되면 사라질 수 있다.
-- `emptyDir`은 같은 Pod의 컨테이너가 공유하지만 Pod가 삭제되면 함께 사라진다.
-- PersistentVolume은 Pod와 독립적인 스토리지 자원을 표현하고, PersistentVolumeClaim은 워크로드의 저장소 요구를 표현한다.
-- ConfigMap과 Secret은 파일 저장소가 아니라 애플리케이션 구성 전달 수단이다.
+- Files in the container's write layer can disappear when the container is replaced.
+- `emptyDir` is shared by containers of the same Pod, but disappears when the Pod is deleted.
+- PersistentVolume represents a storage resource independent of the Pod, and PersistentVolumeClaim represents the storage demand of the workload.
+- ConfigMap and Secret are application configuration delivery vehicles, not file stores.
 
-## PV, PVC, StorageClass, CSI의 역할
+## Role of PV, PVC, StorageClass, CSI
 
-| 리소스·구성요소 | 책임 |
+| Resources/Components | responsibility |
 |---|---|
-| PVC | 사용자가 요청하는 용량, 접근 모드, class |
-| StorageClass | 어떤 provisioner와 정책으로 volume을 만들지 정의 |
-| CSI driver | 실제 스토리지 시스템의 생성·연결·마운트 작업 구현 |
-| PV | 준비되거나 동적으로 생성된 volume 자원을 표현 |
-| Pod | 바인딩된 PVC를 volume으로 마운트해 사용 |
+| PVC | Capacity, access mode, and class requested by the user |
+| StorageClass | Define which provisioner and policy will create the volume |
+| CSI driver | Implementation of creation, connection, and mounting operations of actual storage system |
+| PV | Represents prepared or dynamically created volume resources |
+| Pod | Use bound PVC by mounting it as a volume |
 
 ```mermaid
 sequenceDiagram
-    participant U as 사용자
+    participant U as user
     participant A as API server
     participant P as Provisioner
     participant S as Storage system
     participant K as kubelet
-    U->>A: PVC 생성
-    P->>A: 미바인딩 PVC 감시
-    P->>S: volume 생성 요청
-    S-->>P: volume 식별자 반환
-    P->>A: PV 생성과 PVC 바인딩
-    U->>A: PVC를 쓰는 Pod 생성
-    K->>S: 선택된 노드에 attach와 mount
-    K->>A: Pod 상태 보고
+    U->>A: PVC production
+    P->>A: Unbound PVC surveillance
+    P->>S: Request to create volume
+    S-->>P: Returns the volume identifier
+    P->>A: PV generation and PVC binding
+    U->>A: Create a Pod using PVC
+    K->>S: attach and mount to selected node
+    K->>A: Pod status reporting
 ```
 
-StorageClass의 volume binding mode에 따라 volume을 바로 만들거나 Pod가 어느 노드에 배치될지 기다릴 수 있다. topology 제약이 있는 스토리지에서는 Pod 위치와 volume 위치를 함께 결정해야 한다.
+Depending on the volume binding mode of the StorageClass, you can create a volume right away or wait to see which node the Pod will be placed on. In storage with topology constraints, the pod location and volume location must be determined together.
 
-## access mode는 애플리케이션 동시 쓰기 보장이 아니다
+## The access mode does not guarantee concurrent application writes.
 
-`ReadWriteOnce`, `ReadOnlyMany`, `ReadWriteMany`, `ReadWriteOncePod` 같은 접근 모드는 volume을 어떤 방식으로 노드나 Pod에 마운트할 수 있는지 표현한다. 파일 잠금, 트랜잭션, 여러 writer의 데이터 일관성까지 보장하지는 않는다. 스토리지 드라이버의 지원 범위와 애플리케이션의 동시 접근 모델을 함께 확인한다.
+Access modes such as `ReadWriteOnce`, `ReadOnlyMany`, `ReadWriteMany`, and `ReadWriteOncePod` express how the volume can be mounted on a node or pod. It does not guarantee file locking, transactions, or data consistency across multiple writers. Check the storage driver's support range and the application's concurrent access model.
 
-reclaim policy는 PVC가 사라진 뒤 기반 volume을 어떻게 처리할지 결정한다. `Delete`는 자동 정리에 편하지만 실수의 영향이 크고, `Retain`은 데이터를 보존하지만 관리자가 회수 절차를 수행해야 한다. 이름만 보고 가정하지 말고 실제 StorageClass와 PV의 값을 확인한다.
+The reclaim policy determines what to do with the underlying volume after the PVC disappears. `Delete` is convenient for automatic cleanup, but the impact of mistakes is large, and `Retain` preserves data, but requires an administrator to perform a retrieval procedure. Don't make assumptions just by looking at the name, but check the actual StorageClass and PV values.
 
-## ConfigMap과 Secret의 공통점과 차이
+## Commonalities and differences between ConfigMap and Secret
 
-| 항목 | ConfigMap | Secret |
+| item | ConfigMap | Secret |
 |---|---|---|
-| 용도 | 비민감 설정 | 비밀번호·토큰·키 등 민감 값 |
-| Pod 전달 | 환경 변수, 인수, volume 파일 | 환경 변수, volume 파일, image pull 등 |
-| 기본 보안 의미 | 비밀 저장소가 아님 | API 객체 분리일 뿐 자동 암호화 보장은 아님 |
+| use | Non-sensitive settings | Sensitive values ​​such as passwords, tokens, keys, etc. |
+| Pod delivery | Environment variables, arguments, volume files | Environment variables, volume files, image pull, etc. |
+| Basic security implications | Not a secret repository | It is only an API object separation and does not guarantee automatic encryption |
 
-Secret의 `data`에 쓰는 base64는 인코딩이며 암호화가 아니다. API·RBAC 최소 권한, etcd 저장 데이터 암호화, 특정 컨테이너로의 노출 제한, 로그와 crash dump 유출 방지를 별도로 설계한다.
+The base64 used in Secret's `data` is encoding, not encryption. API/RBAC minimum privileges, encryption of etcd stored data, limitation of exposure to specific containers, and prevention of log and crash dump leaks are designed separately.
 
-환경 변수로 주입한 값은 실행 중 자동으로 바뀌지 않는다. volume으로 투영한 ConfigMap·Secret 파일은 kubelet이 갱신할 수 있지만 즉시 반영을 보장하는 신호가 아니며, `subPath` 마운트 같은 예외도 있다. 애플리케이션이 파일을 다시 읽는지, 안전하게 reload하는지까지 정해야 한다.
+Values ​​injected as environment variables do not change automatically during execution. The ConfigMap·Secret file projected as a volume can be updated by the kubelet, but it is not a signal that guarantees immediate reflection, and there are exceptions such as the `subPath` mount. You must also decide whether the application will reread the file or safely reload it.
 
-## 실행 예제: 구성·비밀·영속 데이터를 분리하기
+## Running example: Separating configuration, secret, and persistent data
 
-`storage.yaml`을 만든다. 기본 StorageClass가 없는 클러스터에서는 PVC가 Pending으로 남을 수 있다.
+Make `storage.yaml`. In clusters without a default StorageClass, the PVC may remain Pending.
 
 ```yaml
 apiVersion: v1
@@ -149,31 +149,31 @@ kubectl apply -f storage.yaml
 kubectl exec storage-demo -- cat /data/state
 ```
 
-두 번째 Pod에서도 `/data/state`가 보이면 Pod 수명과 PVC 수명이 분리된 것을 확인한 것이다. 단, PVC가 남았다는 사실은 백업이 있다는 뜻이 아니다.
+If you see `/data/state` in the second Pod, you have confirmed that the Pod life and PVC life are separated. However, the fact that PVC remains does not mean there is a backup.
 
-Secret 값을 화면에 출력하는 실습은 피한다. 다음처럼 어느 컨테이너에 참조됐는지와 권한만 확인한다.
+Avoid labs that print Secret values ​​on the screen. Only check which container is referenced and its permissions as follows.
 
 ```bash
 kubectl get pod storage-demo -o jsonpath='{.spec.containers[*].env[*].valueFrom}'
 kubectl auth can-i get secrets --as=system:serviceaccount:default:default
 ```
 
-## 백업은 volume 복사보다 큰 문제다
+## Backup is a bigger problem than volume copy
 
-volume snapshot이 특정 시점의 블록이나 파일 상태를 보존해도 애플리케이션 트랜잭션이 일관된지는 별도다. 데이터베이스 flush·quiesce, 여러 volume 사이의 순서, 암호화 키, 복원할 Kubernetes 오브젝트와 외부 의존성을 함께 다뤄야 한다.
+Even if a volume snapshot preserves the state of blocks or files at a specific point in time, whether application transactions are consistent is separate. Database flush/quiesce, ordering between multiple volumes, encryption keys, Kubernetes objects to be restored, and external dependencies must be handled.
 
-백업의 성공 조건은 “파일이 생성됨”이 아니라 격리된 환경에 복원하고 애플리케이션이 검증 쿼리를 통과하는 것이다. PVC 삭제, zone 상실, 잘못된 schema migration 같은 복구 시나리오를 나눠 연습한다.
+The success condition for a backup is not “files created” but restoration to an isolated environment and the application passing verification queries. Practice recovery scenarios such as PVC deletion, zone loss, and incorrect schema migration.
 
-## 실패를 증상에서 원인으로 좁히기
+## Narrowing down failures from symptoms to causes
 
-| 증상 | 확인 | 흔한 원인 |
+| symptoms | check | common causes |
 |---|---|---|
-| PVC가 Pending | PVC event, StorageClass | 기본 class 없음, provisioner 장애, topology 불일치 |
-| Pod가 ContainerCreating | Pod event | attach·mount 실패, 권한, node와 volume 위치 |
-| mount는 됐지만 쓰기 실패 | access mode, 파일 권한, securityContext | read-only 또는 UID/GID 불일치 |
-| ConfigMap 변경이 앱에 안 보임 | env인지 volume인지, reload 방식 | env는 재시작 필요, 앱이 파일을 캐시함 |
-| Secret이 유출됨 | 로그·환경·권한·Git 이력 | 전달 경로와 최소 권한 미설계 |
-| 복원 뒤 앱 오류 | 데이터·키·schema·설정 버전 | snapshot만 있고 일관된 복원 절차 없음 |
+| PVC is Pending | PVC event, StorageClass | No default class, provisioner failure, topology mismatch |
+| Pod is ContainerCreating | Pod event | attach·mount failure, permissions, node and volume location |
+| Mounted, but write failed | access mode, file permission, securityContext | read-only or UID/GID mismatch |
+| ConfigMap changes not visible in app | env or volume, reload method | env requires restart, app caches files |
+| Secret leaked | Log, environment, permissions, Git history | Delivery path and least privilege not designed |
+| App error after restoration | Data·key·schema·setting version | Only snapshots and no consistent restore procedure |
 
 ```bash
 kubectl get storageclass
@@ -182,14 +182,14 @@ kubectl describe pod storage-demo
 kubectl get events --sort-by=.metadata.creationTimestamp
 ```
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. `emptyDir`과 PVC는 컨테이너 재시작, Pod 재생성에서 각각 어떻게 다른가?
-2. PVC가 Bound여도 Pod가 마운트에 실패할 수 있는 이유는 무엇인가?
-3. Secret의 base64 값이 보안 통제가 아닌 이유는 무엇인가?
-4. volume snapshot 생성 성공과 애플리케이션 복구 성공이 왜 다른가?
+1. How are `emptyDir` and PVC different in container restart and pod regeneration?
+2. Why can a Pod fail to mount even if the PVC is bound?
+3. Why is the base64 value of Secret not a security control?
+4. Why is the success of creating a volume snapshot different from the success of application recovery?
 
-[← Service와 네트워킹](05-services-and-networking.md) · [스케줄링과 리소스·오토스케일링 →](07-scheduling-and-autoscaling.md)
+[← Service and Networking](05-services-and-networking.md) · [Scheduling and Resources·Autoscaling →](07-scheduling-and-autoscaling.md)
 
 <!-- source: https://kubernetes.io/ko/docs/concepts/storage/volumes/ | checked: 2026-09-03 -->
 <!-- source: https://kubernetes.io/ko/docs/concepts/storage/persistent-volumes/ | checked: 2026-09-03 -->

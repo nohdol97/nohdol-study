@@ -1,41 +1,41 @@
-# 01. 왜 Kubernetes인가와 첫 클러스터
+# 01. Why Kubernetes and the first cluster
 
-이 장에서는 로컬 클러스터를 만들고 작은 웹 서버를 배포한다. 명령을 따라 치는 데서 끝내지 않고, 각 명령이 어떤 API 오브젝트를 만들며 컨트롤 플레인과 노드가 어떤 순서로 반응하는지 확인한다.
+In this chapter, we will create a local cluster and deploy a small web server. Rather than simply typing out commands, check what API objects each command creates and in what order the control plane and nodes respond.
 
-## 이 장을 마치면
+## When you finish this chapter
 
-- 컨테이너 런타임과 쿠버네티스의 책임을 구분할 수 있다.
-- Deployment, Pod와 Service의 관계를 그림으로 설명할 수 있다.
-- `kubectl get`, `describe`, `logs`, `events`가 답하는 질문을 구분할 수 있다.
-- Pod 삭제와 잘못된 이미지 배포를 재현하고 관측 신호로 원인을 찾을 수 있다.
+- You can separate the responsibilities of the container runtime and Kubernetes.
+- The relationship between Deployment, Pod, and Service can be explained graphically.
+- You can distinguish between the questions answered by `kubectl get`, `describe`, `logs`, and `events`.
+- Pod deletion and incorrect image deployment can be reproduced and the cause can be found using observation signals.
 
-## 실습 구조
+## lab structure
 
-이 예시는 `minikube` 안에 단일 노드 클러스터를 만들고, HTTP 8080 포트에서 응답하는 테스트 컨테이너를 실행한다. 외부 로드 밸런서를 만들지 않고 `port-forward`로 로컬 브라우저와 연결한다.
+This example creates a single-node cluster inside `minikube` and runs a test container that responds on HTTP 8080 port. Connect to the local browser with `port-forward` without creating an external load balancer.
 
 ```mermaid
 flowchart LR
-  BROWSER["로컬 브라우저<br/>localhost 8080"] --> PF["kubectl port-forward<br/>임시 전달 경로"]
+  BROWSER["Local Browser<br/>localhost 8080"] --> PF["kubectl port-forward<br/>temporary forwarding path"]
   PF --> SVC["Service<br/>hello-node"]
-  SVC -->|"label 선택"| POD["Pod<br/>app hello-node"]
-  DEP["Deployment<br/>복제본 한 개 유지"] -->|"생성과 교체"| POD
-  POD --> CONTAINER["테스트 컨테이너<br/>HTTP 8080"]
+  SVC -->|“Select label”| POD["Pod<br/>app hello-node"]
+  DEP["Deployment<br/>Keep one replica"] -->|“Create and Replace”| POD
+  POD --> CONTAINER["Test Container<br/>HTTP 8080"]
 ```
 
-Deployment는 Pod의 수명과 복제본 수를 책임지고, Service는 Pod의 현재 IP가 바뀌어도 같은 이름과 가상 주소로 접근할 수 있게 한다. `port-forward`는 이 실습에서만 사용하는 임시 진입 경로이며 프로덕션 공개 방식이 아니다.
+Deployment is responsible for the Pod's lifespan and number of replicas, and Service allows access with the same name and virtual address even if the Pod's current IP changes. `port-forward` is a temporary entry path used only by this lab and is not intended for production release.
 
-## 준비 사항
+## Preparation
 
-다음 명령이 실행되는 환경을 전제로 한다.
+This assumes the environment in which the following commands are executed.
 
 ```shell
 minikube version
 kubectl version --client
 ```
 
-두 도구가 없다면 먼저 운영체제에 맞게 설치해야 한다. 이 문서에서는 설치 프로그램 자체보다 클러스터 안에서 일어나는 동작에 집중한다.
+If you do not have these two tools, you must first install them according to your operating system. This document focuses on the actions that occur within the cluster rather than the installer itself.
 
-## 클러스터 만들기
+## Create a cluster
 
 ```shell
 minikube start
@@ -43,18 +43,18 @@ kubectl cluster-info
 kubectl get nodes
 ```
 
-정상이라면 노드 하나가 `Ready`로 나타난다.
+If normal, one node appears as `Ready`.
 
 ```text
 NAME       STATUS   ROLES           AGE   VERSION
 minikube   Ready    control-plane   1m    v1.x.y
 ```
 
-여기서 `Ready`는 “모든 애플리케이션이 정상”이라는 뜻이 아니다. kubelet이 노드 상태를 보고하고, 컨트롤 플레인이 해당 노드를 워크로드 배치 대상으로 사용할 수 있다고 판단한 결과다.
+Here, `Ready` does not mean “all applications are normal.” This is the result of the kubelet reporting the node status and the control plane determining that the node can be used as a workload placement target.
 
-## 첫 애플리케이션 선언하기
+## Declaring your first application
 
-다음 내용을 `hello-node.yaml`로 저장한다.
+Save the following contents as `hello-node.yaml`.
 
 ```yaml
 apiVersion: apps/v1
@@ -92,19 +92,19 @@ spec:
       targetPort: http
 ```
 
-### YAML을 관계로 읽기
+### Reading YAML as a relationship
 
-| 필드 | 의미 | 잘못되면 보이는 현상 |
+| field | meaning | What happens when something goes wrong |
 |---|---|---|
-| `replicas: 1` | Deployment가 유지할 Pod 수 | 실제 Pod 수가 다르면 컨트롤러가 생성·삭제 |
-| `selector.matchLabels` | Deployment가 자기 Pod로 판단할 레이블 | 템플릿 레이블과 다르면 API가 생성을 거부 |
-| `template.metadata.labels` | 새 Pod에 붙는 레이블 | Service selector와 다르면 endpoint가 생기지 않음 |
-| `image` | 런타임이 가져올 컨테이너 이미지 | 이름·태그 오류 시 `ImagePullBackOff` |
-| `containerPort` | 컨테이너가 사용할 포트에 붙인 설명 | 그 자체로 외부에 포트를 공개하지 않음 |
-| Service의 `selector` | 트래픽을 받을 Pod 선택 조건 | 일치하는 Pod가 없으면 Service는 있지만 대상은 없음 |
-| `targetPort: http` | 이름이 `http`인 컨테이너 포트로 전달 | 이름이 맞지 않으면 endpoint port 해석 실패 |
+| `replicas: 1` | Number of Pods a Deployment will maintain | If the actual number of Pods is different, the controller creates and deletes them. |
+| `selector.matchLabels` | The label that Deployment will determine to be its own Pod. | If it is different from the template label, the API refuses to create it. |
+| `template.metadata.labels` | Label attached to new Pod | If it is different from the service selector, no endpoint is created. |
+| `image` | Container image to be imported by the runtime | In case of name/tag error `ImagePullBackOff` |
+| `containerPort` | Description attached to the port to be used by the container | By itself, it does not expose any ports to the outside world. |
+| Service's `selector` | Conditions for selecting pods to receive traffic | If there is no matching Pod, there is a Service but no destination. |
+| `targetPort: http` | Forward to container port named `http` | If the names do not match, endpoint port resolution fails. |
 
-## 적용과 상태 관찰
+## Application and status observation
 
 ```shell
 kubectl apply -f hello-node.yaml
@@ -112,11 +112,11 @@ kubectl rollout status deployment/hello-node
 kubectl get deployment,pod,service
 ```
 
-`apply` 직후에는 API 오브젝트만 저장되고 Pod가 아직 준비되지 않았을 수 있다. `rollout status`는 Deployment가 원하는 복제본을 사용할 수 있는 상태까지 기다린다.
+Immediately after `apply`, only the API object is saved and the Pod may not be ready yet. `rollout status` waits until Deployment can use the desired replica.
 
 ```mermaid
 sequenceDiagram
-  participant U as 사용자
+  participant U as user
   participant K as kubectl
   participant A as API server
   participant D as Deployment controller
@@ -124,61 +124,61 @@ sequenceDiagram
   participant L as kubelet
   participant R as container runtime
 
-  U->>K: hello-node.yaml 적용
-  K->>A: Deployment와 Service 요청
-  A-->>K: 오브젝트 저장 완료
-  D->>A: 원하는 Pod 한 개 확인
-  D->>A: ReplicaSet과 Pod 생성
-  S->>A: Pod를 minikube 노드에 배치
-  L->>A: 자기 노드의 Pod 확인
-  L->>R: 이미지 가져오기와 컨테이너 시작
-  R-->>L: 프로세스 실행 결과
-  L->>A: Pod Running 상태 보고
-  K->>A: rollout 상태 조회
+  U->>K: Apply hello-node.yaml
+  K->>A: Deployment and Service Request
+  A-->>K: Object saved completed
+  D->>A: Confirm the one Pod you want
+  D->>A: Create ReplicaSet and Pod
+  S->>A: Deploy Pods to minikube nodes
+  L->>A: Check Pod of own node
+  L->>R: Pull image and start container
+  R-->>L: Process execution result
+  L->>A: Pod Running Status Report
+  K->>A: Check rollout status
   A-->>K: successfully rolled out
 ```
 
-## 애플리케이션에 요청 보내기
+## Send request to application
 
-별도 터미널에서 다음 명령을 계속 실행해 둔다.
+Continue executing the following command in a separate terminal.
 
 ```shell
 kubectl port-forward service/hello-node 8080:8080
 ```
 
-다른 터미널에서 요청한다.
+Request from another terminal.
 
 ```shell
 curl http://127.0.0.1:8080/
 ```
 
-응답을 받았다면 흐름은 `curl → port-forward → Service → 선택된 Pod → 컨테이너` 순서다. Service가 Pod를 선택했는지는 다음 명령으로 확인한다.
+If a response is received, the flow is in `curl → port-forward → Service → selected Pod → container` order. Check whether the Service has selected the Pod with the following command.
 
 ```shell
 kubectl get service hello-node
 kubectl get endpointslice -l kubernetes.io/service-name=hello-node
 ```
 
-EndpointSlice에 주소가 없다면 네트워크 플러그인부터 의심하기 전에 Service selector와 Pod label이 같은지 확인한다.
+If there is no address in EndpointSlice, check whether the Service selector and Pod label are the same before suspecting a network plugin.
 
 ```shell
 kubectl get service hello-node -o jsonpath='{.spec.selector}'
 kubectl get pods --show-labels
 ```
 
-## 관측 명령은 서로 다른 질문에 답한다
+## Observation commands answer different questions
 
-| 명령 | 답하는 질문 | 먼저 볼 때 |
+| command | question to answer | When you see it first |
 |---|---|---|
-| `kubectl get pods` | 현재 Pod들이 어느 단계에 있는가? | 전체 상태를 빠르게 훑을 때 |
-| `kubectl describe pod <이름>` | 스케줄링·이미지·probe와 최신 event는 무엇인가? | Pending, pull 실패, 반복 재시작 |
-| `kubectl logs <이름>` | 컨테이너 프로세스가 무엇을 출력했는가? | 애플리케이션 시작·처리 오류 |
-| `kubectl get events --sort-by=.lastTimestamp` | 최근 클러스터 사건은 어떤 순서였는가? | 원인을 시간순으로 좁힐 때 |
-| `kubectl rollout status deployment/hello-node` | 새 버전 전환이 완료됐는가? | 배포 직후와 자동화 파이프라인 |
+| `kubectl get pods` | What stage are your pods currently in? | When quickly scanning the entire status |
+| `kubectl describe pod <name>` | What are the scheduling, images, probes and latest events? | Pending, pull failure, repeated restart |
+| `kubectl logs <name>` | What did the container process output? | Application startup/processing error |
+| `kubectl get events --sort-by=.lastTimestamp` | What was the sequence of recent cluster events? | When narrowing down the causes chronologically |
+| `kubectl rollout status deployment/hello-node` | Is the transition to the new version complete? | Immediately after deployment and in the automation pipeline |
 
-`logs`에 아무것도 없다고 인프라가 정상인 것은 아니다. 컨테이너가 시작되기 전의 이미지 오류나 스케줄링 오류는 주로 Pod 상태와 event에 나타난다.
+Just because there is nothing in `logs` does not mean that the infrastructure is normal. Image errors or scheduling errors before the container starts mainly appear in Pod status and events.
 
-## 실험 1: Pod를 삭제하면 무엇이 복구되는가
+## Experiment 1: What is recovered when you delete a Pod
 
 ```shell
 kubectl get pods
@@ -186,23 +186,23 @@ kubectl delete pod -l app=hello-node
 kubectl get pods -w
 ```
 
-기존 Pod는 종료되고 새로운 이름의 Pod가 생긴다. 이것은 삭제된 Pod가 되살아난 것이 아니다. Deployment가 `replicas: 1`이라는 의도와 실제 개수 `0`의 차이를 발견해 새 Pod를 만든 결과다.
+The existing Pod is terminated and a Pod with a new name is created. This is not a revived Pod that was deleted. This is the result of creating a new Pod after discovering the difference between the intention of Deployment being `replicas: 1` and the actual number of `0`.
 
-Deployment까지 삭제하면 결과가 달라진다.
+If you delete Deployment, the results will change.
 
 ```shell
 kubectl delete deployment hello-node
 kubectl get pods -w
 ```
 
-상위 의도 자체가 사라졌으므로 새 Pod는 만들어지지 않는다. 다시 실습하려면 원본 YAML을 적용한다.
+Since the parent intent itself is gone, no new Pod is created. To lab again, apply the original YAML.
 
 ```shell
 kubectl apply -f hello-node.yaml
 kubectl rollout status deployment/hello-node
 ```
 
-## 실험 2: 존재하지 않는 이미지를 배포하기
+## Experiment 2: Deploying a non-existent image
 
 ```shell
 kubectl set image deployment/hello-node \
@@ -210,7 +210,7 @@ kubectl set image deployment/hello-node \
 kubectl rollout status deployment/hello-node --timeout=30s
 ```
 
-rollout이 제한 시간 안에 완료되지 않는다. 이제 증상에서 원인으로 좁힌다.
+Rollout does not complete within the time limit. Now narrow down from symptoms to causes.
 
 ```shell
 kubectl get pods
@@ -218,56 +218,56 @@ kubectl describe pod -l app=hello-node
 kubectl get events --sort-by=.lastTimestamp
 ```
 
-새 Pod에서 `ErrImagePull` 또는 `ImagePullBackOff`가 보일 수 있다. 이 상태는 애플리케이션 코드가 실행된 뒤 죽은 `CrashLoopBackOff`와 다르다. 이미지 이름 확인이나 레지스트리 접근 단계에서 실패했으므로 컨테이너 로그보다 event가 먼저다.
+You may see `ErrImagePull` or `ImagePullBackOff` in the new Pod. This state is different from `CrashLoopBackOff`, where the application code dies after execution. Because the image name verification or registry access step failed, the event comes before the container log.
 
-원래 선언으로 되돌린다.
+Revert to the original declaration.
 
 ```shell
 kubectl apply -f hello-node.yaml
 kubectl rollout status deployment/hello-node
 ```
 
-## 자주 생기는 오해
+## Frequent misunderstandings
 
-### `kubectl apply`가 성공했으니 서비스도 정상이다
+### Since `kubectl apply` was successful, the service is normal.
 
-API 요청이 수락됐다는 사실과 애플리케이션이 준비됐다는 사실은 다르다. Deployment의 available replica, Pod condition, Service endpoint와 실제 요청을 차례로 확인해야 한다.
+The fact that an API request has been accepted is different from the fact that the application is ready. You must check the deployment's available replica, Pod condition, Service endpoint, and actual request in order.
 
-### Pod IP를 직접 기억하면 된다
+### Just remember the Pod IP yourself.
 
-Pod는 교체될 수 있고 새 IP를 받을 수 있다. 지속적인 접근 이름과 대상 선택은 Service에 맡긴다.
+Pods can be replaced and receive new IPs. The choice of persistent access name and target is left to the Service.
 
-### 컨테이너가 죽으면 같은 컨테이너가 살아난다
+### When a container dies, the same container comes back to life.
 
-같은 Pod 안에서 런타임이 컨테이너를 재시작하는 경우와, 상위 컨트롤러가 새 Pod를 만드는 경우를 구분해야 한다. 이름, UID와 event를 보면 차이를 확인할 수 있다.
+A distinction must be made between cases where the runtime restarts a container within the same Pod and cases where a parent controller creates a new Pod. You can see the difference by looking at the name, UID, and event.
 
-### 로컬 단일 노드에서 됐으니 프로덕션 준비가 끝났다
+### Now that you have a local single node, you are ready for production.
 
-이 실습은 API와 제어 루프를 관찰하기 위한 최소 환경이다. 고가용성, 백업, 업그레이드, 네트워크 정책, 관측과 자원 계획은 [프로덕션 운영과 확장](10-production-and-extension.md)에서 별도로 다룬다.
+This lab is a minimal environment for observing APIs and control loops. High availability, backups, upgrades, network policies, observation, and resource planning are covered separately in [Production Operations and Scaling](10-production-and-extension.md).
 
-## 정리와 삭제
+## Clean up and delete
 
-port-forward 터미널에서 `Ctrl+C`를 누른 뒤 다음을 실행한다.
+In the port-forward terminal, press `Ctrl+C` and run the following.
 
 ```shell
 kubectl delete -f hello-node.yaml
 minikube stop
 ```
 
-클러스터까지 완전히 지우려면 다음 명령을 추가한다.
+To completely erase the cluster, add the following command:
 
 ```shell
 minikube delete
 ```
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. Pod를 삭제했을 때 새 Pod가 생기지만 Deployment를 삭제했을 때는 생기지 않는 이유는 무엇인가?
-2. Service가 존재하는데 요청이 전달되지 않을 때 selector와 EndpointSlice를 먼저 보는 이유는 무엇인가?
-3. `ImagePullBackOff`에서 애플리케이션 로그보다 event가 더 유용한 이유는 무엇인가?
-4. `kubectl apply` 응답과 `rollout status`가 각각 확인하는 단계는 무엇인가?
+1. Why is a new Pod created when I delete a Pod, but not when I delete a Deployment?
+2. Why do we look at selector and EndpointSlice first when a Service exists but the request is not delivered?
+3. Why are events more useful than application logs in `ImagePullBackOff`?
+4. What steps do `kubectl apply` responses and `rollout status` confirm?
 
-[다음 장: API와 오브젝트](02-api-and-objects.md) · [전체 로드맵](00-roadmap.md)
+[Next Chapter: APIs and Objects](02-api-and-objects.md) · [Full Roadmap](00-roadmap.md)
 
 <!-- source: https://kubernetes.io/ko/docs/tutorials/hello-minikube/ | checked: 2026-09-03 | last-modified: 2026-03-27 -->
 <!-- source: https://kubernetes.io/ko/docs/tutorials/kubernetes-basics/deploy-app/deploy-intro/ | checked: 2026-09-03 | translation-warning: true -->

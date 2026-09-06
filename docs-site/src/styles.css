@@ -306,7 +306,7 @@ kbd {
 .hero h1 {
   max-width: 650px;
   margin: 0;
-  font-size: clamp(68px, 8vw, 116px);
+  font-size: clamp(56px, 6vw, 88px);
   line-height: 0.88;
   letter-spacing: -0.075em;
 }
@@ -804,7 +804,7 @@ kbd {
   color: transparent;
 }
 .markdown-body pre.mermaid:not([data-processed='true']):not(.diagram-error)::before {
-  content: '다이어그램을 그리는 중입니다.';
+  content: 'Rendering diagram.';
   position: absolute;
   inset: 0;
   display: grid;

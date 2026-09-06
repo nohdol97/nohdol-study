@@ -1,45 +1,45 @@
-# Signal 상관관계와 SLO alert 실습
+# Signal correlation and SLO alert lab
 
-> 실습 등급: **Local**. 이미 Prometheus와 OpenTelemetry demo 환경이 있다면 그 환경을 사용하고, 없으면 아래 데이터로 질의 의미를 먼저 검증한다.
+> lab level: **Local**. If you already have a Prometheus and OpenTelemetry demo environment, use that environment. If not, first verify the meaning of the query with the data below.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-- **선행 이해**: HTTP status, 요청 처리 시간, metric·log·trace의 차이를 먼저 설명할 수 있어야 한다.
-- **실행 환경**: Prometheus와 OpenTelemetry demo가 있으면 실제 query를 실행한다. 없다면 이 장은 수식과 사건 기록을 읽는 worksheet이며 실행 실습으로 완료 처리하지 않는다.
-- **필요한 데이터**: request 수 counter, latency histogram, request ID가 있는 log, trace ID가 있는 trace가 필요하다.
-- **시간 고정**: 장애 시작·완화·회복 시각과 query window를 같은 timezone으로 기록한다.
-- **변경 범위**: 첫 실행에서는 alert를 production pager에 연결하지 않고 local rule 평가만 확인한다.
-- **끝난 상태**: 임시 rule과 test traffic을 제거하고 원래 metric 추세로 돌아왔는지 확인한다.
+- **Prerequisite understanding**: You must first be able to explain the differences between HTTP status, request processing time, and metrics·log·trace.
+- **Execution environment**: If Prometheus and OpenTelemetry demo are present, execute actual query. If not, this chapter is a worksheet that reads formulas and event records and is not completed as an execution lab.
+- **Required data**: Request counter, latency histogram, log with request ID, trace with trace ID are required.
+- **Time fixation**: Record the failure start, mitigation, and recovery time and query window in the same timezone.
+- **Scope of change**: The first run does not connect alerts to the production pager, but only checks local rule evaluation.
+- **Finished state**: Remove temporary rules and test traffic and check whether the original metric trend has returned.
 
-아래 PromQL을 그대로 입력하기 전에 자신의 metric 이름과 label을 확인한다. 이름이 다르면 문법이 맞아도 데이터가 나오지 않으며, 그 결과는 서비스가 정상이라는 뜻이 아니다.
+Before entering the PromQL below as is, check your metric name and label. If the names are different, no data will be output even if the grammar is correct, and the result does not mean that the service is normal.
 
-## 먼저 이해하기
+## Understand the model first
 
-이 실습에서 만들려는 것은 dashboard가 아니라 하나의 설명 가능한 incident chain이다. 사용자가 실패한 요청 하나를 출발점으로 request ID와 trace ID를 찾고, 그 요청이 전체 실패율에 포함됐는지 확인한 뒤 어떤 span과 dependency에서 시간이 늘었는지 좁힌다.
+What we are trying to create in this lab is not a dashboard, but an explainable incident chain. Starting from one failed user request, we find the request ID and trace ID, check whether that request is included in the overall failure rate, and then narrow down which span and dependency the time increased.
 
-`http_server_requests_total` 같은 counter는 process가 시작된 뒤 누적된다. 따라서 현재 값끼리 나누기보다 일정 window의 `rate`를 사용한다. histogram bucket은 각 latency 경계 이하의 누적 요청 수이며 `histogram_quantile`이 여러 bucket을 이용해 percentile을 추정한다. 개별 요청의 정확한 시간을 보여 주는 trace와 역할이 다르다.
+Counters such as `http_server_requests_total` are accumulated after the process starts. Therefore, rather than dividing the current values, use `rate` of a certain window. The histogram bucket is the cumulative number of requests below each latency boundary, and `histogram_quantile` estimates the percentile using multiple buckets. Its role is different from trace, which shows the exact time of each individual request.
 
-| 관찰 | 알 수 있는 것 | 주의할 점 |
+| observation | What can be known | Things to watch out for |
 |---|---|---|
-| 5분 error ratio | 최근 traffic에서 실패 비중 | traffic이 적으면 작은 수에도 크게 흔들림 |
-| p95 latency | 대부분의 요청이 경험한 상단 지연 | 가장 느린 요청 하나의 값은 아님 |
-| trace span | 선택된 요청의 hop별 시간 | sampling으로 모든 요청을 대표하지 않음 |
-| error log | component가 기록한 상세 맥락 | 기록 누락과 clock 차이 가능 |
-| burn-rate alert | budget 소진 속도가 대응 기준을 넘음 | threshold는 SLO window에서 계산해야 함 |
+| 5 minute error ratio | Failure rate in recent traffic | If there is little traffic, even small numbers can cause significant shaking. |
+| p95 latency | Top delays experienced by most requests | Slowest request is not a single value |
+| trace span | Time per hop for selected requests | Sampling does not represent all requests |
+| error log | Detailed context recorded by the component | Possible missing records and clock differences |
+| burn-rate alert | Budget exhaustion speed exceeds response standards | Threshold must be calculated in SLO window |
 
-## 1. 요청 계약 정하기
+## 1. Set request contract
 
-sample API에 다음 공통 필드를 둔다.
+Place the following common fields in the sample API.
 
 ```text
 request_id=8f3... trace_id=4bf... route=/checkout status=503 duration_ms=842
 ```
 
-counter는 `http_server_requests_total{route,status_class}`처럼 bounded label을 쓴다. `request_id`나 `user_id`를 metric label로 넣지 않는다. 개별 요청 identity는 log와 trace에 둔다.
+The counter uses a bounded label like `http_server_requests_total{route,status_class}`. Do not include `request_id` or `user_id` as a metric label. Individual request identities are stored in logs and traces.
 
-## 2. Availability와 latency 관찰
+## 2. Observation of availability and latency
 
-5분 availability 비율의 예다.
+This is an example of a 5-minute availability rate.
 
 ```promql
 sum(rate(http_server_requests_total{status_class!="5xx"}[5m]))
@@ -47,7 +47,7 @@ sum(rate(http_server_requests_total{status_class!="5xx"}[5m]))
 sum(rate(http_server_requests_total[5m]))
 ```
 
-histogram에서 95 percentile을 계산하는 예다.
+This is an example of calculating 95 percentile in a histogram.
 
 ```promql
 histogram_quantile(
@@ -56,17 +56,17 @@ histogram_quantile(
 )
 ```
 
-traffic이 0일 때 분모가 0이 되는 상황, retry가 요청 수를 늘리는 상황과 ingress/client 중 어느 지점에서 측정하는지를 기록한다.
+It records situations where the denominator becomes 0 when traffic is 0, situations where retry increases the number of requests, and at which point among ingress/client it is measured.
 
-## 3. 장애 시간축 연결
+## 3. Failure time base connection
 
-오류 요청 하나를 골라 다음 표를 채운다.
+Select one error request and fill out the following table.
 
-| 시간 | 증거 | 가설 | 조치 | 판정 |
+| hour | evidence | hypothesis | action | verdict |
 |---|---|---|---|---|
-| T0 | availability SLI 하락 | upstream 오류 | trace ID 조회 | 조사 중 |
-| T1 | DB span latency 증가 | connection saturation | pool metric 확인 | active=max |
-| T2 | pool 제한 조정 후 burn 감소 | 병목 완화 | rollback 준비 | 관찰 중 |
+| T0 | availability SLI decline | upstream error | trace ID lookup | Investigating |
+| T1 | Increased DB span latency | connection saturation | Check pool metrics | active=max |
+| T2 | Burn reduction after adjusting pool limit | Relieve bottlenecks | Prepare for rollback | observing |
 
 ```mermaid
 sequenceDiagram
@@ -79,13 +79,13 @@ sequenceDiagram
     D--xA: timeout
     A-->>U: 503 + request ID
     A-->>O: metric alert
-    O->>A: log에서 trace ID 확인
-    O->>D: span·pool 상태 확인
+    O->>A: Check trace ID in log
+    O->>D: Check span·pool status
 ```
 
-## 4. Alert 검증
+## 4. Alert verification
 
-alert rule은 테스트 가능한 expression, `for`, severity와 runbook label을 가진다.
+The alert rule has a testable expression, `for`, severity, and runbook label.
 
 ```yaml
 groups:
@@ -100,28 +100,28 @@ groups:
           summary: Sample API error budget is burning quickly
 ```
 
-실제 threshold는 예시 값을 복사하지 말고 SLO window와 alerting policy로 계산한다. 정상·오류·무트래픽 시계열을 입력해 firing과 recovery를 모두 시험한다.
+The actual threshold is calculated using the SLO window and alerting policy rather than copying the example value. Input normal, error, and no-traffic time series to test both firing and recovery.
 
-## 완료 판정과 정리
+## Judgment of completion and summary
 
-- alert 발생 시 사용자 impact와 연결되는 dashboard·runbook이 열린다.
-- request 또는 trace ID로 log와 trace를 오갈 수 있다.
-- 복구 후 짧은 window와 긴 window가 정상화되는 시점을 확인한다.
-- 임시 alert rule, demo workload와 telemetry 저장 데이터를 삭제한다.
+- When an alert occurs, a dashboard/runbook linked to the user impact is opened.
+- You can go back and forth between log and trace by request or trace ID.
+- After recovery, check when the short window and long window normalize.
+- Delete temporary alert rule, demo workload, and telemetry stored data.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-availability 식의 값이 `0.98`이면 선택한 5분 window와 label 범위에서 약 98%가 good으로 분류됐다는 뜻이다. 어떤 request를 valid 또는 good에서 제외했는지에 따라 의미가 달라진다. health check나 client cancel을 무심코 분모에서 빼면 실제 사용자 실패를 숨길 수 있다.
+If the value of the availability expression is `0.98`, it means that about 98% of the areas within the selected 5-minute window and label range were classified as good. The meaning varies depending on which request is excluded from valid or good. Inadvertently subtracting health checks or client cancels from the denominator can hide actual user failures.
 
-p95가 상승한 시각과 DB span 증가가 겹치면 dependency 병목 가설이 강해지지만 아직 인과관계가 확정된 것은 아니다. 같은 trace의 parent-child 시간, connection pool, DB wait와 변경 시점을 함께 본다. 완화 후에는 단일 성공 요청뿐 아니라 burn rate, tail latency와 backlog가 정상 범위로 돌아오는지 확인한다.
+If the time when p95 rises overlaps with the increase in DB span, the dependency bottleneck hypothesis becomes stronger, but the causal relationship has not yet been confirmed. View the parent-child time, connection pool, DB wait, and change time of the same trace together. After mitigation, check whether burn rate, tail latency, and backlog, as well as single successful requests, return to normal ranges.
 
-alert가 firing됐지만 on-call이 할 수 있는 행동이 없다면 rule을 더 민감하게 만드는 것이 해법이 아니다. 사용자 영향과 연결되는 조건, owner, 첫 진단 query와 안전한 완화 동작을 runbook에 묶어야 한다.
+If an alert is fired but there is no action on-call, making the rule more sensitive is not the solution. Conditions associated with user impact, owner, first diagnostic query, and safe mitigation actions must be bundled into a runbook.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. request ID를 metric label에 넣으면 왜 위험한가?
-2. 503 증가와 DB span latency 증가가 인과관계를 곧바로 증명하지는 않는 이유는 무엇인가?
-3. alert recovery를 시험하지 않으면 어떤 운영 문제가 남는가?
+1. Why is it dangerous to put request ID in metric label?
+2. Why do the increase in 503 and DB span latency not immediately prove causality?
+3. What operational problems are left without testing alert recovery?
 
 <!-- source: https://prometheus.io/docs/prometheus/latest/querying/basics/ | checked: 2026-09-03 -->
 <!-- source: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/ | checked: 2026-09-03 -->

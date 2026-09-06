@@ -1,230 +1,230 @@
-# 모바일 텔레그램 스터디 브리지 (Telegram Bot Bridge) 가이드
+# Mobile Telegram Study Bridge (Telegram Bot Bridge) Guide
 
-`nohdol-study` 하네스를 스마트폰 텔레그램(Telegram)과 연동하여, 언제 어디서든 모바일로 Obsidian 지식 볼트(`vault/`)를 검색·조회·분석하고 소크라테스식 문답으로 학습할 수 있는 공식 연동 가이드다.
+This is an official linking guide that links the `nohdol-study` harness with the smartphone Telegram so that you can search, search, and analyze the Obsidian knowledge vault (`vault/`) on your mobile phone anytime, anywhere and learn through Socratic questions and answers.
 
-**이 브리지는 읽기 전용이다.** 노트를 쓰거나 고치거나 지우지 않고, `raw/`에 자료를 담지 않으며, `index.md`·`log.md`·`hot.md`를 갱신하지 않는다. 왜 그렇게 두었는지는 2절에 있다.
+**This bridge is read-only.** It does not write, edit or delete notes, does not store data in `raw/`, and does not update `index.md`·`log.md`·`hot.md`. The reason why it was placed that way is in verse 2.
 
-## 1. 아키텍처 및 원리
+## 1. Architecture and principles
 
 ```text
-[📱 스마트폰 (Telegram)] 
-       ↕ (메시지 및 인라인 버튼 제어)
-[💻 Mac 백그라운드 봇 (`_workspace/telegram_bot/run_bot.sh`)]
-       ↕ (비동기 CLI 호출: agy / gemini)
-[🤖 AI 모델 (Gemini 3.1 Pro / 2.5 Flash)]
-       ↕ (노트 검색, 근거 대조 — 읽기만, 쓰기 없음)
-[📁 지식 저장소 (`vault/` 심링크가 가리키는 곳)]
-       ↕ (Google Drive 실시간 동기화)
-[📱 스마트폰 (Obsidian 앱에서 원본 노트 확인)]
+[📱 Smartphone (Telegram)]
+       ↕ (message and inline button controls)
+[💻 Mac Background Bot (`_workspace/telegram_bot/run_bot.sh`)]
+       ↕ (asynchronous CLI call: agy / gemini)
+[🤖 AI Model (Gemini 3.1 Pro / 2.5 Flash)]
+       ↕ (Search notes, collate evidence — read only, no write)
+[📁 Knowledge Repository (where `vault/` symlink points)]
+       ↕ (Google Drive real-time synchronization)
+[📱 Smartphone (check original notes in Obsidian app)]
 ```
 
-- **핵심 작동 방식**: 텔레그램으로 보낸 메시지를 Mac에서 구동 중인 비동기 파이썬 봇 엔진이 수신하여 로컬 CLI(`agy` 또는 `gemini`)를 백그라운드로 실행하고, 생성된 답변을 청크로 분할해 전송한다.
-- **연속성 보장**: 대화 문맥(`--continue` / `--resume latest`)이 자동으로 유지되어 스마트폰에서도 끊김 없이 딥다이브 학습이 가능하다.
+- **How ​​it works**: Messages sent via Telegram are received by an asynchronous Python bot engine running on a Mac, run a local CLI (`agy` or `gemini`) in the background, and split the generated responses into chunks and send them.
+- **Continuity Guaranteed**: The conversation context (`--continue` / `--resume latest`) is automatically maintained, enabling seamless Deep Dive learning on smartphones.
 
-## 2. 보안 및 하네스 정책 준수 (AGENTS.md Rule 5)
+## 2. Compliance with security and harness policy (AGENTS.md Rule 5)
 
-이 브리지는 하네스 안전 규칙을 엄격히 준수하도록 설계되었다.
+This bridge is designed to strictly comply with harness safety rules.
 
-1. **자격증명 비추적 격리 (No Committed Secrets)**:
-   - 텔레그램 봇 토큰이나 API 키를 Git 저장소나 `vault/` 내부의 파일에 절대 기재하지 않는다.
-   - 모든 시크릿은 실행 시 환경 변수(`TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_CHAT_ID`)로만 주입된다.
-   - 실행 가상환경(`.venv`) 및 로그 파일은 Git 비추적 디렉터리(`_workspace/telegram_bot/`) 내부에 격리된다.
+1. **No Committed Secrets**:
+   - Never write Telegram bot tokens or API keys in Git repositories or files inside `vault/`.
+   - All secrets are only injected into environment variables (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_CHAT_ID`) when running.
+   - The execution virtual environment (`.venv`) and log files are isolated inside the Git untracked directory (`_workspace/telegram_bot/`).
 
-2. **화이트리스트 차단 기능 (Chat ID Whitelisting)**:
-   - 외부 텔레그램 메신저 특성상 누구나 봇에게 접근할 수 있는 위험을 방지하기 위해, 사용자 본인의 텔레그램 Chat ID(`TELEGRAM_ALLOWED_CHAT_ID`)를 설정한다.
-   - 허용되지 않은 Chat ID에서 온 메시지는 **🚨 접근 권한이 없습니다** 안내와 함께 100% 차단된다.
+2. **Whitelist blocking function (Chat ID Whitelisting)**:
+   - To prevent the risk of anyone being able to access bots due to the nature of the external Telegram messenger, set your own Telegram Chat ID (`TELEGRAM_ALLOWED_CHAT_ID`).
+   - Messages from unauthorized Chat IDs are 100% blocked with the message **🚨 You do not have access permission**.
 
-3. **도구 게이트 (PreToolUse Guard) — 지식 루트는 읽기 전용**:
-   - 이 봇은 `--dangerously-skip-permissions`로 CLI를 띄운다. 키보드 앞에 사람이 없어 승인할 수 없기 때문인데, 그래서 **도구 호출을 막는 게이트가 하나도 없다.** 실제로 "문서화해줘" 한 마디가 `find ~ -maxdepth 3`으로 번져 `~/Library/Reminders`를 건드렸고, macOS가 "python3.11이 미리 알림에 접근하려고 합니다"를 띄웠다. 다이얼로그가 CLI가 아니라 봇을 지목한 이유는 TCC가 자식을 띄운 **책임 프로세스**에 권한 요청을 귀속시키기 때문이다.
-   - 그 자리를 `.agents/hooks/study-tool-guard.py`가 메운다. 봇이 주입하는 `STUDY_SURFACE=telegram`을 보고 깨어나며, 다른 세션에는 관여하지 않는다.
-     - **`vault/` 아래 쓰기·수정·삭제를 전부 거부한다.** `wiki/` 노트든 `raw/` 캡처든 `index.md`·`log.md`·`hot.md`든 같다.
-     - 쓰기가 열려 있는 곳은 `_workspace/`와 임시 디렉터리뿐이다. 읽기가 부작용이 없는 것은 아니어서 — `vault-search`가 읽는 의미 인덱스가 거기 있고 노트가 바뀌면 스스로 갱신한다 — 이 스크래치 공간이 닫히면 검색 자체가 멈춘다. 하네스 저장소는 여전히 제외이며, 추적 파일 변경은 `metaskill`과 사람이 있는 세션의 일이다.
-     - 홈 디렉터리 스윕, TCC 보호 폴더 접근, 개인정보 앱 AppleScript를 차단한다.
-   - **왜 계약 검사가 아니라 전면 차단인가.** 초판은 note-writer 계약(프론트매터 8개 필드·`status`·`verification`·ISO 날짜·H1과 파일명 일치)을 만족하면 `wiki/` 쓰기를 통과시켰다. 그런데 **형식이 맞는 프론트매터와 남길 값어치가 있는 노트는 같은 것이 아니다.** 계약은 기계로 볼 수 있지만 주장이 검증됐는지, 이미 있는 노트와 겹치지 않는지, `index`·`log`·`hot`이 함께 움직였는지는 판단이고, 이 표면에는 판단할 사람이 없다. 그래서 지식 루트를 닫고 질문에 답하는 일만 남겼다. 계약 강제는 사라지지 않았다 — 대화형 세션에서 쓰는 노트는 `PostToolUse` 훅 `.agents/hooks/study-note-check.py`가 저장되는 순간 검사한다.
-   - 봇은 매 요청 앞에 읽기 전용 표면이라는 사실을 프롬프트로 붙인다. 훅만으로도 쓰기는 막히지만, 훅은 모델이 **호출을 결정한 뒤에야** 거절할 수 있어서 폰에서는 그 왕복이 몇 분짜리 `생각 중...`으로만 보인다. 미리 알려 주면 그 시간이 답으로 바뀐다.
-   - **등록은 CLI마다 다르고 저장소에 추적되지 않는다.** 봇이 부르는 `agy`(Antigravity CLI)는 전역 `~/.gemini/config/hooks.json`만 읽는다 — 프로젝트 로컬 `.agents/hooks.json`은 1.1.7에서 로드되지 않았다. 등록 절차와 검증 명령은 `study-install` 스킬 6단계에 있다.
-   - 셸 명령은 패턴만으로 완전히 가둘 수 없다(`python3 -c "open(...)"` 같은 우회). 실질 방어선은 쓰기 도구의 경로 검사이며, 셸 검사는 실제로 관찰된 스윕과 리다이렉션을 잡는 보조선이다.
+3. **Tool Gate (PreToolUse Guard) — Knowledge root is read-only**:
+   - This bot launches the CLI as `--dangerously-skip-permissions`. This is because there is no one at the keyboard to approve it, so **there is no gate blocking the tool call.** In fact, the one word "document it" spread to `find ~ -maxdepth 3`, which touched `~/Library/Reminders`, and macOS popped up "python3.11 is trying to access reminders." The reason the dialog points to a bot rather than CLI is because TCC attributes the permission request to the **responsible process** that launched the child.
+   - `.agents/hooks/study-tool-guard.py` fills that position. It wakes up when it sees `STUDY_SURFACE=telegram` injected by the bot, and does not participate in other sessions.
+     - **`vault/` rejects all writing, editing, and deleting below.** It is the same whether it is `wiki/` note, `raw/` capture, or `index.md`·`log.md`·`hot.md`.
+     - The only places open for writing are `_workspace/` and the temporary directory. Reading is not without side effects — the semantic index that `vault-search` reads is there and updates itself when the note changes — so when this scratch space is closed, the search itself stops. The harness repository is still excluded, and changes to the trace file are a matter of human sessions with `metaskill`.
+     - Blocks home directory sweeps, access to TCC protected folders, and privacy app AppleScript.
+   - **Why is it a complete block rather than a contract check?** In the first edition, writing `wiki/` was passed if the note-writer contract (8 frontmatter fields, `status`, `verification`, ISO date, H1 and file name matching) was satisfied. However, **A front matter with the correct format and a note with value to leave are not the same thing.** A contract can be viewed by a machine, but it is a judgment whether the claim has been verified, whether it does not overlap with an existing note, and whether `index`·`log`·`hot` moved together, and there is no one on this surface to judge. So I closed the knowledge root and the only thing left to do was answer the question. Contract enforcement has not gone away — notes taken during an interactive session are checked the moment the `PostToolUse` hook `.agents/hooks/study-note-check.py` is saved.
+   - The bot prefaces each request with a prompt indicating that it is a read-only surface. The hook alone prevents writing, but the hook can be rejected only after the model **decides to call**, so on the phone, the round trip only appears as `생각 중...`, lasting several minutes. If you let us know in advance, the time will be changed to the answer.
+   - **Registration is CLI-specific and not tracked in the repository.** `agy` (Antigravity CLI), as the bot calls it, only reads the global `~/.gemini/config/hooks.json` — the project-local `.agents/hooks.json` was not loaded in 1.1.7. The registration procedure and verification commands are in skill level 6 of `study-install`.
+   - Shell commands cannot be completely confined by patterns alone (bypasses such as `python3 -c "open(...)"`). The real line of defense is the writer's path inspection, while shell inspection is the secondary line that catches sweeps and redirects that are actually observed.
 
-## 3. 빠른 세팅 및 실행 가이드 (5분 컷)
+## 3. Quick setup and execution guide (5 minute cut)
 
-### 1단계: 텔레그램 봇 토큰 발급
-1. 텔레그램 앱에서 **`@BotFather`**를 검색해 대화를 시작한다.
-2. `/newbot` 명령어를 전송하고 봇 이름과 사용자명(끝이 `_bot`으로 끝나야 함)을 지정한다.
-3. 발급된 **HTTP API Token**(예: `123456789:ABCdefGHI...`)을 복사한다.
+### Step 1: Issue Telegram bot token
+1. Search **`@BotFather`** in the Telegram app to start a conversation.
+2. Send the command `/newbot` and specify the bot name and username (which must end with `_bot`).
+3. Copy the issued **HTTP API Token** (example: `123456789:ABCdefGHI...`).
 
-### 2단계: 내 Chat ID 알아내기 (최초 1회)
-1. 텔레그램에서 생성한 봇에게 아무 메시지나 보낸다 (예: `/start` 또는 `안녕`).
-2. 저장소의 공식 레퍼런스 템플릿(`examples/telegram_bot/`)을 로컬 작업 디렉터리로 복사한 뒤, 토큰만 주입하여 봇을 임시 실행한다:
+### Step 2: Find out your Chat ID (first time)
+1. Send any message to the bot created in Telegram (e.g. `/start` or `안녕`).
+2. Copy the official reference template from the repository (`examples/telegram_bot/`) to your local working directory and temporarily run the bot by injecting only the token:
    ```bash
-   # 공식 템플릿 복사 (최초 1회)
+   # Copy the official template (first time)
    mkdir -p _workspace/telegram_bot
    cp -p examples/telegram_bot/* _workspace/telegram_bot/
 
-   # 임시 실행
+   # temporary execution
    TELEGRAM_BOT_TOKEN="발급받은토큰" ./_workspace/telegram_bot/run_bot.sh
    ```
-3. 봇이 텔레그램으로 **"🚨 접근 권한이 없습니다. 당신의 Chat ID: `12345678`"** 라고 내 ID 숫자를 알려주면 해당 번호를 복사하고 터미널에서 `Ctrl+C`로 종료한다.
+3. When the bot tells you your ID number via Telegram, **"🚨 You do not have access permission. Your Chat ID: `12345678`"**, copy that number and exit with `Ctrl+C` in the terminal.
 
-### 3단계: 완벽한 보안 모드로 실전 구동
-터미널에서 내 Chat ID까지 주입하여 봇을 가동한다:
+### Step 3: Run in full security mode
+Run the bot by injecting your Chat ID in the terminal:
 
 ```bash
 export TELEGRAM_BOT_TOKEN="발급받은토큰"
 export TELEGRAM_ALLOWED_CHAT_ID="내_CHAT_ID_숫자"
 
-# CLI 엔진을 gemini로 변경하려면 아래 주석 해제 (기본값: agy)
+# Uncomment below to change CLI engine to gemini (default: agy)
 # export STUDY_CLI_CMD="gemini"
 
-# 백그라운드 상시 구동 (nohup 활용)
+# Always running in the background (using nohup)
 nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&1 &
 ```
 
-#### 💡 [고급] 맥(macOS) 부팅 시 자동 시작 (`launchd` LaunchAgent 등록)
-매번 컴퓨터 재부팅 시 터미널 명령어를 입력하지 않고 **맥이 부팅되자마자 알아서 백그라운드 구동되도록** 하려면, macOS 공식 부팅 서비스 관리자인 `launchd`를 활용할 수 있다.
-보안 계율(RULE 5)에 따라 비밀 토큰은 프로젝트 및 `_workspace/` 내부에 절대 저장하지 않으므로, 사용자 계정 전용 경로인 `~/Library/LaunchAgents/com.nohdol.telegrambot.plist`에 아래와 같이 환경변수 주입 설정을 생성하고 등록한다:
+#### 💡 [Advanced] Automatic startup when booting Mac (macOS) (Register `launchd` LaunchAgent)
+If you want **your Mac to automatically run in the background as soon as it boots** without entering a terminal command every time you reboot your computer, you can use `launchd`, the official macOS boot service manager.
+According to the security rule (RULE 5), the secret token is never stored inside the project and `_workspace/`, so create and register the environment variable injection setting in `~/Library/LaunchAgents/com.nohdol.telegrambot.plist`, a path dedicated to the user account, as follows:
 
 ```bash
-# 1. launchctl 등록 및 실행
+# 1. Register and run launchctl
 launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
 
-# 2. 구동 상태 확인 (PID 출력 확인)
+# 2. Check driving status (check PID output)
 launchctl list | grep telegrambot
 ```
-* **이점**: 재부팅 후에도 자동 구동되며, 예기치 못한 예외로 프로세스가 종료되더라도 macOS가 즉시(`KeepAlive`) 재구동시킨다.
+* **Advantage**: It runs automatically even after rebooting, and even if the process terminates due to an unexpected exception, macOS restarts it immediately (`KeepAlive`).
 
-## 4. 텔레그램 메뉴 및 명령어 사용법
+## 4. How to use Telegram menus and commands
 
-봇 구동 시 텔레그램 채팅창 좌측 하단에 공식 **`[Menu]` (메뉴)** 버튼이 자동 등록된다.
+When running the bot, the official **`[Menu]` (Menu)** button is automatically registered at the bottom left of the Telegram chat window.
 
-| 명령어 | 메뉴 설명 | 주요 기능 및 인라인 버튼 |
+| command | Menu Description | Key features and inline buttons |
 |---|---|---|
-| **`/skill`** | 🧩 조회 스킬 선택 | • `[ 🔎 의미 기반 노트 검색 (vault-search) — 기본 ]`<br>• `[ 🧠 소크라테스 문답 (study-session) ]`<br>• `[ 🌿 vault 드리프트 점검 (vault-gardening) ]`<br>• `[ 🔄 스킬 해제 (일반 자유 대화) ]` |
-| **`/model`** | 🤖 AI 모델 선택 | • `[ 🤖 Gemini 3.1 Pro ]` (최상위 심층 학습/추론/아키텍처 분석)<br>• `[ ⚡ Gemini 2.5 Flash ]` (초고속 일상 메모/요약)<br>• `[ 🔄 기본값 ]` (초기화) |
-| **`/effort`** | 🧠 추론 강도 선택 | • `[ 🔥 High ]` (가장 깊은 사고 및 엄격한 출처 검증 - 권장)<br>• `[ ⚖️ Medium ]` (균형 잡힌 속도와 지능)<br>• `[ ⚡ Low ]` (빠른 즉답) |
-| **`/cancel`** | ⏹ 실행 중인 작업 취소 | 진행 중인 CLI 프로세스를 종료하고 부분 출력이 있으면 함께 반환. 진행 메시지의 `[ ⏹ 취소 ]` 버튼과 동일 |
-| **`/status`** | ⚙️ 상태 확인 | 현재 작동 중인 모델, 추론 강도, 활성 스킬, **실행 중인 작업 유무**, Vault 연결 경로(읽기 전용), CLI 엔진, Git 상태 출력 |
-| **`/new`** | 🔄 새 대화 시작 | 이전 세션 기억을 초기화하고 새로운 대화 시작 |
-| **`/help`** | 📚 도움말 | 사용법 및 소크라테스식 학습 프롬프트 예시 안내 |
+| **`/skill`** | 🧩 Select inquiry skill | • `[ 🔎 의미 기반 노트 검색 (vault-search) — 기본 ]`<br>• `[ 🧠 소크라테스 문답 (study-session) ]`<br>• `[ 🌿 vault 드리프트 점검 (vault-gardening) ]`<br>• `[ 🔄 스킬 해제 (일반 자유 대화) ]` |
+| **`/model`** | 🤖 AI model selection | • `[ 🤖 Gemini 3.1 Pro ]` (Top-level deep learning/inference/architectural analysis)<br>• `[ ⚡ Gemini 2.5 Flash ]` (Super-fast daily notes/summaries)<br>• `[ 🔄 기본값 ]` (Initialization) |
+| **`/effort`** | 🧠 Choose your inference strength | • `[ 🔥 High ]` (Deepest thinking and rigorous source verification - recommended)<br>• `[ ⚖️ Medium ]` (Balanced speed and intelligence)<br>• `[ ⚡ Low ]` (Quick immediate answers) |
+| **`/cancel`** | ⏹ Cancel a running task | Terminates any ongoing CLI process and returns any partial output. Same as `[ ⏹ 취소 ]` button in progress message |
+| **`/status`** | ⚙️ Check status | Current running model, inference strength, active skills, **running tasks**, Vault connection path (read-only), CLI engine, Git status output |
+| **`/new`** | 🔄Start a new conversation | Reset previous session memories and start a new conversation |
+| **`/help`** | 📚Help | Instructions for use and example Socratic learning prompts |
 
-### 🔎 기본 스킬은 `vault-search`다
+### 🔎 The basic skill is `vault-search`
 
-아무것도 고르지 않은 채팅은 `vault-search`로 돈다. 이 표면에 오는 말은 거의 전부 **볼트에 이미 있는 것에 대한 질문**이고, "답하기 전에 기존 노트를 찾는다"는 하네스 규칙은 산문이라 건너뛰어질 수 있다. 기본값으로 두면 그것이 기억에서 상태로 바뀐다.
+A chat where nothing is selected goes to `vault-search`. Almost all of the language that comes to this surface is **questions about things already in the vault**, and the harness rule of "look for existing notes before answering" is prose and can be skipped. Leaving it as default changes it from memory to state.
 
-**강제 사전 검색이 아니라 스킬로 둔 이유는 하나다 — 모델이 건너뛸 수 있어야 한다.** 임베딩 검색은 무엇을 넣든 결과를 돌려준다. 실측하면 `"고마워"`는 GeekNews의 「뒤처져도 괜찮습니다, 고마워요!」를 0.453으로, `"아까 그거 다시 설명해줘"`는 「Retry-now 자율 루프 에이전트」를 0.535로 올린다(진짜 관련 있을 때는 0.61~0.62다). 뒤엣것이 특히 나쁜데, **답이 이미 대화 이력에 있는 후속 질문**에 무관한 노트가 끼어드는 형태이기 때문이다. 봇이 매 턴 결과를 프롬프트에 밀어 넣으면 그 오염이 항상 붙고, 더 나쁘게는 **노트를 열기 전에 발췌를 인용할 유혹**을 만든다 — `vault-search`의 계약은 결과가 포인터일 뿐이라는 것이고, 이는 지식 그래프에 적용되는 규칙과 같다.
+**There is one reason it is a skill rather than a forced dictionary search — the model must be able to skip it.** Embedding searches return results no matter what you put in them. In actual measurements, `"고마워"` raises GeekNews' "It's okay to fall behind, thank you!" to 0.453, and `"아까 그거 다시 설명해줘"` raises "Retry-now Autonomous Loop Agent" to 0.535 (when it's really relevant, it's 0.61 to 0.62). The last one is especially bad, because it is an irrelevant note inserted into a follow-up question whose answer is already in the conversation history. If a bot pushes the result into the prompt at every turn, that taint will always stick, and worse, it creates **the temptation to quote an excerpt before opening the note** — `vault-search`'s contract is that the result is just a pointer, the same rule that applies to knowledge graphs.
 
-**비용은 문제가 아니다.** 로컬 임베딩이라 외부 호출이 없고, 드리프트가 없으면 쿼리 한 번이 **약 1초**다. 노트 5개가 바뀐 직후 첫 쿼리는 재임베딩까지 **약 44초**가 걸리는데, 이 값은 자주 돌릴수록 작아진다 — 드리프트가 잘게 흩어져 해소되기 때문이다.
+**Cost is not an issue.** Since it is a local embedding, there are no external calls, and if there is no drift, one query takes **about 1 second**. The first query right after five notes are changed takes **about 44 seconds** to rebedding, and this value gets smaller the more often you run it — this is because the drift is dispersed and resolved.
 
-`/skill` → 해제를 누르면 기본값까지 함께 꺼진다. 내부적으로 **"고른 적 없음"과 "직접 껐음"을 다른 상태로 저장**하며, 그러지 않으면 해제가 다음 메시지 한 번만 유지되고 기본값이 도로 켜진다.
+`/skill` → If you press Turn Off, even the default settings will be turned off. Internally we store "never picked" and "directly turned off" as different states, otherwise the turn off will only persist for one next message and the default will be turned back on.
 
 > [!NOTE]
-> `/skill`에는 **대화를 그 모드로 고정하고 싶은 조회 스킬만** 둔다. `knowledge-graph`(백링크·고아
-> 노트 조회)와 `understand`(코드베이스·지식베이스 파악)는 하네스가 요청 문구를 보고 자동으로
-> 고르므로 버튼이 필요 없다 — "깨진 링크 찾아줘", "이 코드베이스 파악해줘"처럼 하고 싶은 것을
-> 그냥 쓰면 된다. 버튼을 늘리면 자동 라우팅이 고를 것을 사람이 먼저 고정해 오히려 잘못된 스킬에
-> 갇힌다.
+> In `/skill`, place **only the inquiry skill that you want to fix the conversation to that mode**. `knowledge-graph`(Backlink·Orphan
+> Note inquiry) and `understand` (identification of code base/knowledge base) are automatically performed by Harness after looking at the request text.
+> You don't need a button because you choose — whatever you want to do, like "find broken links" or "figure out this code base".
+> Just use it. If you increase the number of buttons, the automatic routing will choose the wrong skill instead of fixing it first.
+> Trapped.
 >
-> **`note-writer`·`ingest`·`recall`·`paper-search`·`study-video`·`diagram`은 이 표면에서 돌지
-> 않는다.** 전부 결과물을 `vault/`에 남기는 스킬이고, 지식 루트는 읽기 전용이라 훅이 그 쓰기를
-> 거절한다. 버튼에서 뺀 이유도 같다 — 켤 수는 있는데 마지막 단계에서 막히는 모드가 가장 나쁘다.
+> `note-writer`·`ingest`·`recall`·`paper-search`·`study-video`·`diagram` do not spin on this surface.
+>  It is a skill that leaves all results in `vault/`, and the knowledge root is read-only, so the hook does not allow writing.
+> I refuse. The reason for removing it from the button is the same — you can turn it on, but the worst mode is that it gets blocked at the last step.
 >
-> 그래서 "기록해"라고 보내면 봇은 **무엇을 어디에 어떤 프론트매터로 적을지 정리해서 답한다.**
-> 폰에서 읽고, 맥의 대화형 세션에서 `note-writer`로 마무리하면 된다. 논문·영상·웹 자료도 같다 —
-> 링크를 던져 두고 "이거 나중에 볼 것"으로 남기는 대신, 지금 답으로 받을 수 있는 것은 그 자료에
-> 대한 설명과 기존 노트와의 관계까지다.
+> So, when you send the message “Write it down,” the bot replies by organizing what to write, where to write it, and with what front matter.
+> Read it on your phone and finish with `note-writer` in an interactive session on your Mac. The same applies to papers, videos, and web materials —
+> Instead of throwing out a link and saying "I'll look at this later," what you get in response now is the material.
+> It includes explanations and relationships with existing notes.
 
-### ⏳ 오래 걸리는 작업
+### ⏳ A task that takes a long time
 
-모바일에서 가장 답답한 것은 응답이 아니라 **살아 있는지 모르는 것**이다. 그래서:
+The most frustrating thing about mobile is not the response, but **not knowing if something is alive**. so:
 
-- 진행 메시지가 **5초마다 경과 시간으로 갱신**된다. `editMessageText`는 텔레그램에서 무음이므로
-  **알림·소리·뱃지가 발생하지 않는다.** 화면을 열어두면 숫자가 올라가고, 닫아두면 조용하다.
-  진짜 알림은 완료된 답변 하나뿐이다.
-- 타이핑 표시는 텔레그램이 약 5초 뒤 지우므로 4초마다 갱신해 유지한다.
-- 진행 메시지에 `[ ⏹ 취소 ]` 버튼이 붙는다. `/cancel` 도 같다. 취소하면 부분 출력이 있으면 함께 온다.
-- `STUDY_RUN_TIMEOUT`(기본 1200초 = 20분)을 넘기면 자동 중단하고 알린다. 예전에는 CLI가 멈추면
-  그 메시지가 영원히 `생각 중...` 이었고 **폰에서는 손쓸 방법이 없었다.**
-- 앞 작업이 도는 중에 메시지를 보내면 막지는 않되, 두 실행이 같은 세션 이력을 공유해 답변이 섞일 수
-  있다고 한 줄 알린다.
+- Progress messages are **updated with elapsed time every 5 seconds**. `editMessageText` is silent on Telegram, so
+  **Notifications, sounds, and badges do not occur.** When the screen is open, the number goes up, and when it is closed, it is quiet.
+  The only real notification is one completed response.
+- The typing mark is maintained by being updated every 4 seconds because Telegram erases it after about 5 seconds.
+- The `[ ⏹ 취소 ]` button is attached to the progress message. `/cancel` is the same. If you cancel, partial output, if any, will come with it.
+- If it exceeds `STUDY_RUN_TIMEOUT` (default 1200 seconds = 20 minutes), it automatically stops and notifies. In the past, if the CLI stopped
+  The message was forever `생각 중...` and **there was no way to do anything about it on the phone.**
+- Sending a message while the previous task is running will not prevent it, but the responses may be mixed if the two executions share the same session history.
+  Let them know that you have it.
 
-### ♻️ 재시작과 상태 유지
+### ♻️ Restart and maintain state
 
-launchd `KeepAlive`가 봇을 스스로 되살리므로 재시작은 예고 없이 일어난다. 모델·추론 강도·활성 스킬은
-`bot_state.json`에 저장되어 복원되고, **스킬이 켜져 있었다면 복원 사실을 한 번 알린다.**
+Since launchd `KeepAlive` revives the bot on its own, the restart occurs without warning. Model, inference strength, and active skills are
+It is saved and restored in `bot_state.json`, and **if the skill is turned on, the restoration is notified once**.
 
-이게 중요한 이유는 `study-session` 때문이다. 예전에는 재시작 시 스킬 플래그가 조용히 사라져,
-사용자는 소크라테스식 문답을 계속 하는데 봇은 어느 순간부터 평범하게 답하고 있었다. 그걸 알 방법이
-없었다. 참고로 **대화 이력 자체는 원래 안 날아간다** — 봇이 CLI를 `--continue`(또는 `--resume latest`)로
-부르므로 문답 기록은 맥의 CLI 세션에 남는다. 유실되던 것은 스킬 접두사 주입뿐이었다.
+The reason this is important is because `study-session`. In the past, when restarting, the skill flag quietly disappeared,
+The user continued to answer Socratic questions, but at some point the bot began answering normally. There's no way to know that
+There wasn't. For reference, **the conversation history itself is not originally lost** — the bot sets the CLI to `--continue` (or `--resume latest`).
+Because it is called, the question and answer record remains in the Mac's CLI session. All that was lost was skill prefix injection.
 
-> `bot_state.json`에는 chat ID가 들어가므로 `.gitignore` 대상이다. 커밋하지 않는다.
+> Since `bot_state.json` contains a chat ID, it is the target of `.gitignore`. Don't commit.
 
-### 💡 모바일 딥다이브 활용 팁
+### 💡 Tips for using mobile Deep Dive
 
-전부 **읽기만 하는** 용법이다. 볼트에 남는 것이 없으므로 이동 중에 마음껏 물어도 된다.
+These are all **read-only** usages. There is nothing left in the bolt, so you can bite as much as you like while moving.
 
-- **과거 노트 검색 및 종합**: *"내가 예전에 적어둔 피지컬 AI 노트에서 감지(Sensor) 부분만 요약해줘"*
-- **의미 기반 중복 확인 (`vault-search`)**: *"이거 이미 정리했나? — 에이전트 출력 배포 전 자동 차단"* (단어가 기억나지 않아도 찾는다)
-- **지식 연결고리 발견**: *"내 노트들 중에 서로 연관이 깊은데 위키링크로 안 엮인 고아 노트가 있어?"*
-- **소크라테스 문답 (`study-session`)**: *"HBM4 대역폭 왜 그렇게 되는지 나한테 물어봐 줘"* — 노트를 만들지 않고 이해만 점검한다
-- **답을 받아 맥에서 마무리**: *"이 내용 노트로 정리하면 어떤 모양이 되는지 초안만 보여줘"*
+- **Search and synthesis of past notes**: *"Summarize only the sensor part of the physical AI notes I wrote down before"*
+- **Semantic-based duplicate check (`vault-search`)**: *"Have you already sorted this out? — Automatic blocking before agent output deployment"* (Find even if you don't remember the word)
+- **Discover knowledge links**: *"Among my notes, are there orphan notes that are closely related to each other but are not connected by wiki links?"*
+- **Socratic Questions and Answers (`study-session`)**: *"Ask me why HBM4 bandwidth is like that"* — Just check understanding without making notes
+- **Take the answer and finish it on your Mac**: *"Just show me a draft of what this will look like if I organize it into a note"*
 
-## 5. 마크다운 렌더링 및 메시지 분할 아키텍처 (Telegram MessageEntity 기반)
+## 5. Markdown rendering and message segmentation architecture (based on Telegram MessageEntity)
 
-AI CLI(`agy` 또는 `gemini`)가 출력하는 풍부한 마크다운(GitHub Flavored Markdown: `# 제목`, `**굵은 글씨**`, 표, 코드 블록 등)을 텔레그램 채팅창에서 깨짐 없이 깔끔하게 렌더링하기 위해 다음과 같은 포맷팅 엔진과 방어 로직이 내장되어 있다.
+The following formatting engine and defense logic are built-in to render rich markdown (GitHub Flavored Markdown: `# 제목`, `**굵은 글씨**`, tables, code blocks, etc.) output by AI CLI (`agy` or `gemini`) cleanly and without corruption in the Telegram chat window.
 
-1. **`telegramify-markdown` 및 `MessageEntity` 기반 구문 변환**:
-   - 텔레그램 Bot API의 `parse_mode="MarkdownV2"`는 문자열 기반 파싱을 수행하므로 이스케이프 기호(`.`, `-`, `(` 등)가 조금만 어긋나도 오류를 내거나 화면에 백슬래시(`\`), 별표(`*`), 백틱(`` ` ``)을 그대로 노출하는 한계가 있다.
-   - 이를 원천 차단하기 위해 `bot.py`는 `telegramify_markdown.telegramify()`를 호출하여 마크다운 기호가 전혀 없는 100% 순수 텍스트(`item.text`)와 스타일 속성 객체 배열(`MessageEntity`)을 분리 생성한다. 이로써 텍스트 자체에 백슬래시나 별표가 전혀 포함되지 않아 깨짐이나 노출을 완벽하게 방지한다.
-2. **코드 블록 보호 및 안전한 4,000자 분할**:
-   - `telegramify()` 호출 시 `max_message_length=4000`, `min_file_lines=999999` 파라미터를 지정하여 코드 블록이 파일 첨부로 변환되는 것을 막고, 텔레그램 전송 제한 길이를 초과하지 않도록 안전하게 분할한다.
-3. **로컬 파일 링크(`file://`, `vscode://`) 프로토콜 정제 방어**:
-   - AI CLI 모델이 응답 중 로컬 경로(`[CLAUDE.md](file:///...)`)를 마크다운 링크로 출력할 경우, 텔레그램 Bot API는 미지원 프로토콜(`BadRequest: Entity url ... is invalid: unsupported url protocol`)로 간주하여 전송을 차단하고 예외를 발생시킨다.
-   - 이를 방지하기 위해 마크다운 변환 전 전처리 단계에서 정규식(`re.sub`)을 통해 웹 URL(`http://`, `https://`, `tg://` 등)을 제외한 모든 로컬 프로토콜 링크를 인라인 코드 formatting(예: `` `CLAUDE.md` ``)으로 변환하여 API 거부를 100% 방지한다.
-4. **이중 별표(`**`) 표기 교정 및 평문 폴백(Fallback) 방어**:
-   - 텔레그램 일반 마크다운(`parse_mode="Markdown"`)을 쓰는 안내 메시지(`/start`, `/help`, 콜백 버튼 등)에서는 `**굵은 글씨**` 대신 텔레그램 문법인 단일 별표(`*굵은 글씨*`)를 적용해 파싱 오류를 원천 차단한다.
-   - 만약 예기치 못한 특수 기호로 인해 엔티티 전송이 실패할 경우, 메시지 유실을 막기 위해 평문(Plain text) 모드로 자동 전환되어 출력 결과를 끝까지 전송한다.
-5. **의존성 상시 자동 관리**:
-   - `./_workspace/telegram_bot/run_bot.sh` 실행 시 가상환경(`.venv`) 내에 `telegramify-markdown`이 없으면 `uv pip install`로 즉시 자동 탑재되도록 구성되어 있다.
+1. **Syntax conversion based on `telegramify-markdown` and `MessageEntity`**:
+   - `parse_mode="MarkdownV2"` of Telegram Bot API performs string-based parsing, so even if the escape symbols (`.`, `-`, `(`, etc.) are slightly out of sync, an error is generated or the screen displays backslash (`\`), asterisk (`*`, etc.) There is a limit to exposing backticks (`` ` ``) as is.
+   - To block this at the source, `bot.py` calls `telegramify_markdown.telegramify()` and creates 100% pure text (`item.text`) with no markdown symbols and an array of style attribute objects (`MessageEntity`) separately. As a result, the text itself does not contain any backslashes or asterisks, completely preventing it from being broken or exposed.
+2. **Code block protection and secure 4,000 character split**:
+   - When calling `telegramify()`, specify the `max_message_length=4000` and `min_file_lines=999999` parameters to prevent the code block from being converted to a file attachment, and safely divide it so as not to exceed the Telegram transmission limit length.
+3. **Local file link (`file://`, `vscode://`) protocol purification defense**:
+   - If the AI ​​CLI model outputs the local path (`[CLAUDE.md](file:///...)`) as a markdown link during the response, Telegram Bot API considers it to be an unsupported protocol (`BadRequest: Entity url ... is invalid: unsupported url protocol`), blocks transmission, and raises an exception.
+   - To prevent this, all local protocol links except web URLs (`http://`, `https://`, `tg://`, etc.) are converted to inline code formatting (e.g. `` `CLAUDE.md` ``) through regular expressions (`re.sub`) in the preprocessing stage before Markdown conversion to 100% prevent API rejection.
+4. **Double asterisk (`**`) notation correction and plaintext fallback protection:
+   - In guidance messages (`/start`, `/help`, callback buttons, etc.) that use Telegram's general markdown (`parse_mode="Markdown"`), a single asterisk (`*굵은 글씨*`), a Telegram grammar, is applied instead of `**굵은 글씨**` to prevent parsing errors.
+   - If entity transmission fails due to an unexpected special symbol, it automatically switches to plain text mode to prevent message loss and transmits the output results to the end.
+5. **Always-on automatic management of dependencies**:
+   - When `./_workspace/telegram_bot/run_bot.sh` is executed, if `telegramify-markdown` is not found in the virtual environment (`.venv`), it is configured to be automatically mounted as `uv pip install` immediately.
 
-## 6. 트러블슈팅 및 운영 FAQ (Troubleshooting & Maintenance)
+## 6. Troubleshooting & Maintenance FAQ (Troubleshooting & Maintenance)
 
-### Q1. 봇이 응답하지 않거나 `409 Conflict` 오류가 로그에 찍힐 때
-- **원인**: 텔레그램 Bot API는 동일한 토큰으로 2개 이상의 프로세스가 동시에 `getUpdates` 폴링을 수행하는 것을 금지한다. 수동 실행(`nohup`)과 자동 시작(`launchd`)이 중복되었거나 백그라운드 프로세스가 2개 이상 떠 있을 때 발생한다.
-- **해결 방안**:
+### Q1. When the bot becomes unresponsive or the error `409 Conflict` is logged
+- **Cause**: Telegram Bot API prohibits two or more processes from simultaneously polling `getUpdates` with the same token. This occurs when manual execution (`nohup`) and automatic startup (`launchd`) overlap or when two or more background processes are running.
+- **Solution**:
   ```bash
-  # 1. 모든 봇 프로세스 강제 종료
+  # 1. Force stop all bot processes
   ps aux | grep "[b]ot.py" | awk '{print $2}' | xargs kill -9 2>/dev/null || true
 
-  # 2. launchd로 정상 단일 구동 재개
+  # 2. Resume normal single operation with launchd
   launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
   ```
 
-### Q2. 봇 구동 상태 및 실시간 로그를 확인하고 싶을 때
-- **구동 상태 확인**:
+### Q2. When you want to check the bot operation status and real-time logs
+- **Check driving status**:
   ```bash
   launchctl list | grep telegrambot
-  # 또는
+  # or
   ps aux | grep "[b]ot.py"
   ```
-- **실시간 실행 로그 조회**:
+- **View real-time execution log**:
   ```bash
   tail -f _workspace/telegram_bot/bot.log
   ```
 
-### Q3. 봇을 일시 정지하거나 완전히 중단시키고 싶을 때
-- `launchd`에 등록된 경우 일반 `kill` 명령어로 죽여도 즉시 다시 살아나므로(`KeepAlive`), 아래와 같이 서비스 언로드(Unload) 명령을 실행해야 한다:
+### Q3. When you want to pause the bot or stop it completely
+- If registered as `launchd`, it will be revived immediately even if killed with the regular `kill` command (`KeepAlive`), so you must execute the service unload command as follows:
   ```bash
-  # 서비스 일시 정지 및 언로드
+  # Pausing and unloading services
   launchctl unload -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
   ```
 
-## 7. 부록: LLM 원클릭 구현 및 공식 템플릿 안내 (Reference Implementation Appendix)
+## 7. Appendix: LLM one-click implementation and official template guide (Reference Implementation Appendix)
 
-이 문서의 스펙만으로도 AI 모델이 봇 코드를 생성할 수 있지만, 가장 확실하고 검증된 코드를 즉시 적용할 수 있도록 **저장소 자체에 공식 레퍼런스 스크립트(`examples/telegram_bot/`)를 제공**한다.
+Although the specifications in this document alone can enable the AI ​​model to generate bot code, **an official reference script (`examples/telegram_bot/`) is provided in the repository itself** so that you can immediately apply the most authentic and verified code.
 
-1. **공식 레퍼런스 파일 구성 (`examples/telegram_bot/`)**:
-   - `bot.py`: `python-telegram-bot` 및 `telegramify-markdown` 기반 비동기 브리지 핵심 로직 (정제 방어 및 `MessageEntity` 변환 100% 탑재)
-   - `run_bot.sh`: 가상환경(`.venv`) 자동 생성 및 의존성 탑재를 보장하는 실행 부트스트래퍼
-2. **LLM 활용 시 프롬프트 팁**:
-   - 다른 사람이나 다른 세션에서 AI CLI에게 봇을 띄워달라고 할 때는 아래 한 문장만 요청하면 된다:
-   > *"이 저장소의 `examples/telegram_bot/`에 있는 봇 레퍼런스 템플릿을 `_workspace/telegram_bot/`으로 복사하고, 내 토큰(`...`)과 Chat ID(`...`)로 백그라운드 구동해 줘."*
+1. **Official Reference File Configuration (`examples/telegram_bot/`)**:
+   - `bot.py`: Asynchronous bridge core logic based on `python-telegram-bot` and `telegramify-markdown` (100% equipped with purification defense and `MessageEntity` conversion)
+   - `run_bot.sh`: Execution bootstrapper that automatically creates a virtual environment (`.venv`) and ensures dependency loading.
+2. **Prompt Tips When Using LLM**:
+   - When you ask the AI ​​CLI to launch a bot from another person or session, you only need to request one sentence:
+   > *"Copy the bot reference template from `examples/telegram_bot/` in this repository to `_workspace/telegram_bot/` and run it in the background with my token (`...`) and Chat ID (`...`)."*

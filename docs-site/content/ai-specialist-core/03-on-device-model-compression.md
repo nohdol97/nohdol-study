@@ -1,28 +1,28 @@
-# On-device AI와 모델 압축
+# On-device AI and model compression
 
 <!-- source: https://docs.pytorch.org/tutorials/intermediate/pruning_tutorial.html | checked: 2026-09-03 -->
 <!-- source: https://docs.pytorch.org/tutorials/recipes/quantization.html | checked: 2026-09-03 -->
 <!-- source: https://docs.pytorch.org/tutorials/beginner/knowledge_distillation_tutorial.html | checked: 2026-09-03 -->
 
-모델 압축의 목적은 parameter 수를 줄이는 것이 아니라 선택한 device에서 품질, 지연, memory, 전력과 thermal 조건을 동시에 만족하는 것이다. pruning·quantization·distillation은 서로 다른 것을 바꾸며, file size가 줄었다고 실제 kernel이 빨라지는 것은 아니다.
+The purpose of model compression is not to reduce the number of parameters, but to simultaneously satisfy quality, delay, memory, power, and thermal conditions on the selected device. Pruning, quantization, and distillation change different things, and reducing the file size does not mean that the actual kernel becomes faster.
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-| 말 | 이 장에서의 뜻 |
+| word | Meaning in this chapter |
 |---|---|
-| pruning | weight·channel·block 일부를 제거하거나 0으로 만들어 sparsity를 높이는 방법 |
-| quantization | 실수 값을 더 낮은 bit 정수·부동소수 표현으로 근사하는 방법 |
-| distillation | 큰 teacher의 output·feature를 작은 student 학습 신호로 사용하는 방법 |
-| calibration | quantization range나 confidence를 대표 데이터에서 맞추는 과정 |
-| structured sparsity | channel·block처럼 hardware가 이용하기 쉬운 단위의 희소성 |
-| target artifact | model뿐 아니라 runtime·precision·operator·device 조건이 고정된 배포 묶음 |
+| pruning | How to increase sparsity by removing some of the weight·channel·block or setting it to 0 |
+| quantization | How to approximate real numbers with lower bit integer/floating point representations |
+| distillation | How to use the output/feature of a large teacher as a learning signal for a small student |
+| calibration | The process of adjusting the quantization range or confidence from representative data |
+| structured sparsity | Scarcity of units that are easy for hardware to use, such as channel·block |
+| target artifact | A bundle of deployments with fixed runtime·precision·operator·device conditions as well as model |
 
-1. 정확도 baseline과 target hardware 측정 방법을 먼저 고정한다.
-2. 압축률이 아니라 end-to-end task와 device 결과로 승급을 판정한다.
+1. The accuracy baseline and target hardware measurement method are first fixed.
+2. Promotion is determined based on end-to-end task and device results, not compression ratio.
 
-## 먼저 이해하기
+## Understand the model first
 
-unstructured pruning은 개별 weight를 0으로 만들어 parameter sparsity는 높일 수 있지만 target runtime에 sparse kernel이 없으면 dense 계산 시간이 그대로일 수 있다. structured pruning은 channel·head·block을 줄여 shape 자체를 바꾸기 쉽지만 품질 손실이 더 클 수 있다.
+Unstructured pruning can increase parameter sparsity by setting individual weights to 0, but if there is no sparse kernel in the target runtime, dense calculation time may remain the same. Structured pruning is easy to change the shape itself by reducing channels, heads, and blocks, but the quality loss may be greater.
 
 ```mermaid
 flowchart LR
@@ -36,21 +36,21 @@ flowchart LR
     E --> G{promotion gate}
 ```
 
-## 세 기법을 구분한다
+## Distinguish between three techniques
 
-| 기법 | 바꾸는 것 | 필요한 데이터 | 주된 검증 |
+| techniques | change | data needed | main verification |
 |---|---|---|---|
-| magnitude pruning | 작은 weight 제거 | fine-tuning 선택 | 실제 sparse speedup·품질 |
-| activation-aware pruning | weight와 activation 중요도 | calibration sample | 분포 이동 민감도 |
-| PTQ | 학습 뒤 range·scale 결정 | calibration set | outlier·operator support |
-| QAT | 학습 중 fake quantization | training data | target conversion 일치 |
-| distillation | student objective | teacher output·label | teacher 오류 전이·student gain |
+| magnitude pruning | Remove small weight | Select fine-tuning | Real sparse speedup and quality |
+| activation-aware pruning | Weight and activation importance | calibration sample | Distribution shift sensitivity |
+| PTQ | Determine range and scale after learning | calibration set | outlier·operator support |
+| QAT | fake quantization during learning | training data | target conversion match |
+| distillation | student objective | teacher output·label | Teacher error transfer/student gain |
 
-PyTorch 공식 자료도 pruning, 여러 quantization workflow와 distillation을 별도 과정으로 다룬다. 특정 tutorial의 정확도·속도 배수를 일반 보장으로 사용하지 않는다. architecture, backend, device와 dataset이 달라지면 결과가 바뀐다.
+PyTorch official materials also treat pruning, various quantization workflows, and distillation as separate processes. We do not use the accuracy/speed multiplier of a specific tutorial as a general guarantee. If the architecture, backend, device, and dataset change, the results will change.
 
-## quantization의 기본 계약
+## Basic contract of quantization
 
-실수 `r`을 정수 `q`로 옮길 때 scale과 zero point 같은 mapping을 사용한다. 중요한 것은 식을 외우는 것이 아니라 어느 tensor·channel에 어떤 range를 썼고 saturation이 어디서 생기는지를 추적하는 일이다.
+When moving the real number `r` to the integer `q`, mappings such as scale and zero point are used. The important thing is not to memorize the formula, but to keep track of which range was used for which tensor·channel and where saturation occurs.
 
 ```yaml
 edge_bundle:
@@ -64,18 +64,18 @@ edge_bundle:
   fallback: fp16-bundle-88
 ```
 
-LLM은 activation outlier, KV cache와 unsupported operator 때문에 CNN과 다른 sensitivity를 보일 수 있다. weight-only quantization과 activation quantization, prefill과 decode를 따로 측정한다.
+LLM may show different sensitivity than CNN due to activation outliers, KV cache, and unsupported operators. Weight-only quantization, activation quantization, prefill, and decode are measured separately.
 
 ## target gate
 
-| 측정 | 기준선과 비교 | 실패 시 질문 |
+| measurement | Compare to baseline | Questions in case of failure |
 |---|---|---|
-| task quality | class·scenario별 degradation | 특정 rare case만 무너지는가 |
-| p50·p99 latency | cold·warm, batch별 | compile·memory copy가 포함됐는가 |
-| peak memory | model + activation + workspace | 동시 요청에서 OOM인가 |
-| power·temperature | 지속 workload | throttle 뒤 latency가 변하는가 |
-| artifact size·load | OTA와 startup | 전송 성공과 load 성공이 같은가 |
-| fallback | 같은 input contract | runtime 실패 뒤 안전하게 전환되는가 |
+| task quality | degradation by class·scenario | Does it only break down in certain rare cases? |
+| p50·p99 latency | cold·warm, by batch | Is compile·memory copy included? |
+| peak memory | model + activation + workspace | Is OOM in concurrent requests? |
+| power·temperature | sustained workload | Does latency change after throttle? |
+| artifact size·load | OTAs and startups | Are transfer success and load success the same? |
+| fallback | Same input contract | Is there a safe transition after a runtime failure? |
 
 ```json
 {
@@ -93,26 +93,26 @@ LLM은 activation outlier, KV cache와 unsupported operator 때문에 CNN과 다
 }
 ```
 
-평균 품질과 latency가 좋아도 중요한 rare defect recall gate를 넘지 못하면 승급하지 않는다. model artifact만 registry에 올리지 말고 compiler·runtime·device·calibration dataset과 receipt를 연결한다.
+Even if the average quality and latency are good, you will not be promoted if you do not exceed the important rare defect recall gate. Instead of uploading only the model artifact to the registry, connect the compiler·runtime·device·calibration dataset and receipt.
 
-## 운영 연결
+## operational connection
 
-1. input schema와 preprocessing은 [Vision과 생성 모델](#doc=ai-specialist-core-vision)의 bundle에서 받는다.
-2. GPU·runtime capacity는 [AI 인프라와 LLM 서빙](#doc=ai-transformation-platform-infrastructure)에 연결한다.
-3. artifact 승급과 rollback은 [MLOps·LLMOps 수명주기](#doc=ai-transformation-platform-mlops)에서 관리한다.
-4. device temperature·OOM·fallback은 [AIOps 신호와 토폴로지](#doc=aiops-foundations-evidence-graph)에 남긴다.
-5. 자동 rollback은 [승인된 자동 복구](#doc=aiops-remediation-state-machine)의 blast radius와 outcome gate를 따른다.
+1. Input schema and preprocessing are received from the bundle of [Vision and generation model ](#doc=ai-specialist-core-vision).
+2. GPU·runtime capacity is connected to [AI infrastructure and LLM serving](#doc=ai-transformation-platform-infrastructure).
+3. Artifact promotion and rollback are managed in [MLOps·LLMOps lifecycle](#doc=ai-transformation-platform-mlops).
+4. device temperature·OOM·fallback is left in [AIOps signal and topology](#doc=aiops-foundations-evidence-graph).
+5. Automatic rollback follows the blast radius and outcome gate of [approved automatic recovery](#doc=aiops-remediation-state-machine).
 
-## 완료
+## Completion criteria
 
-- pruning·quantization·distillation이 바꾸는 대상을 구분했다.
-- parameter·file size와 실제 target speedup을 분리했다.
-- calibration·runtime·device를 model bundle에 넣었다.
-- 품질·지연·memory·전력·fallback을 승급 gate로 만들었다.
+- The objects changed by pruning·quantization·distillation were distinguished.
+- Separate parameter·file size and actual target speedup.
+- Calibration·runtime·device was added to the model bundle.
+- Quality, delay, memory, power, and fallback were made into promotion gates.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- weight가 0인 비율이 높아도 latency가 줄지 않을 수 있는 이유는 무엇인가?
-- calibration dataset이 production 분포를 대표하지 않으면 어떤 quantization 오류가 생기는가?
-- teacher가 틀린 예를 student가 학습할 가능성을 어떻게 측정할 것인가?
-- target artifact의 rollback이 model file 하나를 되돌리는 것보다 넓은 이유는 무엇인가?
+- Why may latency not decrease even if the ratio of weights to 0 is high?
+- What quantization errors occur if the calibration dataset is not representative of the production distribution?
+- How do we measure the likelihood that a student will learn an example that the teacher got wrong?
+- Why is rollback of a target artifact broader than rolling back a single model file?

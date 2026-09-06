@@ -1,69 +1,69 @@
-# Phase 2c 파일럿 — 전제 조건 실측과 현재 판정
+# Phase 2c pilot — prerequisite ground truth and current verdict
 
-- 날짜: 2026-07-25
-- 대상: basic-memory(basicmachines-co), PaperQA2(Future-House)
-- 관련: [ADR 003](../adr/003-cli-learning-integrations.md),
-  [추가 도구 검토](2026-07-25-additional-tools-review.md),
-  [작업 인계](../handoffs/2026-07-25-next-session.md)
-- 판정: **PaperQA2 = 실행 불가(전제 미충족)**, **basic-memory = 파일럿 완료, 읽기 전용 조건 불충족으로 미채택**
+- Date: 2026-07-25
+- Target: basic-memory (basicmachines-co), PaperQA2 (Future-House)
+- Related: [ADR 003](../adr/003-cli-learning-integrations.md);
+  [Additional Tool Review](2026-07-25-additional-tools-review.md),
+  [Task handover](../handoffs/2026-07-25-next-session.md)
+- Verdict: **PaperQA2 = Impossible to run (prerequisites not met)**, **basic-memory = Pilot completed, not adopted due to read-only conditions not met**
 
-## 왜 이 문서가 있나
+## Why this document?
 
-Phase 2c는 두 도구를 "사용자가 지정한 corpus·provider가 있을 때만" 돌리기로
-한 제한 파일럿이다. 진행 요청을 받고 전제를 실측한 결과 지금은 둘 다 돌릴 수
-없어서, 무엇이 없어서 못 도는지와 무엇을 미리 만들어 뒀는지를 남긴다.
+Phase 2c plans to run both tools “only when there is a corpus/provider specified by the user.”
+This is a limited pilot. As a result of receiving the request to proceed and measuring the premise, we can now run both.
+Because I don't have it, I leave a list of what I can't do because I don't have it and what I made in advance.
 
-## 실측 (2026-07-25)
+## Actual measurement (2026-07-25)
 
-| 항목 | 관측값 |
+| item | observed value |
 |---|---|
-| `basic-memory` CLI | 미설치 (`uv`는 있어 설치는 가능) |
-| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | 셋 다 미설정 |
-| `vault/wiki` (큐레이션 계층) | 노트 1개 |
-| `vault/raw/papers` | PDF 1개 |
-| 지식 루트의 레거시 Markdown | `GeekNews` 169, `공부` 30, `AX` 18, `도서` 9, `경제` 2 |
-| `~/study` (하네스 밖 레거시) | 881개 |
+| `basic-memory` CLI | Not installed (`uv` is available and can be installed) |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | All three are unset |
+| `vault/wiki` (curation tier) | 1 note |
+| `vault/raw/papers` | 1 PDF |
+| Legacy Markdown from the Knowledge Root | `GeekNews` 169, `공부` 30, `AX` 18, `도서` 9, `경제` 2 |
+| `~/study` (legacy outside harness) | 881 |
 
-## PaperQA2 — 실행 불가
+## PaperQA2 — not executable
 
-두 겹으로 막힌다.
+It is blocked in two layers.
 
-1. **provider 부재.** PaperQA2는 LLM과 임베딩 provider를 요구하는데 키가 하나도
-   없다. 키가 생기더라도 논문 본문이 외부 모델로 나가므로 AGENTS 5절에 따라
-   실행별 명시 승인이 먼저다.
-2. **corpus 부재.** 보존된 논문이 1편이라 "심층 질의" 비교가 성립하지 않는다.
+1. **Absence of provider.** PaperQA2 requires LLM and embedding provider, but there is no key.
+   does not exist. Even if a key is created, the body of the paper is exported as an external model, so according to AGENTS Section 5
+   Explicit approval for each execution comes first.
+2. **No corpus.** Since there is only one preserved paper, “in-depth inquiry” comparison is not possible.
 
-따라서 설치하지 않았고, 설치 절차도 만들지 않았다. 만들면 돌릴 수 없는 도구의
-사용법을 검증 없이 적어 두는 셈이다.
+Therefore, it was not installed and no installation procedure was created. A tool that cannot be returned once made
+This means writing down the usage instructions without verifying them.
 
-재검토 trigger: 사용자가 논문 corpus를 모으고 provider를 지정하며 외부 전송을
-승인할 때.
+Reexamination trigger: User collects paper corpus, specifies provider, and sends externally.
+When approving.
 
-## basic-memory — 파일럿 실행 결과 (미채택)
+## basic-memory — Pilot run results (not adopted)
 
-사용자가 corpus로 `vault/공부`를 지정해 실행했다. **원본이 아니라 scratch
-사본에서 돌렸고**, 그 판단이 결과를 갈랐다(아래 B2).
+The user specified `vault/공부` as the corpus and executed it. Not the original, but a scratch
+I ran it from a copy, and that decision decided the outcome (B2 below).
 
-### 실행 조건
+### execution conditions
 
-원본 `vault/공부`는 md 30개를 포함해 총 194개 파일이고, md 중 frontmatter는
-4개, 위키링크는 4개뿐이다. 즉 이 하네스의 노트 계약을 따르지 않은 레거시
-corpus다. 파일럿 후 원본을 재확인한 결과 `permalink` 삽입 0건, frontmatter
-여전히 4개로 **완전히 무오염**이다.
+The original `vault/공부` is a total of 194 files, including 30 mds, and among the mds, frontmatter is
+There are 4, and there are only 4 wiki links. That is, a legacy that does not follow the note contract of this harness.
+It is a corpus. After re-checking the original after the pilot, `permalink` insertion was 0, frontmatter
+There are still 4 of them and they are **completely pollution free**.
 
-### B1. 설치 이식성 — 3회 시도
+### B1. Installation portability — 3 attempts
 
-`uv tool install basic-memory`가 만든 venv의 Python 3.12.4가
-`sqlite3.enable_load_extension`을 지원하지 않아 프로젝트 등록조차 실패했다
+Python 3.12.4 of venv created by `uv tool install basic-memory` is
+Even project registration failed because `sqlite3.enable_load_extension` is not supported.
 (`'sqlite3.Connection' object has no attribute 'enable_load_extension'`).
-Python 3.11은 버전 요구를 못 맞추고(0.14.0b1 프리릴리스만 해당),
-`--python /opt/homebrew/bin/python3`(3.14.6)을 명시해 재설치한 뒤에야 동작했다.
-설치처의 Python 빌드에 따라 갈리는 의존이며, 기준선은 표준 라이브러리만 쓴다.
+Python 3.11 does not meet version requirements (0.14.0b1 prerelease only),
+It worked only after specifying and reinstalling `--python /opt/homebrew/bin/python3` (3.14.6).
+It depends on the Python build of the installer, and the baseline uses only the standard library.
 
-### B2. 색인이 노트를 수정한다 — 결정적 사유
+### B2. Index Modifies Notes — Crucial Reason
 
-`reindex`(103초, 190 entity)가 **마크다운 30개를 전부 수정**했다. 각 파일 앞에
-frontmatter를 새로 써넣는다:
+`reindex` (103 seconds, 190 entity) **edited all 30 markdowns**. before each file
+Rewrite frontmatter:
 
 ```yaml
 ---
@@ -73,80 +73,80 @@ permalink: study-pilot/docker/myeongryeongeo
 ---
 ```
 
-한글 제목이 로마자 permalink로 변환된다. 검색은 색인을 전제하고 색인은 쓰기를
-수반하므로, **검색을 쓰면서 원본을 안 건드리는 모드가 없다.** 이는 이 파일럿의
-전제("자동 write 금지, 원본 hash 확인")를 구조적으로 충족할 수 없다는 뜻이다.
+Korean titles are converted to Roman permalinks. Search presupposes an index, and an index presupposes writing.
+Therefore, **there is no mode that does not touch the original while using a search.** This means that this pilot
+This means that the premise (“prohibit automatic writing, check original hash”) cannot be structurally met.
 
-원본에 바로 돌렸다면 Google Drive의 개인 노트 30개가 수정됐을 것이다.
+If you went directly to the original, 30 personal notes in Google Drive would have been modified.
 
-### B3. 외부 전송은 없다 — 확인
+### B3. There are no external transfers — OK
 
-임베딩은 로컬 `fastembed`/`bge-small-en-v1.5`이고 `cloud_api_key: None`이다.
-AGENTS 5절 위반은 없었다. 다만 **영어 모델을 한국어 corpus에 쓴다**는 점은
-검색 품질의 한계로 남는다.
+The embeddings are local `fastembed`/`bge-small-en-v1.5` and `cloud_api_key: None`.
+There was no violation of AGENTS Section 5. However, **the English model is used in the Korean corpus**
+This remains a limitation in search quality.
 
-### B4. 검색은 실제로 쓸모 있다
+### B4. Search is actually useful
 
-사전에 작성한 질문으로 관련 문서를 찾아낸다: `GitOps` →
+Find related documents using pre-written questions: `GitOps` →
 `04-ci-cd-gitops`(score 0.845), `MSA` → `msa-communication`, `FastAPI` →
-`fast-api`. 폴더가 다른 동명 파일도 namespace가 붙은 permalink로 구분한다.
+`fast-api`. Files with the same name in different folders are also distinguished by permalinks with namespace.
 
-버그 하나: 응답의 `total` 필드가 `results`에 10건이 있어도 `0`이다. 수치를
-그대로 믿으면 안 된다.
+One bug: The `total` field in the response is `0` even if there are 10 entries in `results`. Shame
+You shouldn't believe it as it is.
 
-### B5. 기준선은 이 corpus에서 아예 실패한다
+### B5. The baseline fails outright in this corpus.
 
-결정적 그래프는 `Docker/명령어.md`와 `Kubernetes/명령어.md`의 **중복 제목으로
-하드 실패**해 그래프를 만들지 못한다. 하나를 지우고 재실행하면 29개 노트에서
-엣지 6개, **깨진 링크 52개, 고아 23개**가 나온다(0.19초).
+The deterministic graphs have duplicate titles of `Docker/명령어.md` and `Kubernetes/명령어.md`.
+A hard failure occurs and the graph cannot be created. If you delete one and run it again, it will be deleted from 29 notes.
+There are 6 edges, **52 broken links, and 23 orphans** (0.19 seconds).
 
-이는 기준선의 결함이 아니라 **적용 범위**다. 위키링크와 frontmatter로 큐레이션된
-`wiki/`를 위해 만들어졌고, 그 규약을 따르지 않는 레거시 노트에서는 구조를 찾을
-것이 없다. 반대로 basic-memory는 그런 corpus에서 검색을 제공한다.
+This is not a flaw in the baseline, but **scope**. Curated by wikilink and frontmatter
+It was created for `wiki/`, and the structure cannot be found in legacy notes that do not follow its conventions.
+There is nothing. In contrast, basic-memory provides searching in such a corpus.
 
-### 판정
+### verdict
 
-**둘은 경쟁 관계가 아니다.** 기준선은 큐레이션된 노트의 구조를 결정적으로
-측정하고, basic-memory는 큐레이션되지 않은 더미에서 검색을 제공한다.
+**The two are not in competition.** The baseline determines the structure of the curated notes.
+Measure, basic-memory provides search in uncurated piles.
 
-지금 채택하지 않는 이유는 검색 품질이 아니라 **소유권**이다. basic-memory는
-노트의 frontmatter를 자기 것으로 삼는다. 그 대가를 치를지는 사용자의 결정이지
-숨길 사항이 아니다 — 치르기로 한다면 레거시 노트 검색 도구로 유효하다.
+The reason for not adopting now is **ownership**, not search quality. basic-memory is
+Make the frontmatter of the note your own. It's up to the user to decide whether to pay that price.
+It's nothing to hide - it's a useful legacy note search tool if you decide to use it.
 
-### 재검토 trigger
+### Reexamination trigger
 
-- 사용자가 "레거시 노트를 검색하고 싶고 frontmatter가 바뀌어도 좋다"고 결정할 때.
-  그 경우 대상은 `wiki/`가 아니라 레거시 디렉터리로 한정한다.
-- basic-memory가 원본을 수정하지 않는 읽기 전용 색인 모드를 제공할 때.
+- When the user decides, "I want to retrieve legacy notes and I don't mind if the frontmatter changes."
+  In that case, the target is limited to the legacy directory, not `wiki/`.
+- When basic-memory provides a read-only indexing mode that does not modify the original.
 
-## 미리 만든 것 — 파일럿 하네스
+## Premade — pilot harness
 
-corpus가 정해지면 바로 돌릴 수 있도록, corpus와 무관하게 유효한 부분을 먼저
-구현했다: `.agents/skills/knowledge-graph/scripts/pilot.py`.
+In order to be able to run immediately once the corpus is determined, the valid parts regardless of the corpus are first
+Implemented: `.agents/skills/knowledge-graph/scripts/pilot.py`.
 
-- 실행 전후로 corpus의 모든 Markdown을 SHA-256으로 스냅샷하고, **하나라도
-  추가·삭제·수정되면 후보를 실격**시킨다. 후보가 무엇을 보고했든 무관하다.
-- `write`·`format`·`reset`·`sync` 같은 세그먼트를 가진 명령은 **실행 전에**
-  거부한다. 하이픈 단위로 보므로 `write-note`는 잡히고 `format` 안의 `rm`에는
-  오탐하지 않는다.
-- 결정적 기준선(노드·엣지·누락·고아·런타임)을 측정해 같은 표에 놓는다.
-- **후보 명령은 인자로 받는다.** 설치해서 help를 읽어보지 않은 CLI의 명령줄을
-  기억으로 적지 않는다 — 이 하네스가 다른 곳에서 금지하는 바로 그 미검증
-  주장이기 때문이다.
+- Snapshot all Markdowns in the corpus as SHA-256 before and after execution, even if only one
+  If additions, deletions or modifications are made, the candidate will be disqualified. It is irrelevant what the candidate reported.
+- Instructions with segments such as `write`·`format`·`reset`·`sync` are **before execution**
+  I refuse. Since it is viewed in hyphen units, `write-note` is caught, and `rm` in `format` is
+  No false positives.
+- Deterministic baselines (nodes, edges, missing, orphans, runtime) are measured and placed in the same table.
+- **Candidate commands are received as arguments.** The command line of the CLI that has not been installed and has not read the help
+  Don't write it down from memory — the very unverification that this harness prohibits elsewhere.
+  Because it is a claim.
 
-각 불변식은 뮤테이션으로 실효성을 확인했다(변경 감지·사전 차단·추가/삭제
-감지·임시 산출물 정리).
+The effectiveness of each invariant was confirmed through mutation (change detection, pre-blocking, addition/deletion)
+Detection/Temporary output organization).
 
-## 설치 상태
+## installation status
 
-`basic-memory` 0.22.1이 이 머신에 설치돼 있다(`uv tool`, Homebrew Python 3.14).
-파일럿 프로젝트 등록은 해제했고 기본 프로젝트는 `main`으로 되돌렸다. 채택하지
-않았으므로 하네스는 이 도구를 호출하지 않는다. 필요 없으면
-`uv tool uninstall basic-memory`로 제거해도 무방하다.
+`basic-memory` 0.22.1 is installed on this machine (`uv tool`, Homebrew Python 3.14).
+The pilot project registration was canceled and the default project was returned to `main`. not adopted
+Since it is not used, harness does not call this tool. If you don't need it
+It is okay to remove it with `uv tool uninstall basic-memory`.
 
-## 변경 이력
+## Change history
 
-| 날짜 | 변경 내용 | 사유 |
+| date | Changes | reason |
 |---|---|---|
-| 2026-07-25 | 전제 실측·판정 기록, 파일럿 하네스 구현 | Phase 2c 진행 요청 — 두 도구 모두 전제 미충족으로 실행 불가임을 확인하고, corpus와 무관하게 유효한 안전 장치를 먼저 구현 |
-| 2026-07-25 | basic-memory 파일럿 실행·미채택 판정 | 사용자가 `vault/공부`를 corpus로 지정. scratch 사본에서 실행한 결과 색인이 마크다운 30개를 전부 수정함을 확인 — 읽기 전용 전제를 구조적으로 충족 불가. 검색 자체는 유효하고 외부 전송은 없음 |
+| 2026-07-25 | Premise measurement/judgment record, pilot harness implementation | Request to proceed with Phase 2c — Confirm that both tools cannot be implemented due to unmet prerequisites, and first implement effective safety devices regardless of corpus |
+| 2026-07-25 | basic-memory pilot execution/non-adoption decision | User specifies `vault/공부` as corpus. When run on a copy of scratch, we see that the index modifies all 30 markdowns — the read-only premise is structurally unsatisfactory. The search itself is valid, no external transmission |

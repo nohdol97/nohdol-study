@@ -1,34 +1,34 @@
-# 자동 복구 dry-run과 rollback 판정 실습
+# Automatic recovery dry-run and rollback judgment lab
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-이 실습은 실제 cluster나 cloud resource를 변경하지 않는 **Plan only** 등급이다. 제공된 remediation proposal을 검토해 실행을 승인할 수 있는지 판정한다. `kubectl`이나 credential은 필요 없다. 실제 업무에서는 dry-run 명령이 있어도 외부 database·traffic·사용자 결과까지 검증하지 못하므로, 실행 전 계획 검토와 실행 후 outcome verification을 모두 설계해야 한다.
+This lab is a **Plan only** grade that does not change the actual cluster or cloud resources. Review the provided remediation proposal to determine whether implementation can be approved. There is no need for `kubectl` or credentials. In actual work, even if there is a dry-run command, external database, traffic, and user results cannot be verified, so both plan review before execution and outcome verification after execution must be designed.
 
-| 준비 항목 | 값 |
+| Preparation items | value |
 |---|---|
-| 입력 | 합성 incident bundle과 rollback proposal |
-| 실행 | 없음 |
-| 출력 | 승인·거절·보강 요청 중 하나와 이유 |
-| 중단 조건 | target·previous revision·blast radius·abort 중 하나라도 불명 |
-| cleanup | 없음 |
+| input | Synthetic incident bundle and rollback proposal |
+| execution | doesn't exist |
+| output of power | One of approval/rejection/reinforcement requests and reason |
+| stopping condition | Any one of target·previous revision·blast radius·abort is unknown |
+| cleanup | doesn't exist |
 
-## 먼저 이해하기
+## Understand the model first
 
-dry-run은 대상을 바꾸지 않고 API validation이나 diff를 확인한다. 이것은 중요한 gate지만, runbook의 업무 안전성을 증명하지 않는다. 예를 들어 Deployment rollback plan이 문법상 유효해도 이전 version이 현재 database schema와 호환되지 않을 수 있다. 또한 plan이 안전해도 incident가 이미 회복됐거나 evidence가 오래됐다면 실행하면 안 된다.
+Dry-run checks API validation or diff without changing the target. Although this is an important gate, it does not prove the operational safety of the runbook. For example, even if the deployment rollback plan is syntactically valid, the previous version may not be compatible with the current database schema. Also, even if the plan is safe, it should not be implemented if the incident has already been recovered or the evidence is old.
 
 ```mermaid
 flowchart TB
   P["Remediation proposal"] --> F["Evidence freshness"]
-  F --> T["Target과 current state"]
-  T --> S["Scope와 권한"]
-  S --> A["Abort와 rollback"]
+  F --> T[“Target and current state”]
+  T --> S[“Scope and Authority”]
+  S --> A[“Abort and rollback”]
   A --> V["Outcome verification"]
-  V --> D{"승인 가능한가?"}
-  D -->|"아니오"| R["거절 또는 보강"]
-  D -->|"예"| C["제한 cohort 실행 계획"]
+  V --> D{“Can it be approved?”}
+  D -->|"no"| R[“Reject or Reinforce”]
+  D -->|"yes"| C[“Limited cohort execution plan”]
 ```
 
-## incident 입력
+## Enter incident
 
 ```json
 {
@@ -45,9 +45,9 @@ flowchart TB
 }
 ```
 
-후보는 확정 원인이 아니다. 그래도 사용자 영향이 크고 최근 release와 강한 cohort 차이가 있다면 generic mitigation으로 rollback을 검토할 수 있다. Google SRE incident 사례는 root cause를 완전히 알기 전 recent release rollback이나 region traffic reconfiguration 같은 일반 완화가 사용자 피해를 줄일 수 있지만, blunt instrument라 다른 disruption을 만들 수 있다고 설명한다.
+A candidate is not a confirmed cause. Still, if the user impact is large and there is a strong cohort difference from the recent release, rollback can be considered as a generic mitigation. The Google SRE incident case explains that although general mitigations such as recent release rollback or region traffic reconfiguration before the root cause is fully known can reduce user damage, it is a blunt instrument and can cause other disruptions.
 
-## 첫 proposal — 거절해야 하는 계획
+## First proposal — a plan that should be rejected
 
 ```yaml
 operation: rollback
@@ -57,21 +57,21 @@ reason: AI confidence 0.94
 verify: kubectl rollout status
 ```
 
-| 빠진 항목 | 왜 필요한가 |
+| missing item | why you need it |
 |---|---|
-| namespace·region·cluster | 같은 이름 target 오인 방지 |
-| current revision precondition | 이미 다른 version이면 stale plan 실행 방지 |
-| plan·runbook revision | 승인 뒤 내용 변경 방지 |
-| idempotency key | timeout·중복 요청의 단일 operation 수렴 |
-| blast radius | 전 region 동시 변경 방지 |
-| database compatibility | v17이 현재 schema에서 동작하는지 확인 |
-| abort condition | rollback이 더 악화될 때 중단 |
-| 사용자·dependency verification | rollout 성공과 서비스 회복 구분 |
-| rollback의 rollback·escalation | v17도 실패할 때 안전 경로 |
+| namespace·region·cluster | Prevent misidentification of same name target |
+| current revision precondition | Prevent execution of stale plan if it is already a different version. |
+| plan·runbook revision | Prevent content changes after approval |
+| idempotency key | Timeout and single operation convergence of duplicate requests |
+| blast radius | Prevent simultaneous changes across all regions |
+| database compatibility | Check if v17 works with current schema |
+| abort condition | Stop when rollback gets worse |
+| User/dependency verification | Distinguish between rollout success and service recovery |
+| rollback·escalation of rollback | Safe path when v17 also fails |
 
-`AI confidence 0.94`는 평가된 calibration과 evidence coverage가 없으면 실행 근거가 아니다. 후보가 틀릴 수 있을 뿐 아니라 후보가 맞아도 rollback action이 안전하지 않을 수 있다. 이 proposal은 **거절 후 보강**이 맞다.
+`AI confidence 0.94` is not performance evidence without evaluated calibration and evidence coverage. Not only can the candidate be wrong, but even if the candidate is correct, rollback action may not be safe. This proposal is **rejected and then reinforced**.
 
-## 두 번째 proposal — 제한된 승인 검토
+## Second proposal — limited approval review
 
 ```yaml
 operationId: op-inc-checkout-001-rollback-v17
@@ -101,47 +101,47 @@ verify:
 expiresAt: 2026-09-03T01:20:00Z
 ```
 
-이 proposal은 검토 가능한 수준으로 좋아졌지만 자동 승인이라는 뜻은 아니다. 실제 current state 조회, approval identity와 실행 권한, canary가 정말 5% traffic만 받는지 확인해야 한다. `databaseCompatibilityCheck`의 receipt가 어떤 schema·test를 썼는지도 열어야 한다.
+This proposal has improved to a reviewable level, but this does not mean it will be automatically approved. You need to check the actual current state, approval identity and execution permission, and check whether the canary really receives only 5% of traffic. You must also open what schema·test was used for the receipt of `databaseCompatibilityCheck`.
 
-## 판정 절차
+## Judgment Procedure
 
-1. incident evidence가 만료되지 않았고 사용자 영향이 계속되는지 확인한다.
-2. target의 실제 current revision이 plan precondition과 같은지 read-only 조회한다.
-3. previous revision과 외부 dependency가 함께 호환되는지 receipt를 확인한다.
-4. executor identity가 이 namespace·resource·operation에만 권한을 갖는지 확인한다.
-5. 5% canary가 다른 controller에 의해 즉시 100%로 확대되지 않는지 확인한다.
-6. abort query가 action 전 baseline과 같은 정의·window를 쓰는지 확인한다.
-7. action timeout이면 재실행 전에 operation과 target을 reconcile하도록 한다.
-8. 성공 뒤 사용자 결과, dependency saturation과 업무 중복을 모두 확인한다.
+1. Verify that incident evidence has not expired and user impact continues.
+2. Read-only checks whether the actual current revision of the target is the same as the plan precondition.
+3. Check receipt to see if previous revision and external dependency are compatible.
+4. Check whether the executor identity has permission only for this namespace·resource·operation.
+5. Ensure that the 5% canary is not immediately expanded to 100% by another controller.
+6. Check whether the abort query uses the same definition/window as the baseline before the action.
+7. If the action is timeout, reconcile the operation and target before re-executing.
+8. After success, check all user results, dependency saturation, and work duplication.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-| 결과 | 판정 | 후속 |
+| result | verdict | follow up |
 |---|---|---|
-| plan validation 실패 | 실행 불가 | target schema·field 수정 |
-| current revision 불일치 | stale plan | 새 상태로 plan 재생성·재승인 |
-| canary 오류율 개선, DB 안정 | 확대 후보 | 별도 승급 gate와 관찰 window |
-| canary 오류율 악화 | abort | 이전 상태 복원·사람 escalation |
-| rollout complete, 사용자 오류 지속 | action 무효 | 원인 후보 재평가 |
-| 사용자 회복, DB pending 증가 | 숨은 부작용 | 확대 금지·dependency 보호 |
-| executor timeout | 결과 불명 | actual state reconciliation 후 전이 |
+| plan validation failed | not executable | Edit target schema·field |
+| current revision mismatch | stale plan | Regenerate/reapproval plan in new state |
+| Improved canary error rate, DB stabilization | expanded candidate | Separate promotion gate and observation window |
+| Canary error rate worsens | abort | Previous state restoration/person escalation |
+| rollout complete, user error persists | action invalid | Reassessment of causative candidates |
+| User recovery, DB pending increase | hidden side effects | Prohibit expansion/dependency protection |
+| executor timeout | result unknown | Transfer after actual state reconciliation |
 
-Kubernetes Deployment의 rollback과 rollout status는 Pod template revision과 availability를 다룬다. 이 실습의 사용자 SLI, DB pending과 중복 결제 확인은 그 API가 대신하지 않는다. AIOps는 여러 증거를 연결할 수 있지만 각 증거가 무엇을 보장하는지 경계를 유지해야 한다.
+Kubernetes Deployment’s rollback and rollout status deals with Pod template revision and availability. The API does not replace user SLI, DB pending, and duplicate payment confirmation in this lab. AIOps can connect multiple pieces of evidence, but must remain vigilant about what each piece of evidence warrants.
 
-## 완료
+## Completion criteria
 
-- 첫 proposal을 confidence 숫자에 끌려 승인하지 않았다.
-- 두 번째 proposal의 target·scope·precondition·abort·verification을 검토했다.
-- dry-run, commit과 outcome verification을 구분했다.
-- result unknown 상태에서 blind retry를 금지했다.
-- 성공·실패 결과를 [incident bundle](../aiops-foundations/02-incident-bundle-contract-lab.md)의 label과 runbook evaluation으로 되돌릴 항목을 정했다.
+- I did not approve the first proposal because I was drawn to the confidence number.
+- We reviewed the target·scope·precondition·abort·verification of the second proposal.
+- Dry-run, commit and outcome verification were distinguished.
+- Blind retry is prohibited when the result is unknown.
+- I decided on the items to return the success/failure results to the label and runbook evaluation of [incident bundle](../aiops-foundations/02-incident-bundle-contract-lab.md).
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- 두 번째 proposal이 첫 번째보다 안전하지만 여전히 실행 전 확인이 필요한 이유는 무엇인가?
-- canary success 뒤 자동으로 100% 확대하지 않으려면 어떤 추가 gate가 필요한가?
-- rollback이 사용자 증상을 완화했지만 root cause를 확정하지 못하는 이유는 무엇인가?
-- 반복 성공한 runbook을 auto-run으로 승급할 때 false positive action 비용을 어떻게 평가할 것인가?
+- Why is the second proposal more secure than the first, but still requires confirmation before execution?
+- What additional gate is needed to not automatically zoom to 100% after canary success?
+- Why does rollback relieve user symptoms but not determine the root cause?
+- How to evaluate the cost of false positive actions when promoting a repeatable successful runbook to auto-run?
 
 <!-- source: https://sre.google/workbook/incident-response/ | checked: 2026-09-03 -->
 <!-- source: https://sre.google/sre-book/automation-at-google/ | checked: 2026-09-03 -->

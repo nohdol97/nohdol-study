@@ -1,38 +1,38 @@
-# 계층별 장애 분리 실습
+# Fault separation lab by layer
 
-> 실습 등급: **Local**. `tcpdump`만 packet capture 권한이 필요하며 나머지는 일반 사용자로 실행할 수 있다.
+> lab level: **Local**. Only `tcpdump` requires packet capture authority; the rest can be run as regular users.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-- **환경**: 인터넷에 접속할 수 있는 Linux 또는 macOS terminal을 사용한다.
-- **도구**: `dig`, `curl`, `openssl`이 필요하다. Linux의 route·socket 확인에는 `ip`와 `ss`를 사용한다.
-- **대상**: 처음에는 본인이 운영하지 않는 production 주소 대신 `example.com`과 예약된 `.invalid` 이름을 사용한다.
-- **기록**: 각 명령마다 `성공/실패`, 마지막으로 성공한 단계, 다음에 확인할 항목을 한 줄씩 적는다.
-- **정리**: 이 기본 실습은 resource를 만들지 않는다. 선택적인 Kubernetes test Pod를 만들었다면 명령의 `--rm` 동작으로 삭제됐는지 확인한다.
+- **Environment**: Use a Linux or macOS terminal that can access the Internet.
+- **Tools**: Requires `dig`, `curl`, `openssl`. To check the route/socket of Linux, `ip` and `ss` are used.
+- **Target**: Initially, use the names `example.com` and reserved `.invalid` instead of the production address, which you do not operate.
+- **Record**: For each command, write `success/failure`, the last successful step, and the next item to be checked one line at a time.
+- **Cleanup**: This basic lab does not create resources. If you created an optional Kubernetes test Pod, check whether it has been deleted using the `--rm` action in the command.
 
-macOS에는 기본적으로 Linux의 `ip`, `ss`가 없다. 이 경우 route 확인은 `route -n get 1.1.1.1`, listening port 확인은 `lsof -nP -iTCP -sTCP:LISTEN`으로 바꾸고, 출력 항목이 완전히 같지는 않다는 점을 기록한다.
+macOS does not have Linux's `ip` and `ss` by default. In this case, change route confirmation to `route -n get 1.1.1.1` and listening port confirmation to `lsof -nP -iTCP -sTCP:LISTEN`, and record that the output items are not completely the same.
 
-## 먼저 이해하기
+## Understand the model first
 
-이 실습의 목적은 많은 network 명령을 실행하는 것이 아니라 실패 지점을 이분하는 것이다. 매 단계에서 “여기까지는 성공했는가?”를 묻고, 성공한 계층보다 아래를 다시 조사하지 않는다.
+The purpose of this lab is not to run a bunch of network commands, but to isolate points of failure. At every step, we ask, “Have we succeeded up to this point?” and do not investigate further below the level of success.
 
-예를 들어 DNS가 올바른 address를 반환하고 TCP probe가 연결 성공을 보여 줬다면 basic name resolution과 TCP 443 path는 작동한다. 이후 `curl`이 certificate error를 낸다면 문제 범위는 TLS identity로 좁아진다. 반대로 TCP가 timeout이면 HTTP status를 논할 단계가 아니다.
+For example, if DNS returns the correct address and the TCP probe shows a successful connection, basic name resolution and TCP 443 path will work. Afterwards, if `curl` generates a certificate error, the scope of the problem is narrowed to TLS identity. Conversely, if TCP is timeout, it is not the stage to discuss HTTP status.
 
-| 확인 순서 | 사용할 증거 | 성공 기준 | 실패 시 다음 조사 |
+| Confirmation order | evidence to use | success criteria | Next investigation in case of failure |
 |---:|---|---|---|
-| 1 | `dig` 또는 `nslookup` | 예상 resolver와 address | record·resolver·search domain |
-| 2 | route 조회 | 예상 interface·next hop | local route·VPN·NAT |
-| 3 | TCP probe | connect 또는 명시적 refuse | firewall·listener·return path |
-| 4 | `openssl s_client` | hostname과 chain 검증 | certificate·SNI·clock·trust store |
-| 5 | `curl -v` | 기대한 status와 body | proxy·backend·application |
+| 1 | `dig` or `nslookup` | Expected resolver and address | record·resolver·search domain |
+| 2 | route lookup | Expected interface·next hop | local route·VPN·NAT |
+| 3 | TCP probe | connect or explicitly refuse | firewall·listener·return path |
+| 4 | `openssl s_client` | Hostname and chain verification | certificate·SNI·clock·trust store |
+| 5 | `curl -v` | Expected status and body | proxy·backend·application |
 
-## 목표
+## Goal
 
-URL 하나를 같은 명령으로 반복 호출하지 않고 DNS, route, TCP, TLS, HTTP 증거로 나눈다.
+Instead of repeatedly calling a single URL with the same command, divide it into DNS, route, TCP, TLS, and HTTP evidence.
 
-## 1. 정상 기준 만들기
+## 1. Creating a normal baseline
 
-공개 대상 대신 자신이 운영하거나 실습용으로 허용된 hostname을 사용한다.
+Instead of a public target, use a hostname that you operate or is permitted for lab use.
 
 ```bash
 target_host="example.com"
@@ -44,17 +44,17 @@ curl -sSvo /dev/null --connect-timeout 3 --max-time 8 "$target_url"
 openssl s_client -connect "${target_host}:443" -servername "$target_host" </dev/null
 ```
 
-기록할 값은 answer와 TTL, 선택 route, remote IP, TLS subject·issuer·검증 결과, HTTP status와 전체 시간이다. 공개 사이트를 과도하게 반복 호출하지 않는다.
+The values ​​to be recorded are answer, TTL, selected route, remote IP, TLS subject·issuer·verification result, HTTP status, and total time. Do not make excessive repeated calls to public sites.
 
-## 2. 실패 모양 비교
+## 2. Comparison of failure shapes
 
-### DNS 실패
+### DNS failure
 
 ```bash
 dig +noall +answer does-not-exist.invalid A
 ```
 
-`.invalid`는 이름 해석 실패 실습용으로 예약된 top-level domain이다. answer가 없다는 사실과 resolver가 반환한 status를 본다.
+`.invalid` is a top-level domain reserved for name resolution failure lab. Look at the fact that there is no answer and the status returned by the resolver.
 
 ### TCP refused
 
@@ -63,30 +63,30 @@ curl -v --connect-timeout 2 http://127.0.0.1:65535/
 ss -ltn | grep ':65535' || true
 ```
 
-local에서 listener가 없으면 일반적으로 즉시 거절된다. 반면 packet이 중간에서 버려지면 connect timeout으로 보일 수 있다.
+If there is no listener locally, it is generally rejected immediately. On the other hand, if the packet is discarded in the middle, it may appear as a connect timeout.
 
-### TLS 이름 불일치 관찰
+### Observe TLS name mismatch
 
 ```bash
 openssl s_client -connect example.com:443 -servername wrong.invalid </dev/null
 ```
 
-이 명령은 handshake 자료를 보여 주는 진단 도구다. application client가 hostname 검증을 강제하는 것과 동일한 성공 판정으로 취급하지 않는다. `curl`의 기본 certificate 검증을 끄는 `-k`를 복구 방법으로 쓰지 않는다.
+This command is a diagnostic tool that displays handshake data. It is not treated as the same success decision as the application client forcing hostname verification. Do not use `-k` as a recovery method by turning off the basic certificate verification of `curl`.
 
 ```mermaid
 flowchart TD
-    A[요청 실패] --> B{DNS answer가 있는가?}
-    B -->|아니오| C[resolver·record·TTL 확인]
-    B -->|예| D{TCP가 연결되는가?}
-    D -->|아니오| E[route·listener·firewall 확인]
-    D -->|예| F{TLS 검증 성공?}
-    F -->|아니오| G[SNI·hostname·chain·시간 확인]
-    F -->|예| H{HTTP 응답?}
-    H -->|아니오| I[deadline·proxy·backend 확인]
-    H -->|예| J[status와 application log 상관]
+    A[request failed] --> B{Is there a DNS answer?}
+    B -->|No| C[Check resolver·record·TTL]
+    B -->|Yes| D{Is TCP connected?}
+    D -->|No| E[Check route·listener·firewall]
+    D -->|Yes| F{TLS verification successful?}
+    F -->|No| G[Check SNI·hostname·chain·time]
+    F -->|Yes| H{HTTP response?}
+    H -->|No| I[Check deadline·proxy·backend]
+    H -->|Yes| J[Correlation between status and application log]
 ```
 
-## Kubernetes 확장
+## Kubernetes extensions
 
 ```bash
 kubectl get service,endpointslice -A
@@ -96,30 +96,30 @@ kubectl run netcheck --rm -it --restart=Never --image=curlimages/curl -- \
   curl -sv --max-time 5 http://sample.default.svc.cluster.local/
 ```
 
-이미지 pull이라는 별도 외부 dependency가 있으므로 Pod 생성 실패를 service network 실패로 오해하지 않는다. 먼저 `kubectl get pod`와 event를 확인한다.
+Since there is a separate external dependency called image pull, pod creation failure should not be misunderstood as a service network failure. First, check `kubectl get pod` and event.
 
-## incident 기록 형식
+## incident record format
 
-| 시각 | 계층 | 관찰 | 판정 |
+| time | hierarchy | observation | verdict |
 |---|---|---|---|
-| T0 | DNS | answer와 TTL | 이름 해석 성공/실패 |
-| T1 | TCP | remote IP, connect 결과 | path·listener 후보 |
-| T2 | TLS | SNI, certificate 검증 | identity 성공/실패 |
-| T3 | HTTP | status, latency | proxy/backend 후보 |
+| T0 | DNS | answer and TTL | Name resolution success/failure |
+| T1 | TCP | remote IP, connect result | path·listener candidate |
+| T2 | TLS | SNI, certificate verification | identity success/failure |
+| T3 | HTTP | status, latency | proxy/backend candidates |
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-`connection refused`는 destination까지 packet이 갔고 해당 port를 받아 줄 listener가 없거나 명시적으로 거부됐을 가능성을 보여 준다. `timeout`은 packet drop, 잘못된 route, return path, stateful policy 등 더 넓은 범위를 남긴다. 두 결과를 같은 “연결 실패”로 처리하면 조사 순서가 흐려진다.
+`connection refused` shows the possibility that the packet has reached its destination and there is no listener to receive the port, or it has been explicitly rejected. `timeout` leaves a wider range such as packet drop, wrong route, return path, and stateful policy. Treating both results as the same “connection failure” confuses the order of investigation.
 
-TLS에서 certificate를 받았다는 사실만으로 검증이 끝나지 않는다. 요청 hostname과 Subject Alternative Name, 유효 기간, issuer chain과 client trust를 확인한다. `-k`로 검증을 끈 curl 성공은 암호화된 연결 가능성을 볼 뿐 production identity 검증 성공을 증명하지 않는다.
+Verification does not end with the mere fact that a certificate has been received from TLS. Check the request hostname, Subject Alternative Name, validity period, issuer chain, and client trust. A successful curl with verification turned off with `-k` only shows the possibility of an encrypted connection and does not prove the success of production identity verification.
 
-HTTP status가 보이면 그 응답을 누가 만들었는지 확인한다. proxy, load balancer와 application이 모두 status를 만들 수 있다. response header, request ID와 hop별 log timestamp를 연결하면 마지막으로 request를 본 component를 찾을 수 있다.
+If you see HTTP status, check who created the response. Proxies, load balancers, and applications can all create status. By connecting the response header, request ID, and log timestamp for each hop, you can find the component that last saw the request.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. `connection refused`가 firewall 차단보다 listener 부재를 먼저 의심하게 하는 이유는 무엇인가?
-2. `openssl s_client` 출력만 보고 application TLS 검증 성공을 선언하면 안 되는 이유는 무엇인가?
-3. Pod 안에서만 실패한다면 host와 비교할 DNS·route·policy 차이는 무엇인가?
+1. Why does `connection refused` suspect the absence of a listener before blocking the firewall?
+2. Why can't we declare application TLS verification successful by just looking at the `openssl s_client` output?
+3. If it fails only within the pod, what are the differences in DNS·route·policy compared to the host?
 
 <!-- source: https://datatracker.ietf.org/doc/html/rfc2606 | checked: 2026-09-03 -->
 <!-- source: https://datatracker.ietf.org/doc/html/rfc9293 | checked: 2026-09-03 -->

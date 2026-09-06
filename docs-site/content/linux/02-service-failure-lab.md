@@ -1,37 +1,37 @@
-# Service 장애 진단 실습
+# Service fault diagnosis lab
 
-> 실습 등급: **Local — Linux VM 또는 systemd가 실행되는 Linux host**. root 권한을 쓰는 단계는 임시 unit 생성과 삭제뿐이다.
+> lab class: **Local — Linux VM or Linux host** where systemd runs. The only steps using root authority are temporary unit creation and deletion.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-- **환경**: macOS가 아니라 systemd가 실행되는 disposable Linux VM을 사용한다. 운영 서버에서는 실행하지 않는다.
-- **도구**: `python3`, `curl`, `ss`, `systemctl`, `journalctl`이 필요하다.
-- **권한**: unit 파일을 만들고 지우는 단계에서만 `sudo`를 사용한다.
-- **터미널**: port를 차지한 process를 유지할 창과 진단 명령을 실행할 창, 두 개를 연다.
-- **만들 대상**: `/etc/systemd/system/infra-http.service` 한 파일과 임시 Python HTTP process다.
-- **끝난 상태**: unit 파일과 임시 process가 사라지고 `18080` port를 아무 process도 사용하지 않는다.
+- **Environment**: Use a disposable Linux VM running systemd, not macOS. It does not run on the operating server.
+- **Tools**: Requires `python3`, `curl`, `ss`, `systemctl`, `journalctl`.
+- **Permissions**: Use `sudo` only at the stage of creating and deleting unit files.
+- **Terminal**: Opens two windows: one to hold the process occupying the port and another to run diagnostic commands.
+- **What to create**: `/etc/systemd/system/infra-http.service` One file and a temporary Python HTTP process.
+- **Finished state**: The unit file and temporary process disappear and the `18080` port is not used by any process.
 
-명령어를 입력하기 전에 위 파일 경로가 실습 전에는 존재하지 않는지 확인한다. 이미 같은 이름의 unit이 있다면 이 실습을 중단하고 다른 VM을 사용한다.
+Before entering the command, check that the above file path does not exist before lab. If there is already a unit with the same name, stop this lab and use another VM.
 
-## 먼저 이해하기
+## Understand the model first
 
-이 실습은 일부러 두 process가 같은 port를 가지려고 경쟁하게 만든다. TCP listener는 IP address와 port 조합에 bind된다. 첫 번째 Python process가 `127.0.0.1:18080`을 차지한 상태에서 systemd가 두 번째 process를 시작하면 새 process는 socket을 만들지 못하고 종료한다. systemd의 `failed`, journal의 bind error, `ss`에 보이는 기존 PID는 같은 사건을 서로 다른 관점에서 보여 준다.
+This lab intentionally makes two processes compete for the same port. A TCP listener is bound to an IP address and port combination. If systemd starts a second process while the first Python process occupies `127.0.0.1:18080`, the new process terminates without creating a socket. The existing PIDs shown in systemd's `failed`, journal's bind error, and `ss` show the same event from different perspectives.
 
-| 관찰 | 답하는 질문 | 답하지 못하는 질문 |
+| observation | question to answer | unanswerable question |
 |---|---|---|
-| unit `active` | manager가 main process를 실행 중인가? | 올바른 port에서 정상 응답하는가? |
-| listening socket | kernel이 어느 process에 address를 할당했는가? | HTTP handler가 정상인가? |
-| `curl` 성공 | 이 client 위치에서 요청·응답이 끝났는가? | 다른 network 위치에서도 접근 가능한가? |
+| unit `active` | Is the manager running the main process? | Does it respond normally from the correct port? |
+| listening socket | Which process did the kernel assign the address to? | Is the HTTP handler normal? |
+| `curl` Success | Has the request/response been completed at this client location? | Is it accessible from other network locations? |
 
-세 관찰을 모두 정상 기준으로 만든 뒤 장애를 주입한다. 그래야 실패 후 무엇이 달라졌는지 비교할 수 있다.
+All three observations are set to normal standards and then a disorder is injected. That way, you can compare what has changed after failure.
 
-## 목표
+## Goal
 
-정상 service의 unit·PID·socket·log 기준을 기록한 뒤 port 충돌을 만들어 `failed`라는 결과가 아니라 실패 원인을 찾는다.
+After recording the unit·PID·socket·log standards of normal service, create a port conflict and find the cause of failure, not the result of `failed`.
 
-## 1. 임시 service 만들기
+## 1. Create a temporary service
 
-다음 unit은 loopback의 18080 port에서 정적 HTTP server를 실행한다.
+The next unit runs a static HTTP server on port 18080 of loopback.
 
 ```ini
 # /etc/systemd/system/infra-http.service
@@ -58,21 +58,21 @@ systemctl show infra-http -p MainPID -p ControlGroup -p MemoryCurrent
 ss -ltnp | grep ':18080'
 ```
 
-완료 기준은 네 가지다.
+There are four completion criteria.
 
-- unit이 `active`다.
-- `MainPID`가 0이 아니다.
-- `127.0.0.1:18080`에 listening socket이 있다.
-- HTTP 요청이 성공한다.
+- The unit is `active`.
+- `MainPID` is not 0.
+- There is a listening socket in `127.0.0.1:18080`.
+- The HTTP request succeeds.
 
-## 2. port 충돌 만들기
+## 2. Create a port conflict
 
 ```bash
 sudo systemctl stop infra-http
 python3 -m http.server 18080 --bind 127.0.0.1
 ```
 
-위 foreground process를 유지한 다른 terminal에서 service를 시작한다.
+Start the service in another terminal that maintains the foreground process above.
 
 ```bash
 sudo systemctl start infra-http
@@ -83,19 +83,19 @@ ss -ltnp | grep ':18080'
 
 ```mermaid
 flowchart TD
-    A[service start 실패] --> B{unit log에 bind 오류가 있는가?}
-    B -->|예| C[같은 port의 listener 찾기]
-    B -->|아니오| D[ExecStart 경로·권한·환경 확인]
-    C --> E[소유 process와 의도 확인]
-    E --> F[충돌 process 종료 또는 port 변경]
-    F --> G[service 재시작과 HTTP 확인]
+    A[service start failed] --> B{Are there any bind errors in the unit log?}
+    B -->|Yes| C[Find a listener on the same port]
+    B -->|No| D[Check ExecStart path/permission/environment]
+    C --> E[Verification of ownership process and intent]
+    E --> F[Terminate conflicting process or change port]
+    F --> G[Restart service and check HTTP]
 ```
 
-핵심은 `curl` 실패를 곧바로 network 문제라고 부르지 않는 것이다. 이 경우 kernel은 이미 다른 process에 port를 할당했고 새 process의 bind를 거부한다. `journalctl`의 bind 오류와 `ss`의 기존 listener가 같은 원인을 가리켜야 한다.
+The key is not to immediately call the `curl` failure a network problem. In this case, the kernel has already assigned the port to another process and refuses to bind to the new process. The bind error of `journalctl` and the existing listener of `ss` must point to the same cause.
 
-## 3. 복구하고 증거 남기기
+## 3. Recover and leave evidence
 
-foreground server를 `Ctrl-C`로 종료한 뒤 다음을 실행한다.
+Shut down the foreground server as `Ctrl-C` and run the following.
 
 ```bash
 sudo systemctl reset-failed infra-http
@@ -104,11 +104,11 @@ systemctl is-active infra-http
 curl -i http://127.0.0.1:18080/
 ```
 
-incident 기록에는 증상, 최초 실패 시각, 기존 listener PID, 복구 동작과 마지막 성공 요청 시각을 남긴다.
+The incident record records symptoms, time of first failure, existing listener PID, recovery action, and time of last successful request.
 
-## resource pressure 확장 실습
+## resource pressure expansion lab
 
-`MemoryMax`를 무작정 낮춰 production process를 죽이지 않는다. 별도 VM에서만 test process를 사용하고 다음 증거를 준비한다.
+Do not kill the production process by blindly lowering `MemoryMax`. Use the test process only on a separate VM and prepare the following evidence.
 
 ```bash
 systemctl show infra-http -p MemoryCurrent -p MemoryMax -p NRestarts
@@ -116,9 +116,9 @@ journalctl -k --since "10 minutes ago" | grep -i -E 'oom|killed process'
 cat /proc/pressure/memory
 ```
 
-OOM을 재현하지 않았으면 “OOM 복구 완료”라고 기록하지 않는다. 위 명령은 재현 전 관측 경로만 확인한다.
+If OOM has not been reproduced, “OOM recovery complete” is not recorded. The above command only checks the observation path before reproduction.
 
-## 정리
+## Cleanup
 
 ```bash
 sudo systemctl disable --now infra-http 2>/dev/null || true
@@ -127,19 +127,19 @@ sudo systemctl daemon-reload
 sudo systemctl reset-failed
 ```
 
-삭제 대상이 정확히 `/etc/systemd/system/infra-http.service`인지 먼저 확인한다. 다른 unit이나 Python process는 이 정리 명령이 제거하지 않는다.
+First, check whether the deletion target is exactly `/etc/systemd/system/infra-http.service`. Other units or Python processes are not removed by this cleanup command.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-정상 상태에서는 `MainPID`와 `ss`의 process가 같고 `curl`이 성공한다. 충돌 상태에서는 systemd가 시작한 process가 bind 단계에서 종료하므로 안정된 `MainPID`가 없고, journal에는 address 사용 중이라는 원인이 남는다. 동시에 `ss`에는 foreground Python process가 계속 보인다. 이 세 증거가 일치할 때 port 충돌로 판정한다.
+In normal conditions, the processes of `MainPID` and `ss` are the same, and `curl` succeeds. In a crash state, the process started by systemd terminates at the bind stage, so there is no stable `MainPID`, and the cause of the address being used remains in the journal. At the same time, the foreground Python process is still visible in `ss`. When these three pieces of evidence match, a port conflict is determined.
 
-`ss`에 listener가 없다면 port를 차지한 process가 원인이 아니다. listener가 있고 local `curl`은 성공하지만 remote request만 실패하면 bind address, route, host firewall과 상위 network policy로 조사 범위를 옮긴다. 복구 후에는 새 `MainPID`, 기대한 listener owner와 마지막 HTTP 성공을 다시 확인한다.
+If there is no listener in `ss`, the process occupying the port is not the cause. If there is a listener and the local `curl` succeeds, but only the remote request fails, the investigation scope moves to bind address, route, host firewall, and upper network policy. After recovery, check again the new `MainPID`, the expected listener owner, and the last HTTP success.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. `active`, listening socket, HTTP 성공 중 어느 하나만 확인하면 부족한 이유는 무엇인가?
-2. port 충돌과 firewall 차단은 어떤 관찰값이 다른가?
-3. OOM 의심 시 application log만으로 결론내리면 안 되는 이유는 무엇인가?
+1. Why is it insufficient to check just one of `active`, listening socket, and HTTP success?
+2. What are the differences between port conflicts and firewall blocking?
+3. When OOM is suspected, why should we not conclude only from the application log?
 
 <!-- source: https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html | checked: 2026-09-03 | retrieval-warning: direct page unavailable -->
 <!-- source: https://docs.kernel.org/admin-guide/cgroup-v2.html | checked: 2026-09-03 -->

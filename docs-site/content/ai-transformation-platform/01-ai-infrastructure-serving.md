@@ -1,28 +1,28 @@
-# AI 인프라·분산 학습과 LLM 서빙
+# AI infrastructure, distributed learning and LLM serving
 
 <!-- source: https://arxiv.org/abs/1910.02054 | checked: 2026-09-03 -->
 <!-- source: https://arxiv.org/abs/2309.06180 | checked: 2026-09-03 -->
 <!-- source: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/gpu-operator-mig.html | checked: 2026-09-03 -->
 
-AI workload는 CPU service와 같은 Pod 형태로 실행될 수 있지만 병목과 실패 단위는 다르다. training은 model state와 collective communication을 여러 GPU에 배치하고, serving은 weight·KV cache·batch scheduler를 latency SLO 안에서 공유한다. GPU 요청 개수만으로 capacity를 설명할 수 없다.
+AI workloads can run in pod form like CPU services, but the bottlenecks and failure units are different. Training places the model state and collective communication on multiple GPUs, and serving shares weight·KV cache·batch scheduler within latency SLO. Capacity cannot be explained solely by the number of GPU requests.
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-| 말 | 이 장에서의 뜻 |
+| word | Meaning in this chapter |
 |---|---|
-| HBM / VRAM | GPU가 model·activation·KV cache를 두는 고대역폭 memory |
-| data parallel | model 복제본이 다른 batch를 처리하고 gradient를 동기화하는 방식 |
-| tensor / pipeline parallel | 한 model의 연산·layer를 여러 device에 나누는 방식 |
-| collective | AllReduce·AllGather처럼 여러 GPU가 함께 수행하는 통신 |
-| continuous batching | decode step마다 끝난 요청을 빼고 새 요청을 batch에 합류시키는 scheduling |
-| MFU | 유효 model 계산량을 hardware 최대 계산량과 비교하는 utilization 관점 |
+| HBM / VRAM | High-bandwidth memory where GPU stores model·activation·KV cache |
+| data parallel | How model replicas process different batches and synchronize gradients |
+| tensor / pipeline parallel | A method of dividing the calculations and layers of one model into multiple devices |
+| collective | Communication performed by multiple GPUs together, such as AllReduce and AllGather |
+| continuous batching | Scheduling to exclude completed requests at each decode step and add new requests to the batch |
+| MFU | Utilization perspective that compares the effective model calculation amount to the maximum hardware calculation amount |
 
-1. workload의 memory·compute·communication 식을 먼저 적는다.
-2. throughput만이 아니라 queue·TTFT·TPOT·OOM·cost를 함께 측정한다.
+1. First write down the memory·compute·communication equation of the workload.
+2. It measures not only throughput but also queue·TTFT·TPOT·OOM·cost.
 
-## 먼저 이해하기
+## Understand the model first
 
-training memory에는 parameter뿐 아니라 gradient, optimizer state와 activation이 들어간다. ZeRO 계열은 이 state들을 data-parallel worker 사이에 단계적으로 partition해 중복 memory를 줄인다. 대신 communication, checkpoint와 장애 복구 경계가 달라진다.
+The training memory includes not only parameters but also gradient, optimizer state, and activation. The ZeRO series partitions these states step by step between data-parallel workers to reduce redundant memory. Instead, communication, checkpoint, and failover boundaries change.
 
 ```mermaid
 flowchart LR
@@ -34,18 +34,18 @@ flowchart LR
     K -. restart .-> W
 ```
 
-| 병렬화 축 | 나누는 것 | 주된 비용 | 검증 |
+| parallel axis | sharing | main cost | verification |
 |---|---|---|---|
 | data | batch | gradient synchronization | global batch·convergence |
-| tensor | layer tensor 연산 | 빈번한 collective | topology·kernel efficiency |
+| tensor | layer tensor operation | frequent collective | topology·kernel efficiency |
 | pipeline | layer stage | bubble·activation transfer | microbatch schedule |
-| sequence/context | token 축 | attention communication | long-context correctness |
+| sequence/context | token axis | attention communication | long-context correctness |
 
-NCCL operation이 빨라도 data loader나 checkpoint storage가 병목일 수 있다. step time을 compute, communication, input과 checkpoint로 분해한다. theoretical FLOPS만으로 업무 효율을 선언하지 않는다.
+Even if NCCL operation is fast, data loader or checkpoint storage may be a bottleneck. Decompose step time into compute, communication, input, and checkpoint. We do not declare work efficiency based on theoretical FLOPS alone.
 
-## GPU 공유와 scheduling
+## GPU sharing and scheduling
 
-NVIDIA MIG는 지원 GPU를 분리된 instance로 partition한다. GPU Operator의 MIG Manager는 node label과 profile에 따라 재구성하며, 과정에서 GPU client 중지나 node reboot가 필요할 수 있다. time-slicing과 MIG는 isolation 보장이 다르다.
+NVIDIA MIG partitions supported GPUs into separate instances. The GPU Operator's MIG Manager is reconfigured according to the node label and profile, and stopping the GPU client or rebooting the node may be necessary in the process. Time-slicing and MIG have different isolation guarantees.
 
 ```yaml
 workload_contract:
@@ -59,9 +59,9 @@ workload_contract:
   fallbackBundle: support-small-v4
 ```
 
-이 profile 이름과 수치는 예시다. device generation, driver, operator와 runtime compatibility를 먼저 확인한다. gang scheduling이 필요한 training job은 필요한 자원 일부만 점유한 채 나머지를 기다리는 교착을 피해야 한다. quota와 preemption은 팀 우선순위·checkpoint 비용을 반영한다.
+These profile names and numbers are examples. Check device generation, driver, operator and runtime compatibility first. Training jobs that require gang scheduling should avoid deadlock, with only some of the required resources occupied while waiting for the rest. Quotas and preemptions reflect team priorities and checkpoint costs.
 
-## LLM serving 경로
+## LLM serving path
 
 ```mermaid
 sequenceDiagram
@@ -79,35 +79,35 @@ sequenceDiagram
     end
 ```
 
-PagedAttention은 KV cache를 block 단위로 관리해 memory 낭비와 공유 문제를 다룬다. 논문의 throughput 개선은 특정 workload·비교 시스템 결과이므로 현재 runtime의 보편 배수로 쓰지 않는다.
+PagedAttention manages the KV cache in block units to address memory waste and sharing issues. The throughput improvement in the paper is the result of a specific workload/comparison system, so it is not used as a universal multiple of the current runtime.
 
-| 지표 | 사용자 질문 | resource 질문 |
+| characteristic | user questions | resource question |
 |---|---|---|
-| TTFT | 첫 응답이 언제 보이는가 | queue·prefill이 포화인가 |
-| TPOT / inter-token latency | stream이 끊기지 않는가 | decode batch가 안정적인가 |
-| tokens/s | 유용한 결과 처리량은? | GPU·memory bandwidth 활용은? |
-| queue age | deadline 안에 시작 가능한가 | admission 상한은? |
-| KV cache occupancy | 긴 context를 감당하는가 | eviction·fragmentation은? |
-| OOM·fallback | 결과가 안전하게 수렴하는가 | bundle·profile이 맞는가 |
+| TTFT | When will I see the first response? | Is queue/prefill saturated? |
+| TPOT / inter-token latency | Doesn't the stream stop? | Is the decode batch stable? |
+| tokens/s | What is the useful result throughput? | How to utilize GPU/memory bandwidth? |
+| queue age | Is it possible to start within deadline? | What is the admission limit? |
+| KV cache occupancy | Can it handle a long context? | What about eviction·fragmentation? |
+| OOM·fallback | Do the results converge safely? | Is the bundle·profile correct? |
 
-## 운영 연결
+## operational connection
 
-1. model·tokenizer·precision은 [LLM 구조와 효율화](#doc=ai-specialist-core-llm)의 bundle에서 받는다.
-2. node·Pod·resource 기초는 [Kubernetes](#doc=kubernetes-scheduling-scaling)와 [Karpenter](#doc=karpenter-provisioning)에 연결한다.
-3. gateway deadline과 retry는 [트래픽 복원력](#doc=traffic-resilience-request-budget)에 맞춘다.
-4. GPU·queue·request trace는 [AIOps 신호 계약](#doc=aiops-foundations-evidence-graph)에 넣는다.
-5. OOM 자동 복구는 재시작 횟수가 아니라 사용자 결과와 fallback 성공을 [AIOps remediation](#doc=aiops-remediation-state-machine)에서 검증한다.
+1. The model·tokenizer·precision is received from the bundle of [LLM structure and efficiency](#doc=ai-specialist-core-llm).
+2. The node·Pod·resource base connects to [Kubernetes](#doc=kubernetes-scheduling-scaling) and [Karpenter](#doc=karpenter-provisioning).
+3. Gateway deadline and retry are adjusted to [traffic resilience](#doc=traffic-resilience-request-budget).
+4. GPU·queue·request trace is put into [AIOps signal contract](#doc=aiops-foundations-evidence-graph).
+5. OOM automatic recovery verifies user results and fallback success, not the number of restarts, in [AIOps remediation](#doc=aiops-remediation-state-machine).
 
-## 완료
+## Completion criteria
 
-- training memory와 병렬화 축별 communication 비용을 구분했다.
-- GPU share·scheduler·quota를 isolation과 workload 계약으로 적었다.
-- serving의 prefill·decode·KV cache·queue를 SLO와 연결했다.
-- 논문 benchmark와 현재 target capacity 측정을 분리했다.
+- Training memory and communication costs for each parallel axis were distinguished.
+- GPU share·scheduler·quota were written as isolation and workload contracts.
+- The serving prefill·decode·KV cache·queue was connected to SLO.
+- We separated the paper benchmark and current target capacity measurements.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- ZeRO가 memory를 줄이면서 communication·checkpoint 설계를 바꾸는 이유는 무엇인가?
-- MIG와 time-slicing을 같은 GPU 분할로 취급하면 어떤 isolation 차이를 놓치는가?
-- tokens/s가 높아도 사용자가 느릴 수 있는 이유는 무엇인가?
-- KV cache 상한이 CPU utilization 기반 autoscaling에 잘 보이지 않을 수 있는 이유는 무엇인가?
+- Why does ZeRO change the communication/checkpoint design while reducing memory?
+- What isolation differences are we missing if we treat MIG and time-slicing as the same GPU partition?
+- Why can users feel slow even if tokens/s is high?
+- Why may the KV cache upper limit be invisible to CPU utilization-based autoscaling?

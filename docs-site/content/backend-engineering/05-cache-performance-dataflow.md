@@ -1,27 +1,27 @@
-# 캐시·데이터 흐름과 성능 증거
+# Cache/data flow and performance evidence
 
 <!-- source: https://www.rfc-editor.org/rfc/rfc9111.html | checked: 2026-09-03 -->
 <!-- source: https://www.postgresql.org/docs/current/using-explain.html | checked: 2026-09-03 -->
 
-캐시는 느린 계산과 전송을 줄이지만 새로운 상태, freshness와 무효화 경계를 만든다. hit ratio만 높이면 오래된 값, tenant 혼합과 stampede를 놓칠 수 있다. 성능 개선은 사용자 workload, 정본과 허용된 stale window를 고정한 뒤 전후 결과로 증명해야 한다.
+Caches reduce slow computations and transfers, but create new state, freshness, and invalidation boundaries. If you just increase the hit ratio, you may miss old values, tenant mixes, and stampedes. Performance improvement must be proven with before and after results after fixing the user workload, source of truth, and allowed stale window.
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-| 말 | 이 장에서의 뜻 |
+| word | Meaning in this chapter |
 |---|---|
-| cache key | 저장된 응답이나 값을 다시 찾는 식별 정보 |
-| freshness | 원본에 다시 묻지 않고 재사용해도 되는 기간·조건 |
-| validator | 저장 값이 아직 유효한지 조건부 확인하는 ETag 같은 값 |
-| invalidation | 원본 변경 뒤 더 이상 재사용하면 안 되는 cache entry를 제거·갱신하는 일 |
-| stampede | 같은 miss에서 많은 요청이 동시에 원본 계산을 시작하는 현상 |
-| benchmark | 고정한 workload와 환경에서 전후를 비교하는 측정 |
+| cache key | Identification information to retrieve stored responses or values |
+| freshness | Period and conditions for reuse without re-burying the original |
+| validator | An ETag-like value that conditionally checks if the stored value is still valid. |
+| invalidation | Removing and updating cache entries that should no longer be reused after changing the original |
+| stampede | A phenomenon in which many requests start calculating the original at the same time on the same miss. |
+| benchmark | Before-and-after measurements on a fixed workload and environment |
 
-1. 먼저 정본과 허용 가능한 stale window를 정한다.
-2. 그다음 cache key, 채움, 무효화와 실패 정책을 설계한다.
+1. First, determine the source of truth and the allowable stale window.
+2. Then design the cache key, population, invalidation and failure policies.
 
-## 먼저 이해하기
+## Understand the model first
 
-RFC 9111의 HTTP cache는 method와 target URI를 기본 key로 사용하고 `Vary`, freshness, validator와 directive에 따라 저장 응답 재사용을 제한한다. application cache도 같은 질문을 피할 수 없다. 어떤 요청 차원이 key에 들어가며, 언제 stale이고, origin이 없을 때 stale을 제공할지 실패 계약이 필요하다.
+RFC 9111's HTTP cache uses method and target URI as basic keys and limits reuse of stored responses according to `Vary`, freshness, validator, and directive. Application cache cannot avoid the same question. A failure contract is needed to determine which request dimension goes into the key, when it is stale, and to provide stale when there is no origin.
 
 ```mermaid
 flowchart LR
@@ -38,15 +38,15 @@ flowchart LR
 
 ## cache contract
 
-| 항목 | 주문 조회 예시 | 빠지면 생기는 문제 |
+| item | Order inquiry example | Problems that arise when missing |
 |---|---|---|
-| 정본 | PostgreSQL order row | cache를 복구 불가능한 원본처럼 취급 |
-| key | tenant + order ID + representation version | tenant data 혼합·구형 형식 충돌 |
-| freshness | 완료 주문 60초, 진행 중 주문 2초 | 업무 상태와 무관한 TTL |
-| validator | order revision 또는 ETag | 값 전체를 다시 전송·lost update |
-| invalidation | commit된 order ID event | rollback된 write가 cache를 지움 |
-| miss control | key별 single-flight | hot key가 origin을 동시에 압박 |
-| failure mode | 진행 상태는 stale 금지, 완료 상태는 제한 허용 | 장애 때 임의의 오래된 값 노출 |
+| Source of truth | PostgreSQL order row | Treating a cache as an irreplaceable original |
+| key | tenant + order ID + representation version | Tenant data mixed/old format conflict |
+| freshness | 60 seconds for completed orders, 2 seconds for in-progress orders | TTL independent of business status |
+| validator | order revision or ETag | Resend the entire value · lost update |
+| invalidation | committed order ID event | Rolled back writes clear the cache |
+| miss control | single-flight by key | The hot key presses the origin at the same time |
+| failure mode | Progress status prohibits stale, completion status allows restrictions. | Random old values ​​exposed on failure |
 
 ```yaml
 cache_policy:
@@ -61,25 +61,25 @@ cache_policy:
   fill: single_flight
 ```
 
-이는 구현 예시이며 금융·권한 데이터의 stale 허용값은 업무 계약으로 결정해야 한다. `no-store`, `private`, `must-revalidate` 같은 HTTP directive도 이름이 비슷하다고 application cache 정책과 자동으로 같아지지 않는다.
+This is an implementation example, and the stale allowable values ​​for financial and authority data must be determined in a business contract. HTTP directives such as `no-store`, `private`, and `must-revalidate` do not automatically match the application cache policy just because they have similar names.
 
-## 쓰기와 무효화 사이
+## Between Write and Invalidate
 
-DB write 전에 cache를 지우면 transaction rollback 뒤 유효한 값만 사라져 부하가 늘 수 있다. DB commit 뒤 무효화 event를 보내면 전달 지연 동안 stale window가 생긴다. outbox event에 aggregate ID와 revision을 담고 consumer가 old revision invalidation을 무시하도록 설계할 수 있다.
+If you clear the cache before DB writing, only valid values ​​will disappear after transaction rollback, which may increase load. If an invalidation event is sent after DB commit, a stale window will appear during delivery delay. The aggregate ID and revision can be included in the outbox event and the consumer can be designed to ignore old revision invalidation.
 
-| 사건 | cache가 볼 수 있는 상태 | 방어 |
+| case | Status visible to cache | defense |
 |---|---|---|
-| 같은 key 동시 miss | origin query N개 | single-flight·request coalescing |
-| old invalidation 늦게 도착 | 새 값을 삭제할 위험 | monotonic revision 비교 |
-| cache 전체 장애 | origin으로 부하 집중 | origin load shed·점진 bypass |
-| hot key 집중 | 한 shard·connection 포화 | local cache·key 분산은 의미 보존 검토 |
-| deploy 뒤 schema 변경 | old entry decode 실패 | versioned namespace·dual read 제한 |
+| Same key simultaneous miss | N origin queries | single-flight·request coalescing |
+| old invalidation late arrival | Risk of deleting new values | Monotonic revision comparison |
+| cache total failure | Concentrate load on origin | origin load shed·gradual bypass |
+| hot key focus | One shard·connection saturation | Consider preserving meaning in local cache/key distribution |
+| Change schema after deploy | old entry decode failed | versioned namespace·dual read limitation |
 
-[Redis와 DynamoDB](#doc=nosql-roadmap)는 TTL, hot key와 저장 모델의 구체 동작을 다룬다. 여기서는 그 제품 설정이 API freshness 계약과 연결되는지를 검토한다.
+[Redis and DynamoDB](#doc=nosql-roadmap) deal with specific operations of TTL, hot key, and storage model. Here we examine whether the product settings are linked to the API freshness contract.
 
-## 성능 증거 만들기
+## Create proof of performance
 
-평균 응답 시간만으로 cache 성공을 판정하지 않는다. 동일한 dataset, query mix, concurrency와 warm-up 조건에서 측정한다.
+Cache success is not determined based on average response time alone. Measured under the same dataset, query mix, concurrency, and warm-up conditions.
 
 ```json
 {
@@ -99,28 +99,28 @@ DB write 전에 cache를 지우면 transaction rollback 뒤 유효한 값만 사
 }
 ```
 
-PostgreSQL `EXPLAIN`은 planner가 고른 실행 계획을 보여 주며 `EXPLAIN ANALYZE`는 실제 statement를 실행한다. 쓰기 statement나 무거운 query에 함부로 사용하지 않는다. query plan, rows estimate, buffer·I/O와 lock wait를 [PostgreSQL 운영](#doc=postgresql-lock-restore)에서 확인하고 application span과 같은 request ID로 연결한다.
+PostgreSQL `EXPLAIN` shows the execution plan chosen by the planner, and `EXPLAIN ANALYZE` executes the actual statement. Do not use it carelessly in writing statements or heavy queries. Check query plan, rows estimate, buffer·I/O, and lock wait in [PostgreSQL operation ](#doc=postgresql-lock-restore) and connect with request ID such as application span.
 
-## 검토 순서
+## Review order
 
-1. 사용자 결과와 정본을 고정한다.
-2. key에 tenant, 권한, locale과 representation version이 필요한지 확인한다.
-3. active·terminal 상태별 freshness와 stale 허용을 정한다.
-4. fill, invalidation과 cache 장애 시 origin 보호를 설계한다.
-5. 평균이 아니라 p95·p99, 오류, stale violation과 origin 부하를 함께 잰다.
-6. cache off, cold, warm과 장애 모드를 분리한다.
-7. 변경 결과는 [AIOps incident bundle](#doc=aiops-foundations-contract-lab)에 deploy·cache revision으로 남긴다.
+1. Fix user results and source of truth.
+2. Check if the key requires tenant, permission, locale, and representation version.
+3. Determines freshness and stale allowance for each active/terminal state.
+4. Design origin protection in case of fill, invalidation and cache failure.
+5. Rather than measuring the average, p95·p99, errors, stale violations, and origin loads are measured together.
+6. Separate cache off, cold, warm and failure modes.
+7. The change results are left as deploy·cache revision in [AIOps incident bundle](#doc=aiops-foundations-contract-lab).
 
-## 완료
+## Completion criteria
 
-- cache 정본, key, freshness와 invalidation owner를 적었다.
-- miss stampede와 cache 장애의 origin 보호를 설계했다.
-- query와 cache 지표를 사용자 결과에 연결했다.
-- 재현 가능한 workload와 correctness gate를 성능 결과에 포함했다.
+- I wrote down the cache source of truth, key, freshness and invalidation owner.
+- Designed to protect the origin of miss stampede and cache failures.
+- We linked query and cache metrics to user results.
+- Reproducible workload and correctness gate were included in the performance results.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- hit ratio 99%여도 잘못된 결과를 제공할 수 있는 두 경우는 무엇인가?
-- TTL과 invalidation을 함께 쓰면 어떤 경쟁을 검토해야 하는가?
-- `EXPLAIN ANALYZE`를 production write에 무심코 실행하면 안 되는 이유는 무엇인가?
-- cache 장애 때 단순 bypass가 origin 장애로 번질 수 있는 이유는 무엇인가?
+- What are two cases in which a hit ratio of 99% can give incorrect results?
+- What competition should we consider when using TTL and invalidation together?
+- Why shouldn't `EXPLAIN ANALYZE` be run carelessly in production writes?
+- Why can a simple bypass turn into an origin failure when a cache failure occurs?

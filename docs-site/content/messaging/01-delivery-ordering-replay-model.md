@@ -1,55 +1,55 @@
-# Delivery, ordering과 replay model
+# Delivery, ordering and replay model
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-- **broker**: producer에게 메시지를 받아 보관하고 consumer에게 전달하는 중간 시스템이다.
-- **delivery**: broker가 consumer에게 message 처리를 시도하는 일이다.
-- **retry**: 실패한 처리를 일정 조건에 따라 다시 시도하는 것이다.
-- **DLQ**: 여러 번 처리하지 못한 message를 주 흐름에서 분리해 조사하도록 보관하는 queue다.
-- **ordering**: 여러 message가 producer가 보낸 순서와 어떤 범위에서 같게 처리되는지에 관한 보장이다.
-- **replay**: 과거에 보관한 message나 event를 다시 읽어 처리하는 작업이다.
+- **broker**: An intermediate system that receives messages from producers, stores them, and delivers them to consumers.
+- **delivery**: This is when the broker attempts to process a message to the consumer.
+- **retry**: Retrying failed processing according to certain conditions.
+- **DLQ**: A queue that separates messages that have not been processed multiple times from the main flow and stores them for investigation.
+- **ordering**: This is a guarantee that multiple messages are processed in the same order and within what scope they are sent by the producer.
+- **replay**: This is the process of rereading and processing messages or events stored in the past.
 
-메시지가 broker에 저장됐다는 사실과 업무 처리가 끝났다는 사실은 다르다. 처음에는 `전달 → 업무 변경 → 완료 응답` 세 단계 사이 어디에서 process가 종료될 수 있는지 살펴본다.
+The fact that the message has been stored in the broker is different from the fact that the task has been processed. First, we look at where the process can end between the three steps `delivery → business change → acknowledgment`.
 
-## 먼저 이해하기
+## Understand the model first
 
-주문 서비스가 `order.accepted` event를 보낸 뒤 결제 consumer가 처리한다고 하자. producer는 broker에 event를 기록했지만 consumer가 결제 DB를 갱신한 직후 acknowledgement를 보내기 전에 죽을 수 있다. broker는 처리되지 않았다고 판단해 같은 event를 다시 전달한다. 메시징 시스템이 정상 작동했는데도 business side effect가 두 번 실행될 수 있는 이유다.
+Let's say the order service sends the `order.accepted` event and the payment consumer processes it. The producer records an event in the broker, but the consumer may die immediately after updating the payment DB and before sending an acknowledgment. The broker determines that it has not been processed and delivers the same event again. This is why business side effects can run twice even though the messaging system was operating normally.
 
-| 시점 | broker가 아는 것 | broker가 모르는 것 |
+| point of view | What brokers know | What brokers don’t know |
 |---|---|---|
-| publish 성공 | event를 수락했다 | 모든 consumer의 business 처리 성공 |
-| delivery | consumer에게 보냈다 | consumer transaction commit 여부 |
-| acknowledgement | consumer가 완료라고 응답했다 | 외부 시스템 전체의 일관성 |
-| retention/replay | event를 다시 읽을 수 있다 | 재실행해도 side effect가 안전한지 |
+| publish success | accepted the event | Successful business processing for all consumers |
+| delivery | sent to consumer | Whether consumer transaction commits |
+| acknowledgement | The consumer responded that it was complete | Consistency across external systems |
+| retention/replay | Events can be read again | Is it safe to have side effects even if you rerun it? |
 
-그래서 delivery guarantee와 processing outcome을 분리한다. at-least-once delivery에서는 중복 가능성을 인정하고 consumer가 durable idempotency key를 사용한다. ordering도 “전체가 순서대로”가 아니라 queue group이나 Kafka partition처럼 보장되는 범위를 명시한다.
+Therefore, delivery guarantee and processing outcome are separated. In at-least-once delivery, the possibility of duplication is acknowledged and the consumer uses a durable idempotency key. Ordering also specifies a guaranteed range, like a queue group or Kafka partition, rather than “everything in order.”
 
-SQS·SNS·EventBridge·Kafka는 이 문제의 서로 다른 모양을 해결한다. SQS는 작업을 consumer 사이에 분배하는 queue에 가깝고, SNS와 EventBridge는 여러 target으로 fan-out·routing하며, Kafka는 retained partition log를 consumer group이 offset으로 읽는다. 이름을 고르기 전에 누가 event를 소유하고 누가 retry·replay를 책임지는지 정해야 한다.
+SQS, SNS, EventBridge, and Kafka solve different forms of this problem. SQS is close to a queue that distributes work between consumers, SNS and EventBridge fan-out and route to multiple targets, and Kafka reads the retained partition log as an offset by the consumer group. Before choosing a name, you need to decide who owns the event and who is responsible for retry and replay.
 
-## 메시지 한 건이 처리되는 과정을 따라가기
+## Follow the processing of a single message
 
-1. producer가 고유한 event ID와 업무 data를 message에 넣어 broker에 보낸다.
-2. broker가 허용한 보존 기간과 전달 규칙에 따라 message를 저장한다.
-3. consumer가 message를 받아 업무 database를 변경한다.
-4. 변경이 commit된 뒤 consumer가 broker에 완료 acknowledgement를 보낸다.
-5. 3단계 뒤 4단계 전에 consumer가 종료되면 broker는 같은 message를 다시 전달할 수 있다.
-6. consumer는 event ID를 이용해 이미 완료한 업무 결과가 중복되지 않게 한다.
-7. 반복해서 실패한 message는 DLQ로 분리하고 원인을 고친 뒤 제한된 속도로 다시 처리한다.
+1. The producer puts the unique event ID and business data in a message and sends it to the broker.
+2. Messages are stored according to the retention period and delivery rules allowed by the broker.
+3. The consumer receives the message and changes the business database.
+4. After the change is committed, the consumer sends a completion acknowledgment to the broker.
+5. If the consumer terminates after step 3 but before step 4, the broker can deliver the same message again.
+6. Consumers use event ID to prevent duplication of already completed work results.
+7. Messages that repeatedly fail are separated into DLQ, the cause is corrected, and then processed again at a limited speed.
 
-broker에 저장된 것, consumer에게 전달된 것, 업무 결과가 commit된 것은 서로 다른 완료 지점이다. 메시징 설계는 이 사이의 실패를 다룬다.
+What is stored in the broker, what is delivered to the consumer, and what the work results are committed to are different completion points. Messaging design addresses the failure in between.
 
-## 서비스 이름보다 책임을 본다
+## See responsibility more than service name
 
-| 구성 | 주된 목적 | 운영 질문 |
+| composition | main purpose | operational questions |
 |---|---|---|
-| SQS queue | consumer 간 작업 분배와 buffering | visibility timeout, retry, DLQ, standard/FIFO |
+| SQS queue | Work distribution and buffering between consumers | visibility timeout, retry, DLQ, standard/FIFO |
 | SNS topic | subscriber fan-out | subscription filter, delivery retry, target failure |
-| EventBridge bus | event routing과 target integration | rule, schema, archive/replay, target DLQ |
-| Kafka log | partitioned durable log와 consumer group | partition key, offset, retention, rebalance |
+| EventBridge bus | event routing and target integration | rule, schema, archive/replay, target DLQ |
+| Kafka log | partitioned durable log and consumer group | partition key, offset, retention, rebalance |
 
-SQS standard queue는 at-least-once delivery와 best-effort ordering을 전제로 consumer를 설계한다. FIFO 기능도 ordering과 deduplication scope·throughput 조건을 확인해야 하며 외부 side effect의 transaction을 대신하지 않는다.
+SQS standard queue designs consumers based on the premise of at-least-once delivery and best-effort ordering. The FIFO function must also check ordering and deduplication scope/throughput conditions and does not replace transactions with external side effects.
 
-Kafka의 ordering은 topic 전체가 아니라 partition 안에서 이해한다. partition을 늘리면 병렬성은 커질 수 있지만 같은 key의 ordering, rebalance와 consumer state에 영향을 준다.
+Kafka's ordering is understood within partitions, not across topics. Increasing the partition can increase parallelism, but it affects ordering, rebalance, and consumer state of the same key.
 
 ```mermaid
 sequenceDiagram
@@ -66,26 +66,26 @@ sequenceDiagram
     C->>B: ack
 ```
 
-## Retry와 DLQ
+## Retry and DLQ
 
-retry는 transient failure를 흡수하지만 immediate retry storm은 downstream 장애를 키운다. exponential backoff, jitter와 retry budget을 둔다. poison message는 retry 횟수만 늘리지 말고 격리해 payload, schema version과 consumer error를 조사한다.
+Retry absorbs transient failures, but immediate retry storms increase downstream failures. Add exponential backoff, jitter and retry budget. Instead of just increasing the number of retries, poison messages are isolated and the payload, schema version, and consumer error are investigated.
 
-DLQ redrive 전에 다음을 확인한다.
+Check the following before DLQ redrive.
 
-1. 원인이 code, dependency, permission 또는 data 중 무엇인지 분류한다.
-2. consumer fix와 idempotency가 배포됐는지 확인한다.
-3. redrive rate가 정상 traffic과 downstream capacity를 압도하지 않는지 정한다.
-4. 성공·재실패·누락 수를 reconciliation한다.
+1. Classify whether the cause is code, dependency, permission, or data.
+2. Check whether consumer fix and idempotency have been deployed.
+3. Determine whether the redrive rate does not overwhelm normal traffic and downstream capacity.
+4. Reconcile the number of successes, re-failures, and omissions.
 
-## Schema evolution과 replay
+## Schema evolution and replay
 
-producer와 consumer가 동시에 배포되지 않는다면 schema는 additive change와 compatibility 규칙을 가져야 한다. retained event를 새 consumer로 replay할 때 당시 의미와 현재 reference data가 달라질 수 있다. event time, schema version, producer identity와 replay run ID를 기록한다.
+If producers and consumers are not deployed simultaneously, the schema must have additive change and compatibility rules. When a retained event is replayed by a new consumer, its meaning at the time and the current reference data may differ. Record event time, schema version, producer identity, and replay run ID.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. visibility timeout이 너무 짧거나 길 때 각각 어떤 문제가 생기는가?
-2. Kafka partition key가 ordering과 load distribution을 동시에 좌우하는 이유는 무엇인가?
-3. event replay가 단순 파일 재읽기가 아닌 운영 변경인 이유는 무엇인가?
+1. What problems arise when the visibility timeout is too short or too long?
+2. Why does the Kafka partition key affect ordering and load distribution at the same time?
+3. Why is event replay an operational change rather than simply rereading a file?
 
 <!-- source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html | checked: 2026-09-03 -->
 <!-- source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html | checked: 2026-09-03 -->

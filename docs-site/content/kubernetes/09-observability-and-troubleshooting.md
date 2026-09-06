@@ -1,38 +1,38 @@
-# 09. 관측과 트러블슈팅
+# 09. Observation and troubleshooting
 
-좋은 트러블슈팅은 명령어를 많이 아는 것이 아니라 **증상을 재현하고 실패 계층을 빠르게 반으로 나누는 과정**이다. 먼저 사용자 영향을 확인하고, 원하는 상태와 현재 상태의 차이를 찾은 뒤, event·log·metric을 시간순으로 연결한다.
+Good troubleshooting is not about knowing a lot of commands, but about reproducing symptoms and quickly dividing the failure hierarchy in half. First, check user influence, find the difference between the desired state and the current state, and then connect event·log·metric in chronological order.
 
-## 도구마다 답하는 질문이 다르다
+## Each tool answers different questions
 
-| 증거 | 답하는 질문 | 대표 명령 |
+| evidence | question to answer | representative order |
 |---|---|---|
-| `get` | 어떤 리소스가 지금 어떤 요약 상태인가? | `kubectl get deploy,rs,pod` |
-| YAML·jsonpath | API가 알고 있는 원본 필드는 무엇인가? | `kubectl get pod -o yaml` |
-| `describe` | condition, container state, 최근 event는 무엇인가? | `kubectl describe pod` |
-| event | scheduler·kubelet·controller가 무엇을 시도했나? | `kubectl get events` |
-| log | 애플리케이션과 컨테이너가 무엇을 기록했나? | `kubectl logs --previous` |
-| metric | 자원과 지연이 언제부터 얼마나 변했나? | `kubectl top`, 관측 시스템 |
+| `get` | Which resources are now in what summary state? | `kubectl get deploy,rs,pod` |
+| YAML·jsonpath | What source fields does the API know about? | `kubectl get pod -o yaml` |
+| `describe` | What are the condition, container state, and recent events? | `kubectl describe pod` |
+| event | What did scheduler·kubelet·controller try? | `kubectl get events` |
+| log | What did your applications and containers log? | `kubectl logs --previous` |
+| metric | Since when and how much have resources and delays changed? | `kubectl top`, observation system |
 
-event는 영구 감사 로그가 아니며 반복 event가 합쳐질 수 있다. 장애 타임라인이 필요하면 로그와 metric을 중앙 수집하고 시간 동기화·보존 정책을 준비한다.
+The event is not a permanent audit log and repeated events may be merged. If a failure timeline is necessary, centrally collect logs and metrics and prepare time synchronization and retention policies.
 
-## 증상에서 실패 계층으로 이동하기
+## Moving from Symptoms to Failure Hierarchy
 
 ```mermaid
 flowchart TD
-    I["사용자 증상 재현"] --> W{"워크로드의 원하는 수와 현재 수가 같은가?"}
-    W -->|"아니오"| P{"Pod phase와 nodeName은?"}
-    P -->|"Pending·노드 없음"| S["스케줄링 event"]
-    P -->|"노드 있음·시작 전"| K["image·volume·kubelet"]
-    P -->|"반복 재시작"| L["현재와 이전 container log"]
-    W -->|"예"| R{"Pod가 Ready인가?"}
-    R -->|"아니오"| H["readiness와 애플리케이션 상태"]
-    R -->|"예"| N["DNS·Service·Endpoint·NetworkPolicy"]
-    N --> A["실제 사용자 요청으로 재검증"]
+    I[“Reproduce user symptoms”] --> W{“Are the desired and current number of workloads the same?”}
+    W -->|"no"| P{“What are Pod phase and nodeName?”}
+    P -->|"Pending·no node"| S[“Scheduling event”]
+    P -->|“Node present, before starting”| K["image·volume·kubelet"]
+    P -->|“Repeat Restart”| L["Current and previous container log"]
+    W -->|"yes"| R{“Is the Pod Ready?”}
+    R -->|"no"| H["readiness and application status"]
+    R -->|"yes"| N["DNS·Service·Endpoint·NetworkPolicy"]
+    N --> A["Re-verify with real user requests"]
 ```
 
-항상 상위 controller부터 내려간다. Pod 하나만 고치려 하면 Deployment가 다시 덮어쓰거나 새 Pod로 교체한다. 반대로 클러스터 전체 장애가 아닌데 노드부터 들어가면 조사 범위가 불필요하게 커진다.
+It always goes down from the top controller. If you try to fix just one Pod, Deployment will overwrite it again or replace it with a new Pod. Conversely, if it is not a cluster-wide failure but the node is involved, the scope of investigation becomes unnecessarily large.
 
-## 기본 진단 루프
+## Basic diagnostic loop
 
 ```bash
 kubectl config current-context
@@ -45,29 +45,29 @@ kubectl logs <pod-name> -n <namespace> -c <container-name>
 kubectl logs <pod-name> -n <namespace> -c <container-name> --previous
 ```
 
-context와 Namespace를 첫 줄에서 확인하는 이유는 잘못된 클러스터를 보고 내린 결론이 기술적으로 완벽해도 쓸모없기 때문이다. 읽기 명령에서 시작하고, 수정 전에 현재 YAML과 변경 diff를 보존한다.
+The reason for checking the context and namespace in the first line is because the conclusion drawn from looking at the wrong cluster is useless even if it is technologically perfect. Starts with a read command and preserves the current YAML and change diff before modification.
 
-## 자주 만나는 상태를 정확히 읽기
+## Accurately read frequently encountered conditions
 
 ### Pending
 
-Pod가 scheduler에 의해 노드에 배치되지 못했거나, 배치는 됐지만 volume 준비 등 시작 전 단계일 수 있다. `spec.nodeName`과 event를 확인한다. `FailedScheduling`이면 requests, taint, affinity, PVC topology를 본다.
+The pod may not have been placed on the node by the scheduler, or it may have been placed but in a pre-start stage, such as volume preparation. Check `spec.nodeName` and event. If it is `FailedScheduling`, you can see requests, taint, affinity, and PVC topology.
 
 ### ImagePullBackOff
 
-이미지 이름·tag·digest, registry DNS와 네트워크, imagePullSecret, pull rate limit을 확인한다. BackOff는 원인이 아니라 실패 재시도 간격이 늘어난 상태다. 구체적 원인은 event에 있다.
+Check image name·tag·digest, registry DNS and network, imagePullSecret, and pull rate limit. BackOff is not the cause, but the failure retry interval has increased. The specific cause lies in the event.
 
 ### CrashLoopBackOff
 
-컨테이너가 시작된 뒤 종료되고 재시작이 반복된다. 현재 로그만 보면 새 인스턴스의 빈 로그일 수 있으므로 `--previous`, 종료 reason과 code, command·args·환경·mount를 확인한다. OOMKilled면 메모리 limit뿐 아니라 누수, startup peak, tmpfs 사용도 본다.
+The container starts, terminates, and restarts repeatedly. If you only look at the current log, it may be an empty log of a new instance, so check `--previous`, termination reason and code, command·args·environment·mount. If OOMKilled, you can see not only the memory limit, but also leaks, startup peak, and tmpfs usage.
 
-### Running이지만 NotReady
+### Running but NotReady
 
-프로세스는 실행 중이지만 readiness 조건을 통과하지 못했다. Service endpoint와 사용자 트래픽에서 빠질 수 있다. probe path·port·timeout과 실제 앱 준비 상태를 함께 확인한다.
+The process is running but has not passed the readiness condition. It can be left out of service endpoints and user traffic. Check the probe path·port·timeout and the actual app preparation status together.
 
-## 실행 예제: 실패한 rollout 진단하기
+## Running example: Diagnosing a failed rollout
 
-`broken.yaml`을 만든다.
+Make `broken.yaml`.
 
 ```yaml
 apiVersion: apps/v1
@@ -105,7 +105,7 @@ kubectl describe pod -l app=broken-web
 kubectl get events --sort-by=.metadata.creationTimestamp
 ```
 
-진단 가설은 “애플리케이션이 crash했다”가 아니라 “컨테이너가 시작되기 전 이미지 가져오기에서 실패했다”여야 한다. 그래서 log보다 event가 먼저다.
+The diagnostic hypothesis should not be “the application crashed” but “image retrieval failed before the container was started.” So event comes before log.
 
 ```bash
 kubectl set image deployment/broken-web web=nginx:1.27-alpine
@@ -114,29 +114,29 @@ kubectl get pods -l app=broken-web
 kubectl delete deployment broken-web
 ```
 
-## rollout 장애의 시간선
+## Timeline of rollout failure
 
 ```mermaid
 sequenceDiagram
-    participant U as 사용자
+    participant U as user
     participant D as Deployment
-    participant R as 새 ReplicaSet
-    participant P as 새 Pod
-    participant E as Event와 Log
-    U->>D: 새 이미지 적용
-    D->>R: 새 revision 생성
-    R->>P: 새 Pod 생성
-    P-->>E: image pull 또는 probe 실패
-    E-->>D: Available 수 부족
-    D-->>U: progress deadline 초과
-    U->>E: describe·event·log 조사
-    U->>D: 수정 또는 rollout undo
-    D-->>U: Available condition 회복
+    participant R as New ReplicaSet
+    participant P as New Pod
+    participant E as Event and Log
+    U->>D: Apply new image
+    D->>R: Create new revision
+    R->>P: Create a new Pod
+    P-->>E: Image pull or probe failure
+    E-->>D: Insufficient number of available
+    D-->>U: Progress deadline exceeded
+    U->>E: describe·event·log investigation
+    U->>D: Modify or rollout undo
+    D-->>U: Available condition recovery
 ```
 
-rollout 상태는 controller 관점의 진행 여부다. 복구 뒤에는 `Available=True`만 보지 말고 실제 사용자 경로로 요청을 보내고 error rate와 latency가 회복됐는지 확인한다.
+The rollout status is whether progress is made from the controller's perspective. After recovery, do not just look at `Available=True`, but send a request to the actual user path and check whether the error rate and latency have recovered.
 
-## Service 경로 진단
+## Service path diagnosis
 
 ```bash
 kubectl get service <service> -o yaml
@@ -146,47 +146,47 @@ kubectl run netcheck --rm -it --restart=Never --image=curlimages/curl -- \
   curl -v http://<service>:<port>/health
 ```
 
-Service에 endpoint가 없으면 먼저 selector와 readiness다. endpoint는 있는데 timeout이면 targetPort, Pod listener, NetworkPolicy, CNI와 노드 경로로 이동한다. 한 Pod IP로 직접 시험하는 것은 계층을 나누는 진단일 뿐, Service를 우회하는 운영 해법이 아니다.
+If there is no endpoint in the service, first selector and readiness. There is an endpoint, but if it times out, it moves to targetPort, Pod listener, NetworkPolicy, CNI, and node path. Direct testing with one Pod IP is only a diagnosis of dividing the layers, not an operational solution to bypass the service.
 
-## distroless 이미지와 `kubectl debug`
+## distroless image and `kubectl debug`
 
-운영 이미지에 shell과 패키지 관리자를 억지로 넣지 않아도 된다. 이미지에 도구가 없거나 프로세스가 너무 빨리 crash하면 ephemeral debug container나 복제 Pod를 사용할 수 있다.
+There is no need to force a shell and package manager into the operating image. If your image doesn't have the tools or the process crashes too quickly, you can use an ephemeral debug container or a replication Pod.
 
 ```bash
 kubectl debug -it <pod-name> --image=busybox:1.36 --target=<container-name>
 kubectl debug <pod-name> -it --copy-to=<pod-name>-debug --container=<container-name> -- sh
 ```
 
-이 기능에는 강한 권한과 민감 데이터 노출 위험이 따를 수 있다. 누가 언제 debug container를 만들 수 있는지 RBAC과 감사 정책으로 제한하고, 만들어진 debug Pod를 정리한다.
+This feature may come with strong privileges and the risk of exposing sensitive data. Limit who can create debug containers and when with RBAC and audit policies, and organize created debug pods.
 
-## metric, log, trace를 사용자 영향에 연결하기
+## Connecting metrics, logs, and traces to user impact
 
-CPU가 높다는 사실만으로 장애 원인을 확정할 수 없다. 사용자 요청량, error rate, latency, queue 대기, saturation과 같은 신호를 같은 시간축에 놓는다.
+The cause of the failure cannot be determined simply by the fact that the CPU is high. Signals such as user request volume, error rate, latency, queue waiting, and saturation are placed on the same time axis.
 
-- **metric**은 범위와 변화 시점을 빠르게 찾는다.
-- **log**는 특정 실패의 문맥과 값을 찾는다.
-- **trace**는 여러 서비스와 구간 중 시간이 소비된 곳을 찾는다.
-- **Kubernetes 상태·event**는 orchestration 계층의 결정을 설명한다.
+- **metric** quickly finds scope and change points.
+- **log** finds the context and values ​​of a specific failure.
+- **trace** finds where time is spent among various services and sections.
+- **Kubernetes state·event** describes the decisions of the orchestration layer.
 
-신호의 label에 request ID, workload, Namespace, Pod UID, revision 같은 연결 키를 일관되게 남기되 고카디널리티와 개인정보를 통제한다.
+Consistently leave connection keys such as request ID, workload, namespace, Pod UID, and revision in the signal label, but control high cardinality and personal information.
 
-## 조사 중 흔한 실수
+## Common Mistakes During Investigations
 
-- 재현과 증거 보존 전에 Pod를 지워 이전 상태를 잃는다.
-- 최신 event 한 줄만 보고 더 이른 원인을 놓친다.
-- `Running`을 서비스 정상으로 해석한다.
-- 평균 CPU만 보고 OOM, throttling, queue와 p99 지연을 놓친다.
-- 임시 `kubectl edit`로 복구하고 Git 정본을 갱신하지 않는다.
-- 원인이 불명확한데 재시작으로 증상만 지운다.
+- Pods are erased before reproduction and evidence preservation, losing their previous state.
+- We only look at the latest event line and miss earlier causes.
+- `Running` is interpreted as service normal.
+- You only look at average CPU and miss OOM, throttling, queue and p99 delays.
+- Restore to temporary `kubectl edit` and do not update Git source of truth.
+- The cause is unclear, but restarting only clears the symptoms.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. ImagePullBackOff에서 `kubectl logs`보다 event가 먼저인 이유는 무엇인가?
-2. Running Pod가 사용자 요청을 전혀 받지 못할 수 있는 경로 두 가지는 무엇인가?
-3. `logs --previous`가 CrashLoopBackOff에서 중요한 이유는 무엇인가?
-4. controller condition이 회복된 뒤에도 실제 사용자 요청을 검증해야 하는 이유는 무엇인가?
+1. Why does the event come before `kubectl logs` in ImagePullBackOff?
+2. What are two paths through which Running Pod may never receive a user request?
+3. Why is `logs --previous` important in CrashLoopBackOff?
+4. Why do we need to verify actual user requests even after the controller condition is restored?
 
-[← 보안과 정책](08-security-and-policy.md) · [프로덕션 운영과 확장 →](10-production-and-extension.md)
+[← Security and Policy](08-security-and-policy.md) · [Production Operations and Expansion →](10-production-and-extension.md)
 
 <!-- source: https://kubernetes.io/ko/docs/tasks/debug/debug-application/ | checked: 2026-09-03 -->
 <!-- source: https://kubernetes.io/ko/docs/tasks/debug/debug-application/debug-running-pod/ | checked: 2026-09-03 -->

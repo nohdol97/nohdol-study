@@ -78,5 +78,5 @@ item must be reported as a limitation rather than silently omitted.
 |---|---|---|
 | Rule placement | Policy and optional procedures mix | Always-on policy and routed procedures stay separate |
 | Skill discoverability | Name-only or vague summaries | Trigger, boundary, procedure, and output are explicit |
-| Documentation drift | Code changes but indexes stay stale | README, Korean view, MOC, and changelog move together |
+| Documentation drift | Code changes but indexes stay stale | README, rules summary, MOC, and changelog move together |
 | Verification | Static files appear complete | Behavior is tested and unobserved live behavior is labeled |

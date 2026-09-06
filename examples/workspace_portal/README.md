@@ -1,6 +1,6 @@
 # Workspace Portal
 
-`_workspace/sites/<slug>/` 아래의 사용자용 다이내믹 HTML 사이트를 `_workspace/index.html` 한 곳에서 여는 로컬 포털이다. 지식 정본은 아니며 `_workspace/`와 함께 Git에서 제외된다.
+This local portal opens user-facing dynamic HTML sites under `_workspace/sites/<slug>/` from a single entry point, `_workspace/index.html`. It is not a knowledge source of truth and is excluded from Git along with `_workspace/`.
 
 ```sh
 python3 examples/workspace_portal/portal.py init
@@ -14,4 +14,4 @@ python3 examples/workspace_portal/portal.py check
 python3 examples/workspace_portal/portal.py serve
 ```
 
-`register` 전에 `_workspace/sites/sample-site/index.html`이 있어야 한다. 등록 파일은 `_workspace/sites.json`이며, 같은 slug를 다시 등록하면 항목을 갱신한다. `init`은 없는 포털 파일만 만들고 기존 로컬 포털을 덮어쓰지 않는다.
+There must be `_workspace/sites/sample-site/index.html` before `register`. The registration file is `_workspace/sites.json`, and the item is updated if the same slug is registered again. `init` only creates portal files that do not exist and does not overwrite existing local portals.

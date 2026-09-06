@@ -1,28 +1,28 @@
-# 요청 의미와 API 계약
+# Request semantics and API contract
 
 <!-- source: https://www.rfc-editor.org/rfc/rfc9110.html | checked: 2026-09-03 -->
 <!-- source: https://www.rfc-editor.org/rfc/rfc9457.html | checked: 2026-09-03 -->
 <!-- source: https://spec.openapis.org/oas/v3.1.0.html | checked: 2026-09-03 -->
 
-API 계약은 endpoint 목록이 아니라 호출자가 다음 행동을 안전하게 선택할 수 있게 하는 의미의 집합이다. method, status, representation, 오류 코드, deadline, 중복 요청과 장기 작업 상태가 서로 맞아야 proxy·SDK·재시도 정책도 같은 의도로 동작한다.
+An API contract is not a list of endpoints, but rather a set of semantics that allows the caller to safely choose the next action. The method, status, representation, error code, deadline, duplicate request, and long-term task status must match for the proxy, SDK, and retry policy to operate with the same intent.
 
-## 이 장에서 처음 쓰는 말
+## Terms introduced in this chapter
 
-| 말 | 이 장에서의 뜻 |
+| word | Meaning in this chapter |
 |---|---|
-| resource | API가 식별하고 표현하는 대상 |
-| safe | 호출자가 상태 변경을 요청하지 않는 method 성질 |
-| idempotent | 같은 요청을 반복해도 의도한 서버 효과가 한 번과 같은 성질 |
-| representation | resource의 현재 상태를 전송 가능한 형식으로 표현한 값 |
-| problem detail | 기계가 읽을 수 있는 공통 오류 본문 형식 |
-| operation | 응답보다 오래 실행되는 한 번의 업무 작업과 그 상태 |
+| resource | What the API identifies and represents |
+| safe | Method properties that do not require the caller to change state |
+| idempotent | Even if the same request is repeated, the intended server effect is the same as once. |
+| representation | A value that expresses the current state of the resource in a transmittable format. |
+| problem detail | Common machine-readable error body formats |
+| operation | One business task that runs longer than it responds and its state |
 
-1. 먼저 사용자의 의도를 resource와 method로 적는다.
-2. 그다음 성공·실패·중복·처리 중 상태를 클라이언트 행동과 연결한다.
+1. First, write the user's intention as a resource and method.
+2. Next, connect the success, failure, duplicate, and processing states with client actions.
 
-## 먼저 이해하기
+## Understand the model first
 
-RFC 9110에서 method는 요청의 주된 의미를 전달한다. `GET`이 읽기처럼 보인다는 관습만으로 충분하지 않다. safe method에서 업무 상태를 바꾸게 만들면 crawler, cache와 자동 재시도가 의도하지 않은 효과를 만들 수 있다. idempotent method는 통신이 끊긴 뒤 같은 의도를 다시 보내는 판단에 도움을 주지만, 로그가 한 줄만 생긴다는 뜻도 아니고 모든 `POST`가 자동으로 안전해진다는 뜻도 아니다.
+In RFC 9110, method conveys the main meaning of the request. The convention that `GET` looks like a read is not enough. Changing the task state in a safe method can have unintended effects on crawlers, caches, and automatic retries. The idempotent method helps determine whether to resend the same intent after communication is lost, but it does not mean that only one line will be created in the log, nor does it mean that all `POST` will automatically become safe.
 
 ```mermaid
 sequenceDiagram
@@ -30,29 +30,29 @@ sequenceDiagram
     participant A as Orders API
     participant D as Database
     C->>A: POST /orders + Idempotency-Key
-    A->>D: key와 주문을 같은 transaction으로 기록
+    A->>D: Record key and order in the same transaction
     D-->>A: commit
-    A--xC: 201 응답 유실
-    C->>A: 같은 key로 재시도
-    A->>D: 기존 결과 조회
-    A-->>C: 같은 order 표현 반환
+    A--xC: 201 Response Lost
+    C->>A: Retry with same key
+    A->>D: View existing results
+    A-->>C: Returns the same order expression
 ```
 
-## 계약 표부터 쓴다
+## Start with the contract table
 
-`POST /orders` 예시를 코드보다 먼저 표로 고정한다.
+`POST /orders` The example is fixed as a table before the code.
 
-| 상황 | HTTP 결과 | 안정 식별자 | 호출자의 다음 행동 |
+| situation | HTTP result | stable identifier | Caller's next action |
 |---|---|---|---|
-| 새 주문 생성 | `201 Created` | `orderId`, request key | 표현 저장 또는 조회 |
-| 같은 key·같은 payload | 기존 결과 | 같은 `orderId` | 성공으로 수렴 |
-| 같은 key·다른 payload | `409 Conflict` | problem `type` | 자동 재시도 중단 |
-| 입력 형식 오류 | `400` 또는 `422` 계약 | field problem | 입력 수정 |
-| 인증은 됐지만 권한 없음 | `403 Forbidden` | audit correlation | 권한 요청 또는 중단 |
-| 처리 접수, 아직 완료 전 | `202 Accepted` | `operationId`와 상태 URI | polling 또는 callback 대기 |
-| 서버 과부하 | `503 Service Unavailable` | request ID, 선택적 Retry-After | budget 안에서 backoff |
+| Create new order | `201 Created` | `orderId`, request key | Save or view expressions |
+| Same key, same payload | existing results | Same as `orderId` | converge to success |
+| Same key, different payload | `409 Conflict` | problem `type` | Abort automatic retry |
+| Input format error | `400` or `422` contract | field problem | Input correction |
+| Authenticated but no permissions | `403 Forbidden` | audit correlation | Request permission or stop |
+| Received for processing, not yet completed | `202 Accepted` | `operationId` and status URI | polling or waiting for callback |
+| server overload | `503 Service Unavailable` | request ID, optional Retry-After | backoff within budget |
 
-RFC 9457의 problem detail은 HTTP status만으로 부족한 오류 세부를 `type`, `title`, `status`, `detail`, `instance` 같은 공통 구조에 담는다. `detail` 문자열을 파싱해 분기하지 말고 안정적인 `type` URI나 확장 code를 계약으로 둔다. 내부 stack trace, SQL과 개인정보를 오류 본문에 노출하지 않는다.
+The problem detail of RFC 9457 contains error details that are insufficient with HTTP status alone in common structures such as `type`, `title`, `status`, `detail`, and `instance`. Instead of parsing the `detail` string and branching, place the stable `type` URI or extension code as the contract. Internal stack traces, SQL and personal information are not exposed in the error body.
 
 ```json
 {
@@ -64,23 +64,23 @@ RFC 9457의 problem detail은 HTTP status만으로 부족한 오류 세부를 `t
 }
 ```
 
-## OpenAPI가 보장하는 것과 못 하는 것
+## What OpenAPI guarantees and what it doesn’t
 
-OpenAPI 3.1 문서는 path, operation, parameter, response와 schema를 기계가 읽을 수 있게 표현한다. lint, 문서 생성과 contract test의 입력으로 쓸 수 있다. 그러나 schema가 유효하다는 사실만으로 의미 호환성이 보장되지는 않는다.
+The OpenAPI 3.1 document expresses path, operation, parameters, response, and schema in a machine-readable manner. It can be used as input for lint, document creation, and contract testing. However, semantic compatibility is not guaranteed just because the schema is valid.
 
-| 변경 | schema 검사 | 실제 호환성 질문 |
+| change | schema check | Actual Compatibility Questions |
 |---|---|---|
-| optional field 추가 | 대체로 통과 | 엄격한 consumer가 미지 필드를 거부하는가 |
-| enum 값 추가 | 형식상 가능 | consumer의 exhaustive switch가 실패하는가 |
-| 숫자 범위 축소 | schema에 표현 가능 | 기존 저장 값과 요청이 거부되는가 |
-| status 변경 | 문서화 가능 | retry·error mapping이 달라지는가 |
-| sync를 `202` 비동기로 변경 | 표현 가능 | operation polling과 timeout 계약이 생겼는가 |
+| Add optional field | Mostly passed | Does a strict consumer reject unknown fields? |
+| Add enum value | Formally possible | Does the consumer's exhaustive switch fail? |
+| Narrow down the number range | Can be expressed in schema | Are existing stored values ​​and requests rejected? |
+| change status | Documentable | Does retry·error mapping change? |
+| Change sync to `202` asynchronous | expressible | Are there operation polling and timeout contracts? |
 
-따라서 provider schema diff와 실제 consumer contract test를 함께 둔다. [호환 변경·테스트와 점진적 배포](#doc=backend-engineering-evolution)에서 이 공존 기간을 배포 gate로 확장한다.
+Therefore, the provider schema diff and the actual consumer contract test are placed together. [In compatibility changes/tests and gradual deployment](#doc=backend-engineering-evolution), this coexistence period is extended to the deployment gate.
 
-## 장기 작업과 결과 불명
+## Long-term operation and results unknown
 
-요청 deadline이 끝났다고 operation을 취소했다고 가정하면 안 된다. server가 commit한 뒤 응답만 잃을 수 있다. 오래 걸리는 작업은 `operationId`, 현재 상태, 생성·갱신 시각, 결과 링크, 취소 가능 상태를 별도 resource로 제공한다.
+You should not assume that the operation is canceled just because the request deadline has ended. The response can only be lost after the server commits. For tasks that take a long time, `operationId`, current status, creation/update time, result link, and cancellable status are provided as separate resources.
 
 ```yaml
 operationId: op-0182
@@ -93,28 +93,28 @@ result: null
 retryable: false
 ```
 
-`retryable: false`는 실패라는 뜻이 아니라 같은 업무를 새로 시작하지 말고 이 operation을 조회하라는 뜻이다. 외부 callback은 `eventId`, signature, 발생 시각과 replay window를 확인하고 중복 수신을 정상 시나리오로 처리한다.
+`retryable: false` does not mean failure, but rather means that you should check this operation instead of starting the same task again. The external callback checks `eventId`, signature, occurrence time, and replay window, and processes duplicate reception as a normal scenario.
 
-## API review 순서
+## API review order
 
-1. resource와 method가 사용자의 의도를 표현하는지 본다.
-2. success, accepted, conflict, overload와 validation failure를 분리한다.
-3. 모든 상태 변경 요청에 중복·응답 유실 시나리오를 적는다.
-4. 오류 code와 필드가 SDK에 안정적인지 확인한다.
-5. auth subject와 tenant가 [인프라 보안](#doc=infrastructure-security-roadmap)의 identity에서 transaction까지 이어지는지 확인한다.
-6. 전체 deadline과 retry는 [트래픽 제어와 서비스 복원력](#doc=traffic-resilience-request-budget)에 맞춘다.
-7. operation과 request ID를 [AIOps evidence graph](#doc=aiops-foundations-evidence-graph)에 전달한다.
+1. Check whether the resource and method express the user's intent.
+2. Separate success, accepted, conflict, overload, and validation failure.
+3. Write down duplication and response loss scenarios for all status change requests.
+4. Check whether the error code and field are stable in the SDK.
+5. Check whether the auth subject and tenant continue from the identity of [Infrastructure Security ](#doc=infrastructure-security-roadmap) to the transaction.
+6. The overall deadline and retry are aligned with [Traffic Control and Service Resiliency](#doc=traffic-resilience-request-budget).
+7. Pass the operation and request ID to [AIOps evidence graph](#doc=aiops-foundations-evidence-graph).
 
-## 완료
+## Completion criteria
 
-- method·status·오류 본문을 호출자의 다음 행동과 연결했다.
-- 상태 변경 요청의 idempotency key와 payload conflict를 정의했다.
-- 요청 timeout과 operation 결과 불명을 구분했다.
-- OpenAPI schema 검사와 의미 호환성 검사를 분리했다.
+- We linked the method·status·error body to the caller's next action.
+- Defined the idempotency key and payload conflict of the status change request.
+- A distinction is made between request timeout and operation result unknown.
+- OpenAPI schema check and semantic compatibility check were separated.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-- `PUT`이 idempotent하다는 사실과 업무 중복이 절대로 없다는 주장이 왜 다른가?
-- `503`을 받은 모든 요청을 즉시 재시도하면 어떤 feedback loop가 생기는가?
-- enum 값 하나를 추가하는 변경이 어떤 consumer에서는 breaking change가 되는가?
-- `202 Accepted`가 성공 완료를 뜻하지 않는다면 어떤 상태 resource가 필요한가?
+- Why is the fact that `PUT` is idempotent different from the claim that there is absolutely no duplication of work?
+- What feedback loop will occur if all requests receiving `503` are immediately retried?
+- Does a change that adds one enum value become a breaking change for some consumers?
+- If `202 Accepted` does not mean successful completion, what status resource is needed?

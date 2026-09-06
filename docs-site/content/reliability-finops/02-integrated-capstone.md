@@ -1,40 +1,40 @@
-# DevOps 통합 capstone
+# DevOps integration capstone
 
-> 실습 등급: **Local 필수 + AWS optional**. AWS 단계는 실제 계정 변경 없이 design·plan까지만 수행해도 된다. live 실행 시 resource inventory, 과금 가능성과 cleanup 승인을 먼저 남긴다.
+> Lab level: **Local required + AWS optional**. The AWS stage can be performed only up to design and plan without changing the actual account. When running live, resource inventory, billing possibility, and cleanup approval are left first.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-이 문서는 첫 실습이 아니라 앞선 주제를 연결하는 졸업 과제다. Linux·networking·Kubernetes·Helm·observability와 PostgreSQL 또는 Redis의 기본 실습을 먼저 끝낸다.
+This document is not the first lab, but a graduation assignment that connects the previous topics. Complete the basic labs of Linux·networking·Kubernetes·Helm·observability and PostgreSQL or Redis first.
 
-- **local cluster**: 지워도 되는 kind 또는 minikube context가 필요하다.
-- **도구**: `kubectl`, `helm`, `curl`과 선택한 data store client가 필요하다.
-- **sample workload**: `/ready`, `/metrics`, request ID와 data store 연결을 제공하는 test API와 Helm chart가 필요하다.
-- **관측 환경**: 최소한 request 성공률·latency와 application log를 볼 수 있어야 한다. trace까지 있으면 같은 request ID로 연결한다.
-- **실패 하나만 선택**: 잘못된 image, connection exhaustion, network denial 중 처음에는 하나만 고른다.
-- **안전 조건**: 실패 범위, 중단 조건, rollback 명령과 cleanup 목록을 주입 전에 작성한다.
+- **local cluster**: Requires a kind or minikube context that can be deleted.
+- **Tools**: Requires `kubectl`, `helm`, `curl` and selected data store client.
+- **sample workload**: `/ready`, `/metrics`, a test API and Helm chart that provide request ID and data store connection are required.
+- **Observation environment**: At a minimum, you must be able to see the request success rate/latency and application log. If there is a trace, connect with the same request ID.
+- **Choose only one failure**: Initially choose only one of incorrect image, connection exhaustion, or network denial.
+- **Safe Conditions**: Failure scope, abort conditions, rollback command and cleanup list are written before injection.
 
-현재 저장소에는 완성된 sample workload와 chart가 포함돼 있지 않으므로, 이 문서만으로 Local capstone을 실행 완료했다고 판정할 수 없다. 아래 절은 필요한 실행 계약이며 실제 sample bundle이 제공되기 전까지는 설계·검토 단계로 취급한다.
+Since the current repository does not include the completed sample workload and chart, it cannot be determined that the local capstone has been completed through this document alone. The section below is a necessary execution contract and is treated as a design/review stage until the actual sample bundle is provided.
 
-## 먼저 이해하기
+## Understand the model first
 
-capstone의 목적은 여러 도구를 한 번씩 실행하는 것이 아니라 하나의 사용자 요청이 infrastructure 전체를 지나 실패하고 회복되는 과정을 증거로 설명하는 것이다. Helm release, Pod 상태, database connection, telemetry와 SLO를 같은 timeline에 놓아야 한다.
+The purpose of the capstone is not to run multiple tools at once, but to provide evidence of how a single user request passes through the entire infrastructure to fail and recover. Helm release, Pod status, database connection, telemetry and SLO should be placed on the same timeline.
 
-예를 들어 DB connection exhaustion을 선택하면 단순히 database connection 수를 줄이는 데서 끝나지 않는다. 어떤 traffic에서 pool이 포화됐는지, API가 timeout 또는 503을 어떻게 반환했는지, metric·log·trace가 같은 사건을 가리키는지, 완화 뒤 backlog와 SLO가 회복됐는지 확인한다.
+For example, selecting DB connection exhaustion does not end with simply reducing the number of database connections. Check which traffic caused the pool to become saturated, how the API returned a timeout or 503, whether metrics·log·trace point to the same event, and whether the backlog and SLO were restored after mitigation.
 
-| 단계 | 질문 | 남길 증거 |
+| step | question | evidence to leave |
 |---|---|---|
-| baseline | 정상일 때 얼마를 처리하는가? | request rate, p95, pool, resource 사용량 |
-| injection | 실패 범위와 종료 조건은 무엇인가? | 시작 시각, 변경 diff, safety limit |
-| detection | 사용자가 먼저 알기 전에 잡는가? | SLI와 alert timeline |
-| diagnosis | 어느 경계가 병목인가? | event, log, trace, dependency state |
-| mitigation | impact가 실제로 줄었는가? | rollout·rollback과 recovery signal |
-| learning | 다음에는 무엇이 자동화되는가? | owner 있는 action과 검증 방법 |
+| baseline | How much do you process when normal? | request rate, p95, pool, resource usage |
+| injection | What are the failure boundaries and termination conditions? | Start time, change diff, safety limit |
+| detection | Does it catch it before the user knows about it? | SLI and alert timeline |
+| diagnosis | Which boundary is the bottleneck? | event, log, trace, dependency state |
+| mitigation | Has impact actually decreased? | rollout·rollback and recovery signal |
+| learning | What's automated next? | Actions with owner and verification method |
 
-Pod가 Running이거나 alert가 사라진 사실 하나만으로 완료하지 않는다. 정상 기준으로 돌아온 사용자 요청과 dependency 상태를 확인하고 임시 변경을 desired state에 반영해야 한다.
+The fact that the Pod is Running or that the alert has disappeared is not enough. User requests and dependency states that have returned to normal standards must be checked and temporary changes reflected in the desired state.
 
-## 공통 workload 계약
+## Common workload contract
 
-sample API는 PostgreSQL 또는 Redis에 의존하고 `/ready`, `/metrics`와 trace context를 제공한다. 다음 목표는 예시이므로 자신의 환경에 맞게 계산한다.
+The sample API relies on PostgreSQL or Redis and provides `/ready`, `/metrics` and trace context. The following goals are examples, so calculate them according to your environment.
 
 ```yaml
 objectives:
@@ -57,14 +57,14 @@ flowchart LR
     T[Terraform plan] --> N[optional AWS foundation]
 ```
 
-## A. Local 필수 capstone
+## A. Local required capstone
 
-### 1. 준비와 정상 기준
+### 1. Preparation and normal standards
 
-1. local Kubernetes에 namespace와 resource quota를 만든다.
-2. sample API와 data dependency를 Helm으로 설치한다.
-3. rendered manifest, image digest와 release revision을 보관한다.
-4. 정상 요청 성공률, p95 latency, connection usage와 resource baseline을 기록한다.
+1. Create a namespace and resource quota in local Kubernetes.
+2. Install sample API and data dependency with Helm.
+3. Store rendered manifest, image digest and release revision.
+4. Records normal request success rate, p95 latency, connection usage and resource baseline.
 
 ```bash
 helm lint ./sample-chart
@@ -74,9 +74,9 @@ helm upgrade --install sample ./sample-chart -n infra-capstone --create-namespac
 kubectl get deploy,pod,service -n infra-capstone
 ```
 
-### 2. 장애 주입
+### 2. Disorder injection
 
-잘못된 image, DB connection exhaustion 또는 NetworkPolicy denial 중 하나만 선택한다. 주입 전에 rollback command와 관찰 dashboard를 준비한다.
+Select only one of incorrect image, DB connection exhaustion, or NetworkPolicy denial. Prepare rollback command and observation dashboard before injection.
 
 ```mermaid
 sequenceDiagram
@@ -85,20 +85,20 @@ sequenceDiagram
     participant O as Observability
     participant R as Responder
     E->>W: bounded failure injection
-    W-->>O: SLI·log·trace 변화
+    W-->>O: SLI·log·trace changes
     O->>R: actionable alert
     R->>W: diagnose and mitigate
     W-->>O: recovery signal
     R->>E: timeline·receipt
 ```
 
-### 3. 완료 증거
+### 3. Proof of Completion
 
-- alert 시각부터 SLO 회복까지 incident timeline
-- 변경 전후 metric과 request/trace ID 한 개
-- root cause와 가장 가까운 evidence
-- rollback 또는 fix revision과 재발 방지 action
-- Helm uninstall, namespace와 local artifact cleanup receipt
+- Incident timeline from alert time to SLO recovery
+- One metric and request/trace ID before and after change
+- Evidence closest to the root cause
+- Rollback or fix revision and action to prevent recurrence
+- Helm uninstall, namespace and local artifact cleanup receipt
 
 ```bash
 helm uninstall sample -n infra-capstone
@@ -108,36 +108,36 @@ rm -f rendered.yaml
 
 ## B. AWS optional capstone
 
-Terraform으로 격리 VPC·IAM role과 EKS 의존 자원을 설계하고 saved plan을 검토한다. Karpenter는 다음 심화 topic에서만 추가한다.
+Design isolated VPC/IAM roles and EKS dependent resources using Terraform and review saved plans. Karpenter only adds to the following in-depth topics:
 
-### 실행 전 gate
+### gate before execution
 
-- temporary credential의 caller identity, region과 예상 account를 검증한다.
-- 예상 resource, quota, public exposure, tag와 region별 가격을 공식 도구에서 확인한다.
-- state backend, lock, encryption과 recovery owner를 정한다.
-- `terraform plan`의 create·replace·destroy 수와 data egress 가능성을 두 명이 검토한다.
+- Verify the caller identity, region, and expected account of the temporary credential.
+- Check expected resource, quota, public exposure, tag, and price by region in the official tool.
+- Set the state backend, lock, encryption and recovery owner.
+- Two people review the number of create·replace·destroy and data egress possibilities of `terraform plan`.
 
-### live 실행 시 receipt
+### Receipt when running live
 
-architecture diagram, resource inventory, apply/deploy evidence, SLI, incident timeline과 cleanup 결과를 남긴다. secret, state, account ID와 private endpoint는 공개 receipt에서 제거한다. CI는 live AWS resource를 만들지 않는다.
+Leaves architecture diagram, resource inventory, apply/deploy evidence, SLI, incident timeline and cleanup results. Secret, state, account ID and private endpoint are removed from public receipt. CI does not create live AWS resources.
 
-### 정리 판정
+### Clearance Judgment
 
-`terraform destroy` 성공만 믿지 않고 AWS resource inventory, load balancer·volume·snapshot·backup, DNS, log retention과 billing view를 확인한다. 보존해야 할 backup이나 audit log는 owner와 만료일을 남긴다.
+`terraform destroy` Don't just believe in success, check AWS resource inventory, load balancer·volume·snapshot·backup, DNS, log retention, and billing view. Backup or audit logs that need to be preserved leave an owner and an expiration date.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-장애 주입 직후 SLI가 하락하고 alert가 울렸다면 detection path를 확인한 것이다. alert가 없더라도 요청이 실패했다면 threshold, measurement point 또는 traffic volume이 가정과 맞지 않는지 조사한다. alert를 억지로 울리기 위해 threshold만 낮추지 않는다.
+If the SLI drops immediately after fault injection and an alert sounds, the detection path has been confirmed. If the request fails even without an alert, check whether the threshold, measurement point, or traffic volume does not match the assumptions. Do not just lower the threshold to force an alert to sound.
 
-rollback 뒤 Pod readiness가 회복됐지만 DB pool이 계속 포화되거나 queue backlog가 증가한다면 서비스는 아직 회복 중이다. recovery 완료 event를 정상 요청률, tail latency와 dependency health의 조합으로 미리 정의해야 RTO를 일관되게 잴 수 있다.
+Pod readiness has recovered after rollback, but if the DB pool continues to be saturated or the queue backlog increases, the service is still recovering. The recovery completion event must be defined in advance as a combination of normal request rate, tail latency, and dependency health to measure RTO consistently.
 
-AWS optional 단계의 plan 성공은 cloud architecture가 실제 traffic과 failure를 견딘다는 증거가 아니다. account·region·권한·resource graph를 검토한 정적 증거다. live 실행을 하지 않았다면 load, failover, 비용과 cleanup 결과는 미검증으로 남긴다.
+The success of the AWS optional phase plan is not proof that the cloud architecture can withstand actual traffic and failure. This is static evidence that examines the account·region·authority·resource graph. If live execution is not performed, load, failover, cost, and cleanup results remain unverified.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. local capstone의 성공을 “Pod Running”으로 끝낼 수 없는 이유는 무엇인가?
-2. AWS plan에 destroy가 0이어도 위험한 변경일 수 있는 예는 무엇인가?
-3. cleanup receipt에 billing과 backup 확인이 필요한 이유는 무엇인가?
+1. Why can’t local capstone success be completed with “Pod Running”?
+2. What is an example of a change that might be dangerous even if destroy is 0 in an AWS plan?
+3. Why is billing and backup confirmation necessary upon cleanup receipt?
 
 <!-- source: https://helm.sh/docs/helm/helm_upgrade/ | checked: 2026-09-03 -->
 <!-- source: https://developer.hashicorp.com/terraform/cli/commands/plan | checked: 2026-09-03 | version: Terraform 1.16.x -->

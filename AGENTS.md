@@ -79,7 +79,7 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 - Claude-specific configuration lives in `.claude/settings.json`.
 - Codex project configuration and inline lifecycle hooks live in `.codex/config.toml`. Project trust and exact hook-definition trust are required before Codex runs project hooks.
 - Keep reusable workflow bodies CLI-neutral. Tool-specific configuration only registers the shared scripts.
-- Model-read harness assets are English. User-facing chat and repository documentation are Korean.
+- Model-read harness assets and repository documentation are English. Match user-facing chat to the user's language. Preserve Korean skill-trigger aliases and language-specific examples where they are functional inputs.
 
 ## 7. Working rules
 
@@ -92,7 +92,7 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 - Put internet-published documentation UI under `docs-site/`. Its catalog may name only explicitly selected, Git-tracked Markdown; a build must reject `vault/`, `REGISTRY.md`, `_workspace/`, path traversal, and untracked sources rather than discovering content automatically. Keep `docs-site/dist/` untracked and publish it only as a GitHub Pages artifact. The local `_workspace` portal and the public docs site are separate surfaces.
 - Keep installation scripts dependency-free and compatible with macOS `/bin/sh`.
 - Do not install optional global tools during ordinary study work. `study-install` reports optional capabilities and installs nothing unless the user separately asks.
-- Use `metaskill` for changes to harness rules, shared skills, hooks, installers, ADRs, or specs. Keep root README, the Korean skill map, docs MOC, and harness changelog synchronized with those changes.
+- Use `metaskill` for changes to harness rules, shared skills, hooks, installers, ADRs, or specs. Keep root README, the skill map, docs MOC, and harness changelog synchronized with those changes.
 
 ## 8. Phase boundaries
 

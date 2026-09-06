@@ -1,36 +1,36 @@
-# Plan, drift와 import 실습
+# Plan, drift and import lab
 
-> 실습 등급: 첫 절은 **Local**, AWS 예시는 **Plan only**다. 이 장은 `terraform apply`를 실행하지 않는다.
+> Lab level: The first section is **Local**, and the AWS example is **Plan only**. This chapter does not run `terraform apply`.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-- **도구**: Terraform 1.16.x를 설치하고 `terraform version`으로 확인한다.
-- **directory**: 다른 Terraform state가 없는 새 directory를 만든 뒤 그 안에서만 실행한다.
-- **파일**: 첫 단계에서 `main.tf`, 두 번째 단계에서 `contract.tftest.hcl`을 만든다.
-- **AWS 단계**: 선택 사항이다. AWS CLI와 temporary credential, 조회·plan에 필요한 최소 권한이 있을 때만 진행한다.
-- **생성 여부**: 이 장은 `apply`하지 않으므로 AWS resource를 만들지 않는다. local saved plan 파일만 생긴다.
-- **정리 대상**: `study.tfplan`, `planned-change.tfplan`, `.terraform/`이며 실제 backend state와 `.terraform.lock.hcl`은 같은 대상으로 취급하지 않는다.
+- **Tools**: Install Terraform 1.16.x and check with `terraform version`.
+- **directory**: Create a new directory with no other Terraform state and run only within it.
+- **File**: Create `main.tf` in the first step and `contract.tftest.hcl` in the second step.
+- **AWS Step**: Optional. Proceed only if you have the minimum privileges required for AWS CLI, temporary credentials, and inquiry/plan.
+- **Creation or not**: This chapter does not create AWS resources because it does not `apply`. Only local saved plan files are created.
+- **Correction target**: `study.tfplan`, `planned-change.tfplan`, `.terraform/`, and the actual backend state and `.terraform.lock.hcl` are not treated as the same target.
 
-Terraform을 처음 쓴다면 첫 절의 성공 기준은 `plan`에 `terraform_data.contract` 하나의 생성 제안이 보이는 것이다. AWS 연결은 그 결과를 설명할 수 있게 된 다음에 진행한다.
+If you are using Terraform for the first time, the success criterion in the first section is to see one creation proposal, `terraform_data.contract` in `plan`. The AWS connection will proceed only after the results can be explained.
 
-## 먼저 이해하기
+## Understand the model first
 
-이 실습은 Terraform 명령의 성공 여부보다 각 단계가 어떤 불확실성을 줄이는지 확인한다. `fmt`는 표현 형식을 통일하지만 의미를 검증하지 않는다. `validate`는 configuration 구조와 provider schema를 검사하지만 어느 AWS account를 바꿀지는 판단하지 않는다. `plan`은 state와 remote object를 읽어 변경안을 만들지만 application health를 보장하지 않는다.
+This lab examines how each step reduces uncertainty rather than whether the Terraform command is successful. `fmt` unifies the expression format but does not verify the meaning. `validate` checks the configuration structure and provider schema, but does not determine which AWS account to change. `plan` reads the state and remote object to make changes, but does not guarantee application health.
 
-| 단계 | 확인하는 것 | 통과해도 남는 위험 |
+| step | checking | Risk that remains even after passing |
 |---|---|---|
-| `fmt -check` | canonical formatting | 잘못된 resource 설계 |
-| `init` | backend·module·provider 준비 | 올바른 account·변경 여부 |
-| `validate` | syntax와 내부 consistency | quota·비용·runtime 영향 |
-| `test` | 작성한 assertion | assertion에 쓰지 않은 동작 |
-| `plan` | 현재 입력 기준 변경 proposal | apply 중 race와 서비스 정상성 |
-| post-apply check | 실제 resource와 health | 장기 운영·복구 가능성 |
+| `fmt -check` | canonical formatting | Bad resource design |
+| `init` | Prepare backend·module·provider | Correct account/change? |
+| `validate` | syntax and internal consistency | Quota·cost·runtime impact |
+| `test` | The assertion you wrote | Actions not written in assertions |
+| `plan` | Proposal to change current input criteria | Race and service normality during apply |
+| post-apply check | actual resources and health | Long-term operation and recovery potential |
 
-처음 두 절은 AWS provider 없이도 이 차이를 확인하도록 `terraform_data`를 쓴다. AWS plan 단계에서는 credential과 remote state가 추가되므로 출력과 artifact를 민감하게 다룬다.
+The first two clauses use `terraform_data` to check this difference even without an AWS provider. At the AWS plan stage, credentials and remote state are added, so output and artifacts are handled sensitively.
 
-## 1. Provider 없는 core workflow
+## 1. Core workflow without provider
 
-빈 directory에 `main.tf`를 만든다.
+Create `main.tf` in an empty directory.
 
 ```hcl
 terraform {
@@ -67,9 +67,9 @@ terraform plan -var='environment=dev' -out=study.tfplan
 terraform show study.tfplan
 ```
 
-`terraform_data`는 provider download 없이 Terraform lifecycle을 연습하는 built-in resource다. `study.tfplan`은 실습 후 삭제하며 실제 environment에서는 공개 artifact로 취급하지 않는다.
+`terraform_data` is a built-in resource that practices Terraform lifecycle without provider download. `study.tfplan` is deleted after lab and is not treated as a public artifact in the actual environment.
 
-## 2. Test로 contract 고정
+## 2. Fix the contract by testing
 
 ```hcl
 # contract.tftest.hcl
@@ -92,11 +92,11 @@ terraform test
 terraform plan -var='environment=unknown'
 ```
 
-두 번째 plan은 validation 때문에 실패해야 한다. test 성공과 잘못된 input 거부를 함께 확인한다.
+The second plan should fail due to validation. Check test success and incorrect input rejection together.
 
-## 3. AWS plan review 설계
+## 3. AWS plan review design
 
-AWS provider를 쓰는 configuration에는 최소한 다음 gate를 둔다.
+Place at least the following gate in the configuration using the AWS provider.
 
 ```bash
 aws sts get-caller-identity
@@ -108,67 +108,67 @@ terraform plan -detailed-exitcode -out=planned-change.tfplan
 terraform show -no-color planned-change.tfplan
 ```
 
-`-detailed-exitcode`는 no change, change, error를 구분하므로 CI가 “변경 있음”을 실패로 오해하지 않게 한다. apply job은 review된 saved plan과 같은 commit, workspace와 account에서만 실행한다.
+`-detailed-exitcode` distinguishes between no change, change, and error, so CI does not misunderstand “there is a change” as a failure. Apply job runs only in the same commit, workspace, and account as the reviewed saved plan.
 
 ```mermaid
 flowchart TD
-    A[caller·commit 확인] --> B[fmt·validate·test]
-    B --> C[lock을 잡고 plan]
-    C --> D{destroy·replace·권한 확대?}
-    D -->|예| E[owner review와 migration·rollback 확인]
-    D -->|아니오| F[일반 승인]
+    A[Check caller/commit] --> B[fmt·validate·test]
+    B --> C[Hold the lock and plan]
+    C --> D{destroy·replace·expand permissions?}
+    D -->|Yes| E[Check owner review and migration/rollback]
+    D -->|No| F[general approval]
     E --> G[saved plan apply]
     F --> G
-    G --> H[resource·state·health 확인]
+    G --> H[Check resource·state·health]
 ```
 
-## Drift 진단
+## Drift Diagnosis
 
-plan이 예상 밖 변경을 보이면 다음 셋을 비교한다.
+If the plan shows unexpected changes, compare the following three:
 
-1. 현재 commit의 configuration
-2. backend가 가진 state binding
-3. AWS API가 반환하는 remote object
+1. Configuration of current commit
+2. State binding of the backend
+3. remote object returned by AWS API
 
-console 변경을 무조건 되돌릴지, configuration에 채택할지는 ownership 정책의 결정이다. 먼저 plan과 CloudTrail 등 변경 주체 증거를 남긴다.
+Whether to unconditionally revert console changes or adopt them in the configuration is a decision of ownership policy. First, leave evidence of the change agent, such as plan and CloudTrail.
 
-## Import와 rename
+## Import and rename
 
-기존 object를 import할 때는 configuration을 먼저 작성하고 정확한 resource address와 remote ID를 확인한다. import 뒤에는 반드시 plan이 추가 변경 0인지 또는 의도한 차이만 있는지 검토한다.
+When importing an existing object, write the configuration first and check the correct resource address and remote ID. After import, be sure to check whether the plan has zero additional changes or only intended differences.
 
-address rename은 remote object rename과 다르다. `moved` block으로 old address와 new address의 binding 이동 의도를 기록한다.
+Address rename is different from remote object rename. Record the binding movement intention of the old address and new address with the `moved` block.
 
-## 실패와 복구
+## Failure and Recovery
 
-| 실패 | 먼저 확인 | 금지할 반응 |
+| failure | check first | reaction to inhibit |
 |---|---|---|
-| state lock 획득 실패 | active run과 lock owner | 확인 없이 force-unlock |
-| wrong account | caller identity와 allowed account | plan을 계속 진행 |
-| 예상 밖 destroy | address rename, count/for_each key, import | plan review 생략 |
-| state object 손상·삭제 | S3 version과 audit log | 빈 state로 apply |
+| Failed to acquire state lock | active run and lock owner | force-unlock without confirmation |
+| wrong account | caller identity and allowed account | Continue with the plan |
+| unexpected destruction | address rename, count/for_each key, import | Skip plan review |
+| State object damage/deletion | S3 version and audit log | apply with empty state |
 
-## 정리
+## Cleanup
 
 ```bash
 rm -f study.tfplan planned-change.tfplan
 rm -rf .terraform
 ```
 
-이 정리는 실습 directory 안에서 경로를 확인한 뒤 실행한다. 실제 backend state나 lockfile은 삭제하지 않는다.
+This cleanup is executed after checking the path in the lab directory. The actual backend state or lockfile is not deleted.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-첫 plan의 `+ create`는 built-in resource가 아직 state에 없어서 생긴다. apply하지 않았으므로 같은 plan을 다시 만들어도 create 제안이 남는 것이 정상이다. `environment=unknown`이 실패하면 variable validation이 입력 경계에서 작동한 것이다. 이것은 AWS resource가 안전하다는 검증이 아니라 module contract 한 조각의 검증이다.
+`+ create` in the first plan occurs because the built-in resource is not in the state yet. Since you did not apply, it is normal for the create suggestion to remain even if you create the same plan again. If `environment=unknown` fails, variable validation has operated on an input boundary. This is not verification that AWS resources are safe, but verification of a piece of module contract.
 
-AWS plan의 `known after apply`는 API가 생성 뒤에만 결정하는 값일 수 있다. 오류라고 지우기보다 그 unknown 값에 의존하는 policy나 route가 계획 단계에서 지나치게 넓어지지 않는지 확인한다.
+AWS plan's `known after apply` may be a value that the API determines only after creation. Rather than erasing it as an error, check whether the policy or route that depends on the unknown value is not overly widened during the planning stage.
 
-drift plan이 나오면 console 변경이 잘못됐다고 즉시 단정하지 않는다. emergency change가 정당할 수도 있고 configuration 배포가 누락됐을 수도 있다. 변경 주체와 시각, owner를 확인한 뒤 remote를 코드로 채택할지 코드대로 되돌릴지 결정한다.
+When a drift plan appears, do not immediately assume that the console change was wrong. An emergency change may be warranted, or a configuration deployment may be missing. After checking the subject, time, and owner of the change, decide whether to adopt remote as the code or revert to the code.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. `validate` 성공이 AWS plan의 안전성을 보장하지 않는 이유는 무엇인가?
-2. force-unlock 전에 active apply 여부를 확인해야 하는 이유는 무엇인가?
-3. import 직후 plan이 0이 아니면 어떤 세 상태를 비교할 것인가?
+1. `validate` Why doesn't success guarantee the safety of your AWS plan?
+2. Why do I need to check whether the application is active before force-unlock?
+3. If plan is non-zero immediately after import, which three states will be compared?
 
 <!-- source: https://developer.hashicorp.com/terraform/cli/commands/plan | checked: 2026-09-03 | version: Terraform 1.16.x -->
 <!-- source: https://developer.hashicorp.com/terraform/language/tests | checked: 2026-09-03 | version: Terraform 1.16.x -->

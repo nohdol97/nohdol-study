@@ -1,36 +1,36 @@
-# Allow·deny와 artifact 수명주기 실습
+# Allow·deny and artifact life cycle lab
 
-> 실습 등급: policy 검토는 **Local/Plan only**, AWS API 검증은 **AWS optional**이다. temporary role과 격리된 test resource만 사용하며 secret 값과 account ID를 기록하지 않는다.
+> Lab level: Policy review is **Local/Plan only**, AWS API verification is **AWS optional**. Only temporary roles and isolated test resources are used, and secret values ​​and account IDs are not recorded.
 
-## 실습 전에 준비할 것
+## Lab prerequisites
 
-- **첫 단계**: AWS 없이 JSON policy의 `Action`, `Resource`, `Condition`이 각각 동작·대상·조건을 뜻하는지 읽는다.
-- **AWS 선택 단계**: 전용 test bucket·prefix와 temporary role을 사용한다. 운영 bucket이나 사람의 기본 role은 사용하지 않는다.
-- **시험 쌍**: 허용돼야 하는 read 한 개와 거부돼야 하는 write 한 개를 실행 전에 적는다.
-- **안전 조건**: test object에는 공개해도 되는 임시 문자열만 넣고 실제 secret이나 고객 데이터를 사용하지 않는다.
-- **기록**: 성공·실패뿐 아니라 caller, action, resource, 결정에 관여한 policy 범위를 남긴다.
-- **정리 대상**: test object, bucket, temporary role·policy와 local verification artifact다.
+- **First step**: Without AWS, read whether `Action`, `Resource`, and `Condition` in the JSON policy mean action, target, and condition, respectively.
+- **AWS selection step**: Use a dedicated test bucket·prefix and temporary role. The default roles of operational buckets or people are not used.
+- **Test pair**: Write down one read that should be allowed and one write that should be rejected before execution.
+- **Safety Conditions**: Enter only temporary strings that can be made public in the test object and do not use actual secrets or customer data.
+- **Record**: Leaves not only success/failure but also caller, action, resource, and policy scope involved in the decision.
+- **Cleanup target**: test object, bucket, temporary role·policy, and local verification artifact.
 
-보안 실습에서 예상한 거부는 성공적인 관찰이다. 오류를 없애려고 곧바로 `*` 권한을 추가하지 말고 어떤 경계가 요청을 거부했는지 먼저 확인한다.
+An expected rejection in the security lab is a successful observation. Instead of adding the `*` permission right away to eliminate the error, first check which boundary denied the request.
 
-## 먼저 이해하기
+## Understand the model first
 
-least privilege는 허용된 한 동작이 성공하는지만 보는 테스트가 아니다. 의도한 read는 성공하고 인접한 prefix read, write와 delete는 실패해야 policy boundary를 확인할 수 있다. 허용과 거부를 쌍으로 시험해야 wildcard나 잘못된 resource ARN을 발견할 수 있다.
+Least privilege is not a test that only checks that one permitted operation succeeds. The policy boundary can be confirmed only when the intended read succeeds and adjacent prefix reads, writes, and deletes fail. You can detect wildcards or incorrect resource ARNs by testing allow and deny pairs.
 
-IAM에서 **implicit deny**는 어떤 Allow에도 해당하지 않는 기본 결과다. **explicit deny**는 identity/resource policy나 상위 guardrail이 명시적으로 거부하는 경우이며 Allow보다 우선한다. AccessDenied 하나만으로 어느 계층이 결정했는지는 알 수 없으므로 caller, action, resource와 evaluation context를 수집한다.
+In IAM, **implicit deny** is the default result that does not correspond to any Allow. **explicit deny** is when the identity/resource policy or upper guardrail explicitly denies it and takes precedence over Allow. Because AccessDenied alone does not know which layer made the decision, caller, action, resource, and evaluation context are collected.
 
-| 시험 | 기대 결과 | 확인하는 경계 |
+| test | expected results | checking boundaries |
 |---|---|---|
-| release object read | allow | 필요한 업무 동작 |
+| release object read | allow | Required work actions |
 | private prefix read | deny | resource scope |
 | object write/delete | deny | action scope |
-| 다른 role session | deny | principal·trust scope |
-| 잘못 서명된 digest | deploy deny | artifact identity |
-| 이전 secret version | rotation 뒤 deny | credential lifetime |
+| Different role session | deny | principal·trust scope |
+| Incorrectly signed digest | deploy deny | artifact identity |
+| previous secret version | deny after rotation | credential lifetime |
 
-## 1. 최소 policy 설계
+## 1. Minimum policy design
 
-특정 prefix의 object read만 허용하는 예다. bucket 이름은 별도 variable로 주입한다.
+This is an example of only allowing reading of objects with a specific prefix. The bucket name is injected as a separate variable.
 
 ```json
 {
@@ -45,18 +45,18 @@ IAM에서 **implicit deny**는 어떤 Allow에도 해당하지 않는 기본 결
 }
 ```
 
-검토 질문은 “무엇이 허용되는가”와 “무엇이 허용되지 않아야 하는가”를 쌍으로 만든다.
+Review questions pair “what is acceptable” with “what should not be acceptable.”
 
-| request | 예상 |
+| request | expectation |
 |---|---|
 | `releases/app.tar` read | allow |
-| 같은 bucket의 `private/key` read | deny |
+| Read `private/key` from the same bucket | deny |
 | object write·delete | deny |
-| 다른 bucket read | deny |
+| read another bucket | deny |
 
-## 2. Policy simulation과 실제 deny
+## 2. Policy simulation and actual deny
 
-권한이 있다면 IAM policy simulator로 먼저 확인한다. 실제 API 시험은 전용 role session에서 수행한다.
+If you have permission, check first with the IAM policy simulator. Actual API testing is performed in a dedicated role session.
 
 ```bash
 aws sts get-caller-identity
@@ -69,9 +69,9 @@ aws s3api put-object \
   --body denied.txt
 ```
 
-두 번째 write는 실패가 기대 결과다. terminal output에는 account identity, bucket name 또는 request metadata가 포함될 수 있으므로 공개 artifact에 복사하지 않는다. 예상한 deny와 credential 오류를 혼동하지 말고 error code와 CloudTrail event를 함께 본다.
+The expected result for the second write is failure. Terminal output may include account identity, bucket name, or request metadata, so do not copy it to the public artifact. Don't confuse the expected deny and credential errors; look at the error code and CloudTrail event together.
 
-## 3. Artifact gate 사고 실험
+## 3. Artifact gate thought experiment
 
 ```bash
 cosign verify \
@@ -80,12 +80,12 @@ cosign verify \
   registry.example.invalid/sample@sha256:replace-with-digest
 ```
 
-`.invalid` 주소는 실행용 registry가 아니다. 실제 조직 registry에서는 다음 경우를 각각 시험한다.
+The address `.invalid` is not a registry for execution. The actual organizational registry tests each of the following cases:
 
-- 올바른 digest와 기대한 workflow identity: 통과
-- 같은 tag가 가리키는 다른 digest: 거부
-- signature 없음 또는 다른 issuer: 거부
-- scan policy가 정한 심각도 초과: 별도 gate에서 거부
+- Correct digest and expected workflow identity: Passed
+- Other digests pointed to by the same tag: Rejected
+- No signature or other issuer: Reject
+- Severity determined by scan policy exceeded: Rejected at a separate gate
 
 ```mermaid
 flowchart LR
@@ -94,32 +94,32 @@ flowchart LR
     B --> D{policy}
     C --> D
     D -->|pass| E[deploy]
-    D -->|deny| F[evidence와 remediation]
+    D -->|deny| F[evidence and remediation]
 ```
 
-## 4. Secret rotation 완료 기준
+## 4. Secret rotation completion criteria
 
-1. 새 secret version을 생성한다.
-2. canary consumer가 새 version으로 인증하는지 확인한다.
-3. 모든 consumer를 전환하고 authentication error를 관측한다.
-4. 이전 version을 비활성화하거나 폐기한다.
-5. rollback window와 audit receipt를 닫는다.
+1. Create a new secret version.
+2. Check whether the canary consumer authenticates with the new version.
+3. Switch all consumers and observe authentication errors.
+4. Deactivate or discard the previous version.
+5. Close the rollback window and audit receipt.
 
-AWS optional resource를 만들었다면 test object, bucket, role·policy, CloudTrail 보관 범위를 inventory와 역순으로 정리한다. audit 보존 정책 때문에 즉시 삭제하지 않는 로그가 있다면 명시한다.
+If you created an AWS optional resource, organize the test object, bucket, role·policy, and CloudTrail storage range in reverse order from inventory. Specify if there are logs that are not deleted immediately due to the audit retention policy.
 
-## 결과를 이렇게 읽는다
+## How to interpret the results
 
-expected read가 실패하면 곧바로 wildcard 권한을 붙이지 않는다. caller가 예상 role인지, object ARN이 정확한지, bucket policy·KMS key policy·organization guardrail 같은 다른 계층이 있는지 확인한다. 반대로 write가 성공하면 테스트는 실패다. “명령이 성공했다”보다 policy가 의도한 경계를 지켰는지가 판정 기준이다.
+If expected read fails, wildcard permission is not immediately applied. Check whether the caller is the expected role, whether the object ARN is correct, and whether there are other layers such as bucket policy, KMS key policy, and organization guardrail. Conversely, if write succeeds, the test fails. Rather than “the command was successful,” the criterion for judgment is whether the policy’s intended boundary was maintained.
 
-Cosign 검증 성공은 내려받은 digest가 기대한 identity·issuer의 signature 조건을 만족했다는 뜻이다. image의 취약점이 없거나 runtime 설정이 안전하다는 뜻은 아니다. scan, provenance policy와 admission 결과를 별도 gate로 연결한다.
+Successful Cosign verification means that the downloaded digest satisfies the expected signature conditions of the identity/issuer. This does not mean that there are no vulnerabilities in the image or that the runtime settings are safe. The scan, provenance policy, and admission results are connected through separate gates.
 
-rotation에서는 새 credential 성공과 이전 credential 실패가 모두 필요하다. 이전 값이 계속 동작하면 노출된 credential의 위험 window가 닫히지 않았고, 일부 consumer가 이전 값을 cache하고 있다면 폐기 순간 장애가 날 수 있다.
+Rotation requires both new credential success and old credential failure. If the old value continues to operate, the risk window of the exposed credential has not been closed, and if some consumers are caching the previous value, a failure may occur at the moment of discard.
 
-## 스스로 설명해 보기
+## Explain it in your own words
 
-1. 예상한 AccessDenied와 잘못된 credential을 어떤 증거로 구분하는가?
-2. tag를 검증하고 digest를 배포하지 않으면 어떤 race가 생길 수 있는가?
-3. 새 secret이 동작한다는 사실만으로 rotation이 끝나지 않은 이유는 무엇인가?
+1. What evidence distinguishes an expected AccessDenied from an incorrect credential?
+2. What races can occur if you don't verify tags and deploy digests?
+3. Why doesn't the rotation end just because the new secret is running?
 
 <!-- source: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_testing-policies.html | checked: 2026-09-03 -->
 <!-- source: https://docs.aws.amazon.com/cli/latest/reference/sts/get-caller-identity.html | checked: 2026-09-03 -->

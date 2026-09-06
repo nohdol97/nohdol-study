@@ -1,103 +1,103 @@
-# ADR 006 — archify는 명시 호출 전용이고 산출물은 vault 밖에 둔다
+# ADR 006 — archify is an explicit call only, output is placed outside the vault
 
-- 날짜: 2026-08-09
-- 상태: 활성
-- 대상: 신규 `.agents/skills/archify/`, `.tools/PINS.md`,
-  `install-phase2b-tools.sh`의 `node18` 런타임 값, `diagram` 스킬 경계,
-  `AGENTS.md` 8절
-- 관계: [ADR 003](003-cli-learning-integrations.md)이 세운 exact-pin 설치 방식을
-  Phase 3 계열 도구에 그대로 적용한다. `diagram`은 기능이 줄지 않는다.
+- Date: 2026-08-09
+- Status: Active
+- Target: New `.agents/skills/archify/`, `.tools/PINS.md`,
+  `node18` runtime value of `install-phase2b-tools.sh`, `diagram` skill boundary,
+  `AGENTS.md` Section 8
+- Relationship: [ADR 003](003-cli-learning-integrations.md)'s exact-pin installation method
+  Applies directly to Phase 3 series tools. `diagram` does not have reduced functionality.
 
-## 맥락
+## context
 
-archify(<https://github.com/tt-a1i/archify>, MIT)는 아키텍처·워크플로·시퀀스·
-데이터흐름·라이프사이클 다이어그램을 단독 실행 HTML로 렌더한다. 외부로 아무것도
-보내지 않고, 스키마·테스트·CI를 갖췄으며, 상류가 활발하다. 도구 자체의 품질은
-채택을 막을 이유가 아니었다.
+archify(<https://github.com/tt-a1i/archify>, MIT) is architecture·workflow·sequence·
+Render data flow/lifecycle diagrams as standalone HTML. nothing outside
+It is not sent, has schema, tests, and CI, and the upstream is active. The quality of the tool itself is
+There was no reason to prevent adoption.
 
-막은 것은 **산출물의 모양**이다. 세 가지가 겹친다.
+What is blocked is **the shape of the output**. Three things overlap.
 
-1. Obsidian은 HTML 파일을 임베드하지 않는다. 노트에서 다이어그램이 보이지 않는다.
-2. 파일 하나가 약 600KB이고 이 설치처의 지식 루트는 클라우드 동기화다. 모든
-   기기가 그 용량을 치른다.
-3. **CLI에 SVG 출력 경로가 없다.** `bin/archify.mjs`의 명령은 `render`,
+1. Obsidian does not embed HTML files. The diagram is not visible in the notes.
+2. One file is about 600KB and the root of knowledge for this installation is cloud synchronization. every
+   The device pays for its capacity.
+3. **There is no SVG output path in CLI.** The command for `bin/archify.mjs` is `render`,
    `compare`, `deliver`, `preview`, `validate`, `inspect`, `check`, `guide`,
-   `examples`, `doctor`, `demo`이고 파일 전체에 `.svg` 문자열이 없다. README가
-   말하는 PNG/SVG 내보내기는 생성된 HTML을 브라우저에서 열었을 때의 **뷰어
-   버튼**이지 호출 가능한 명령이 아니다. 즉 용량 문제를 우회할 방법도 없다.
+   `examples`, `doctor`, `demo`, and there is no `.svg` string in the entire file. README
+   Speaking PNG/SVG export is a viewer when the generated HTML is opened in a browser.
+   It is a button, not a callable command. In other words, there is no way to circumvent the capacity problem.
 
-세 번째가 결정적이다. 1과 2만이라면 "SVG로 뽑아서 노트에 넣는다"가 답이었을 것이다.
+The third is decisive. If it were only 1 and 2, the answer would have been “Extract it as SVG and put it in the notebook.”
 
-## 결정
+## decision
 
-채택하되 **노트 파이프라인에 넣지 않는다.**
+Adopt but **do not put in note pipeline**
 
-- **명시 호출 전용**이다. 사용자가 archify를 지목하거나 인터랙티브·공유용·
-  발표용 다이어그램을 요청할 때만 라우팅한다. 구조가 복잡하다는 것은 라우팅
-  사유가 아니다 — 복잡도의 승급 경로는 여전히 Mermaid → D2이고, 그쪽은 노트에
-  임베드되는 SVG를 남긴다.
-- **산출물은 `_workspace/archify/`에만 쓴다.** 지식 루트에는 HTML도, 스펙 JSON도,
-  내보내기도 넣지 않는다. `.tools/` 아래도 안 된다 — 거기에 파일을 더하면
-  설치기가 검증하는 tree hash가 깨진다.
-- 스펙 JSON과 HTML을 **함께** 남긴다. 스펙은 몇 KB이고, 그것이 있어야 다이어그램을
-  고칠 수 있다.
+- **For explicit calls only**. Users point to archify or use it for interactive/sharing purposes.
+  Route only when a presentation diagram is requested. The complexity of the structure means that routing
+  That's not a reason — the complexity progression path is still Mermaid → D2, and that's in the notes.
+  Leaves an embedded SVG.
+- **The output is only used in `_workspace/archify/`.** The knowledge root includes HTML, specification JSON,
+  Export is also not included. It doesn't even go below `.tools/` — if you add the file there
+  The tree hash that the installer verifies is broken.
+- Leave the spec JSON and HTML **together**. How many kilobytes is the spec, and that's all it takes to make a diagram.
+  It can be fixed.
 
-## 왜 전역 설치가 아닌가
+## Why not a global install?
 
-상류 권장 설치법은 `npx skills add tt-a1i/archify -g`다. `AGENTS.md` 1절이
-upstream installer 실행과 전역 스킬 디렉터리 링크를 금지한다. 그래서 경로는
-하나뿐이다 — `.tools/PINS.md`에 commit과 tree hash로 pin하고 Phase 2b 설치기가
-해시를 검증해 배치한다. pin은 릴리스 `v2.13.0`이다. 태그 이후 커밋 3개 중 하나가
-렌더 측정 수정이지만, `main`을 따라가는 대신 다음 릴리스에서 re-pin한다.
+The upstream recommended installation method is `npx skills add tt-a1i/archify -g`. `AGENTS.md` Section 1
+Prohibits running upstream installers and linking to global skill directories. So the path is
+There is only one — pin `.tools/PINS.md` with commit and tree hash and the Phase 2b installer starts.
+Verify and deploy the hash. The pin is release `v2.13.0`. One of the three commits after the tag
+Render measurement fix, but re-pin it in the next release instead of following `main`.
 
-## 왜 새 런타임 값 `node18`인가
+## Why the new runtime value `node18`
 
-기존 값은 `none`과 `node22-pnpm10` 둘뿐이었다. archify는 Node 18 이상을 요구하고
-패키지 매니저는 필요 없다 — 선언된 의존성은 dev용 `ajv` 하나이며 생성물
-`renderers/shared/generated-validators.mjs`가 커밋되어 있다.
+The existing values ​​were only `none` and `node22-pnpm10`. archify requires Node 18 or higher
+There is no need for a package manager — the only declared dependency is `ajv` for dev and the product
+`renderers/shared/generated-validators.mjs` is committed.
 
-이 트리를 `node22-pnpm10`으로 적으면 설치기는 **pnpm이 없어서 도구를 못 쓴다**고
-보고한다. 그 설명은 거짓이고, 사용자는 그 거짓에 따라 pnpm을 깔 것이다. 그래서
-값을 늘렸다. 설치기는 여전히 배치를 막지 않고 보고만 하며, 실제 거부는 어댑터가
-한다.
+If you write this tree as `node22-pnpm10`, the installer says **the tool cannot be used because pnpm is missing**.
+Report. The explanation is false, and the user will install pnpm based on that falsehood. so
+The value was increased. The installer still does not prevent deployment, it just reports it, the actual rejection is due to the adapter
+Do it.
 
-## 근거가 아닌 것
+## What is not evidence
 
-`deliver`는 스펙과 산출물의 SHA-256, 바이트 수, `9/9` 검사 통과를 찍는다. 상류
-문서의 어휘가 강해서 검증처럼 읽히지만, 그것이 증명하는 것은 **렌더 파이프라인의
-무결성**이다 — 이 바이트가 저 산출물을 만들었고 구성 검사를 통과했다는 것. 다이어그램이
-시스템에 대해 주장하는 내용과는 무관하다. `AGENTS.md` 8절의 "파생물은 설명할 뿐
-근거가 되지 않는다"가 그대로 적용된다. 어댑터 스킬이 이 구분을 명시한다.
+`deliver` captures the SHA-256 and byte count of the specifications and output, and `9/9` passes the check. upstream
+The document's vocabulary is strong and reads like verification, but what it proves is the render pipeline's
+Integrity — that this byte produced that output and passed the configuration check. the diagram
+It has nothing to do with the claims made about the system. `AGENTS.md` Section 8 “Derivatives are illustrative only.
+“It does not constitute evidence” still applies. The adapter skill specifies this distinction.
 
-상류의 repository evidence 기능도 마찬가지다. 코드를 읽어 다이어그램을 다듬는
-것은 유용하지만, 거기서 나온 사실이 노트에 들어가려면 `note-writer`와 근거
-프로토콜을 거쳐 원본 파일을 열고 인용해야 한다.
+The same goes for the upstream repository evidence function. Read the code and refine the diagram
+It is useful, but if the facts from there need to be included in the note, `note-writer` and evidence
+The original file must be opened and cited through the protocol.
 
-## 실측 (2026-08-10)
+## Actual measurement (2026-08-10)
 
-pin을 배치하고 확인했다. 설치기는 tree hash를 검증해 `archify`를 `ready`로
-보고했고, `node bin/archify.mjs doctor`가 **의존성 설치 없이** exit 0으로
-14개 항목을 통과했다(Node v26.5.0, 커밋된 standalone validator 포함 전부 `ok`).
-`node18` 값이 실제와 맞는다는 뜻이다.
+The pin was placed and confirmed. The installer verifies the tree hash and changes `archify` to `ready`.
+reported, `node bin/archify.mjs doctor` exits 0 **without installing dependencies**
+Passed 14 items (Node v26.5.0, all including committed standalone validator `ok`).
+This means that the `node18` value matches the reality.
 
-`demo`가 만든 산출물은 **597.6KB HTML 한 개**다. 이 ADR이 격리 근거로 든 용량은
-추정이 아니라 이 수치다.
+The output created by `demo` is **one 597.6KB HTML piece**. The capacity of this ADR as isolated evidence is
+These are numbers, not estimates.
 
-## 한계 — 명시해 둔다
+## Limits — state them
 
-`--install`은 archify만 놓고 끝나지 않는다. 설치기 말미의 블록이 node와 pnpm이
-갖춰져 있고 `understand-anything/package.json`이 있으면 **이미 배치된 트리라도**
-`pnpm install`과 `pnpm -r build`를 다시 돌린다. 이번에도 대시보드까지 재빌드됐다.
-archify와는 무관한 기존 동작이라 이 변경에서 건드리지 않았지만, 핀 하나를
-추가하려고 `--install`을 부르면 딸려 오는 비용이므로 적어 둔다.
+`--install` does not end with just archify. The block at the end of the installer is node and pnpm.
+If it is equipped and has `understand-anything/package.json` **even if it is an already deployed tree**
+Run `pnpm install` and `pnpm -r build` again. This time, even the dashboard was rebuilt.
+Since this is an existing behavior unrelated to archify, it was not touched in this change, but one pin was added.
+If you call `--install` to add it, it will be an additional cost, so write it down.
 
-시각 검토는 하지 않았다. `demo` 산출물이 열리는지 브라우저에서 확인하지 않고
-파일 존재와 크기만 봤으므로, 렌더 품질에 대해 주장할 근거는 없다.
+There was no visual review. Without checking in the browser whether the `demo` output is opened.
+Since we only looked at file existence and size, there is no evidence to make claims about render quality.
 
-## 재검토 조건
+## Conditions for review
 
-상류가 CLI에서 SVG를 직접 출력하게 되면 `diagram`의 D2 자리를 대체할 후보로
-다시 본다. 그 전까지 이 경계는 취향이 아니라 포맷의 제약이다.
+If the upstream outputs SVG directly from CLI, it is a candidate to replace the D2 position of `diagram`.
+See you again. Until then, this boundary is not a matter of taste but a constraint of format.
 
-반대로 명시 호출 전용인데도 노트용 요청이 이쪽으로 새는 것이 관찰되면, 경계를
-설명으로 더 적을 것이 아니라 `diagram` 쪽 라우팅 문구를 먼저 손본다.
+Conversely, if it is observed that note requests are leaking even though it is only for explicit calls, raise the boundary.
+Instead of writing more as an explanation, let's first fix the routing text on the `diagram` side.

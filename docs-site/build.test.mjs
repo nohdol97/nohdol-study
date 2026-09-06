@@ -71,6 +71,11 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(index, /href="\.\/assets\/styles\.css"/);
   assert.match(index, /src="\.\/assets\/app\.js"/);
   assert.match(index, /id="diagram-viewer"/);
+  assert.match(index, /<html lang="en">/);
+  const styles = await readFile(path.join(outputPath, 'assets', 'styles.css'), 'utf8');
+  assert.doesNotMatch(index + app + styles + JSON.stringify(content), /[\u3131-\u318e\uac00-\ud7a3]/u);
+  assert.match(index, /placeholder="Search docs"/);
+  assert.match(index, /aria-label="Diagram zoom controls"/);
   assert.match(index, /data-diagram-action="zoom-in"/);
   assert.doesNotMatch(index, /src="\.\/assets\/mermaid\.min\.js"/);
   assert.match(app, /script\.src = '\.\/assets\/mermaid\.min\.js'/);
@@ -78,15 +83,15 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(app, /Math\.min\(3, Math\.max\(0\.35, nextScale\)\)/);
   assert.match(app, /let mermaidRenderQueue = Promise\.resolve\(\)/);
   assert.match(app, /node\.dataset\.processed !== 'true'/);
-  assert.match(app, /운영 기술을/);
-  assert.match(app, /배울 영역을 선택하세요/);
+  assert.match(app, /Learn operations/);
+  assert.match(app, /Choose your learning path/);
   assert.match(app, /content\.paths/);
   assert.match(app, /#path=/);
-  assert.match(app, /문제와 용어/);
-  assert.match(app, /정상 관찰/);
-  assert.match(app, /복구 증명/);
-  assert.match(app, /운영 판단/);
-  assert.doesNotMatch(app, /쿠버네티스 학습 목차/);
+  assert.match(app, /Problems and terms/);
+  assert.match(app, /Observe the baseline/);
+  assert.match(app, /Verify recovery/);
+  assert.match(app, /Operational judgment/);
+  assert.doesNotMatch(app, /Kubernetes learning contents/);
   assert.match(mermaidBundle, /globalThis\["mermaid"\]/);
   assert.equal(content.documents.length, expectedCount);
 
@@ -95,16 +100,16 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   const apiObjects = content.documents.find((document) => document.id === 'kubernetes-api-objects');
   assert.match(roadmap.html, /href="#doc=kubernetes-first-cluster"/);
   assert.match(roadmap.html, /href="#doc=kubernetes-api-objects"/);
-  assert.match(roadmap.html, /처음 보는 사람을 위한 출발점/);
-  assert.match(roadmap.html, /처음 이해했는지 확인/);
-  assert.match(roadmap.html, /운영 판단으로 확장하기/);
+  assert.match(roadmap.html, /Starting point for beginners/);
+  assert.match(roadmap.html, /Check your understanding/);
+  assert.match(roadmap.html, /Develop operational judgment/);
   assert.equal([...roadmap.html.matchAll(/<pre class="mermaid">/g)].length, 2);
   assert.equal([...firstCluster.html.matchAll(/<pre class="mermaid">/g)].length, 2);
-  assert.match(apiObjects.html, /Namespace는 무엇을 나누는가/);
-  assert.match(apiObjects.html, /자체만으로는 보안 경계를 완성하지 않는다/);
+  assert.match(apiObjects.html, /What does a Namespace separate/);
+  assert.match(apiObjects.html, /does not establish a security boundary by itself/);
   assert.match(apiObjects.html, /kubectl api-resources --namespaced=true/);
   assert.match(apiObjects.html, /namespace-demo-a/);
-  assert.match(apiObjects.html, /ResourceQuota와 LimitRange/);
+  assert.match(apiObjects.html, /ResourceQuota and LimitRange/);
   const detailedChapters = content.documents.filter((document) => /^0[2-9]\. |^10\. /.test(document.title));
   assert.equal(detailedChapters.length, 9);
   for (const chapter of detailedChapters) {
@@ -112,9 +117,9 @@ test('builds every catalog document into a relative-path Pages artifact', async 
       [...chapter.html.matchAll(/<pre class="mermaid">/g)].length >= 2,
       `${chapter.id} must contain at least two diagrams`,
     );
-    assert.match(chapter.html, /스스로 설명해 보기/);
+    assert.match(chapter.html, /Explain it in your own words/);
     assert.match(chapter.html, /language-(?:yaml|bash)/);
-    assert.doesNotMatch(chapter.html, /목차 단계|예정 실습|예정 다이어그램|예정 산출물/);
+    assert.doesNotMatch(chapter.html, /Outline stage|Planned lab|Planned diagram|Planned deliverable/);
   }
   assert.match(firstCluster.html, /language-yaml/);
   assert.match(firstCluster.html, /ImagePullBackOff/);
@@ -143,38 +148,38 @@ test('builds every catalog document into a relative-path Pages artifact', async 
         parsedJsonExamples += 1;
       }
       assert.match(source, /<!-- source: https:\/\/[^|]+ \| checked: 2026-09-03/);
-      assert.match(document.html, /스스로 설명해 보기|운영 판단으로 확장하기/);
+      assert.match(document.html, /Explain it in your own words|Develop operational judgment/);
       assert.doesNotMatch(document.html, /source:/);
       if (/\/00-roadmap\.md$/.test(document.path)) {
-        assert.match(source, /## 처음 보는 사람을 위한 출발점/);
-        assert.match(source, /\| 처음 만나는 말 \| 학습용 쉬운 뜻 \|/);
-        assert.match(source, /## 처음 이해했는지 확인/);
-        assert.match(source, /## 운영 판단으로 확장하기/);
+        assert.match(source, /## Starting point for beginners/);
+        assert.match(source, /\| New term \| Plain-language meaning \|/);
+        assert.match(source, /## Check your understanding/);
+        assert.match(source, /## Develop operational judgment/);
         assert.ok(
-          source.indexOf('## 처음 보는 사람을 위한 출발점') < source.indexOf('## 완료'),
+          source.indexOf('## Starting point for beginners') < source.indexOf('## Completion criteria'),
           `${document.id} must establish beginner context before completion criteria`,
         );
       }
       if (!/\/00-roadmap\.md$/.test(document.path)) {
-        assert.match(document.html, /먼저 이해하기/);
+        assert.match(document.html, /Understand the model first/);
         assert.match(document.html, /<table>/);
         assert.ok(source.length >= 3000, `${document.id} must explain the model with enough context`);
       }
       if (/\/01-/.test(document.path) || (isExpandedHub && !/\/00-roadmap\.md$/.test(document.path))) {
-        assert.match(source, /## 이 장에서 처음 쓰는 말/);
+        assert.match(source, /## Terms introduced in this chapter/);
         assert.match(source, /\n1\. .+\n2\. /);
         assert.ok(
-          source.indexOf('## 이 장에서 처음 쓰는 말') < source.indexOf('## 먼저 이해하기'),
+          source.indexOf('## Terms introduced in this chapter') < source.indexOf('## Understand the model first'),
           `${document.id} must define terms before using the detailed model`,
         );
       }
       if (/\/02-/.test(document.path) && !isExpandedHub) {
-        assert.match(source, /## 실습 전에 준비할 것/);
+        assert.match(source, /## Lab prerequisites/);
         assert.ok(
-          source.indexOf('## 실습 전에 준비할 것') < source.indexOf('## 먼저 이해하기'),
+          source.indexOf('## Lab prerequisites') < source.indexOf('## Understand the model first'),
           `${document.id} must establish prerequisites before the exercise model`,
         );
-        assert.match(document.html, /결과를 이렇게 읽는다/);
+        assert.match(document.html, /How to interpret the results/);
         assert.ok(source.length >= 3500, `${document.id} must explain how to interpret the exercise`);
       }
     }
@@ -210,14 +215,14 @@ test('builds every catalog document into a relative-path Pages artifact', async 
     'CDC·CQRS·Event Sourcing',
     'fleet device registry',
     'memory hierarchy·storage latency',
-    '증분 집계의 삽입 여부 기반 멱등성',
-    '집계 인원수의 재식별 위험',
-    'OpenTelemetry pipeline의 단계별 보증',
+    'insertion-based idempotence of incremental aggregates',
+    'risk of re-identification from aggregate headcounts',
+    'guarantees at each stage of the OpenTelemetry pipeline',
   ]) {
     assert.match(backendRoadmap.html, new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   for (const term of [
-    'MLA 저랭크 KV 압축',
+    'MLA low-rank KV compression',
     'Gated DeltaNet',
     'Stable Diffusion',
     'GPTQ·AWQ',
@@ -226,7 +231,7 @@ test('builds every catalog document into a relative-path Pages artifact', async 
     assert.match(aiSpecialistRoadmap.html, new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   for (const term of [
-    'Ray 분산 compute',
+    'Ray distributed compute',
     'Kueue quota·gang scheduling',
     'LiteLLM gateway',
     'Temporal durable execution',
