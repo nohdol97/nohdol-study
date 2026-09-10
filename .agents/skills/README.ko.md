@@ -2,6 +2,8 @@
 
 This English guide maps each skill's purpose, triggers, and boundaries. Execution rules live in each directory's `SKILL.md`; this guide has one section per skill. New or renamed skills are reliably discovered in the next CLI session. The historical `README.ko.md` filename is retained to preserve existing links. Korean trigger aliases remain available as functional inputs.
 
+The public [Data & Observability course](../../docs/guides/data-observability/00-roadmap.md) is a learning resource, not a new skill. Use existing study routing for guided learning and source verification; its explicitly selected English chapters are published through the docs catalog.
+
 ## archify
 
 - **One-line role**: Create architecture, workflow, sequence, data flow, and lifecycle diagrams into **single-executable HTML** with the pinned Archify CLI. This is a one-shot output for presentation and sharing.

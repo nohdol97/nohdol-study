@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -24,6 +25,56 @@ async function writeCatalog(directory, catalog) {
   await writeFile(target, JSON.stringify(catalog), 'utf8');
   return target;
 }
+
+test('publishes the complete data and observability course from explicitly selected docs', async () => {
+  const payload = await buildSite({ checkOnly: true });
+  const learningPath = payload.paths.find((item) => item.id === 'data-observability');
+  assert.deepEqual(learningPath.topicIds, ['data-observability-engineering']);
+  const documents = payload.documents.filter((item) => item.pathId === learningPath.id);
+  assert.equal(documents.length, 17);
+  const selectedPaths = new Set(payload.documents.map((item) => item.path));
+  let diagramCount = 0;
+  for (const document of documents) {
+    assert.ok(document.path.startsWith('docs/guides/data-observability/'));
+    const source = await readFile(path.join(REPOSITORY_ROOT, document.path), 'utf8');
+    assert.ok(source.startsWith(`# ${document.title}\n`));
+    assert.match(source, /checked: 2026-09-10/);
+    assert.match(document.html, /Explain it in your own words|Develop operational judgment/);
+    assert.doesNotMatch(document.html, /<!--|source:|turn\d+(?:search|view)\d+|memcite/);
+    for (const match of source.matchAll(/\]\(([^)]+\.md)(?:#[^)]*)?\)/g)) {
+      const target = path.posix.normalize(path.posix.join(path.posix.dirname(document.path), match[1]));
+      assert.ok(selectedPaths.has(target), `${document.id}: missing published target ${target}`);
+    }
+    for (const match of source.matchAll(/```json\n([\s\S]*?)```/g)) {
+      assert.doesNotThrow(() => JSON.parse(match[1]), document.id);
+    }
+    diagramCount += [...document.html.matchAll(/<pre class="mermaid">/g)].length;
+  }
+  assert.ok(diagramCount >= 6);
+  const byId = new Map(documents.map((item) => [item.id.replace('data-observability-engineering-', ''), item]));
+  assert.match(byId.get('roadmap').html, /#doc=data-observability-engineering-capstone/);
+  assert.match(byId.get('roadmap').html, /#doc=observability-sre-roadmap/);
+  assert.match(byId.get('kafka-cdc-streaming').html, /at-least-once/);
+  assert.match(byId.get('quality-contracts-slos').html, /interval still belongs in the denominator/);
+  assert.match(byId.get('opentelemetry').html, /In-memory queues can disappear on restart/);
+  assert.match(byId.get('cloud-platforms').html, /Enterprise Edition/);
+  assert.match(byId.get('ai-ready-data-evaluation').html, /held-out evaluation set/);
+  assert.match(byId.get('source-review').html, /chatgpt|shared conversation/);
+});
+
+test('the documented local SQL and capstone correctness fixtures execute successfully', async () => {
+  const examples = [
+    ['02-sql-python-foundations.md', /350/],
+    ['15-capstone.md', /PASS: replay, totals, invalid values, conflicts, missing input, ordering/],
+  ];
+  for (const [filename, expected] of examples) {
+    const source = await readFile(path.join(REPOSITORY_ROOT, 'docs/guides/data-observability', filename), 'utf8');
+    const code = source.match(/```python\n([\s\S]*?)```/);
+    assert.ok(code, `missing runnable fixture: ${filename}`);
+    const output = execFileSync('python3', ['-c', code[1]], { encoding: 'utf8', timeout: 10000 });
+    assert.match(output, expected);
+  }
+});
 
 test('builds every catalog document into a relative-path Pages artifact', async () => {
   const outputPath = await temporaryDirectory();
@@ -51,17 +102,18 @@ test('builds every catalog document into a relative-path Pages artifact', async 
     'aiops-foundations',
     'aiops-diagnosis',
     'aiops-remediation',
+    'data-observability-engineering',
   ];
-  assert.deepEqual(payload.paths.map((learningPath) => learningPath.id), ['infra', 'aiops']);
-  assert.deepEqual(payload.paths.map((learningPath) => learningPath.title), ['DevOps', 'AIOps']);
+  assert.deepEqual(payload.paths.map((learningPath) => learningPath.id), ['infra', 'aiops', 'data-observability']);
+  assert.deepEqual(payload.paths.map((learningPath) => learningPath.title), ['DevOps', 'AIOps', 'Data & Observability']);
   assert.equal(payload.paths[0].topicIds.length, 15);
   assert.equal(payload.paths[1].topicIds.length, 5);
   assert.deepEqual(payload.topics.map((topic) => topic.id), expectedTopicIds);
-  assert.equal(expectedCount, 77);
+  assert.equal(expectedCount, 94);
   assert.equal(payload.documents.length, expectedCount);
   assert.equal(new Set(payload.documents.map((document) => document.id)).size, expectedCount);
   assert.ok(payload.documents.every((document) => document.searchText.length > 0));
-  assert.ok(payload.documents.every((document) => document.path.startsWith('docs-site/content/')));
+  assert.ok(payload.documents.every((document) => document.path.startsWith('docs-site/content/') || document.path.startsWith('docs/guides/data-observability/')));
   assert.ok(payload.documents.every((document) => !/^(?:vault|_workspace)(?:\/|$)/.test(document.path)));
 
   const index = await readFile(path.join(outputPath, 'index.html'), 'utf8');
@@ -126,7 +178,7 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.doesNotMatch(roadmap.html, /language-mermaid/);
   assert.doesNotMatch(roadmap.html, /source:/);
   assert.doesNotMatch(firstCluster.html, /source:/);
-  const addedTopics = payload.topics.filter((topic) => topic.id !== 'kubernetes');
+  const addedTopics = payload.topics.filter((topic) => !['kubernetes', 'data-observability-engineering'].includes(topic.id));
   let parsedJsonExamples = 0;
   for (const topic of addedTopics) {
     const topicDocuments = content.documents.filter((document) => document.topicId === topic.id);
@@ -242,7 +294,9 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   }
   assert.doesNotMatch(index + app + JSON.stringify(content.site) + JSON.stringify(content.paths), /Infra Specialist/);
   assert.ok(content.documents.every((document) => !/<script>/i.test(document.html)));
-  assert.ok(content.documents.every((document) => !/href="https:\/\/(?:kubernetes\.io|docs\.aws\.amazon\.com|developer\.hashicorp\.com|helm\.sh|www\.postgresql\.org|redis\.io|karpenter\.sh)/i.test(document.html)));
+  assert.ok(content.documents
+    .filter((document) => document.id !== 'data-observability-engineering-source-review')
+    .every((document) => !/href="https:\/\/(?:kubernetes\.io|docs\.aws\.amazon\.com|developer\.hashicorp\.com|helm\.sh|www\.postgresql\.org|redis\.io|karpenter\.sh)/i.test(document.html)));
   assert.equal(content.documents.some((document) => document.id === 'project-overview'), false);
   assert.equal(content.documents.some((document) => document.id === 'operating-rules'), false);
 });

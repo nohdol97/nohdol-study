@@ -38,7 +38,7 @@
 ### 5. 🌐 GitHub Pages public documentation
 [**Open the public document site directly →**](https://nohdol97.github.io/nohdol-study/)
 
-- **root 2 learning areas, 20 topics, 77 documents**: DevOps 15 topics, 57 documents and AIOps 5 topics, 20 documents are provided separately, and the two areas are connected through internal links in the request, data, model, GPU, observability, traffic, GitOps, security, and incident documents.
+- **Three learning paths, 21 topics, 94 documents**: DevOps has 57 documents, AIOps has 20, and [Data & Observability](docs/guides/data-observability/00-roadmap.md) adds a 17-chapter English course from SQL and Parquet through Spark, Kafka, quality, OpenTelemetry, governance, cloud platforms, and AI evaluation. Internal links connect prerequisites and follow-up reading.
 - **Complete backend and AIOps paths**: Backend follows API contracts → invariants and transactions → capacity → distributed workflows → caching and performance → compatible deployments. AIOps connects five AI Specialist modules and four AI Transformation pillars to incident evidence, diagnosis, and approved remediation.
 - **Unomitted concept→execution→recovery connection**: Each new topic is explained starting with key terms and actual situations, and distinguishes between what the command results prove and what is not yet known. Local·Plan only·AWS optional Boundary, failure judgment, and cleanup are provided according to [spec ](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)
 - **Convert links to internal documents**: Rather than linking user-specified official pages to external links, evolve them into self-contained explanations with relationship/sequence diagrams, executable YAML/`kubectl` examples, failure examples, and recovery flows.
@@ -79,7 +79,7 @@ npm run build
 npm run preview
 ```
 
-Open `http://127.0.0.1:4174/` in your browser. Root's DevOps·AIOps learning area, method of reflecting official sources as internal documents, and Page settings follow [Public Learning Guide Guide](docs-site/README.md).
+Open `http://127.0.0.1:4174/` in your browser. The DevOps, AIOps, and Data & Observability learning paths, method of reflecting official sources as internal documents, and Page settings follow [Public Learning Guide Guide](docs-site/README.md).
 
 ### Step 1: Install harness and connect Vault
 Make the following request in AI CLI (Claude Code, Codex, Gemini CLI, etc.) or run the shell script directly:
@@ -162,8 +162,9 @@ All skills are located in the `.agents/skills/` directory, and detailed usage in
 This project's detailed architecture decisions (ADRs), step-by-step implementation specifications (Specs), and security review reports are all systematically organized in the `docs/` directory.
 
 - **[Document Map (docs/README.md)](docs/README.md)**: Map of Content (MOC) of entire ADR, specification, and proposal documents.
-- **[Open Learning Guide](docs-site/README.md)**: root DevOps·AIOps 2 areas, 20 topics, 77 documents, internal links between areas, beginner learning ladder and GitHub Pages deployment method
+- **[Open Learning Guide](docs-site/README.md)**: three paths, 21 topics, 94 documents, internal links between areas, beginner learning ladder and GitHub Pages deployment method
 - **[DevOps Open Learning Path Specification](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)**: Scope and verification agreement of 15 topics and 57 documents, from Linux, network, AWS to backend, traffic, operations, data, and Karpenter.
+- **[Data & Observability course](docs/guides/data-observability/00-roadmap.md)**: Seventeen English chapters, a twelve-month plan, stack tradeoffs, runnable correctness fixtures, failure drills, and a single evolving platform project.
 - **[AIOps Open Learning Path Specification](docs/specs/2026-09-03-aiops-public-learning-path.md)**: AI Specialist·AI Transformation Linkage and safety contract of 5 topics and 20 documents from the entire map to signals, diagnosis, and approved automatic recovery
 - **[Mobile Telegram integration guide](docs/guides/mobile-telegram-bot.md)**: Guide to building a smartphone ↔ Mac harness bridge (read only — inquiry/Q&A only)
 - **[Feed Scraper Guide](docs/guides/feed-scraper.md)**: Automatic collection of RSS sources, selection of sources by computer, procedure for adding new sources

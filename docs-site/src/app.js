@@ -133,7 +133,7 @@ function renderHome() {
           <p class="eyebrow"><span></span>CHOOSE A PATH</p>
           <h2 id="topics-title">Choose your learning path</h2>
         </div>
-        <p>Connect DevOps request and data flows with AIOps models and platforms through observability, diagnosis, and recovery.</p>
+        <p>Build systems with DevOps, connect models with AIOps, and follow events into trusted data with Data &amp; Observability.</p>
       </div>
       <div class="path-grid">
         ${content.paths

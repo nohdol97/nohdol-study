@@ -2,7 +2,7 @@
   "site": {
     "title": "Study Gateway",
     "eyebrow": "CURATED LEARNING PATHS",
-    "description": "Learn infrastructure, backend engineering, and AIOps by following requests and data through execution, observability, diagnosis, and recovery.",
+    "description": "Learn DevOps, AIOps, and data and observability engineering through systems, trusted datasets, operational evidence, diagnosis, and recovery.",
     "repository": "https://github.com/nohdol97/nohdol-study"
   },
   "paths": [
@@ -44,6 +44,17 @@
         "aiops-foundations",
         "aiops-diagnosis",
         "aiops-remediation"
+      ]
+    },
+    {
+      "id": "data-observability",
+      "number": "03",
+      "label": "DATA & OBSERVABILITY",
+      "title": "Data & Observability",
+      "description": "Follow events into trusted data and AI: Parquet, lakehouse tables, Spark, Kafka, quality, OpenTelemetry, lineage, governance, and managed platforms.",
+      "accent": "teal",
+      "topicIds": [
+        "data-observability-engineering"
       ]
     }
   ],
@@ -707,6 +718,118 @@
           "title": "Automatic recovery dry-run and rollback judgment lab",
           "summary": "Review the recovery plan without making any actual changes, and find and supplement any cases where approval, abort, or success judgments are missing.",
           "path": "docs-site/content/aiops-remediation/02-remediation-dry-run-lab.md"
+        }
+      ]
+    },
+    {
+      "id": "data-observability-engineering",
+      "number": "D01",
+      "label": "Data Platform Engineering",
+      "title": "Data and observability engineering",
+      "description": "Progress from local correctness to distributed data, telemetry, governed AI, and tested recovery.",
+      "accent": "teal",
+      "documents": [
+        {
+          "id": "data-observability-engineering-roadmap",
+          "title": "Data and Observability Engineering: from events to trusted AI",
+          "summary": "Follow a twelve-month plan and build one evolving platform with measurable completion criteria.",
+          "path": "docs/guides/data-observability/00-roadmap.md"
+        },
+        {
+          "id": "data-observability-engineering-stack-and-architecture",
+          "title": "Choose a stack by responsibility",
+          "summary": "Select a core stack and learn when CDC, Flink, Trino, catalogs, and telemetry backends earn their place.",
+          "path": "docs/guides/data-observability/01-stack-and-architecture.md"
+        },
+        {
+          "id": "data-observability-engineering-sql-python-foundations",
+          "title": "SQL and Python: prove the result before scaling it",
+          "summary": "Prove row grain, joins, deduplication, and totals with a runnable Python and SQL fixture.",
+          "path": "docs/guides/data-observability/02-sql-python-foundations.md"
+        },
+        {
+          "id": "data-observability-engineering-parquet-object-storage",
+          "title": "Parquet and object storage: understand what gets read",
+          "summary": "Measure projection, filtering, file layout, and object storage behavior.",
+          "path": "docs/guides/data-observability/03-parquet-object-storage.md"
+        },
+        {
+          "id": "data-observability-engineering-table-formats",
+          "title": "Iceberg and Delta Lake: make a set of files a table",
+          "summary": "Trace committed table versions, compare Iceberg and Delta, and rehearse recovery.",
+          "path": "docs/guides/data-observability/04-table-formats.md"
+        },
+        {
+          "id": "data-observability-engineering-spark-performance",
+          "title": "Spark internals: explain a slow job with evidence",
+          "summary": "Connect physical plans, tasks, shuffle, skew, and spill to measured improvements.",
+          "path": "docs/guides/data-observability/05-spark-performance.md"
+        },
+        {
+          "id": "data-observability-engineering-kafka-cdc-streaming",
+          "title": "Kafka, CDC, and streaming recovery",
+          "summary": "Define CDC, delivery boundaries, event time, checkpoints, and replay correctness.",
+          "path": "docs/guides/data-observability/06-kafka-cdc-streaming.md"
+        },
+        {
+          "id": "data-observability-engineering-modeling-orchestration",
+          "title": "Modeling, dbt, and orchestration: publish a meaningful dataset",
+          "summary": "Build meaningful marts, distinguish contracts from tests, and backfill explicit intervals.",
+          "path": "docs/guides/data-observability/07-modeling-orchestration.md"
+        },
+        {
+          "id": "data-observability-engineering-quality-contracts-slos",
+          "title": "Data quality, contracts, and outcome-based SLOs",
+          "summary": "Measure validity, completeness, freshness, missed runs, and publication outcomes.",
+          "path": "docs/guides/data-observability/08-quality-contracts-slos.md"
+        },
+        {
+          "id": "data-observability-engineering-opentelemetry",
+          "title": "OpenTelemetry: connect executions without losing control of telemetry",
+          "summary": "Connect SDKs and Collector pipelines; investigate propagation, sampling, and telemetry loss.",
+          "path": "docs/guides/data-observability/09-opentelemetry.md"
+        },
+        {
+          "id": "data-observability-engineering-metrics-logs-traces",
+          "title": "Prometheus, Grafana, Loki, and Tempo: operate the evidence pipeline",
+          "summary": "Read counters and histograms, bound labels, and connect dataset alerts to logs and traces.",
+          "path": "docs/guides/data-observability/10-metrics-logs-traces.md"
+        },
+        {
+          "id": "data-observability-engineering-lineage-governance",
+          "title": "Lineage, catalog, and governance: find impact and enforce access",
+          "summary": "Connect datasets, jobs, and runs to owners while testing execution-time access.",
+          "path": "docs/guides/data-observability/11-lineage-governance.md"
+        },
+        {
+          "id": "data-observability-engineering-cloud-platforms",
+          "title": "Databricks first, Snowflake second: compare the same promises",
+          "summary": "Compare Databricks and Snowflake against identical quality, recovery, and cost requirements.",
+          "path": "docs/guides/data-observability/12-cloud-platforms.md"
+        },
+        {
+          "id": "data-observability-engineering-ai-ready-data-evaluation",
+          "title": "AI-ready data, retrieval, and evaluation",
+          "summary": "Deliver authorized evidence to retrieval and agents and evaluate reproducible answer traces.",
+          "path": "docs/guides/data-observability/13-ai-ready-data-evaluation.md"
+        },
+        {
+          "id": "data-observability-engineering-platform-operations",
+          "title": "Platform operations: releases, recovery, capacity, and cost",
+          "summary": "Operate compatible releases, restores, capacity, backpressure, and cost per successful outcome.",
+          "path": "docs/guides/data-observability/14-platform-operations.md"
+        },
+        {
+          "id": "data-observability-engineering-capstone",
+          "title": "Capstone: one evolving data and observability platform",
+          "summary": "Grow one synthetic project through six phases, a runnable oracle, and a failure matrix.",
+          "path": "docs/guides/data-observability/15-capstone.md"
+        },
+        {
+          "id": "data-observability-engineering-source-review",
+          "title": "Source review, extensions, and implementation boundaries",
+          "summary": "Inspect official sources, curriculum extensions, and version boundaries.",
+          "path": "docs/guides/data-observability/16-source-review.md"
         }
       ]
     }

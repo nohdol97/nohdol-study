@@ -29,6 +29,10 @@ DevOps adds `트래픽 제어와 서비스 복원력` and `운영 가능한 백�
 
 AIOps consists of 5 topics and 20 documents: `AI Specialist 핵심 모델과 응용`, `AI Transformation 운영 플랫폼`, `신호와 운영 토폴로지`, `이상 탐지와 근거 기반 진단`, and `승인된 자동 복구와 운영 학습`. All five training modules of AI Specialist and four operational pillars of AI Transformation are moved to the upper chapters without exception, but the original text of individual lectures and vault sentences are not posted. The model, search, GPU, MLOps, and agent execution results are connected to go back and forth between the incident evidence and the evaluation dataset, and the diagnosis and action documents return to the traffic, GitOps, security, reliability, and backend documents of DevOps. To ensure that individual items in the three vault areas do not disappear under the main axis, each roadmap has a full content linking table, and the build test checks the boundary items in each table.
 
+## Extension: Data and Observability (2026-09-10)
+
+The third `data-observability` path uses the same one-path-per-topic contract and preserves all existing routes. Its 17 selected chapters live under `docs/guides/data-observability/` at the user's request. The catalog already permits explicitly selected tracked Markdown there; unrelated docs and private files are not added. See the [acceptance specification](../specs/2026-09-10-data-observability-learning-path.md).
+
 ## result
 
 - The root size follows the number of study areas, not the number of topics.

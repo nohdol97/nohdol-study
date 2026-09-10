@@ -6,7 +6,8 @@ This directory is a MOC (Map of Content) that connects nohdol-study's decisions 
 
 | guide | Target | substance |
 |---|---|---|
-| [Public learning guide](../docs-site/README.md) | English DevOps and AIOps gateway on GitHub Pages | Two learning paths, 20 topics, and 77 articles; prerequisites and follow-up reading across backend engineering, AI Specialist, and AI Transformation; search, Markdown reader, and Pages deployment |
+| [Public learning guide](../docs-site/README.md) | English DevOps, AIOps, and Data & Observability gateway on GitHub Pages | Three learning paths, 21 topics, and 94 articles; prerequisites and follow-up reading across backend engineering, AI Specialist, and AI Transformation; search, Markdown reader, and Pages deployment |
+| [Data & Observability Engineering](guides/data-observability/00-roadmap.md) | Data and observability specialization | Seventeen English chapters covering distributed data, quality, telemetry, lineage, managed platforms, AI evaluation, and a reproducible capstone |
 | [Workspace Portal](../examples/workspace_portal/README.md) | Dynamic HTML site for users from `_workspace` | `_workspace/sites/<slug>/` path and explicit manifest, single server root, portal initialization/registration/inspection |
 | [Mobile Telegram Study Bridge](guides/mobile-telegram-bot.md) | Smartphone Telegram ↔ Mac harness integration (read only) | Inquiry/question-and-answer surface that only reads the knowledge root, mobile Socratic learning, inline button control, MessageEntity-based flawless format rendering and local URL purification, automatic startup when launchd boots, AGENTS.md security whitelist compliance |
 | [Feed Scraper](guides/feed-scraper.md) | RSS source → vault automatic collection | Separation of catalog (tracking) and selection by computer (non-tracking), `feed` stacks only titles and links, API call 0, `geeknews` summarizes/classifies after score gate, marker-based duplication prevention, launchd automatically runs |
@@ -29,6 +30,7 @@ This directory is a MOC (Map of Content) that connects nohdol-study's decisions 
 
 | specs | situation | Target |
 |---|---|---|
+| [2026-09-10-data-observability-learning-path](specs/2026-09-10-data-observability-learning-path.md) | implemented | Seventeen source-reviewed chapters in docs/, third public path, executable fixtures, browser checks, and Pages deployment |
 | [2026-09-03-aiops-public-learning-path](specs/2026-09-03-aiops-public-learning-path.md) | implemented | AI Specialist 5 modules, AI Transformation 4 pillars → Signal/evidence-based diagnosis → 5 topics/20 documents of approved automatic recovery and DevOps cross-link/execution safety contract |
 | [2026-09-03-infra-specialist-public-learning-path](specs/2026-09-03-infra-specialist-public-learning-path.md) | implemented | 57 document paths connecting Kubernetes and 14 DevOps topics, backend 6 axes, traffic control reinforcement and terminology → normal observation → failure/recovery → operation judgment contract |
 | [2026-09-03-public-docs-gateway](specs/2026-09-03-public-docs-gateway.md) | implemented | Early Kubernetes 11 training documents, search/document viewer, and visibility gates on scalable topic gateways |
