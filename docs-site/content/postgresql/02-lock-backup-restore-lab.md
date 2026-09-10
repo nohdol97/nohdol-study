@@ -9,7 +9,7 @@
 - **database**: Create a source database for lab and change `replace_source_db` in the document to the actual name.
 - **terminal**: Open three sessions: session A to hold the lock, session B to wait, and session C to check the status.
 - **File**: `accounts.dump` must not exist in the current directory. If there is a file with the same name, do not overwrite it but use a separate directory.
-- **Cleanup targets**: restore database, dump files, and unfinished transactions.
+- **Cleanup targets**: the two newly created test databases, dump file, and unfinished transactions.
 
 First, check with `SELECT current_database(), pg_backend_pid();` whether all three terminals are viewing the same test instance and database. If the PIDs are different, there are three separate sessions.
 
@@ -29,6 +29,8 @@ The second lab separates backup creation from restore success. `pg_dump` exit co
 
 ## 1. lab data
 
+Choose unused names for `replace_source_db` and `replace_restore_db` throughout this chapter. Run `createdb replace_source_db`; stop if it fails rather than reusing an existing database. Open each session with `psql -X --set ON_ERROR_STOP=1 replace_source_db`. Create the table once, in session C:
+
 ```sql
 CREATE TABLE accounts (
   id bigint PRIMARY KEY,
@@ -47,6 +49,7 @@ UPDATE accounts SET balance = balance - 10 WHERE id = 1;
 If you change the same row in session B, it waits.
 
 ```sql
+SET lock_timeout = '60s';
 UPDATE accounts SET balance = balance + 10 WHERE id = 1;
 ```
 
@@ -58,15 +61,15 @@ FROM pg_stat_activity AS a
 WHERE cardinality(pg_blocking_pids(a.pid)) > 0;
 ```
 
-After `COMMIT` or `ROLLBACK` session A, check how B progresses. After completion, check whether there are any remaining transactions.
+Finish A within 60 seconds: after A commits, B completes and account 1 returns to `100.00`; after A rolls back, B completes at `110.00`. If B hits the lock timeout, its statement has failed and neither expected result applies until it is deliberately rerun after A finishes. Run `RESET lock_timeout;` in B. Check `TABLE accounts ORDER BY id;` in C and close all open transactions before the backup.
 
 ## 2. Separate restore from logical backup
 
 ```bash
 pg_dump --format=custom --file=accounts.dump replace_source_db
 createdb replace_restore_db
-pg_restore --dbname=replace_restore_db --clean --if-exists accounts.dump
-psql replace_restore_db -c 'TABLE accounts ORDER BY id;'
+pg_restore --exit-on-error --dbname=replace_restore_db accounts.dump
+psql -X --set ON_ERROR_STOP=1 replace_restore_db -c 'TABLE accounts ORDER BY id;'
 ```
 
 A successful backup exit code and file size alone do not prove recoverability. Restore to a separate database and check row count, constraints, representative queries, and application compatibility.
@@ -98,8 +101,28 @@ Delete the two test databases and `accounts.dump`. The same cleanup is not appli
 
 ```bash
 dropdb replace_restore_db
+dropdb replace_source_db
 rm -f accounts.dump
 ```
+
+## Example results
+
+Expected SQL results for the stated starting balances. Backend PIDs and measured times vary.
+
+```text
+# While Session A holds the row, Session B has not printed UPDATE 1.
+# The observer should show B waiting with a nonempty pg_blocking_pids array.
+# After A COMMIT and B completes:
+UPDATE 1
+# If the starting balance is 100 and A subtracts 10, then B adds 10:
+balance = 100
+# If A instead ROLLBACKs before B adds 10:
+balance = 110
+# If A remains open beyond B's lock_timeout:
+ERROR: canceling statement due to lock timeout
+```
+
+Capture the source count and balance sum immediately before the dump. In the isolated restored database, both must equal that captured baseline. Successful restore commands often print nothing; compare SQL values and command exits. A timed-out UPDATE is not a successful concurrent transaction.
 
 ## How to interpret the results
 

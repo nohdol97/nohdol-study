@@ -111,7 +111,7 @@ kubectl auth can-i get secrets \
   -n secure-demo --as=system:serviceaccount:secure-demo:config-reader
 ```
 
-The intended result is that only the specific ConfigMap `get` is yes and list and secret reading are no. Actual requests may be subject to additional restrictions depending on admission or separate authorizer configuration.
+Expect yes only for the named ConfigMap GET, and no for list and secret reads. The caller needs impersonation permission for `--as`; an impersonation denial is not the tested ServiceAccount's result. `can-i` evaluates authorization and does not create or fetch `app-settings`; a permitted GET can still return NotFound. Admission governs applicable write requests, not ordinary GETs. Remove only this lab namespace after completing the policy examples with `kubectl delete namespace secure-demo`.
 
 ## securityContext to reduce Pod execution permissions
 
@@ -168,13 +168,28 @@ Secret separates sensitive values ​​from the Pod specification and image, bu
 | symptoms | boundary | check |
 |---|---|---|
 | `Unauthorized` | certification | kubeconfig context, certificate/token validity |
-| `Forbidden` | impression | `kubectl auth can-i`, binding subject and scope |
+| `Forbidden` | authorization | `kubectl auth can-i`, binding subject and scope |
 | Deny creation with policy message | admission | Namespace policy label, webhook and Pod fields |
 | Pod was created but permission denied | runtime | UID/GID, volume permission, read-only filesystem |
 | connection timeout | network | Supports both NetworkPolicy, DNS egress, and CNI |
 | Secret is exposed as plain text | data path | RBAC, etcd encryption, log·env·Git history |
 
 If you immediately give `cluster-admin` when solving a permission problem, you will lose the cause and minimum permissions. First, reproduce the exact subject and verb and add only one line of the necessary rules.
+
+## Example results
+
+Expected answers to the three impersonated `can-i` checks in order, assuming the caller has impersonation permission:
+
+```text
+# get configmap/app-settings
+yes
+# list configmaps
+no
+# get secrets
+no
+```
+
+A successful authorization check does not create `app-settings`; an actual GET can still return NotFound. If the request instead fails because you cannot impersonate the service account, the intended RBAC test has not run. Pass only when the allowed named read and both denied broader reads match the role.
 
 ## Explain it in your own words
 

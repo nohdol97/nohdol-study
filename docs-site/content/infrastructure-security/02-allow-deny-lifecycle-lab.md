@@ -1,5 +1,7 @@
 # Allow·deny and artifact life cycle lab
 
+<!-- source: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | checked: 2026-09-10 | object-level audit coverage is not enabled by default -->
+
 > Lab level: Policy review is **Local/Plan only**, AWS API verification is **AWS optional**. Only temporary roles and isolated test resources are used, and secret values ​​and account IDs are not recorded.
 
 ## Lab prerequisites
@@ -26,7 +28,7 @@ In IAM, **implicit deny** is the default result that does not correspond to any 
 | object write/delete | deny | action scope |
 | Different role session | deny | principal·trust scope |
 | Incorrectly signed digest | deploy deny | artifact identity |
-| previous secret version | deny after rotation | credential lifetime |
+| previous credential at its target service | deny after revocation | credential lifetime |
 
 ## 1. Minimum policy design
 
@@ -63,13 +65,14 @@ aws sts get-caller-identity
 aws s3api head-object \
   --bucket replace-study-bucket \
   --key releases/app.tar
+printf 'public lab fixture\n' > denied.txt
 aws s3api put-object \
   --bucket replace-study-bucket \
   --key releases/denied.txt \
   --body denied.txt
 ```
 
-The expected result for the second write is failure. Terminal output may include account identity, bucket name, or request metadata, so do not copy it to the public artifact. Don't confuse the expected deny and credential errors; look at the error code and CloudTrail event together.
+Create the harmless `denied.txt` fixture only in an empty lab directory. A missing local file is not evidence of IAM denial. The write must reach S3 and return the expected authorization error; successful STS identity lookup alone proves no S3 permission. CloudTrail object-level events require data-event logging and are not in default event history. Record the error and configured audit coverage without publishing account metadata.
 
 ## 3. Artifact gate thought experiment
 
@@ -102,10 +105,26 @@ flowchart LR
 1. Create a new secret version.
 2. Check whether the canary consumer authenticates with the new version.
 3. Switch all consumers and observe authentication errors.
-4. Deactivate or discard the previous version.
+4. Revoke the previous credential at its target service and verify that authentication with it fails. Moving a Secrets Manager version label does not itself revoke a database password, and authorized retrieval of an old stored version is a separate policy question.
 5. Close the rollback window and audit receipt.
 
 If you created an AWS optional resource, organize the test object, bucket, role·policy, and CloudTrail storage range in reverse order from inventory. Specify if there are logs that are not deleted immediately due to the audit retention policy.
+
+## Example results
+
+Illustrative AWS excerpts using the isolated read-only test role; these are not live authorization receipts.
+
+```text
+# head-object on the allowed, pre-created releases object (selected fields)
+ContentLength: 19
+ContentType: text/plain
+# Write of the locally created denied.txt
+An error occurred (AccessDenied) when calling the PutObject operation
+# After actual target-service credential revocation
+authentication rejected
+```
+
+The first two lines summarize fields from the JSON response; the actual size and content type depend on the pre-created fixture. A successful HEAD proves metadata access, not a downloaded body. A missing local upload file or a missing source object does not prove an IAM deny. The last line is a semantic outcome to record from your target service, not literal AWS CLI text: changing a secret's version label alone does not revoke the old credential.
 
 ## How to interpret the results
 

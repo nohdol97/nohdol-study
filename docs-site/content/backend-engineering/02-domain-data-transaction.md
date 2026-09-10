@@ -51,7 +51,28 @@ flowchart TD
 
 ## Conditional writing rather than reading and writing
 
-If you read the inventory first, calculate it in the application, and save it as shown below, both transactions can be judged successful by reading the same value of 1.
+For an executable local fixture, open one disposable PostgreSQL session and create these temporary tables. They disappear when the session closes and demonstrate transaction semantics, not durable storage:
+
+```sql
+CREATE TEMP TABLE inventory (sku text PRIMARY KEY, available integer NOT NULL CHECK (available >= 0));
+INSERT INTO inventory VALUES ('book-01', 1);
+CREATE TEMP TABLE orders (
+  order_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  tenant_id text NOT NULL,
+  request_key text NOT NULL,
+  status text NOT NULL,
+  total_amount integer NOT NULL,
+  UNIQUE (tenant_id, request_key)
+);
+CREATE TEMP TABLE outbox (
+  event_id text PRIMARY KEY,
+  aggregate_id bigint REFERENCES orders(order_id),
+  event_type text NOT NULL,
+  payload jsonb NOT NULL
+);
+```
+
+Reading inventory into application memory and later writing a calculated value allows two callers to act on the same stock. The conditional decrement below keeps the availability test and write in one statement:
 
 ```sql
 UPDATE inventory
@@ -62,7 +83,7 @@ WHERE sku = 'book-01'
 
 The application checks whether the affected row count is 1. If it is 0, it means that the current state does not satisfy the precondition. Although this pattern does not solve all invariants, it bundles comparison and modification of the same row into one DB statement.
 
-Do not declare a quarantine level safe just by looking at its name. In PostgreSQL's Read Committed, the snapshot can be different for each statement, and Repeatable Read and Serializable have different anomaly and abort characteristics. Serializable can also cause a transaction to fail in the event of a conflict, so a policy is needed to retry the entire transaction with the same input and within the idempotency boundary. For detailed execution and lock diagnosis, continue to [PostgreSQL Operation](#doc=postgresql-roadmap).
+Do not choose an isolation level by its name alone. PostgreSQL Read Committed can use a new snapshot for each statement; Repeatable Read and Serializable have different anomaly and abort behavior. Retry serialization failures as whole transactions with bounded attempts and the same business identity. A `CHECK (quantity > 0)` also needs `NOT NULL` if missing quantity is forbidden: SQL CHECK accepts an unknown result. Continue to [PostgreSQL operations](#doc=postgresql-roadmap) for lock diagnosis.
 
 ## The moment you leave the transaction
 
@@ -71,16 +92,47 @@ If a broker publish or HTTP call is performed first within a DB transaction, onl
 ```sql
 BEGIN;
 
-INSERT INTO orders (tenant_id, request_key, status, total_amount)
-VALUES ('shop-a', 'web-7731', 'PLACED', 42000);
-
+WITH placed AS (
+  INSERT INTO orders (tenant_id, request_key, status, total_amount)
+  VALUES ('shop-a', 'web-7731', 'PLACED', 42000)
+  RETURNING order_id
+)
 INSERT INTO outbox (event_id, aggregate_id, event_type, payload)
-VALUES ('evt-981', 'order-204', 'OrderPlaced', '{"orderId":"order-204"}');
+SELECT 'evt-981', order_id, 'OrderPlaced',
+       jsonb_build_object('orderId', order_id)
+FROM placed;
 
 COMMIT;
 ```
 
+This fragment assumes an `orders.order_id` default and a compatible outbox schema. `RETURNING` ties the event to the row actually created; an unrelated hard-coded order ID would defeat the transaction's meaning. A uniqueness conflict must resolve the existing tenant/request result and compare its payload instead of inventing a second event.
+
 Since the relay may fail in the mark process after successful publish, the same `event_id` can be sent again. Therefore, outbox reduces the event missing window, but does not automatically create end-to-end exactly-once. [Messaging and event infrastructure](#doc=messaging-roadmap) and [Partial failure and distributed workflow](#doc=backend-engineering-distributed-workflow) close the duplicate processing of consumers.
+
+## Example results
+
+Expected PostgreSQL results for the temporary fixture. Run the conditional inventory UPDATE twice, then the outbox transaction once in the same session:
+
+```text
+# First inventory decrement
+UPDATE 1
+# Second decrement: no stock remains
+UPDATE 0
+# Order and outbox transaction
+BEGIN
+INSERT 0 1
+COMMIT
+```
+
+Verify the business state and the event's actual foreign key:
+
+```sql
+SELECT available FROM inventory WHERE sku = 'book-01';
+SELECT count(*) FROM orders o JOIN outbox e ON e.aggregate_id = o.order_id
+WHERE e.payload->>'orderId' = o.order_id::text;
+```
+
+The first query returns 0 and the second returns 1. Repeating the order INSERT without application-level idempotency handling raises a unique-key violation; roll back the failed transaction. For an atomicity test, use fresh request/event IDs and replace COMMIT with ROLLBACK: the existing order and outbox counts must both stay at one. A broker has not been invoked by this fixture.
 
 ## How to interpret the results
 

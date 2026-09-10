@@ -11,7 +11,7 @@
 ### 1. 🏗️ Phase 1: Basic knowledge harness
 - **Highly portable installation**: Select knowledge directory by installation location (personal/company profile, synchronization method) and secure bootstrapping
 - **Standardized structure**: `raw/` (immutable source), `wiki/` (atomic note), `index.md` (map), `log.md` (chronology), `hot.md` (session context)
-- **Note Contract**: Flat YAML front matter, wiki link, strict enforcement of source and verification status for each claim (`unverified` ~ `primary-confirmed`)
+- **Note Contract**: Flat YAML front matter, wiki link, strict enforcement of source and verification status for each claim (`unverified`, `source-backed`, `primary-confirmed`, `cross-checked`, or `contested`)
 - **Write point gate (`PostToolUse`)**: At the moment of saving a note, diagram render failure, Frontmatter contract violation, and uninterpreted `sources:` path are checked and corrected in the same turn. Applies on a file basis even to authors who have not gone through the skill
 - **Finish Gate (`Stop`)**: Checks whether the notes written in this session have been recorded, **what points to those notes**, and whether the newly entered link is actually interpreted. The reachability judgment uses the same definition as `vault-gardening`.
 - **Egress gate (`PreToolUse`)**: Blocks notebook cells containing knowledge-root paths, wikilinks, or note frontmatter. An approval prompt asks whether to run a tool; it does not inspect whether the payload contains notes. This gate therefore also runs in interactive sessions. Measurements from public datasets are allowed because they are not vault material.
@@ -28,7 +28,7 @@
 - **Understand Anything 9-Mode Routing (`understand`)**: Know your codebase architecture, explore feature locations, explain concepts, onboarding guide, scope of change impact, domain analysis, dashboard viewer.
 - **Obsidian format and CLI integration (`obsidian`)**: Markdown extension, Bases (`.base`), JSON Canvas (`.canvas`) creation and internal routing of Obsidian CLI (4 modes)
 - **Interactive diagram for presentation (`archify`)**: **Only when explicitly called** Creates a standalone HTML diagram with a pinned CLI. Since Obsidian cannot embed and the knowledge root is synchronized, the output is placed only in `_workspace/`, and the diagrams to be included in the notes are handled by `diagram` (Mermaid/D2).
-- **Secure isolation runtime**: The external tool tree is deployed by verifying the tree hash of `.tools/PINS.md`, and unauthorized installation of dependencies and external transfers are thoroughly blocked.
+- **Source and execution gates**: External tool trees are checked against `.tools/PINS.md`. Dependency installation and optional external transfers require their explicit workflow gates; a source hash does not prove runtime isolation.
 
 ### 4. 🖥️Local Dynamic Site Portal
 - **Single entry point**: Place the HTML learning site you use repeatedly in `_workspace/sites/<slug>/` and search and access it in `_workspace/index.html`
@@ -38,9 +38,10 @@
 ### 5. 🌐 GitHub Pages public documentation
 [**Open the public document site directly →**](https://nohdol97.github.io/nohdol-study/)
 
+- **Lab result examples**: Normal, failed, and recovered states carry expected or synthetic labels. See the [full documentation review](docs/reviews/2026-09-10-full-documentation-review.md) for corrections and verification limits.
 - **Three learning paths, 21 topics, 94 documents**: DevOps has 57 documents, AIOps has 20, and [Data & Observability](docs/guides/data-observability/00-roadmap.md) adds a 17-chapter English course from SQL and Parquet through Spark, Kafka, quality, OpenTelemetry, governance, cloud platforms, and AI evaluation. Internal links connect prerequisites and follow-up reading.
-- **Complete backend and AIOps paths**: Backend follows API contracts → invariants and transactions → capacity → distributed workflows → caching and performance → compatible deployments. AIOps connects five AI Specialist modules and four AI Transformation pillars to incident evidence, diagnosis, and approved remediation.
-- **Unomitted concept→execution→recovery connection**: Each new topic is explained starting with key terms and actual situations, and distinguishes between what the command results prove and what is not yet known. Local·Plan only·AWS optional Boundary, failure judgment, and cleanup are provided according to [spec ](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)
+- **Connected backend and AIOps paths**: Backend follows API contracts → invariants and transactions → capacity → distributed workflows → caching and performance → compatible deployments. AIOps connects five AI Specialist modules and four AI Transformation pillars to incident evidence, diagnosis, and approved remediation.
+- **Concept → execution → recovery**: Each new topic is explained starting with key terms and actual situations, and distinguishes between what the command results prove and what is not yet known. Local·Plan only·AWS optional Boundary, failure judgment, and cleanup are provided according to [spec ](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)
 - **Convert links to internal documents**: Rather than linking user-specified official pages to external links, evolve them into self-contained explanations with relationship/sequence diagrams, executable YAML/`kubectl` examples, failure examples, and recovery flows.
 - **Integrated search and reading screen**: Title/summary/text search, URL direct link, responsive Markdown viewer and dark mode provided
 - **Public scope gate**: Only build Git tracking Markdown specified in `docs-site/catalog.json`, reject `vault/`·`REGISTRY.md`·`_workspace/`
@@ -49,10 +50,10 @@
 
 ### 6. 📱 Mobile Telegram Study Bridge (Telegram Bot Bridge)
 - **Read-only learning on the go**: Search, query, and explain existing knowledge vaults anytime, anywhere using the smartphone Telegram messenger and conduct Socratic questions and answers, but do not write, edit, or delete notes.
-- **Cloud real-time synchronization**: Notes created and modified on Mac are immediately synchronized to the Obsidian smartphone app via Google Drive
+- **Cloud real-time synchronization**: Synchronization depends on the selected client and platform; verify arrival and conflicts on each device
 - **Inline buttons and menu controls**: Instantly switch between AI models (`Gemini 3.1 Pro` ↔ `2.5 Flash`) and inference strengths (`High/Med/Low`) with the bottom left `[Menu]` button and touch buttons.
-- **Flawless format rendering (`MessageEntity`)**: Equipped with a defense architecture that separates and transmits style attribute arrays without exposing markdown symbols (`\`, `*`, `` ` ``) and refines local paths (`file://`)
-- **Automatically runs when Mac OS boots (`launchd`)**: Always runs without entering commands even after rebooting and automatically recovers when the process ends (`KeepAlive`)
+- **Structured message rendering (`MessageEntity`)**: Equipped with a defense architecture that separates and transmits style attribute arrays without exposing markdown symbols (`\`, `*`, `` ` ``) and refines local paths (`file://`)
+- **Optional launchd operation**: A separately configured user LaunchAgent can start the bridge and restart it under the selected policy; verify the local installation before relying on unattended operation.
 - **AGENTS.md Rule 5 security perimeter**: Environment variable injection, Chat ID whitelist, `STUDY_SURFACE=telegram` tool gate blocks vault writes/deletes and home directory sweeps
 
 ---
@@ -95,37 +96,13 @@ Make the following request in AI CLI (Claude Code, Codex, Gemini CLI, etc.) or r
   --sync google-drive
 ```
 
-### Step 2: Run the mobile Telegram study bot (optional)
-It is a read-only bridge that **searches, queries, and answers** the vault on your phone. Notes are not created, modified, or deleted, and the boundaries are enforced by `.agents/hooks/study-tool-guard.py`, not by the notice. After receiving a bot token from `@BotFather` on Telegram, run the bot in the background using the following command in a Mac terminal:
+### Step 2: Optional mobile bridge
 
-```bash
-export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHI..."
-export TELEGRAM_ALLOWED_CHAT_ID="내_CHAT_ID_숫자"
+Follow the [Telegram bridge guide](docs/guides/mobile-telegram-bot.md) for transmission approval, externally injected credentials, the required allowed private chat, and fresh-session hook verification. The current template allows all chats if `TELEGRAM_ALLOWED_CHAT_ID` is empty. Model menus and launchd setup are installation-specific.
 
-# Bot always running (nohup method)
-nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&1 &
+### Step 3: Optional feed collection
 
-# Or automatically start when the Mac boots (launchd method - recommended)
-launchctl load -w ~/Library/LaunchAgents/com.nohdol.telegrambot.plist
-```
-> 📖 **Detailed setup and auto-start guide**: [Refer to Mobile Telegram Study Bridge Guide](docs/guides/mobile-telegram-bot.md)
-
-### Step 3: Drive the feed scraper (optional)
-Automatically collects RSS sources into the vault. **Which sources you turn on will vary from computer to computer**, so keep the tracking code (catalog) and the selection in a non-tracking configuration file:
-
-```bash
-mkdir -p _workspace/feed_scraper
-cp -p examples/feed_scraper/* _workspace/feed_scraper/
-cd _workspace/feed_scraper
-
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-cp sources.local.example.toml sources.local.toml   # 켤 소스 고르기
-
-./run_scraper.sh
-```
-The `feed` source (collects only titles and links) does not require a key because it does not use an external API. Only `geeknews` needs to put the Gemini key into `.env`.
-
-> 📖 **Source addition and operation guide**: [Refer to Feed Scraper Guide](docs/guides/feed-scraper.md)
+Follow the [feed scraper guide](docs/guides/feed-scraper.md) for first-time setup, source selection, result examples, and scheduling. Collection writes to the knowledge root; generated lists remain a reading queue. Feed-only mode makes RSS requests but no model calls. Inject model credentials externally; never store them in a workspace `.env`.
 
 ---
 
@@ -169,4 +146,4 @@ This project's detailed architecture decisions (ADRs), step-by-step implementati
 - **[Mobile Telegram integration guide](docs/guides/mobile-telegram-bot.md)**: Guide to building a smartphone ↔ Mac harness bridge (read only — inquiry/Q&A only)
 - **[Feed Scraper Guide](docs/guides/feed-scraper.md)**: Automatic collection of RSS sources, selection of sources by computer, procedure for adding new sources
 - **[harness change history (Changelog)](docs/harness-changelog.md)**: Phase 1 ~ Phase 2b feature updates and architecture change records
-- **Operating rules source**: [AGENTS.md](AGENTS.md) (Immutable rules that all AI agents and CLI respect first when starting a session)
+- **Operating rules source**: [AGENTS.md](AGENTS.md) (Current shared rules to read at session start)

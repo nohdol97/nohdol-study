@@ -44,7 +44,7 @@ SELECT i AS event_id,
 FROM range(100000) t(i);
 
 COPY (SELECT * FROM events ORDER BY event_date)
-TO 'events.parquet' (FORMAT PARQUET);
+TO 'events.parquet' (FORMAT PARQUET, ROW_GROUP_SIZE 8192);
 
 SELECT COUNT(*), SUM(amount_cents)
 FROM read_parquet('events.parquet');
@@ -53,11 +53,17 @@ EXPLAIN ANALYZE
 SELECT SUM(amount_cents)
 FROM read_parquet('events.parquet')
 WHERE event_date = DATE '2026-01-02';
+
+SELECT COUNT(*) AS candidate_row_groups
+FROM parquet_metadata('events.parquet')
+WHERE path_in_schema = 'event_date'
+  AND CAST(stats_min_value AS DATE) <= DATE '2026-01-02'
+  AND CAST(stats_max_value AS DATE) >= DATE '2026-01-02';
 ```
 
 The full file should contain 100,000 rows and sum to 10,000,000 cents. The selected day has 3,334 rows, or 333,400 cents. Inspect the plan for the projected columns and filter. A fast wall-clock result by itself does not prove object-store bytes were skipped. Local filesystem caching can dominate this small experiment.
 
-Write a second file ordered by `event_id`, compare metadata and available scan metrics, then increase the data size and control row-group size. Preserve result equality. The interesting question is whether layout improves selective reads at a reasonable write and maintenance cost. Remove only the files created for the exercise when finished.
+The explicit row-group size makes this small fixture contain multiple groups; a default larger than the fixture would hide the comparison. Write a second file ordered by `event_id` with the same `ROW_GROUP_SIZE 8192`, compare metadata and available scan metrics, then increase the data size. Preserve result equality. Candidate groups from min/max metadata demonstrate pruning opportunities, not a measurement of physical bytes fetched. The interesting question is whether layout improves selective reads at a reasonable write and maintenance cost. Remove only the files created for the exercise when finished.
 
 ## Object storage changes the operating model
 
@@ -70,6 +76,20 @@ Compare larger files against the write latency and parallelism your workload nee
 ## Failure exercise
 
 Publish a manifest listing two fixture files, then make one unavailable in a disposable copy. A reader that scans whatever files remain may return a plausible but incomplete answer. A reader that checks the manifest can identify the missing object. Record file identities, expected row counts, and checksums for the fixture. Restore it and verify the same result, not merely that a directory listing succeeds.
+
+## Example results
+
+Expected values for the deterministic fixture; CLI decoration and query timing vary.
+
+```text
+full_count: 100000
+full_sum_cents: 10000000
+selected_day_count: 3334
+selected_day_sum_cents: 333400
+sorted_layout_candidate_row_groups: 1
+```
+
+With event_id ordering and the same row-group size, more groups remain candidates. Counts and totals must stay equal. Candidate metadata is not a measurement of bytes fetched from object storage. A missing manifest file must fail completeness.
 
 ## Explain it in your own words
 

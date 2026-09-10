@@ -62,6 +62,20 @@ Horizon Catalog is the governance/discovery context to investigate for lineage, 
 
 A useful comparison records source size, query concurrency, cache state, runtime configuration, repeated measurements, output equality, recovery time, and a cost breakdown. Do not declare a winner from a single warm query or a trial-credit balance.
 
+## Example results
+
+Synthetic policy worksheet with two valid and two invalid rows; no managed-platform run is claimed.
+
+```text
+retain policy: 4 candidates with violations reported
+drop policy: 2 valid candidates; 2 dropped rows recorded
+fail policy: no approved new publication
+retry after correction: business total unchanged by duplicate delivery
+cleanup: no lab compute or schedule remains active
+```
+
+The invalid rows contain a null key and unknown currency. Whether old output stays visible depends on the selected publication contract. Record actual update identifiers, lineage gaps, access tests, and billing evidence before calling the cloud lab complete.
+
 ## Explain it in your own words
 
 Which responsibilities move to the provider, and which still belong to your team? Explain why platform monitoring, business quality checks, access enforcement, and restoration each require distinct evidence. Defer Snowflake specialization until you can demonstrate the first platform's failure behavior.

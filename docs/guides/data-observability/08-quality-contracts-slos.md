@@ -82,6 +82,22 @@ Run checks against a candidate version before exposing it. Store failed-record s
 
 Create one missing scheduled interval, one duplicated ID, and one absent check result. The system should identify three different problems. Repair the duplicate, replay the interval, restart the checker, and verify both data and observation coverage. Keep the failure ledger after recovery rather than replacing historical failures with a green current status.
 
+## Example results
+
+Calculated worksheet for ten scheduled intervals.
+
+```text
+scheduled intervals: 10
+on-time and valid: 8
+late: 1
+never ran: 1
+good / eligible: 8 / 10 = 80%
+incorrect denominator using completed runs only: 8 / 9
+missing checker result: UNKNOWN, not PASS
+```
+
+Repair can restore current data usability without erasing missed-deadline history. Distinguish duplicate-key failure, missing interval, and absent check evidence. The never-started interval still counts.
+
 ## Explain it in your own words
 
 Why can freshness improve while completeness worsens? Explain the denominator and authority behind every percentage on your dashboard. Identify which quality rules need domain approval and which are mechanical type checks.

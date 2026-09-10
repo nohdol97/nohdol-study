@@ -46,7 +46,7 @@ flowchart LR
 | LoRA | frozen base + low-rank adapter | task loss | base·adapter compatibility |
 | preference optimization | chosen·rejected pair | relative preference loss | annotator·judge bias |
 
-LoRA is a method of learning low rank updates instead of updating all base weights. Even if the adapter is small, it cannot be reproduced unless you forget which base model·tokenizer·prompt template it learned from. The fact that preference loss has improved is not the same as factuality and safety.
+LoRA trains low-rank weight updates while freezing the base weights. Reproducing an adapter requires preserving its exact base model, tokenizer, prompt template, and training configuration. Better preference loss does not by itself establish factual accuracy or safe behavior.
 
 ```yaml
 model_bundle:
@@ -75,6 +75,8 @@ Prefill processes the input sequence in parallel, and decode generates tokens on
 Do not use the multiple improvement of a specific paper as a capacity value. If the prompt length distribution, output length, hardware, runtime version, and scheduler change, the results will also vary. [AI infrastructure and LLM serving](#doc=ai-transformation-platform-infrastructure) verifies the bundle with actual serving SLO.
 
 ## Minimum unit of evaluation
+
+For a conventional attention KV cache, a useful first estimate is `2 × layers × tokens × KV heads × head dimension × bytes per element` per sequence. The factor two represents keys and values. With 32 layers, 8 KV heads, head dimension 128, 8,192 tokens, and two-byte values, this is 1 GiB per sequence; 32 such sequences need 32 GiB for KV alone. Model weights, activations, allocator overhead, and runtime workspace are additional. GQA changes KV-head count; architectures with compressed latent state need a different accounting model. Use this arithmetic to reject impossible capacity plans before benchmarking.
 
 ```json
 {

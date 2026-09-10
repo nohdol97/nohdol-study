@@ -212,6 +212,24 @@ In the lab, public images were used, but in operation, a verified registry and i
 | Node maintenance | PDB·capacity·quorum | eviction and relocation | topology and performance |
 | secret·certificate rotation | New and old coexistence and rollback | Observation of both versions | Use old version 0, discarded |
 
+## Example results
+
+Expected selected fields from the offline Kustomize render:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prod-study-web
+spec:
+  replicas: 4
+# Under spec.template.spec.containers:
+# - name: web
+#   image: nginx:1.27-alpine
+```
+
+This is an abbreviated inspection excerpt, not a complete manifest to apply. Pass when the rendered name, four replicas, image tag, and unchanged matching selectors agree with the overlay. `kubectl diff` returns 1 when differences exist; that is not a rendering error. Server validation and rollout require a selected disposable cluster. If you applied the overlay, remove those resources with `kubectl delete -k k8s/overlays/production`.
+
 ## Explain it in your own words
 
 1. What operational responsibilities will remain with my team if I use managed Kubernetes?

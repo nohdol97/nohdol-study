@@ -94,7 +94,7 @@ If you leave the prompt and retrieved content in the trace, personal information
 1. Check immutable candidates and lineage completeness.
 2. Compare offline suite and risk slice against baseline.
 3. Check policy·tool schema·runtime compatibility.
-4. Compare results in shadow traffic without writing them down.
+4. Compare shadow outputs without applying business side effects; store permitted evaluation receipts so differences remain inspectable.
 5. Observe users, cost, latency, and safety in a small canary.
 6. After actually practicing abort and rollback, increase the range.
 7. Outcomes and incidents are collected as label candidates, but reflected in the dataset after human review.

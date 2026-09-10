@@ -8,7 +8,7 @@ This lab is a **Plan only** grade that does not change the actual cluster or clo
 |---|---|
 | input | Synthetic incident bundle and rollback proposal |
 | execution | doesn't exist |
-| output of power | One of approval/rejection/reinforcement requests and reason |
+| output | Approve, reject, or request missing evidence, with a reason |
 | stopping condition | Any one of target·previous revision·blast radius·abort is unknown |
 | cleanup | doesn't exist |
 
@@ -113,6 +113,22 @@ This proposal has improved to a reviewable level, but this does not mean it will
 6. Check whether the abort query uses the same definition/window as the baseline before the action.
 7. If the action is timeout, reconcile the operation and target before re-executing.
 8. After success, check all user results, dependency saturation, and work duplication.
+
+## Example results
+
+Illustrative plan-review output. No executor or cluster operation is run by this worksheet.
+
+```text
+target_diff: bounded canary cohort
+approval_matches_plan: required
+rollback_pointer_verified: required
+missing_precondition: BLOCK
+approved_plan_with_changed_target: BLOCK; regenerate plan and approval
+executor_timeout_after_dispatch: UNKNOWN; reconcile existing operation
+command_exit_zero_but_user_sli_unhealthy: NOT RECOVERED
+```
+
+After filling every prerequisite, the verdict may become READY FOR APPROVED EXECUTION, never RECOVERED before execution and independent outcome checks. A repeated request with the same operation key must inspect the existing operation instead of creating another rollout.
 
 ## How to interpret the results
 

@@ -1,5 +1,7 @@
 # 01. Why Kubernetes and the first cluster
 
+<!-- source: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_port-forward/ | checked: 2026-09-10 | Service reference selects a Pod for forwarding -->
+
 In this chapter, we will create a local cluster and deploy a small web server. Rather than simply typing out commands, check what API objects each command creates and in what order the control plane and nodes respond.
 
 ## When you finish this chapter
@@ -16,8 +18,8 @@ This example creates a single-node cluster inside `minikube` and runs a test con
 ```mermaid
 flowchart LR
   BROWSER["Local Browser<br/>localhost 8080"] --> PF["kubectl port-forward<br/>temporary forwarding path"]
-  PF --> SVC["Service<br/>hello-node"]
-  SVC -->|“Select label”| POD["Pod<br/>app hello-node"]
+  SVC["Service<br/>hello-node"] -.->|"Select Pod and targetPort"| PF
+  PF -->|"API tunnel"| POD["Pod<br/>app hello-node"]
   DEP["Deployment<br/>Keep one replica"] -->|“Create and Replace”| POD
   POD --> CONTAINER["Test Container<br/>HTTP 8080"]
 ```
@@ -37,17 +39,19 @@ If you do not have these two tools, you must first install them according to you
 
 ## Create a cluster
 
+Before starting, use `minikube profile list` to confirm that `infra-study-first` does not already exist, and record your original kubectl context. Stop if the profile belongs to existing work.
+
 ```shell
-minikube start
+minikube start -p infra-study-first
 kubectl cluster-info
 kubectl get nodes
 ```
 
-If normal, one node appears as `Ready`.
+Verify that the active context becomes `infra-study-first`. If normal, one node appears as `Ready`.
 
 ```text
 NAME       STATUS   ROLES           AGE   VERSION
-minikube   Ready    control-plane   1m    v1.x.y
+infra-study-first   Ready    control-plane   1m    v1.x.y
 ```
 
 Here, `Ready` does not mean “all applications are normal.” This is the result of the kubelet reporting the node status and the control plane determining that the node can be used as a workload placement target.
@@ -128,7 +132,8 @@ sequenceDiagram
   K->>A: Deployment and Service Request
   A-->>K: Object saved completed
   D->>A: Confirm the one Pod you want
-  D->>A: Create ReplicaSet and Pod
+  D->>A: Create ReplicaSet
+  Note over D,A: ReplicaSet controller creates the Pods
   S->>A: Deploy Pods to minikube nodes
   L->>A: Check Pod of own node
   L->>R: Pull image and start container
@@ -152,7 +157,7 @@ Request from another terminal.
 curl http://127.0.0.1:8080/
 ```
 
-If a response is received, the flow is in `curl → port-forward → Service → selected Pod → container` order. Check whether the Service has selected the Pod with the following command.
+The flow is `curl → local port-forward → API/kubelet tunnel → selected Pod port`. Naming a Service lets kubectl select a Pod and resolve its target port; packets do not traverse the Service ClusterIP. This success does not test cluster DNS, Service load balancing, or the ordinary NetworkPolicy path. Use the in-cluster client in chapter 5 to test those boundaries. Inspect the Service's selected backends with:
 
 ```shell
 kubectl get service hello-node
@@ -187,6 +192,8 @@ kubectl get pods -w
 ```
 
 The existing Pod is terminated and a Pod with a new name is created. This is not a revived Pod that was deleted. This is the result of creating a new Pod after discovering the difference between the intention of Deployment being `replicas: 1` and the actual number of `0`.
+
+Stop each `-w` watch with Ctrl-C before the next step. The port-forward session also ends when its selected Pod terminates; restart it after the replacement becomes Ready if you want to send another request.
 
 If you delete Deployment, the results will change.
 
@@ -251,14 +258,36 @@ In the port-forward terminal, press `Ctrl+C` and run the following.
 
 ```shell
 kubectl delete -f hello-node.yaml
-minikube stop
+minikube stop -p infra-study-first
 ```
 
 To completely erase the cluster, add the following command:
 
 ```shell
-minikube delete
+minikube delete -p infra-study-first
 ```
+
+## Example results
+
+Illustrative output after the image has been pulled; generated Pod suffixes and addresses vary.
+
+```text
+# kubectl apply -f hello-node.yaml
+deployment.apps/hello-node created
+service/hello-node created
+# kubectl rollout status deployment/hello-node
+deployment "hello-node" successfully rolled out
+# kubectl port-forward service/hello-node 8080:8080
+Forwarding from 127.0.0.1:8080 -> 8080
+# Bad-image rollout
+error: timed out waiting for the condition
+# New Pod status
+0/1  ImagePullBackOff
+# After reapplying hello-node.yaml
+deployment "hello-node" successfully rolled out
+```
+
+The original ready Pod may remain during the failed rolling update, so HTTP can still work while rollout fails. For the deletion experiment, record a changed Pod UID and eventual readiness. Restart port-forward after its target Pod is replaced, then require an HTTP success again.
 
 ## Explain it in your own words
 

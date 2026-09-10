@@ -1,5 +1,7 @@
 # nohdol-study Review of additional tool introduction
 
+> Historical review: the candidate decisions and machine observations below are dated 2026-07-25. The [completed pilot](2026-07-25-phase2c-pilot-status.md) subsequently rejected basic-memory under the non-modifying corpus requirement; PaperQA2 was not run. This is not an installation recommendation or current capability inventory.
+
 - Date: 2026-07-25
 - Scope: local retrieval, paper RAG, agent memory/graph, Obsidian skill·API,
   spaced repetition, diagram

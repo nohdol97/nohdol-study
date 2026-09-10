@@ -17,7 +17,7 @@ flowchart LR
     D -->|"yes"| W[“Waiting for the next change”]
 ```
 
-The important point is that “the apply command launches the container directly”. The API server stores the intent, and multiple control loops adjust the state asynchronously within their respective responsibilities.
+The apply command submits an API object. The API server stores the intent; controllers, the scheduler, and the kubelet then perform their separate asynchronous work before a container can run.
 
 ## Five columns to read all objects
 
@@ -168,7 +168,7 @@ sequenceDiagram
     participant E as etcd
     participant C as Controller
     K->>A: apply object.yaml
-    A->>A: Certification and Accreditation
+    A->>A: Authentication and authorization
     A->>M: Default/Verification/Policy
     M-->>A: Allow or Deny
     A->>E: Save new resource version
@@ -228,7 +228,7 @@ After the lab is over, look at the ownership relationship and organize it.
 
 ```bash
 kubectl get rs,pods -l app.kubernetes.io/name=object-demo \
-  -o custom-columns=KIND:.kind,NAME:.metadata.name,OWNER:.metadata.ownerReferences[0].kind
+  -o 'custom-columns=KIND:.kind,NAME:.metadata.name,OWNER:.metadata.ownerReferences[0].kind'
 kubectl delete -f object.yaml
 ```
 
@@ -255,6 +255,23 @@ In server-side application, the API server tracks the management subject for eac
 | Deletion does not end | `deletionTimestamp`, finalizers | External cleanup controller failed to complete |
 
 When an object is different from expected, first compare the “spec I sent”, “spec saved by the server”, and “status” separately. Local YAML and saved results may differ due to application of default values ​​or modification of other controllers.
+
+## Example results
+
+Expected values for the two explicit JSONPath queries, followed by representative owner output. Object names include generated suffixes.
+
+```text
+# app-config in namespace-demo-a
+team-a
+# app-config in namespace-demo-b
+team-b
+# custom-columns owner query for object-demo
+KIND         NAME                         OWNER
+ReplicaSet   object-demo-<hash>           Deployment
+Pod          object-demo-<hash>-<suffix>  ReplicaSet
+```
+
+The same ConfigMap name resolves to different values because the namespaces differ. A missing namespace flag can return NotFound or the other value; it is not proof of missing data. The owner chain must be Deployment → ReplicaSet → Pod. Apply success alone does not establish that two replicas became ready.
 
 ## Explain it in your own words
 

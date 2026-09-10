@@ -1,5 +1,7 @@
 # Account, identity and network boundary
 
+<!-- source: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | checked: 2026-09-10 | data-event support and explicit selection -->
+
 ## Terms introduced in this chapter
 
 - **principal**: The identity of the person or program sending the request to AWS.
@@ -32,9 +34,9 @@ For example, let's say you are reading an S3 object from EC2 in a private subnet
 3. Evaluate whether IAM and related policies allow the requested action for the resource.
 4. If allowed, the service in the target region inquires or changes the resource status.
 5. Tasks that require a data path must also pass the VPC route and security policy.
-6. The results and change agent can be checked again in audit records such as service log or CloudTrail.
+6. Inspect service logs or CloudTrail where the relevant event type is enabled and supported. For example, S3 object-level data events are not automatically covered by every default management-event history.
 
-IAM acceptance is the result of three steps: Requests that must pass through the network, such as database connections, may fail in step 5 even if step 3 succeeds.
+These are responsibility boundaries rather than a packet-level sequence. The signed API request itself must reach an AWS endpoint before that endpoint can evaluate it. A separate application connection, such as a database session, has its own network and authentication path.
 
 ## Two permissions required for one request
 

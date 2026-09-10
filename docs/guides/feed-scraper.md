@@ -1,203 +1,105 @@
-# Feed Scraper Guide
+# Feed scraper guide
 
-It is a tool that automatically collects RSS sources into a connected vault. The reference implementation is
-[It is at `examples/feed_scraper/`](../../examples/feed_scraper/), and the actual execution is
-This is done in `_workspace/feed_scraper/`, a non-tracking area.
+The reference implementation in [examples/feed_scraper](../../examples/feed_scraper/README.md) collects selected public feeds. Run an installation copy under `_workspace/feed_scraper/`; source selections and collection state are machine-specific.
 
-## Why this structure
+## What it reads and writes
 
-The collection tool is **the code is the same on all computers, but what it collects varies from computer to computer**.
-If you put these two in one file, you will have to modify the code every time you move it to another machine, and the changes will be
-When committed to a harness, your personal choices are mixed into the trace file.
-
-So we divided it into three.
-
-| what | where | tracking |
+| Pipeline | External requests | Output |
 |---|---|---|
-| Engine and Source Catalog | `examples/feed_scraper/scrape.py` | O |
-| Select this computer | `_workspace/feed_scraper/sources.local.toml` | X |
-| Credential/Collection Status | `_workspace/feed_scraper/{.env,data/}` | X |
+| `feed` | RSS HTTP requests; no model API calls | Source-specific title/link lists under `wiki/` |
+| `geeknews` | Feed/article requests and Gemini summarization/classification | Daily captures and monthly indexes under `raw/geeknews/`; topic queues under `wiki/GeekNews/` |
 
-Even if it is in the catalog, it will not be collected if it is not in `enabled`. On laptops, only the robot source is available.
-Even GeekNews on the desktop — the same code can be run differently.
+These outputs are reading queues and generated summaries, not verified atomic knowledge. The existing writer does not perform the complete note-writer evidence review or update the master index, log, and hot cache for every generated entry. Running it authorizes actual knowledge-root writes; review the selected paths and obtain installation-specific authorization before enabling collection. Promote useful material through `ingest` and `note-writer`.
 
-### Once you have modified the code, copy it as a copy.
+The monthly index is derivative and regenerated; the daily capture is normally preserved once present. Do not set `GEEKNEWS_OVERWRITE` on retained captures as a routine retry. The curated hub's month links are maintained separately.
 
-The cost of this structure is that **the engines are in two places**. What turns around is always `_workspace/`
-Since it is a copy, the old code will continue to run unless you edit and copy the trace copy of `examples/`.
-That actually happened on 2026-08-03 — the output was split into two layers: `raw/` and `wiki/`.
-Since changes were not made to the copy, the entire day's collection was accumulated in `wiki/`, and the log was
-They said it was normal.
+## First-time setup
+
+Use Python 3.11 or later. Run this only when the target copy does not exist; updating an existing installation requires a diff so local configuration is preserved.
 
 ```bash
-cp -p examples/feed_scraper/scrape.py _workspace/feed_scraper/scrape.py
-```
-
-Even if you forget to copy, it will not pass quietly. Every time `run_scraper.sh` runs
-Compare the SHA-256 of `scrape.py`·`run_scraper.sh`·`requirements.txt` with the traceback,
-If there is a discrepancy, the file name and correction command are left at the beginning of the log. Even if it's off, it won't stop
-No — The judgment is that running with old code is better than losing collection. manuscript
-In some cases, the page is corrected first, so the direction of copying is determined by the person.
-
-`README.md` and `sources.local.example.toml` do not collate. Collect even if divided
-If the results do not change but the warnings become more frequent, the warnings themselves will not be read. Just take a copy
-If you place it somewhere else (if `examples/` is not visible), the test will be quietly skipped.
-
-## two pipelines
-
-| pipeline | What you do | External API | output |
-|---|---|---|---|
-| `feed` | Just build titles and links | doesn't exist | 1 listing document per source |
-| `geeknews` | Scoring → Summary and classification of those that pass the standard | Gemini | Original by date + month index + 7 topic documents |
-
-### Why is the output divided into two layers?
-
-There is only one standard — **Was human judgment involved?**
-
-| output | location | Created by |
-|---|---|---|
-| Original by date | `vault/raw/geeknews/<연월>/<날짜>.md` | automatic |
-| month index | `vault/raw/geeknews/<연월> 인덱스.md` | automatic |
-| 7 topic documents | `vault/wiki/GeekNews/` | Classification is automatic, **you have to decide what to leave and which atomic note** |
-| `feed` List by Source | `vault/wiki/<카탈로그의 path>` | automatic |
-
-The original by date is an immutable capture of several unrelated posts in one day, and the monthly index is just a list of links created by scanning the folder. Since both have no curation judgment, they are stacked at `raw/`. If you place it in `wiki/`, all indicators that count atomic notes — orphan notes, `status` distribution, knowledge graph — will be swept away by the collection. In fact, before 2026-08-02, 177 of the 305 notes in `wiki/` were captured here, and 61% of `status: seed` were captured here.
-
-Only subject documents remain in `wiki/GeekNews/`. So there are no subdirectories — if you dig `주제/` one more layer into a folder with only one type, the path will only get longer.
-
-Obsidian resolves wikilinks by name throughout the vault, so the links remain the same even if the floors are different. The same goes for `[[2026-08-01]]` in the index and `[[2026.8 인덱스]]` in the hub.
-
-> The table at `GeekNews 큐레이션 허브`, which contains a list of month indexes, is **maintained by hand.** The scraper creates the index but does not add any rows to the hub table, so when the month changes, no one points to the new index.
-
-### Why `feed` does not summarize
-
-Since the body is not read, the API call is 0. No matter how many sources you add, there is a free tier limit and
-It is irrelevant. If you add a summary, the limit must be divided for each source, and the summary is not verified.
-Because it is an unused product, it cannot be used as evidence. The title is enough to determine whether or not you will read it.
-
-### Why `geeknews` summarizes
-
-GeekNews has poll scores so the site is already measuring “what’s worth reading.”
-Since only 8 to 12 cases per day pass through the 5P gate, the summary cost is covered. Up to topic classification
-It is received in the same call and sent to the topic document.
-
-## installation
-
-```bash
+test ! -e _workspace/feed_scraper || exit 1
 mkdir -p _workspace/feed_scraper
 cp -p examples/feed_scraper/* _workspace/feed_scraper/
 cd _workspace/feed_scraper
-
-python3 -m venv .venv                      # Python 3.11+ (tomllib)
+python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-
 cp sources.local.example.toml sources.local.toml
-$EDITOR sources.local.toml                 # 켤 소스 고르기
+```
 
-echo 'GEMINI_API_KEY=...' > .env           # geeknews를 켰을 때만
+Edit `sources.local.toml` before the first run:
+
+```toml
+enabled = ["ieee-robotics", "the-robot-report"]
+```
+
+Catalog entries in `SOURCES` are available choices; only `enabled` entries run. The script discovers the harness through its parent directories. A custom layout may specify `study_root` in the local configuration.
+
+If enabling `geeknews`, inject `GEMINI_API_KEY` through your machine's credential manager or a protected launcher outside the harness, vault, and workspace. Never put the key in a tracked file, a workspace `.env`, shell history, or chat. The loader supports externally provided environment variables even though legacy `.env` loading remains in the implementation.
+
+Once source selection, write scope, and any model transmission are approved:
+
+```bash
 ./run_scraper.sh
 ```
 
-There are quite a few vault paths. The script goes up and has a symlink of `vault`.
-Find the harness root. Only when running outside of the standard layout
-Write `study_root` in `sources.local.toml`.
+This command fetches sources and can change the connected knowledge root. There is no documented dry-run switch.
 
-## Autorun (macOS launchd)
+## Example results and interpretation
 
-```bash
-launchctl load -w ~/Library/LaunchAgents/com.user.study.feedscraper.plist
-launchctl list | grep feedscraper
+Representative diagnostic lines from the implementation; normal collection counts vary with publication times and filters.
+
+```text
+켜진 소스가 없습니다. sources.local.toml의 enabled를 확인하세요.
+GEMINI_API_KEY가 없어 건너뜁니다
 ```
 
-`ProgramArguments` should point to `_workspace/feed_scraper/run_scraper.sh`.
-Since the wrapper derives the log/venv path from its location, the plist only needs that one line.
-Enough.
+The first means no source is selected. The second means the model-dependent pipeline cannot run; feed-only collection needs no Gemini key. A zero new-item count can mean no recent matching publications or that all items are already present, so inspect the feed window and markers before diagnosing a failure.
 
-### execution time
+Success means the expected selected-source entries appeared at the reviewed paths, duplicates were suppressed on a sequential rerun, and no unexpected file changed. It does not mean the titles or generated summaries have been fact-checked.
 
-If you turn on `geeknews`, the time has meaning. Gemini daily limit (RPD) is Pacific
-It resets at midnight**, which is **KST 16:00 based on PDT. Execution at 06:00 and 08:00 is based on Pacific
-Since it is the same day, the limit is shared, and executions after 17:00 KST are allocated the next day.
+## Updating the installation copy
 
-If you only use the `feed` source, the time is probably good because there is no call. Feed window is 4 days
-These sauces are more effective, so once a day is enough.
+The wrapper compares SHA-256 for `scrape.py`, `run_scraper.sh`, and `requirements.txt` with the reference copy when available. Drift is logged but does not stop collection. Compare changes before copying a reviewed file:
 
-## add source
+```bash
+diff -u examples/feed_scraper/scrape.py _workspace/feed_scraper/scrape.py
+```
 
-Add an entry to `SOURCES` in `scrape.py`, and to `enabled` in `sources.local.toml`.
-Write down your key. Measure two things before adding them.
+A diff exit of 1 means differences. Stop the installation's scheduled run before replacing executable files, then rerun the reference tests and a bounded collection check. Never overwrite `sources.local.toml`, local state, or credentials during an update.
 
-1. **Availability of `published_parsed`** — If not, the date cannot be written, so it is skipped.
-2. **Feed Window** — Time span from oldest to newest. `window_days`
-   You need to hold more than that so you don't miss out on running it once a day.
+## Adding a source
+
+Add the catalog definition to `SOURCES`, then explicitly enable its key in the local configuration. Inspect the live feed for parseable publication dates and retention window. A `window_days` setting cannot recover entries already removed by the publisher.
 
 ```python
 'my-source': {
     'name': "My Source",
     'pipeline': 'feed',
     'rss': "https://example.com/feed.xml",
-    'path': "Robotics/My Source.md",     # vault/wiki/ 기준 상대 경로
+    'path': "Physical AI/My Source.md",  # Relative to wiki/.
     'tags': ["robotics", "feed"],
     'hub': "로봇과 피지컬 AI 정보 소스",
     'window_days': 14,
+    'title_filter': ["robot", "lerobot", "embodied"],
 },
 ```
 
-The measuring method and eliminated candidates (arXiv cs.RO, hnrss, etc.) are listed in the vault.
-It's in the `[[로봇과 피지컬 AI 정보 소스]]` note.
+This is a catalog fragment, not a standalone Python program. The URL is a placeholder. Title filtering trades coverage for relevance; measure missed titles before claiming complete coverage. Source publication rates and historical feed-window measurements are not permanent guarantees.
 
-### Filter feeds that are not topic-specific
+## Scheduling, retries, and cleanup
 
-If you give `title_filter`, you will only get items with one of those words in the title. Hugging
-Used in feeds with some topics of interest, such as the Face blog — Among the 831 cases in the actual measurement, robot-related
-There are 23 items (2.8%), so if you don't filter them, the rest will cover the list.
+Use one scheduler for each installation copy. A launchd job needs a machine-specific label, absolute executable path, schedule, working environment, and log handling; the reference repository does not install a complete personal plist. Validate those locally before enabling it.
 
-```python
-'title_filter': ["robot", "lerobot", "embodied", "manipulat"],
+Markers such as `<!-- src:key:link -->` and `<!-- gn:topic_id -->` suppress repeated entries in ordinary sequential runs. They are not a concurrency lock or an atomic multi-file transaction. Avoid overlapping manual and scheduled runs; inspect partially written output before retrying. Gemini quotas and reset times must be checked in the selected provider account rather than inferred from an old schedule.
+
+To retire collection, unload only its owned scheduler job. Preserve captured sources and local selection/state unless their deletion is separately intended. Test fixtures belong in a disposable directory, never in a production vault.
+
+## Verification
+
+```sh
+python3 examples/feed_scraper/scrape_test.py
+sh examples/feed_scraper/run_scraper_test.sh
 ```
 
-Only the title is checked, not the body. If you look at the main text, there are many articles where the topic has passed by.
-I got caught, and the article I was looking for already had that word in the title on GeekNews' list of favorites.
-confirmed sea. Instead, the **word list is the recall**, so if you feel like you're missing something,
-The list expands, but different topics are mixed in.
-
-## current catalog
-
-| key | sauce | pipeline | daily average | feed window |
-|---|---|---|---|---|
-| `geeknews` | GeekNews | `geeknews` | 8~12 (after gate) | 33 hours |
-| `ieee-robotics` | IEEE Spectrum Robotics | `feed` | 0.4 | 67 days |
-| `the-robot-report` | The Robot Report | `feed` | 3.7 | 4.1 day |
-| `ros-discourse` | ROS Discourse | `feed` | 6.7 | 4.5 days |
-| `robohub` | Robohub | `feed` | 0.4 | 191 days |
-| `nvidia-robotics` | NVIDIA Robotics | `feed` | 0.2 | 118 days |
-| `huggingface-robotics` | Hugging Face (Robot) | `feed` | 2.8% of 0.35 | broadness |
-
-The daily average and window are actual measurements from 2026-07-26. It changes as the issuance cycle changes.
-
-## Duplicate and Redo
-
-All entries are saved with a marker — `feed` is `<!-- src:키:링크 -->`,
-`geeknews` is `<!-- gn:topic_id -->`. No matter how many times you read it in a day, you will see the same article twice.
-Since it does not enter, you can simply rerun the failed execution.
-
-`geeknews` additionally caches the score in `data/pending/`. Summary is blocked at 429
-Even if it is interrupted, the next run does not ask for the score again and only continues with the summary.
-
-## problem solving
-
-| symptoms | cause | action |
-|---|---|---|
-| `설정이 없습니다` | `sources.local.toml` not created | copy example |
-| `켜진 소스가 없습니다` | `enabled` is empty or completely commented out | write down the key |
-| `카탈로그에 없는 소스` | Typo in `enabled` | Matches catalog keys |
-| `venv python not found` | Virtual environment not created | Above installation procedure |
-| `GEMINI_API_KEY가 없어 건너뜁니다` | `.env` None | Insert key or turn off `geeknews` |
-| 0 specific sources only | Change feed URL or outside window | Open the RSS directly to check |
-
-## The product is not knowledge
-
-The collected list is **a queue for picking things to read**, not knowledge. `feed` document
-Each line is just a published title, and the one-line summary of `geeknews` is an unverified AI
-It is a product. In both cases, it cannot be used as evidence for a claim. What I read and understood
-Write it down in an atomic note as `note-writer`, and that note holds the evidence.
+The tests exercise fixtures and wrapper behavior. They do not prove live feed availability, successful provider authentication, correct factual summaries, or a running scheduler.

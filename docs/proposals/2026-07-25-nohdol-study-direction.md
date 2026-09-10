@@ -1,5 +1,7 @@
 # nohdol-study direction review — study harness design proposal
 
+> Historical design proposal: implementation-state labels and local observations below reflect the proposal date. Phase 2b and Phase 3 were subsequently implemented; NotebookLM export was withdrawn and basic-memory was not adopted. Consult the [current documentation map](../README.md) and operating rules instead of treating the old priority table as pending work.
+
 - Date: 2026-07-25 / Status: **Phase 1·2 implemented, Phase 2b scope confirmed/not implemented** (Phase 2c·3 awaiting)
 - Purpose: A harness that helps accumulate and study knowledge in various fields such as robots and physical AI as well as codes. Obsidian integration + graph utilization, operation of both Claude Code and Codex, symlink-based porting.
 - Analysis targets: claude-obsidian (AgriciDaniel) · superpowers (obra) · Understand-Anything (Egonex-AI) · claude-video (bradautomates) · defuddle (kepano) · context7 + additional candidate research

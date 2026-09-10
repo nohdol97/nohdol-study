@@ -10,7 +10,7 @@
 - **Record**: For each command, write `success/failure`, the last successful step, and the next item to be checked one line at a time.
 - **Cleanup**: This basic lab does not create resources. If you created an optional Kubernetes test Pod, check whether it has been deleted using the `--rm` action in the command.
 
-macOS does not have Linux's `ip` and `ss` by default. In this case, change route confirmation to `route -n get 1.1.1.1` and listening port confirmation to `lsof -nP -iTCP -sTCP:LISTEN`, and record that the output items are not completely the same.
+macOS does not have Linux's `ip` and `ss` by default. Use `route -n get "$target_ip"` after resolving the target below, and use `lsof -nP -iTCP -sTCP:LISTEN` for listeners. Record that the output fields differ.
 
 ## Understand the model first
 
@@ -22,7 +22,7 @@ For example, if DNS returns the correct address and the TCP probe shows a succes
 |---:|---|---|---|
 | 1 | `dig` or `nslookup` | Expected resolver and address | record·resolver·search domain |
 | 2 | route lookup | Expected interface·next hop | local route·VPN·NAT |
-| 3 | TCP probe | connect or explicitly refuse | firewall·listener·return path |
+| 3 | TCP probe | Connection established to the intended endpoint | An explicit refusal is failure evidence; inspect listener, rejection policy and return path |
 | 4 | `openssl s_client` | Hostname and chain verification | certificate·SNI·clock·trust store |
 | 5 | `curl -v` | Expected status and body | proxy·backend·application |
 
@@ -39,19 +39,22 @@ target_host="example.com"
 target_url="https://example.com/"
 
 dig +noall +answer "$target_host" A
-ip route get 1.1.1.1
+target_ip="$(dig +short "$target_host" A | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ { print; exit }')"
+test -n "$target_ip" || exit 1
+ip route get "$target_ip"
 curl -sSvo /dev/null --connect-timeout 3 --max-time 8 "$target_url"
-openssl s_client -connect "${target_host}:443" -servername "$target_host" </dev/null
+openssl s_client -connect "${target_host}:443" -servername "$target_host" \
+  -verify_hostname "$target_host" -verify_return_error </dev/null
 ```
 
-The values ​​to be recorded are answer, TTL, selected route, remote IP, TLS subject·issuer·verification result, HTTP status, and total time. Do not make excessive repeated calls to public sites.
+Record the DNS answer, TTL, selected route, actual remote IP, certificate verification, HTTP status, and duration. On macOS use `route -n get "$target_ip"`. If curl chooses another IPv4 address or IPv6, investigate that actual address as well. A route lookup for an unrelated public resolver does not establish the path to this server. Use an OpenSSL version supporting the verification options and its configured trust store; trust-store failures must be distinguished from hostname mismatches.
 
 ## 2. Comparison of failure shapes
 
 ### DNS failure
 
 ```bash
-dig +noall +answer does-not-exist.invalid A
+dig +noall +comments +answer does-not-exist.invalid A
 ```
 
 `.invalid` is a top-level domain reserved for name resolution failure lab. Look at the fact that there is no answer and the status returned by the resolver.
@@ -68,10 +71,11 @@ If there is no listener locally, it is generally rejected immediately. On the ot
 ### Observe TLS name mismatch
 
 ```bash
-openssl s_client -connect example.com:443 -servername wrong.invalid </dev/null
+openssl s_client -connect example.com:443 -servername example.com \
+  -verify_hostname wrong.invalid -verify_return_error </dev/null
 ```
 
-This command is a diagnostic tool that displays handshake data. It is not treated as the same success decision as the application client forcing hostname verification. Do not use `-k` as a recovery method by turning off the basic certificate verification of `curl`.
+This keeps server selection (SNI) at `example.com` but asks the verifier to authenticate `wrong.invalid`. The expected result is a hostname verification failure. Changing SNI alone does not force a client-side hostname check and may instead select a different certificate or make the server reject the handshake. Do not use `-k` as recovery: it bypasses the property this test measures.
 
 ```mermaid
 flowchart TD
@@ -107,6 +111,23 @@ Since there is a separate external dependency called image pull, pod creation fa
 | T2 | TLS | SNI, certificate verification | identity success/failure |
 | T3 | HTTP | status, latency | proxy/backend candidates |
 
+## Example results
+
+Illustrative excerpts, not a capture of the public endpoint. DNS addresses, TTLs, certificate chains, and protocol versions can change.
+
+```text
+# Normal TLS verification
+Verify return code: 0 (ok)
+# Reserved .invalid query
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, ...
+# Closed local TCP port
+curl: (7) Failed to connect to 127.0.0.1 port 65535
+# Explicit wrong hostname verification
+verify error:num=62:hostname mismatch
+```
+
+Pass the failure exercise only when the intended layer fails: NXDOMAIN is different from an unreachable resolver, and a certificate-chain error does not demonstrate the intended hostname mismatch. Restore the correct verification hostname and require successful verification again.
+
 ## How to interpret the results
 
 `connection refused` shows the possibility that the packet has reached its destination and there is no listener to receive the port, or it has been explicitly rejected. `timeout` leaves a wider range such as packet drop, wrong route, return path, and stateful policy. Treating both results as the same “connection failure” confuses the order of investigation.
@@ -124,4 +145,5 @@ If you see HTTP status, check who created the response. Proxies, load balancers,
 <!-- source: https://datatracker.ietf.org/doc/html/rfc2606 | checked: 2026-09-03 -->
 <!-- source: https://datatracker.ietf.org/doc/html/rfc9293 | checked: 2026-09-03 -->
 <!-- source: https://datatracker.ietf.org/doc/html/rfc8446 | checked: 2026-09-03 -->
+<!-- source: https://docs.openssl.org/3.0/man1/openssl-s_client/ | checked: 2026-09-10 | explicit hostname verification and failure propagation -->
 <!-- source: https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/ | checked: 2026-09-03 -->

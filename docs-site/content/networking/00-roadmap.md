@@ -8,7 +8,7 @@ Let's start with a situation where you enter an address in your browser, but the
 |---|---|
 | hostname | A server name that is easy for people to remember. Example: `api.example.com` |
 | IP address | A numeric address used to locate a computer or connection point on a network. |
-| DNS | A system that finds a host name by IP address |
+| DNS | A system that retrieves records for a name, including addresses through A/AAAA records; reverse lookup is a separate query |
 | route | Rules that determine which direction to send packets to the destination IP |
 | port | A number that identifies the program that will receive the request within a computer |
 | connection | A communication state that allows two programs to exchange data |
@@ -19,7 +19,7 @@ Network failures can be diagnosed not by saying “no connection,” but by dete
 
 ## The model in one sentence
 
-> The client request is a continuous contract of `DNS → route/NAT/firewall → TCP → TLS → HTTP → load balancer → backend`, and the error in the next step can only be interpreted if the previous step is successful.
+> Diagnose a fresh HTTPS request through name resolution, the network route, transport, TLS, and HTTP handling. A load balancer may terminate some layers and start a separate backend connection. Cached connections and HTTP/3 change the observed sequence.
 
 ```mermaid
 flowchart LR

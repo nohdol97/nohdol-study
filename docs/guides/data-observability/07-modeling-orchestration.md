@@ -77,6 +77,20 @@ Repeat the same backfill. The final result should remain identical. Then inject 
 
 Incremental filtering on `max(event_time)` alone can miss a late correction with an older timestamp. Design a bounded lookback plus deterministic merging, CDC positions, or another source-supported change mechanism. Compare incremental output with a full rebuild on a fixture that includes late updates and deletes.
 
+## Example results
+
+Illustrative three-day ledger, all amounts in cents.
+
+```text
+baseline: day1=100, day2=250, day3=50
+day2 correction: replace 250 with 270
+after bounded backfill: day1=100, day2=270, day3=50
+after identical retry: day1=100, day2=270, day3=50
+full rebuild comparison: MATCH
+```
+
+A day-two value of 520 indicates additive replay. An unexplained change outside day two violates the repair scope. Include late deletes in the full-rebuild comparison and reconcile existing publication after a scheduler acknowledgment failure.
+
 ## Explain it in your own words
 
 What exactly does your model's successful build prove? State its grain, interval, input versions, checks, publication boundary, and remaining uncertainty. Explain why retrying a task and republishing a business result are different operations.

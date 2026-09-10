@@ -7,7 +7,7 @@ This lab is a **Local·read only** analysis that groups incidents by looking at 
 | Preparation items | value |
 |---|---|
 | input | 4 synthetic alerts, 1 change event, 1 service dependency |
-| output of power | incident cluster, evidence and gap, next query |
+| output | incident cluster, evidence and gap, next query |
 | Correct answer status | The cause is not yet determined |
 | stopping condition | One of service·timestamp·source cannot be interpreted |
 | cleanup | No operational changes |
@@ -86,6 +86,20 @@ The following query list is passed to the handler without throwing the entire lo
 5. Check whether the checkout pod and search-batch actually experienced CPU contention on the same node.
 
 This list verifies the edges of [incident evidence graph](../aiops-foundations/01-evidence-graph.md). If you ask LLM about the cause before the query results come out, it will only repeat the current table in natural language and will not create any new evidence.
+
+## Example results
+
+Illustrative analyst output for the synthetic incident, not a model benchmark or a confirmed root cause:
+
+```text
+group: checkout / ap-northeast-2 / incident window
+candidate: recent deployment may contribute to checkout failures
+support: error timing and deployment change
+missing: comparison with unaffected revision; direct causal test
+decision: investigate; do not automatically roll back
+```
+
+An alert from an unrelated service without a dependency link stays separate even if its timestamp matches. Pass when each grouped alert and candidate can be traced to supplied evidence, counterevidence is retained, and unsupported claims are withheld. Fewer groups alone is not higher diagnostic quality.
 
 ## How to interpret the results
 

@@ -32,9 +32,9 @@ Even if you change the replica from 2 to 3 in values, the rendered manifest will
 2. Users add environment-specific values ​​or command line values.
 3. Helm combines the values ​​according to priority and renders the template as the final manifest.
 4. The person or CI checks whether the manifest contains only the expected image, replica, and permissions.
-5. Helm install·upgrade sends the manifest to the cluster API and records release history.
-6. If you use GitOps, Argo CD continuously compares Git's manifest and live resources.
-7. Depending on the policy allowed, the difference is notified or synchronized to return to the desired state.
+5. Choose the lifecycle owner. With the Helm CLI, install/upgrade submits resources and records Helm release revisions. With Argo CD's Helm integration, Helm only renders templates; Argo CD applies and owns the application lifecycle.
+6. Argo CD continuously compares rendered desired resources with live resources. A Helm-sourced Argo CD application does not require a corresponding entry in `helm list` or `helm history`.
+7. Depending on the allowed policy, Argo CD reports or synchronizes differences. Avoid having a separate Helm release and Argo CD compete for the same resources.
 
 If you only use Helm, steps 6 and 7 are not required. Adding GitOps does not mean that the fourth step of reviewing whether the template is safe disappears.
 
@@ -69,7 +69,7 @@ default `values.yaml`, additional values ​​file and CLI override are combine
 
 ```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "required": ["image", "replicaCount"],
   "properties": {
@@ -126,3 +126,4 @@ Auto-sync allows CIs to only change Git commits without cluster credentials, but
 <!-- source: https://helm.sh/docs/topics/charts_hooks/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
 <!-- source: https://argo-cd.readthedocs.io/en/stable/core_concepts/ | checked: 2026-09-03 -->
 <!-- source: https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/ | checked: 2026-09-03 -->
+<!-- source: https://argo-cd.readthedocs.io/en/stable/user-guide/helm/ | checked: 2026-09-10 -->

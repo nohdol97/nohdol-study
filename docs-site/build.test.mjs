@@ -301,6 +301,44 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.equal(content.documents.some((document) => document.id === 'operating-rules'), false);
 });
 
+test('all published JSON fixtures and internal document links resolve', async () => {
+  const payload = await buildSite({ checkOnly: true });
+  const ids = new Set(payload.documents.map((document) => document.id));
+  for (const document of payload.documents) {
+    const source = await readFile(path.join(REPOSITORY_ROOT, document.path), 'utf8');
+    for (const match of source.matchAll(/^```json\n([\s\S]*?)^```/gm)) {
+      assert.doesNotThrow(() => JSON.parse(match[1]), `${document.id}: invalid JSON fixture`);
+    }
+    for (const match of document.html.matchAll(/href="#doc=([^"&]+)[^"]*"/g)) {
+      assert.ok(ids.has(match[1]), `${document.id}: unresolved route ${match[1]}`);
+    }
+    assert.doesNotMatch(document.html, /<a\b[^>]*>\s*<\/a>/i, `${document.id}: empty link label`);
+    const isKubernetesExercise = document.topicId === 'kubernetes' && !document.path.endsWith('00-roadmap.md');
+    const isDataExercise = document.pathId === 'data-observability' && !/\/(?:00|16)-/.test(document.path);
+    const isLab = /## Lab prerequisites/.test(source);
+    if (isKubernetesExercise || isDataExercise || isLab) {
+      assert.match(source, /## Example results\n/, `${document.id}: missing result example`);
+    }
+  }
+});
+
+test('documented Python outputs match execution, including publication rejection', async () => {
+  for (const filename of ['02-sql-python-foundations.md', '15-capstone.md']) {
+    const source = await readFile(path.join(REPOSITORY_ROOT, 'docs/guides/data-observability', filename), 'utf8');
+    const code = source.match(/^```python\n([\s\S]*?)^```/m)[1];
+    const results = source.split('## Example results\n')[1];
+    const expected = results.match(/^```text\n([\s\S]*?)^```/m)[1].trim();
+    const actual = execFileSync('python3', ['-c', code], { encoding: 'utf8', timeout: 10000 }).trim();
+    assert.equal(actual, expected, `${filename}: output differs from the teaching example`);
+    if (filename === '15-capstone.md') {
+      const regression = code.replace('if rejected or conflicts or set(accepted) != set(expected_ids):', 'if False:');
+      assert.notEqual(regression, code);
+      assert.throws(() => execFileSync('python3', ['-c', regression], { stdio: 'pipe', timeout: 10000 }),
+        'the fixture must detect a publication gate that accepts invalid data');
+    }
+  }
+});
+
 test('rejects duplicate document ids', async () => {
   const directory = await temporaryDirectory();
   const catalog = await clonedCatalog();

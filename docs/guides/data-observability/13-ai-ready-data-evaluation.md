@@ -67,6 +67,22 @@ Create ten synthetic questions with explicit expected evidence, including an una
 
 Remove access to one source, refresh the derivative index/policy state, and repeat as the restricted caller. The source must not appear in retrieval results, prompts, answers, or exposed debugging views. Change a source value and verify that a new answer can be traced to the updated version while the previous evaluation remains reproducible under its retained fixture policy.
 
+## Example results
+
+Illustrative evaluation receipt, not measured model performance.
+
+```text
+questions: 10
+answered: 7
+supported correct answers: 6
+abstained: 3
+answered accuracy: 6 / 7
+answer coverage: 7 / 10
+forbidden-source exposure: 0 required
+```
+
+Report coverage and answered accuracy together. A forbidden source in a prompt or debug view fails the access gate even if the final answer omits it. Grade against authorized evidence for each question, not another model's agreement.
+
 ## Explain it in your own words
 
 If an answer is wrong, what evidence distinguishes stale data, retrieval failure, an ambiguous metric definition, a prompt defect, and a model error? Explain why a trace can help diagnose the case without proving the answer is true.

@@ -1,5 +1,7 @@
 # Connecting operational signals to an incident evidence graph
 
+<!-- source: https://opentelemetry.io/docs/specs/semconv/registry/attributes/deployment/ | checked: 2026-09-10 | deployment.environment.name replaces the deprecated deployment.environment attribute -->
+
 ## Terms introduced in this chapter
 
 | word | Meaning in this chapter |
@@ -26,8 +28,8 @@ Capturing multiple dashboards does not connect the incidents. Even if the CPU is
 flowchart TB
   S["User checkout failed"] -->|"SLI window"| SV["checkout service"]
   SV -->|"trace service.name"| TR["Failure trace"]
-  TR -->|"peer.service"| DB["orders database"]
-  SV -->|"deployment.environment and revision"| DP["deployment v18"]
+  TR -->|"dependency identity from instrumentation"| DB["orders database"]
+  SV -->|"deployment.environment.name and revision"| DP["deployment v18"]
   DP -->|"change timestamp"| CH[“Change image”]
   DB -->|"resource ID"| SAT["connection saturation"]
   CH -.->|“Candidate Cause”| H["release regression"]
@@ -59,7 +61,7 @@ Event time and collection time are also different. If logs arrive late after a n
 ```json
 {
   "incident_id": "inc-20260903-001",
-  "window": {"start": "2026-09-03T01:01:00Z", "end": "2026-09-03T01:18:00Z"},
+  "window": {"start": "2026-09-03T00:55:00Z", "end": "2026-09-03T01:18:00Z"},
   "impact": {"sli": "checkout_success_ratio", "regions": ["ap-northeast-2"]},
   "entities": [
     {"type": "service", "id": "checkout", "revision": "v18"},
@@ -81,7 +83,7 @@ This bundle is not a copy of the original data. Leave the query to be re-execute
 - The basic role of the signal follows from [Observability and SRE](../observability-sre/01-signals-slo-incident-model.md).
 - Kubernetes object status and events can be checked with actual commands in [Observation and Troubleshooting](../kubernetes/09-observability-and-troubleshooting.md).
 - deployment·route change connects to revisions of [Helm and GitOps](../helm-gitops/02-render-upgrade-drift-lab.md) and [Traffic Control](../traffic-resilience/01-request-budget-and-ownership.md).
-- The procedure for using this graph for diagnosis is covered in [](../aiops-diagnosis/01-detection-correlation-rca.md), from detection scores to cause candidates with evidence.
+- [Evidence-based diagnosis](../aiops-diagnosis/01-detection-correlation-rca.md) turns detection scores into candidates that can be checked against supporting and opposing evidence.
 
 ## Explain it in your own words
 

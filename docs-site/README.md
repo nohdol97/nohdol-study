@@ -32,6 +32,12 @@ DevOps implements the [DevOps public learning path specification](../docs/specs/
 
 The [Data & Observability course](../docs/guides/data-observability/00-roadmap.md) implements its [learning-path specification](../docs/specs/2026-09-10-data-observability-learning-path.md). It follows one evolving project through SQL/Python, Parquet, Iceberg/Delta, Spark, Kafka/CDC, dbt, quality/SLOs, OpenTelemetry, telemetry backends, lineage/governance, Databricks/Snowflake, AI evaluation, and recovery/cost engineering. The course sources live in `docs/` at the user's request; no duplicate article tree is generated.
 
+## Reading lab results
+
+Each hands-on chapter and Data & Observability exercise provides an **Example results** section. Runnable fixtures distinguish expected values from variable names, times, and IDs; plan-only assignments provide explicitly synthetic review receipts. Compare the normal, failed, and recovered states and record command exits as well as business outcomes. Never copy a worksheet receipt into an execution record.
+
+The [full documentation review](../docs/reviews/2026-09-10-full-documentation-review.md) records corrections, reproducible checks, and the boundary between local execution and unrun cloud or cluster exercises.
+
 ## Run locally
 
 Node.js 20 or later and Python 3 are required; CI uses Node.js 22. Python runs the documented standard-library correctness fixtures during tests.
@@ -45,6 +51,8 @@ npm run preview
 ```
 
 Open `http://127.0.0.1:4174/` in your browser.
+
+Optional [local lab checks](labs/README.md) reproduce the PostgreSQL transaction/restore and Prometheus alert fixtures with separately installed tools. They create no cloud resources. The default site test checks JSON and internal links across all 94 documents and compares the two self-contained Python examples with their documented output.
 
 ## Publication and deployment
 

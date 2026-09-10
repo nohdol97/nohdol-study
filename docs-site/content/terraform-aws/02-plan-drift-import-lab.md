@@ -81,7 +81,7 @@ run "valid_dev_contract" {
   }
 
   assert {
-    condition     = terraform_data.contract.output.environment == "dev"
+    condition     = terraform_data.contract.input.environment == "dev"
     error_message = "planned environment must remain dev"
   }
 }
@@ -92,7 +92,9 @@ terraform test
 terraform plan -var='environment=unknown'
 ```
 
-The second plan should fail due to validation. Check test success and incorrect input rejection together.
+The second plan should fail due to validation. Check test success and incorrect input rejection together. The assertion deliberately reads `input`: the new resource's computed `output` can remain unknown until apply, so asserting that output in a plan-only test can fail before any meaningful comparison. A plan test checks planned inputs; an apply test can inspect the resulting state but may execute resources and provisioners.
+
+An existing project's `terraform test` is not inherently read-only. Inspect every run block and test module before reusing the optional AWS sequence below: the default test command can apply resources. Use only reviewed `command = plan` runs for this chapter.
 
 ## 3. AWS plan review design
 
@@ -108,12 +110,22 @@ terraform plan -detailed-exitcode -out=planned-change.tfplan
 terraform show -no-color planned-change.tfplan
 ```
 
-`-detailed-exitcode` distinguishes between no change, change, and error, so CI does not misunderstand “there is a change” as a failure. Apply job runs only in the same commit, workspace, and account as the reviewed saved plan.
+`-detailed-exitcode` returns 0 for no differences, 2 for proposed changes, and 1 for an error. Treat 2 as a reviewable plan, not a failed execution. Apply jobs must use the reviewed saved plan with the intended commit, workspace, backend, and account. A plan lock is released when planning ends; it is not held throughout the human review period, and a stale saved plan may need to be recreated.
+
+```bash
+plan_status=0
+terraform plan -detailed-exitcode -out=planned-change.tfplan || plan_status=$?
+case "$plan_status" in
+  0) printf '%s\n' 'No proposed changes' ;;
+  2) printf '%s\n' 'Changes require review' ;;
+  *) printf '%s\n' 'Plan failed' >&2; exit "$plan_status" ;;
+esac
+```
 
 ```mermaid
 flowchart TD
     A[Check caller/commit] --> B[fmt·validate·test]
-    B --> C[Hold the lock and plan]
+    B --> C[Lock while computing plan]
     C --> D{destroy·replace·expand permissions?}
     D -->|Yes| E[Check owner review and migration/rollback]
     D -->|No| F[general approval]
@@ -156,6 +168,24 @@ rm -rf .terraform
 
 This cleanup is executed after checking the path in the lab directory. The actual backend state or lockfile is not deleted.
 
+## Example results
+
+Expected abbreviated output for the local built-in resource. Formatting and diagnostic wording can differ by Terraform patch version.
+
+```text
+# terraform validate
+Success! The configuration is valid.
+# terraform plan -var='environment=dev'
+Plan: 1 to add, 0 to change, 0 to destroy.
+# terraform test
+Success! 1 passed, 0 failed.
+# terraform plan -var='environment=unknown'
+Error: Invalid value for variable
+environment must be dev, stage, or prod
+```
+
+An empty successful `fmt -check` output is normal. The invalid-input plan must exit nonzero. Repeating the valid plan still proposes one creation because this exercise never applies it. In the optional detailed-exitcode workflow, code 2 means a successfully computed plan with differences.
+
 ## How to interpret the results
 
 `+ create` in the first plan occurs because the built-in resource is not in the state yet. Since you did not apply, it is normal for the create suggestion to remain even if you create the same plan again. If `environment=unknown` fails, variable validation has operated on an input boundary. This is not verification that AWS resources are safe, but verification of a piece of module contract.
@@ -172,5 +202,6 @@ When a drift plan appears, do not immediately assume that the console change was
 
 <!-- source: https://developer.hashicorp.com/terraform/cli/commands/plan | checked: 2026-09-03 | version: Terraform 1.16.x -->
 <!-- source: https://developer.hashicorp.com/terraform/language/tests | checked: 2026-09-03 | version: Terraform 1.16.x -->
+<!-- source: https://developer.hashicorp.com/terraform/language/resources/terraform-data | checked: 2026-09-10 | plan-time input versus computed output correction -->
 <!-- source: https://developer.hashicorp.com/terraform/language/import | checked: 2026-09-03 | version: Terraform 1.16.x -->
 <!-- source: https://developer.hashicorp.com/terraform/language/modules/develop/refactoring | checked: 2026-09-03 | version: Terraform 1.16.x -->

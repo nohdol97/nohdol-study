@@ -67,7 +67,7 @@ vision_bundle:
 | line | Key Learning Ideas | latent form | Key Failure/Evaluation Questions |
 |---|---|---|---|
 | GAN | Competition between generator and discriminator | continuous noise | mode collapse·learning instability |
-| VAE | Likelihood lower bound and reparameterization | continuous odds | reconstruction·latent regularity |
+| VAE | Likelihood lower bound and reparameterization | continuous random variables | reconstruction·latent regularity |
 | VQ-VAE | Discrete latent in codebook | Discrete token | Codebook usage/commitment |
 | autoregressive image token | Predict next token with previous token | Discrete sequence | Long producing cost·ordering |
 | diffusion | Reverse process denoising after adding noise | pixel or latent | sampling step·conditioning·fidelity |
@@ -94,7 +94,7 @@ Edge deployment connects to [On-device AI and model compression](#doc=ai-special
 
 ## Explain it in your own words
 
-- What bias difference does ViT make between convolution and convolution by converting image patches into tokens?
+- How does converting image patches into tokens change ViT's inductive bias compared with convolution?
 - What are we missing if we just call ResNet residual and UNet skip the same connection?
 - Even if the FID of the generated image is good, why may it not pass the actual product gate?
 - What downstream choices do continuous latent and discrete codebook each change?

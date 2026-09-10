@@ -1,35 +1,13 @@
-# Mobile Telegram Study Bridge Reference Implementation (Telegram Bot Reference Implementation)
+# Mobile Telegram study bridge reference
 
-This directory is the reference template for the official Python bot bridge (`bot.py`) and execution script (`run_bot.sh`) that links `nohdol-study` harness with smartphone Telegram.
+The Python bot and launcher connect Telegram to a local agent CLI. Runtime copies belong under `_workspace/telegram_bot/`; follow the [full guide](../../docs/guides/mobile-telegram-bot.md) for setup and example results.
 
-**This bridge is read-only.** It searches, queries, explains, and answers vaults, but does not write, edit, or delete notes, and its boundaries are enforced by `.agents/hooks/study-tool-guard.py`, not by instructions. The reason is in section 2 of [docs/guides/mobile-telegram-bot.md](../../docs/guides/mobile-telegram-bot.md).
+The intended surface is read-only. Register the shared `study-tool-guard.py` through `study-install` for the selected CLI and verify it in a fresh session. The bot sets `STUDY_SURFACE=telegram`; that environment marker alone does not register a hook.
 
-## 🚀 Usage guide (3 second application method)
+**An empty `TELEGRAM_ALLOWED_CHAT_ID` currently permits all chats.** Set a private allowed chat explicitly and test a rejected chat. Inject `TELEGRAM_BOT_TOKEN` externally; never save it in this repository, the vault, workspace, or shell history.
 
-1. **Copy to local workspace (`_workspace/`)**:
-   According to the security rule (RULE 5) and `.gitignore` policy, the virtual environment (`.venv`) and execution log must be run in the untracked area, `_workspace/`. Copy the reference script to your workspace with the command below:
-   ```bash
-   mkdir -p _workspace/telegram_bot
-   cp -p examples/telegram_bot/* _workspace/telegram_bot/
-   ```
+Sending answers through Telegram and source material to a selected provider requires the installation's transmission authorization. Read-only access is not a confidentiality guarantee.
 
-2. **Environment variable injection and execution**:
-   ```bash
-   export TELEGRAM_BOT_TOKEN="발급받은_토큰"
-   export TELEGRAM_ALLOWED_CHAT_ID="내_CHAT_ID_숫자"
+The launcher defaults to `agy` and can download virtual-environment dependencies when missing. Model/effort aliases must be checked against the installed CLI. Markdown conversion uses MessageEntity ranges and local-link normalization; unusual formatting still needs testing.
 
-   # background execution
-   nohup ./_workspace/telegram_bot/run_bot.sh > _workspace/telegram_bot/bot.log 2>&1 &
-   ```
-
-## 📖 Core documentation and architecture guidance
-- **Detailed settings and rendering principle guide**: [docs/guides/mobile-telegram-bot.md](../../docs/guides/mobile-telegram-bot.md)
-- **Key Features**:
-  - 100% flawless format separation and transmission based on `MessageEntity` (Breaking of backslash `\` and asterisk `*` at the source)
-  - Local file link protocol automatic pre-purification defense, such as `file://`, `vscode://`, etc.
-  - Secure code chunk split transmission of large responses exceeding 4,000 characters
-  - Instantly switch skill (`/skill`), model (`/model`), and inference strength (`/effort`) through the `[Menu]` button at the bottom left.
-  - `/skill` exposes only the inquiry skills for which you want to fix the conversation (`vault-search`, `study-session`, `vault-gardening`). The remaining inquiry skills are automatically routed to the request phrase.
-  - **The basic skill is `vault-search`**. The reason it's a skill rather than a forced dictionary search is because the model needs to be able to skip it — the embedding search also returns results in `"고마워"`, so if you inject it every turn, you'll always end up with an irrelevant excerpt. Unchecked is stored in a separate state separate from “Never selected”.
-  - A prompt informs each request that this is a read-only surface. The hook alone prevents writing, but the round trip where the model attempts to write a note and is rejected appears to be several minutes long `생각 중...` on the phone.
-  - Since this is a spinning surface without an acknowledgment prompt, we inject `STUDY_SURFACE=telegram` to turn on the `.agents/hooks/study-tool-guard.py` gate. Knowledge root is read-only, writes are only open to `_workspace/` and temporary directories, and home directory sweeps are blocked. **Registration is done in CLI global settings, not in the repository**, and the procedure is in step 6 of `study-install`
+The default skill is `vault-search`; `/skill`, `/model`, `/effort`, `/status`, `/cancel`, and `/new` control the conversation. Copying scripts is not evidence that authentication, hook trust, session isolation, or unattended operation works.

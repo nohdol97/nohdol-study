@@ -1,12 +1,14 @@
 # Service fault diagnosis lab
 
-> lab class: **Local — Linux VM or Linux host** where systemd runs. The only steps using root authority are temporary unit creation and deletion.
+<!-- source: https://github.com/systemd/systemd/blob/main/man/systemd.exec.xml | checked: 2026-09-10 | DynamicUser and RuntimeDirectory lifecycle; upstream manual source used because rendered manual was unavailable -->
+
+> Lab class: **Local — disposable Linux VM or Linux host** running systemd. System-manager operations require privileges; the HTTP service itself runs with a transient unprivileged identity.
 
 ## Lab prerequisites
 
 - **Environment**: Use a disposable Linux VM running systemd, not macOS. It does not run on the operating server.
 - **Tools**: Requires `python3`, `curl`, `ss`, `systemctl`, `journalctl`.
-- **Permissions**: Use `sudo` only at the stage of creating and deleting unit files.
+- **Permissions**: Creating/removing a system unit and starting, stopping, or reloading it require the appropriate system-manager privileges. Read access to journals and process ownership may also be restricted.
 - **Terminal**: Opens two windows: one to hold the process occupying the port and another to run diagnostic commands.
 - **What to create**: `/etc/systemd/system/infra-http.service` One file and a temporary Python HTTP process.
 - **Finished state**: The unit file and temporary process disappear and the `18080` port is not used by any process.
@@ -41,6 +43,9 @@ After=network.target
 
 [Service]
 Type=simple
+DynamicUser=yes
+RuntimeDirectory=infra-http
+WorkingDirectory=/run/infra-http
 ExecStart=/usr/bin/python3 -m http.server 18080 --bind 127.0.0.1
 Restart=no
 MemoryMax=128M
@@ -121,13 +126,33 @@ If OOM has not been reproduced, “OOM recovery complete” is not recorded. The
 ## Cleanup
 
 ```bash
-sudo systemctl disable --now infra-http 2>/dev/null || true
+sudo systemctl stop infra-http
+sudo systemctl reset-failed infra-http
 sudo rm /etc/systemd/system/infra-http.service
 sudo systemctl daemon-reload
-sudo systemctl reset-failed
 ```
 
-First, check whether the deletion target is exactly `/etc/systemd/system/infra-http.service`. Other units or Python processes are not removed by this cleanup command.
+Check that the deletion target is exactly `/etc/systemd/system/infra-http.service`. The unit uses a transient unprivileged identity and serves only its empty runtime directory. It was never enabled at boot, so disabling it is unnecessary. Reset only this unit's failure state; a bare `systemctl reset-failed` would clear unrelated diagnostic state. Verify that the foreground conflict process has also ended and port 18080 is free.
+
+## Example results
+
+Illustrative output on Linux; PIDs, memory values, timestamps, and errno numbers vary. The conflict phase can still return HTTP 200 from the foreground server, so curl alone is not the success gate.
+
+```text
+# Baseline: systemctl is-active infra-http
+active
+# Baseline: systemctl show ... -p MainPID
+MainPID=2401
+# Conflict: journalctl -u infra-http
+OSError: [Errno 98] Address already in use
+# Conflict: ss identifies the foreground Python process, not PID 2401.
+# Recovery: systemctl is-active infra-http
+active
+# Recovery: curl -i http://127.0.0.1:18080/
+HTTP/1.0 200 OK
+```
+
+Pass when the recovered unit's nonzero MainPID owns the expected listener and HTTP succeeds. After cleanup, the listener must disappear; a remaining foreground process means cleanup is incomplete.
 
 ## How to interpret the results
 

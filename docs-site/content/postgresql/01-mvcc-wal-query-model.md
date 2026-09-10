@@ -55,9 +55,11 @@ sequenceDiagram
 
 Checkpoints advance the WAL point where recovery begins, but if they are too frequent, write pressure can increase, and if they are too rare, the crash recovery time can increase. WAL creation rate, storage latency, and recovery goals are viewed together.
 
+The diagram assumes ordinary logged tables, `fsync=on`, and a commit mode that waits for local WAL flush. With `synchronous_commit=off`, an acknowledged transaction can be lost after a crash even though database consistency is preserved. Local durability also does not prove that a standby has received or applied the commit; inspect synchronous replication settings before defining failover RPO.
+
 ## VACUUM Responsibilities
 
-UPDATE and DELETE create row versions that are no longer visible in any transactions. VACUUM makes it reusable and is involved in visibility map and transaction ID wraparound prevention. General VACUUM and `VACUUM FULL`, which rewrites the table and requires a stronger lock, are not treated the same.
+UPDATE and DELETE leave old row versions that may still be visible to existing snapshots. VACUUM can reclaim their space only after they are no longer needed. It also maintains the visibility map and helps prevent transaction ID wraparound. General VACUUM and `VACUUM FULL`, which rewrites the table and requires a stronger lock, are not treated the same.
 
 Long-running transactions or neglected replication slots can delay cleanup and WAL retention. Don't just look at table size, but also observe transaction age, dead tuple, autovacuum activity, and retained WAL of slots.
 
@@ -92,3 +94,4 @@ Before ending a blocking query, check the owner, transaction contents, rollback 
 <!-- source: https://www.postgresql.org/docs/18/wal-intro.html | checked: 2026-09-03 | version: PostgreSQL 18 -->
 <!-- source: https://www.postgresql.org/docs/18/routine-vacuuming.html | checked: 2026-09-03 | version: PostgreSQL 18 -->
 <!-- source: https://www.postgresql.org/docs/18/using-explain.html | checked: 2026-09-03 | version: PostgreSQL 18 -->
+<!-- source: https://www.postgresql.org/docs/18/runtime-config-wal.html | checked: 2026-09-10 | version: PostgreSQL 18 -->

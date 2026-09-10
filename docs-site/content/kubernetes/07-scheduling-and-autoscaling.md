@@ -36,7 +36,7 @@ A taint is a condition where a node pushes out a Pod, and toleration indicates t
 
 ## Deployment failure, preemption, and eviction occur at different times.
 
-- **Pending** is a state in which a suitable node has not yet been found.
+- **Pending** includes unscheduled Pods and Pods whose containers are not yet prepared. Diagnose scheduling only after checking `nodeName`, `PodScheduled`, and events.
 - **preemption** is a scheduler operation that considers removing low-priority Pods in order to place high-priority Pods.
 - **node-pressure eviction** is an operation in which the kubelet evicts a Pod due to pressure on the memory, disk, etc. of the running node.
 - **API-initiated eviction** is when management tasks such as drain use the eviction API.
@@ -154,12 +154,14 @@ spec:
 
 ```bash
 kubectl apply -f schedule.yaml
-kubectl get hpa compute-demo --watch
+kubectl get hpa compute-demo
 kubectl describe hpa compute-demo
 kubectl top pods -l app=compute-demo
 ```
 
 When HPA displays `unknown`, check the CPU request, metrics API, and selector of the target Pod. When HPA manages replicas, it sets ownership so that it does not conflict with automation, which continues to overwrite `spec.replicas` in the Git manifest.
+
+Use separate YAML documents with `---` when appending the HPA. No load generator is supplied here, so reading the HPA is not a demonstrated scale-up. To complete the optional load exercise, record the metric ratio, replica recommendation, resulting Ready replicas, and downstream latency; stop at the declared load cap. Delete the lab HPA and Deployment with `kubectl delete -f schedule.yaml` afterward. Exit code 137 alone means SIGKILL, not proof of OOM; corroborate with the container termination reason and node memory evidence.
 
 ## Which scaler changes what
 
@@ -181,6 +183,23 @@ Using the three control loops together requires testing for observation windows 
 | CPU is high and lag increases | throttling metric, limit | Check CPU limit and app concurrency together |
 | HPA target unknown | `describe hpa`, metrics API | Missing requests or failing to collect metrics |
 | Replica keeps fluctuating | HPA condition and metric time series | Review noise metrics, startup, stabilization |
+
+## Example results
+
+Illustrative scheduling and HPA observations. The manifest does not generate sustained CPU load.
+
+```text
+# If placement constraints cannot be met
+PodScheduled=False
+Warning  FailedScheduling  ... didn't match Pod's node affinity/selector
+# HPA without working resource metrics
+TARGETS
+<unknown>/50%
+# Worksheet only: 3 replicas, measured utilization 80%, target 50%
+ceil(3 * 80 / 50) = 5 proposed replicas
+```
+
+An unknown metric is not zero utilization. The calculated five replicas is a simplified example, not a promised live result: readiness, missing metrics, tolerance, limits, and stabilization affect the controller. Record the actual scheduling reason before changing constraints.
 
 ## Explain it in your own words
 

@@ -1,5 +1,7 @@
 # Operational backend engineering roadmap
 
+This roadmap maps subject areas into a learning sequence. Coverage in the map does not mean every technique has a complete implementation or measured production result; follow each chapter's exercise scope and completion criteria.
+
 <!-- source: https://www.rfc-editor.org/rfc/rfc9110.html | checked: 2026-09-03 -->
 <!-- source: https://sre.google/sre-book/addressing-cascading-failures/ | checked: 2026-09-03 -->
 

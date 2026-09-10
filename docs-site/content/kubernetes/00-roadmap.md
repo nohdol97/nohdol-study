@@ -99,7 +99,7 @@ sequenceDiagram
   CTRL->>API: Request to create ReplicaSet and Pod
   SCHED->>API: Undeployed Pod Observation
   SCHED->>API: record the node to run
-  KUBE->>API: Pod observation of magnetic nodes
+  KUBE->>API: Watch Pods assigned to this Node
   KUBE->>RT: Prepare image and start container
   RT-->>KUBE: execution result
   KUBE->>API: Update Pod status

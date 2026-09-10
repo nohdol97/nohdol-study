@@ -73,6 +73,20 @@ Maintain a compatibility manifest containing engine version, connector coordinat
 
 Draw two designs: a daily 100 MB report and a continuously updated stream with a five-minute freshness target. Assign storage, processing, scheduling, contract checking, and telemetry to each. Explain every additional process in the second design. Then add a one-hour downstream outage and show where the backlog lives, how long it survives, and who owns recovery.
 
+## Example results
+
+Illustrative design review, not a running platform.
+
+```text
+daily 100 MB report: versioned files + scheduled transform + publication checks
+five-minute stream: retained log + checkpointed processing + freshness checks
+100 events/s paused for one hour: backlog = 360000
+recovery 300/s minus incoming 100/s: net drain = 200/s
+estimated drain time = 1800 seconds
+```
+
+The estimate assumes sustained rates and sufficient retention. A diagram without a backlog owner or retention bound fails the review.
+
 ## Explain it in your own words
 
 Why can OpenLineage and OpenTelemetry coexist without one replacing the other? A lineage event describes data derivation; a span records an operation. Linking their run identities makes them useful together. Neither grants permission to read a dataset.

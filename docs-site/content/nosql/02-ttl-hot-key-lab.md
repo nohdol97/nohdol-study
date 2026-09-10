@@ -78,6 +78,24 @@ flowchart LR
 - DynamoDB explains with what key/index each query is performed without Scan.
 - Delete the AWS optional table, index, backup, and test IAM policy in reverse inventory order and recheck the billing·resource view.
 
+## Example results
+
+Expected Redis CLI output. Run the first three commands promptly; the exact remaining TTL is time-dependent.
+
+```text
+# SET session:demo active EX 10
+OK
+# TTL session:demo, immediately afterward
+(integer) 10
+# GET session:demo
+"active"
+# Repeat TTL and GET after more than 10 seconds
+(integer) -2
+(nil)
+```
+
+If the initial TTL is 9, expiration is still working. A value of -1 indicates no expiry, not a missing key. This transcript demonstrates expiration only. For the separate eviction exercise, require an increase in `evicted_keys` and corresponding cache misses; an expired key is not eviction evidence. Delete only `session:demo` if ending before its TTL expires.
+
 ## How to interpret the results
 
 When `TTL` changes from a positive number to `-2`, the key has expired and the minimum flow that no longer exists has been confirmed. If it is `-1`, the key exists but expiration has not been set. You must distinguish between the two negative values ​​to distinguish between missing settings, which cause the session to remain permanently, and normal expiration.

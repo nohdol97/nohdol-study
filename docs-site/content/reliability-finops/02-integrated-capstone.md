@@ -125,6 +125,24 @@ Leaves architecture diagram, resource inventory, apply/deploy evidence, SLI, inc
 
 `terraform destroy` Don't just believe in success, check AWS resource inventory, load balancer·volume·snapshot·backup, DNS, log retention, and billing view. Backup or audit logs that need to be preserved leave an owner and an expiration date.
 
+## Example results
+
+Synthetic review receipt; replace these worksheet values with your own timestamps, counts, and cost evidence after execution.
+
+```text
+restore_target: isolated-study
+expected_orders: 1000
+restored_orders: 1000
+expected_total_cents: 250000
+restored_total_cents: 250000
+recovery_duration_seconds: 420
+declared_rto_seconds: 600
+lost_confirmed_orders: 0
+verdict: PASS for this fixture and declared RTO
+```
+
+A deliberate restore with 999 orders must fail reconciliation even if the service returns HTTP 200. Record cost separately from correctness. This receipt does not establish production RPO, regional failover, sustained load capacity, or a cloud bill.
+
 ## How to interpret the results
 
 If the SLI drops immediately after fault injection and an alert sounds, the detection path has been confirmed. If the request fails even without an alert, check whether the threshold, measurement point, or traffic volume does not match the assumptions. Do not just lower the threshold to force an alert to sound.

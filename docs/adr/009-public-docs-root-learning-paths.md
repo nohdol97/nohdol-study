@@ -14,7 +14,7 @@ Personal `vault/` has verification notes for reference in infrastructure and AIO
 
 ## decision
 
-Add layer `paths` to the catalog and root only shows study area cards. There are currently two areas: `infra` and `aiops`. Each area owns an explicit `topicIds` sequence, and every topic must belong to exactly one area.
+Add layer `paths` to the catalog and show study area cards at the root. The initial areas were `infra` and `aiops`; the extension below adds `data-observability`. Each area owns an explicit `topicIds` sequence, and every topic must belong to exactly one area.
 
 - `#path=<id>` shows the topic order of the area and the common learning ladder.
 - The existing direct link between `#topic=<id>` and `#doc=<id>` is maintained.

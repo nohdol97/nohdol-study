@@ -56,6 +56,16 @@ print(result)
 db.close()
 ```
 
+## Example results
+
+Output from the self-contained Python/SQLite fixture:
+
+```text
+[('c1', 350)]
+```
+
+The raw c1 rows sum to 450 cents; deduplicating the identical e1 retry produces 350. Removing deduplication must trip the assertion. Conflicting payloads require the capstone's separate conflict gate.
+
 ## How to interpret the results
 
 The correct eligible total is 350 cents. A naive sum for `c1` is 450 because it counts the retry. The null customer is excluded deliberately, so this query does not prove that all input orders reached a consumer. Track exclusions separately.

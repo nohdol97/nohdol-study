@@ -165,6 +165,25 @@ kubectl logs <pod-name> -c web --previous
 kubectl get deployment web -o jsonpath='{.status.conditions}'
 ```
 
+## Example results
+
+Illustrative rolling-update transcript:
+
+```text
+# Initial rollout
+deployment "web" successfully rolled out
+# After nginx:does-not-exist
+error: timed out waiting for the condition
+# New Pod state
+0/1  ImagePullBackOff
+# kubectl rollout undo deployment/web
+deployment.apps/web rolled back
+# Rollout verification
+deployment "web" successfully rolled out
+```
+
+Healthy old replicas can continue serving during the failed rollout. Pass recovery only after the current Deployment's image and readiness are restored. `logs --previous` requires a previous terminated container; an image that never started has no such log. Delete the lab resources with `kubectl delete -f workload.yaml` after recording the observations.
+
 ## Explain it in your own words
 
 1. Why is Deployment better for recovery than creating Pods directly?

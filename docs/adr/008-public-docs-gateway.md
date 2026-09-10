@@ -1,5 +1,7 @@
 # ADR 008 — Subject-specific learning documents are deployed to GitHub Pages through an explicit catalog.
 
+> Scope clarification (2026-09-10): [ADR 009](009-public-docs-root-learning-paths.md) adds learning paths and explicitly selects the Data & Observability course from docs/. Other harness guides, ADRs, and specifications remain outside the public catalog.
+
 - Date: 2026-09-03
 - Status: Partially replaced (root topic listing replaced by ADR 009)
 - Subject: `docs-site/`, `.github/workflows/docs-pages.yml`, `AGENTS.md` Section 7

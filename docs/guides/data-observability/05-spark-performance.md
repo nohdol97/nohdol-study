@@ -71,6 +71,19 @@ AQE can coalesce shuffle partitions and alter supported joins using observed sta
 
 `repartition` can redistribute data through a shuffle; reducing partitions with `coalesce` can avoid a full redistribution in relevant cases but reduce parallelism. Inspect the plan and measure. Increasing executor memory before correcting an exploding join may simply make an incorrect job run longer before failure.
 
+## Example results
+
+Expected result invariants; collect ordering and the physical plan may vary.
+
+```text
+aggregated_rows: 1000
+sum_of_counts: 1000000
+customer_0_count: 900100
+each_other_customer_count: 100
+```
+
+The hot key receives 900,000 explicit rows plus 100 from the modulo tail. The small dimension can be broadcast and partial aggregation can reduce shuffle, so the fixture does not guarantee a slow skewed join. Inspect the plan before attributing a timing change to AQE. Changed counts fail the comparison.
+
 ## Explain it in your own words
 
 If task p50 is two seconds and p99 is ninety seconds, what evidence distinguishes skew from garbage collection or a slow host? A duration histogram alone cannot identify the cause. Describe how to compare task input, spill, GC time, and executor location. Keep your before/after result checks and cost measurements beside the plans.

@@ -1,5 +1,7 @@
 # 09. Observation and troubleshooting
 
+<!-- source: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_debug/ | checked: 2026-09-10 | copied Pod image replacement -->
+
 Good troubleshooting is not about knowing a lot of commands, but about reproducing symptoms and quickly dividing the failure hierarchy in half. First, check user influence, find the difference between the desired state and the current state, and then connect event·log·metric in chronological order.
 
 ## Each tool answers different questions
@@ -154,7 +156,8 @@ There is no need to force a shell and package manager into the operating image. 
 
 ```bash
 kubectl debug -it <pod-name> --image=busybox:1.36 --target=<container-name>
-kubectl debug <pod-name> -it --copy-to=<pod-name>-debug --container=<container-name> -- sh
+kubectl debug <pod-name> -it --copy-to=<pod-name>-debug \
+  --set-image=<container-name>=busybox:1.36 --container=<container-name> -- sh
 ```
 
 This feature may come with strong privileges and the risk of exposing sensitive data. Limit who can create debug containers and when with RBAC and audit policies, and organize created debug pods.
@@ -168,7 +171,7 @@ The cause of the failure cannot be determined simply by the fact that the CPU is
 - **trace** finds where time is spent among various services and sections.
 - **Kubernetes state·event** describes the decisions of the orchestration layer.
 
-Consistently leave connection keys such as request ID, workload, namespace, Pod UID, and revision in the signal label, but control high cardinality and personal information.
+Keep request and trace IDs in logs and traces. Use bounded workload, namespace, and environment dimensions for request metrics; per-request IDs must not become metric labels. Pod UID and revision can help infrastructure diagnosis, but their churn also needs a series budget and retention policy.
 
 ## Common Mistakes During Investigations
 
@@ -178,6 +181,22 @@ Consistently leave connection keys such as request ID, workload, namespace, Pod 
 - You only look at average CPU and miss OOM, throttling, queue and p99 delays.
 - Restore to temporary `kubectl edit` and do not update Git source of truth.
 - The cause is unclear, but restarting only clears the symptoms.
+
+## Example results
+
+Illustrative output for the deliberately broken image:
+
+```text
+# rollout status ... --timeout=75s
+error: timed out waiting for the condition
+# describe pod / events
+Warning  Failed  ... failed to pull image ...
+Warning  BackOff  ... Back-off pulling image ...
+# After set image ... nginx:1.27-alpine
+deployment "broken-web" successfully rolled out
+```
+
+An image-pull failure occurs before application startup, so missing application logs are expected. Compare the event reason with registry authentication, DNS, and image-name failures before assigning a cause. Recovery needs the intended image and ready Pod, then the relevant request check; the command exit alone is insufficient.
 
 ## Explain it in your own words
 

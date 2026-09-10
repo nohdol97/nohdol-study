@@ -1,5 +1,7 @@
 # 05. Service and networking
 
+<!-- source: https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/ | checked: 2026-09-10 | endpoint metadata and readiness -->
+
 When a Pod is replaced, its IP may change. If the client remembers individual Pod addresses, connection information will be broken during each recovery and rollout. Service puts a stable name and virtual access point in front of a changing set of Pods, and EndpointSlice represents a list of currently connectable backends.
 
 ## Divide the request path into tiers
@@ -36,18 +38,21 @@ sequenceDiagram
     participant E as Endpoint controller
     participant S as EndpointSlice
     participant C as Client
+    participant N as Service dataplane
     D->>P: Create a Pod with label app=web
     P-->>E: Ready status report
     E->>S: Add ready endpoint
-    C->>S: Request via Service route
-    S-->>C: Delivered as Ready Pod
+    S-->>N: Endpoint metadata
+    C->>N: Request to Service IP
+    N->>P: Forward to eligible Pod
     P-->>E: readiness failure
     E->>S: Update endpoint readiness status
-    C->>S: next request
-    S-->>C: Forward to another Ready Pod
+    S-->>N: Updated endpoint metadata
+    C->>N: next request
+    N->>P: Forward to another eligible Pod
 ```
 
-The readiness failure is not a container restart command. This is a signal that is excluded from candidates for new service traffic. The update time of an already open connection and an external load balancer may be different.
+EndpointSlice is API metadata consumed by the dataplane, not a packet-forwarding component. A not-ready address can remain in a slice with `ready: false`; distinguish no addresses from no eligible addresses. Readiness failure does not restart the container. Endpoint propagation, existing connections, and `publishNotReadyAddresses` require separate interpretation.
 
 ## Criteria for selecting service type
 
@@ -115,8 +120,9 @@ kubectl apply -f network.yaml
 kubectl rollout status deployment/web
 kubectl get service web
 kubectl get endpointslice -l kubernetes.io/service-name=web -o wide
-kubectl run netcheck --rm -it --restart=Never --image=curlimages/curl -- \
-  curl -fsS http://web:8080/
+kubectl run netcheck --restart=Never --image=curlimages/curl --command -- sleep 3600
+kubectl wait --for=condition=Ready pod/netcheck --timeout=90s
+kubectl exec netcheck -- curl --connect-timeout 3 --max-time 5 -fsS http://web:8080/
 ```
 
 Here, the Service receives 8080 and forwards it to the Pod's named port `http`, i.e. 80. By referring to port names instead of numbers, you can maintain the service contract even if the container port changes in a new Pod version.
@@ -152,9 +158,10 @@ kubectl get service web -o yaml
 kubectl get endpointslice -l kubernetes.io/service-name=web -o yaml
 kubectl describe pod <web-pod>
 kubectl logs <web-pod>
-kubectl exec netcheck -- nslookup web
-kubectl exec netcheck -- curl -v http://web:8080/
+kubectl exec netcheck -- curl --connect-timeout 3 --max-time 5 -v http://web:8080/
 ```
+
+Verbose curl output separates name lookup, selected address, connection, and HTTP response without assuming the client image contains `nslookup`. Keep this client Pod alive for the diagnostics above. At the end run `kubectl delete pod netcheck` and `kubectl delete -f network.yaml` in the disposable cluster.
 
 | symptoms | First floor to see |
 |---|---|
@@ -164,6 +171,23 @@ kubectl exec netcheck -- curl -v http://web:8080/
 | EndpointSlice is empty | selector-label and readiness |
 | The inside of the cluster succeeds, only the outside fails. | Gateway/Ingress controller, LB, DNS, TLS |
 | Only some requests fail | Differences in readiness, version, and node by endpoint |
+
+## Example results
+
+Illustrative excerpts for an in-cluster client. Endpoint addresses and failure wording depend on the network implementation.
+
+```text
+# kubectl exec netcheck -- curl ... http://web:8080/
+<!DOCTYPE html>
+...
+<title>Welcome to nginx!</title>
+# After selector app=wrong: EndpointSlice has no matching backend addresses
+ENDPOINTS: <none>
+# Client result can be a refusal or a bounded timeout, not an HTTP success.
+# After kubectl apply -f network.yaml: ready backend addresses return.
+```
+
+The Service ClusterIP can remain unchanged during all three phases. Pass only when the matching Pod labels, ready EndpointSlice addresses, and successful client request agree. Repeat the bounded curl after restoring the selector; endpoint recovery alone is insufficient.
 
 ## Explain it in your own words
 

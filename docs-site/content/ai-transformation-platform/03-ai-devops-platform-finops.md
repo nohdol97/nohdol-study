@@ -1,5 +1,7 @@
 # AI DevOps/Platform and FinOps
 
+<!-- source: https://kueue.sigs.k8s.io/docs/concepts/all_or_nothing/ | checked: 2026-09-10 | quota reservation versus physical placement and readiness timeout -->
+
 <!-- source: https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/ | checked: 2026-09-03 -->
 <!-- source: https://opentelemetry.io/docs/concepts/observability-primer/ | checked: 2026-09-03 -->
 <!-- source: https://docs.nvidia.com/datacenter/dcgm/latest/gpu-telemetry/dcgm-exporter.html | checked: 2026-09-03 -->
@@ -12,7 +14,7 @@ AI platform is not a collection of installations that manages the GPU cluster on
 |---|---|
 | platform contract | Common input of resource·identity·artifact·SLO that workload must declare |
 | quota | Limits on resources and priorities that a team/project can occupy |
-| gang scheduling | A deployment method that does not secure or start all required workers together |
+| gang scheduling | Coordinating admission or placement for the required worker group so partial allocation does not strand the job |
 | autoscaling | Control to adjust the number of workload·nodes according to observed demand |
 | chargeback / showback | How to bill or visualize the cost spent to the team |
 | unit economics | The true cost of creating one successful unit of work |
@@ -60,7 +62,7 @@ spec:
     retentionDays: 30
 ```
 
-This CRD is for illustrative purposes only. The actual API must be aligned with the organization's scheduler/cloud and security perimeter. To ensure that long training only captures some GPUs and does not make them wait for the rest, queue admission and gang scheduling are combined, and preemption cost is calculated based on checkpoint availability.
+This CRD illustrates a proposed platform contract, not an installed API. Match it to the organization's scheduler and security boundaries. Queue admission and gang scheduling should prevent a training job from holding a few GPUs indefinitely while waiting for the rest. Implementations differ: Kueue coordinates quota, readiness timeouts, and related scheduling mechanisms; admission alone is not proof that every worker started atomically. Measure readiness and requeue behavior, and include checkpoint loss in preemption cost.
 
 ## Connect telemetry floor by floor
 

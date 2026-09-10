@@ -71,6 +71,21 @@ Use an isolated topic, synthetic event IDs, a disposable sink, and an independen
 
 Observe input rate, processing rate, event-to-publication latency, state size, retries, checkpoint age, and sink commits together. Zero Kafka lag does not prove a mart is current: downstream processing or publication may still be stuck.
 
+## Example results
+
+Synthetic replay ledger using the capstone's e1=100 and e2=250, not a broker execution trace.
+
+```text
+input deliveries: e1, e2, e1
+accepted unique IDs: e1, e2
+published total_cents: 350
+crash after sink commit before checkpoint: replay expected
+after replay: unique IDs=2, total_cents=350
+conflicting e1 payload: BLOCK or explicit quarantine
+```
+
+A replayed total of 450 shows double-counting. Zero source lag while publication is stopped fails freshness. Recreating a checkpoint cannot recover events absent from both source retention and independent captures.
+
 ## Explain it in your own words
 
 Where are your offsets and output committed, and what happens if the process dies between them? Explain why a dead-letter queue needs ownership, retention, a repair procedure, and a tested replay path. Moving a record into a DLQ records a failure; it does not resolve it.

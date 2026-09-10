@@ -99,6 +99,30 @@ Account ID, actual resource ID, and internal CIDR may be sensitive depending on 
 
 The `sts`·`describe` commands in this chapter do not create resources. However, API call records may remain in the organization's audit path, such as CloudTrail. Exported shell variables disappear when the terminal is closed, and there is no separate cloud cleanup.
 
+## Example results
+
+Synthetic, redacted AWS CLI examples. These are reading fixtures; no account was queried to create them.
+
+```json
+{
+  "UserId": "AROAEXAMPLE:study-session",
+  "Account": "123456789012",
+  "Arn": "arn:aws:sts::123456789012:assumed-role/StudyReadOnly/study-session"
+}
+```
+
+A selected route might read as follows; the query can also return NAT targets or an empty list.
+
+```text
+Destination: 0.0.0.0/0
+Gateway: igw-example
+State: active
+# A denied inventory call may report:
+An error occurred (UnauthorizedOperation) when calling the DescribeVpcs operation
+```
+
+Pass identity review only against the account and role you intended to use. An empty inventory is not proof of a permission failure; a successful STS call is not permission to query EC2. Route configuration still needs an endpoint reachability test.
+
 ## How to interpret the results
 
 `0.0.0.0/0 → igw-...` in the route table refers to the basic next hop of connected subnet traffic. This does not mean that all destinations go to an internet gateway, nor does it mean that an instance has a public address. If there is a more specific prefix route, the longest-prefix match takes precedence, and security group and network ACLs are also applied separately.

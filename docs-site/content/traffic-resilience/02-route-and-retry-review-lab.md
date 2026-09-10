@@ -1,5 +1,7 @@
 # Route ownership and retry storm review lab
 
+<!-- source: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ | checked: 2026-09-10 | HTTPS listener termination and certificate reference -->
+
 ## Lab prerequisites
 
 This lab is a **Plan only** review that does not change cluster or proxy settings. All you need is a text editor, and if you have a YAML parser, you can use it to check the grammar. The example does not include the actual hostname or credentials. The goal is not “whether the application succeeds,” but rather “who allowed what, and how much additional traffic and duplication of work could result if it fails.”
@@ -42,6 +44,11 @@ spec:
       protocol: HTTPS
       port: 443
       hostname: "*.example.test"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: study-tls
       allowedRoutes:
         namespaces:
           from: Selector
@@ -67,7 +74,7 @@ spec:
           port: 8080
 ```
 
-In the first review, check whether the `shop` namespace has a label that matches the selector. There is an intersection between the hostnames of the gateway and the route, but if the namespace is not allowed, they will not be combined. If a cross-namespace backend reference is added, the backend owner must allow `ReferenceGrant`. The mere existence of an object does not grant permission to use other namespace resources.
+Check the referenced GatewayClass, the `study-tls` certificate Secret in `infra`, its hostname coverage, and the backend Service before reviewing attachment. These are prerequisites, not resources supplied by this plan-only example. The `shop` namespace must match the allowed label selector. Cross-namespace backend references require a ReferenceGrant from the target namespace; listener permission controls this cross-namespace route attachment separately.
 
 The following resiliency draft is a contract for review, not a finished configuration to be put directly into a specific proxy product.
 
@@ -99,12 +106,27 @@ evidence:
 
 ## Step-by-step review
 
-1. In `outerDeadlineMs` 900, write 100 for connection, 250 for two attempts, and whether backoff and response margin are included. In this example, at least 300 ms of space is left, but queue waiting is not defined.
-2. The meaning of `maxAttempts: 2` is fixed for each implementation, whether it is “first attempt + one retry” or “two retries”. If you estimate based on the name alone, the actual amount of attempts will vary.
+1. Define which intervals overlap before adding them. If each of two attempts needs 100 ms to connect plus 250 ms for processing, the subtotal is 700 ms and only 200 ms remains for queueing, backoff, and response delivery. With a reused connection or a per-try timer that includes connection time, the accounting differs. The draft alone cannot prove a 300 ms margin.
+2. This worksheet defines `maxAttempts: 2` as the first attempt plus one retry. Map it explicitly to the selected proxy's attempt/retry fields; copying the number into a field that counts retries would permit three attempts.
 3. Make sure there is a guarantee that the 503 will be returned before processing. If only the response can be lost after the payment side effect, you should not retry without the idempotency key.
 4. Calculate how much concurrent addition a 15% retry budget will allow for a normal 1,000 ongoing requests. Check the implementation documentation to see which setting takes precedence when used with static `maxRetries`.
 5. When half of the backends show 5xx due to a common DB error, consider whether excluding the host is the solution. If it is a common cause, traffic may be concentrated on the remaining hosts.
 6. If `checkout_success_ratio` is not recovered or the pending request increases, write an abort condition to stop automatic change and return to the previous policy revision.
+
+## Example results
+
+Calculated worksheet results, not proxy output:
+
+```text
+attempts: 2 total = 1 initial + 1 retry
+worst_case_attempt_subtotal_ms: 2 * (100 + 250) = 700
+remaining_deadline_ms: 900 - 700 = 200
+illustrative_retry_allowance: 1000 * 0.15 = 150
+attachment_without_required_namespace_label: REJECT
+overall_verdict_without_backend_and_certificate_checks: NOT READY
+```
+
+The 150 allowance assumes the worksheet's 1,000-request basis; a real proxy may include pending requests, minimum concurrency, or a different budget window. If backoff and queueing require 250 ms under the stated non-overlapping timers, total time becomes 950 ms and fails the 900 ms deadline.
 
 ## How to interpret the results
 
@@ -130,7 +152,7 @@ The most important distinction in this table is that **mitigation success is dif
 ## Explain it in your own words
 
 - Why doesn't server-side dry-run find the possibility of a retry storm?
-- Why is `maxEjectionPercent: 50` a safe upper limit and not the correct threshold?
+- Why is `maxEjectionPercent: 50` only a proposed ceiling that still needs remaining-capacity tests?
 - What are you missing if you end up determining the success of automatic rollback with just rollout status?
 - What ID and timestamp are needed when passing this incident evidence to [AIOps alert correlation](../aiops-diagnosis/02-alert-correlation-triage-lab.md)?
 

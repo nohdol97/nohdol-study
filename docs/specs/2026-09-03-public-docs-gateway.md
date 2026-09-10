@@ -1,5 +1,7 @@
 # Public Docs Gateway Specification
 
+> Scope clarification (2026-09-10): this is the initial gateway specification. [The Data & Observability extension](2026-09-10-data-observability-learning-path.md) explicitly publishes its selected docs/ course; the original exclusion still applies to other harness guides, ADRs, and specifications.
+
 - Date: 2026-09-03
 - Status: Implemented
 - Related Decision: [ADR 008](../adr/008-public-docs-gateway.md)

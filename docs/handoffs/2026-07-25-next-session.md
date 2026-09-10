@@ -1,5 +1,7 @@
 # Handover work for next session — after Phase 2b
 
+> Archived handoff: completed steps and proposed prompts below record the 2026-07-25 session. They are not an active backlog. Start from [current operating rules](../../AGENTS.md), the local registry, and the [documentation map](../README.md); NotebookLM was later withdrawn by ADR 004.
+
 - Date written: 2026-07-25
 - Reference branch: `main`
 - Current status: Complete Phase 1·2·2b and Phase 3 implementation. What remains is Phase 2c

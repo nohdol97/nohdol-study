@@ -35,7 +35,7 @@ Save the following contents in `/tmp/aiops-incident-lab/incidents.json`. The fir
 [
   {
     "incident_id": "inc-good-001",
-    "window": {"start": "2026-09-03T01:01:00Z", "end": "2026-09-03T01:18:00Z"},
+    "window": {"start": "2026-09-03T00:55:00Z", "end": "2026-09-03T01:18:00Z"},
     "impact": {"sli": "checkout_success_ratio", "scope": ["region:ap-northeast-2"]},
     "entities": [{"type": "service", "id": "checkout", "revision": "v18"}],
     "changes": [{"id": "deploy-881", "at": "2026-09-03T01:00:30Z"}],
@@ -81,6 +81,17 @@ Delete `revision` from `inc-good-001` or change `window.end` to faster than star
 | schema | Required field·type·enum | Actual order of timestamps and presence of IDs |
 | semantic rule | Time order, entity relationship, and tolerance range | Veracity of query results |
 | evidence check | The claim is consistent with the original text, query, and source. | Generalization from future incidents |
+
+## Example results
+
+Expected exact lines from the top-level-key inspection:
+
+```text
+inc-good-001 missing= []
+inc-bad-002 missing= ['changes', 'entities', 'evidence', 'gaps', 'impact', 'window']
+```
+
+After removing a nested revision or reversing the time window, the first line still shows `missing= []`. That is an intentional counterexample: the original command has passed only key presence. The semantic review must reject those changed records before diagnosis.
 
 ## How to interpret the results
 

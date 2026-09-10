@@ -59,6 +59,21 @@ Start from the impacted consumer and time range. Check observation coverage, ide
 
 Write a post-incident record containing timeline, affected datasets/consumers, actual cause evidence, contributing conditions, recovery actions, remaining gaps, and a regression fixture. A screenshot of a red panel followed by a green panel omits most of that knowledge.
 
+## Example results
+
+Calculated capacity worksheet, not a provider benchmark or price quote.
+
+```text
+incoming rate: 100 events/s
+recovery processing rate: 300 events/s
+backlog: 360000 events
+net drain rate: 200 events/s
+drain estimate: 1800 seconds
+processing rate <= incoming rate: backlog cannot drain
+```
+
+If the recovery window is 20 minutes, a 30-minute drain fails even when restart succeeds. Check retention and downstream bottlenecks. Report accepted-publication cost with idle, storage, transfer, and recovery charges included.
+
 ## Explain it in your own words
 
 What happens if code rollback succeeds but a downstream index still contains the bad version? Which recovery components must be restored together? Calculate the catch-up capacity for your workload and identify the first retention window that would expire.

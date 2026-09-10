@@ -76,6 +76,19 @@ In an isolated lab, stop publication while keeping the HTTP endpoint alive. The 
 
 Compare dashboard timestamps against raw backend queries and the independent ledger. A panel that says “no data” may reflect a label change, expired retention, failed ingestion, or an empty population. Distinguish them before changing an alert.
 
+## Example results
+
+Illustrative query outcomes, not backend measurements.
+
+```text
+HTTP healthy + publication stopped: DATA FRESHNESS FAILURE
+publication continues + telemetry absent: COVERAGE UNKNOWN
+2 known failures / 100 observed attempts: 0.02
+empty PromQL vector: NO EVIDENCE, not zero failures
+```
+
+An attempt-based ratio does not count jobs that never started. Reconcile scheduled intervals independently and label the histogram p95 estimate in seconds. Recovery must restore both publication and observation coverage.
+
 ## Explain it in your own words
 
 Why can average latency improve when slow requests are dropped from observation? Why is a per-dataset p95 not safely averaged into a platform p95? Describe how an operator can reach the affected dataset version from a bounded aggregate metric.

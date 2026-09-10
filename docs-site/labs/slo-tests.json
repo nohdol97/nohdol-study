@@ -1,0 +1,143 @@
+{
+  "rule_files": [
+    "sample-api.rules.yml"
+  ],
+  "evaluation_interval": "1m",
+  "tests": [
+    {
+      "name": "sustained 2 percent",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"2xx\"}",
+          "values": "0+98x120"
+        },
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"5xx\"}",
+          "values": "0+2x120"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "60m",
+          "alertname": "SampleApiFastBurn",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "page"
+              },
+              "exp_annotations": {
+                "summary": "Sample API error budget is burning quickly"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SLO rate 0.1 percent",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"2xx\"}",
+          "values": "0+999x120"
+        },
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"5xx\"}",
+          "values": "0+1x120"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "60m",
+          "alertname": "SampleApiFastBurn",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "burst recovered",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"2xx\"}",
+          "values": "0+98x50 4900+100x69"
+        },
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"5xx\"}",
+          "values": "0+2x50 100+0x69"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "60m",
+          "alertname": "SampleApiFastBurn",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "counter reset",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"2xx\"}",
+          "values": "0+98x30 0+98x89"
+        },
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"5xx\"}",
+          "values": "0+2x30 0+2x89"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "60m",
+          "alertname": "SampleApiFastBurn",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "page"
+              },
+              "exp_annotations": {
+                "summary": "Sample API error budget is burning quickly"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "zero traffic",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"2xx\"}",
+          "values": "0+0x120"
+        },
+        {
+          "series": "http_server_requests_total{service=\"sample-api\",status_class=\"5xx\"}",
+          "values": "0+0x120"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "60m",
+          "alertname": "SampleApiFastBurn",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "missing series",
+      "interval": "1m",
+      "input_series": [],
+      "alert_rule_test": [
+        {
+          "eval_time": "60m",
+          "alertname": "SampleApiFastBurn",
+          "exp_alerts": []
+        }
+      ]
+    }
+  ]
+}

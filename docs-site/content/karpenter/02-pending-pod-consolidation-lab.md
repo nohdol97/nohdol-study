@@ -84,10 +84,12 @@ Creates a disposable deployment with an explicit CPU request that does not enter
 
 ```bash
 kubectl scale deployment/capacity-demo -n infra-capstone --replicas=1
-kubectl get pod -n infra-capstone -w
-kubectl get nodeclaim -w
+kubectl get pod -n infra-capstone -o wide
+kubectl get nodeclaim
 kubectl get events -n infra-capstone --sort-by=.lastTimestamp
 ```
+
+Repeat these snapshots, or run each `-w` watch in a separate terminal and stop it with Ctrl-C. A watch does not exit automatically when the next step becomes ready. Distinguish an unscheduled Pod from a scheduled Pod waiting for an image; extra EC2 capacity will not fix an invalid image.
 
 ```mermaid
 sequenceDiagram
@@ -118,6 +120,24 @@ The success judgment is as follows.
 ## Cleanup
 
 Delete the test workload first and observe the NodeClaim cleanup created by NodePool. Afterwards, the test NodePool·EC2NodeClass and related IAM·network·log artifacts are organized in reverse inventory order. Before arbitrarily removing a finalizer, check the controller and cloud instance status.
+
+## Example results
+
+Illustrative status transitions, not an EKS execution record. NodeClaim names and reason strings depend on the installed version.
+
+```text
+# Unschedulable workload
+PodScheduled=False
+nodeName=<empty>
+# After capacity is provisioned and the scheduler binds the Pod
+PodScheduled=True
+nodeName=<new-node>
+# A bad image can still be Pending after scheduling
+PodScheduled=True
+container waiting reason=ImagePullBackOff
+```
+
+For consolidation, record the old node, disruption eligibility, Pod relocation, and user outcome. A budget or PDB can delay voluntary disruption; an absent deletion is not proof that the controller failed. Provider interruption follows a different path and may not wait for replacement capacity.
 
 ## How to interpret the results
 

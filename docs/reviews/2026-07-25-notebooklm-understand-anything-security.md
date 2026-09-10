@@ -1,5 +1,7 @@
 # NotebookLM CLI·Understand Anything Security Review
 
+> Historical security review: findings apply to the exact versions and audit date below. [ADR 004](../adr/004-remove-notebooklm-export.md) subsequently withdrew NotebookLM export and its bridge. The historical allow table is not current execution authorization or a fresh dependency audit.
+
 - Date: 2026-07-25
 - Review Scope:
   - `teng-lin/notebooklm-py` stable release `v0.7.3`

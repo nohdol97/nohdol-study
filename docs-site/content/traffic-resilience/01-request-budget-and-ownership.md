@@ -39,7 +39,7 @@ sequenceDiagram
   P-->>C: Respond within the remaining deadline
 ```
 
-## Adding time doesn't cut into the budget.
+## Every attempt consumes the shared deadline
 
 If the total deadline is 900 ms, the timeout for each attempt is 400 ms, and the maximum retry is 2, the worst attempt time is 1,200 ms. Connection, queue, backoff, and response transmission times have not yet been included. In this configuration, the last attempt is truncated due to an outer deadline or the client gives up first. Correct calculation must satisfy `connection + queueing + Σ(each attempt + backoff) + response margin ≤ outer deadline`.
 

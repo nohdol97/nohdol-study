@@ -1,5 +1,7 @@
 # Phase 2c pilot — prerequisite ground truth and current verdict
 
+> Historical pilot receipt: measurements, installed versions, and capability observations below describe 2026-07-25 only. The final verdict is basic-memory not adopted and PaperQA2 not executed. Reassess current capabilities in the local registry before another explicitly scoped pilot.
+
 - Date: 2026-07-25
 - Target: basic-memory (basicmachines-co), PaperQA2 (Future-House)
 - Related: [ADR 003](../adr/003-cli-learning-integrations.md);

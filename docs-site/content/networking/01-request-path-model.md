@@ -1,5 +1,7 @@
 # From DNS to backend
 
+<!-- source: https://www.rfc-editor.org/rfc/rfc9114.html | checked: 2026-09-10 | TCP scope and HTTP/3 over QUIC -->
+
 ## Terms introduced in this chapter
 
 - **client**: This is the program that initiates the request. It can be a browser or `curl`.
@@ -13,7 +15,7 @@ The point of this chapter is not to memorize abbreviations, but to ensure that t
 
 ## Understand the model first
 
-When you enter `https://api.example` in your browser, an HTTP request does not arrive at the server immediately. The client first changes the name to an IP address, finds a route to send the packet to that address, creates a TCP connection, and agrees on the relative identity and encryption conditions through TLS. Only on top of that do HTTP requests and responses flow.
+For a new HTTPS connection using HTTP/1.1 or HTTP/2 over TCP, the client resolves an address, selects a route, establishes TCP, and negotiates TLS before exchanging HTTP data. A cached address or an existing pooled connection can skip work on a later request. HTTP/3 uses QUIC over UDP; the TCP-specific sequence below does not describe that transport.
 
 | step | input | What you get when you succeed | representative failure |
 |---|---|---|---|
@@ -35,7 +37,7 @@ The output of each step is the input to the next step. The symptom that users se
 6. The load balancer selects a healthy backend and forwards the request.
 7. The backend's response returns to the client through the opposite path.
 
-If the previous step fails, the later step does not start yet. For example, searching for HTTP status in a DNS failure situation is out of order.
+For the fresh TCP connection modeled here, an earlier failure prevents the dependent later step. Real clients can race IPv4/IPv6 addresses, reuse connections, or use a proxy that performs DNS resolution elsewhere. Identify the actual protocol, proxy, and remote address before assigning a failure to a layer.
 
 ## Hierarchy is a tool for separating responsibilities
 

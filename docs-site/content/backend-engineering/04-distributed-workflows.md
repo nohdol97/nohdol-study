@@ -55,18 +55,22 @@ If the consumer prevents duplication only with an in-memory set, the same event 
 ```sql
 BEGIN;
 
-INSERT INTO consumer_inbox (consumer_name, event_id)
-VALUES ('fulfillment', 'evt-981')
-ON CONFLICT DO NOTHING;
-
--- Transition the business state only if the INSERT above created a row.
+WITH accepted AS (
+  INSERT INTO consumer_inbox (consumer_name, event_id)
+  VALUES ('fulfillment', 'evt-981')
+  ON CONFLICT (consumer_name, event_id) DO NOTHING
+  RETURNING event_id
+)
 UPDATE orders
 SET fulfillment_state = 'QUEUED'
 WHERE order_id = 'order-204'
-  AND fulfillment_state = 'NEW';
+  AND fulfillment_state = 'NEW'
+  AND EXISTS (SELECT 1 FROM accepted);
 
 COMMIT;
 ```
+
+The inbox requires a unique key on `(consumer_name, event_id)`. This fragment assumes the target order already exists and is eligible; a real consumer must distinguish an already completed transition from an absent or invalid order and roll back or quarantine according to that contract. The executable [duplicate-event lab](#doc=messaging-duplicate-dlq) tests a fixed existing business row.
 
 If the dedupe retention period is shorter than the producer replay period, old events can produce effects again. ID range, preservation/deletion, and reprocessing runbook are contracted together. For detailed broker selection and DLQ, connect to [Messaging and Event Infrastructure ](#doc=messaging-roadmap).
 

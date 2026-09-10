@@ -110,7 +110,7 @@ spec:
       image: busybox:1.36
       command: ["sh", "-c"]
       args:
-        - echo "$APP_MODE"; cat /config/message.txt; echo ready > /data/state; sleep 3600
+        - echo "$APP_MODE"; cat /config/message.txt; sleep 3600
       env:
         - name: APP_MODE
           valueFrom:
@@ -143,13 +143,15 @@ kubectl get pvc,pv
 kubectl describe pvc app-data
 kubectl wait --for=condition=Ready pod/storage-demo --timeout=90s
 kubectl logs storage-demo
+kubectl exec storage-demo -- sh -c 'printf "written-before-pod-replacement\n" > /data/state'
 kubectl exec storage-demo -- cat /data/state
 kubectl delete pod storage-demo
 kubectl apply -f storage.yaml
+kubectl wait --for=condition=Ready pod/storage-demo --timeout=90s
 kubectl exec storage-demo -- cat /data/state
 ```
 
-If you see `/data/state` in the second Pod, you have confirmed that the Pod life and PVC life are separated. However, the fact that PVC remains does not mean there is a backup.
+The second Pod must read `written-before-pod-replacement` without writing the marker again. Record different Pod UIDs and the same PVC UID across the replacement. Writing a constant file during every startup would make the experiment pass even if persistence failed. This proves only the tested Pod/PVC lifecycle, not backup recovery. After finishing, inspect the PV reclaim policy, then delete only the disposable lab resources with `kubectl delete -f storage.yaml`; a Retain volume needs separate cleanup.
 
 Avoid labs that print Secret values ​​on the screen. Only check which container is referenced and its permissions as follows.
 
@@ -181,6 +183,21 @@ kubectl describe pvc app-data
 kubectl describe pod storage-demo
 kubectl get events --sort-by=.metadata.creationTimestamp
 ```
+
+## Example results
+
+Expected marker content, with illustrative PVC state:
+
+```text
+# PVC after successful dynamic provisioning and Pod scheduling
+app-data   Bound   pvc-<generated-id>
+# cat /data/state before Pod deletion
+written-before-pod-replacement
+# cat /data/state after recreating the Pod
+written-before-pod-replacement
+```
+
+Record the Pod UID before and after deletion; it must change while the PVC identity stays the same. The recreated process never writes this marker, so identical content demonstrates survival across this Pod replacement. A Pending PVC or a missing file is a failed exercise. This does not prove backup recovery or cross-node access for every storage driver.
 
 ## Explain it in your own words
 

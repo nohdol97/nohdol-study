@@ -22,7 +22,7 @@ Counters such as `http_server_requests_total` are accumulated after the process 
 | observation | What can be known | Things to watch out for |
 |---|---|---|
 | 5 minute error ratio | Failure rate in recent traffic | If there is little traffic, even small numbers can cause significant shaking. |
-| p95 latency | Top delays experienced by most requests | Slowest request is not a single value |
+| p95 latency | Estimated threshold at or below which 95% of observations fall | Bucket resolution limits accuracy; it is not the slowest request |
 | trace span | Time per hop for selected requests | Sampling does not represent all requests |
 | error log | Detailed context recorded by the component | Possible missing records and clock differences |
 | burn-rate alert | Budget exhaustion speed exceeds response standards | Threshold must be calculated in SLO window |
@@ -39,12 +39,12 @@ The counter uses a bounded label like `http_server_requests_total{route,status_c
 
 ## 2. Observation of availability and latency
 
-This is an example of a 5-minute availability rate.
+This teaching contract classifies non-5xx responses as good and measures one service. A real checkout SLI must classify rejected, canceled, timed-out, and unrecorded requests explicitly; HTTP status alone may not represent a successful order. Initialize bounded status-class counters to zero so a quiet error series remains observable.
 
 ```promql
-sum(rate(http_server_requests_total{status_class!="5xx"}[5m]))
+sum(rate(http_server_requests_total{service="sample-api",status_class!="5xx"}[5m]))
 /
-sum(rate(http_server_requests_total[5m]))
+sum(rate(http_server_requests_total{service="sample-api"}[5m]))
 ```
 
 This is an example of calculating 95 percentile in a histogram.
@@ -52,7 +52,7 @@ This is an example of calculating 95 percentile in a histogram.
 ```promql
 histogram_quantile(
   0.95,
-  sum by (le, route) (rate(http_server_request_duration_seconds_bucket[5m]))
+  sum by (le, route) (rate(http_server_request_duration_seconds_bucket{service="sample-api"}[5m]))
 )
 ```
 
@@ -85,14 +85,18 @@ sequenceDiagram
 
 ## 4. Alert verification
 
-The alert rule has a testable expression, `for`, severity, and runbook label.
+For the teaching SLO of 99.9% over 30 days, allowed error fraction is `0.001`. Burn rate `14.4` sustained for one hour consumes `14.4 × 1 / 720 = 2%` of that window's budget. Requiring the short window too helps detect that burning is still active. Save these complete rules as `sample-api.rules.yml`:
 
 ```yaml
 groups:
   - name: sample-api-slo
     rules:
+      - record: sample_api:error_budget_burn_rate5m
+        expr: sum(rate(http_server_requests_total{service="sample-api",status_class="5xx"}[5m])) / sum(rate(http_server_requests_total{service="sample-api"}[5m])) / 0.001
+      - record: sample_api:error_budget_burn_rate1h
+        expr: sum(rate(http_server_requests_total{service="sample-api",status_class="5xx"}[1h])) / sum(rate(http_server_requests_total{service="sample-api"}[1h])) / 0.001
       - alert: SampleApiFastBurn
-        expr: sample_api:error_budget_burn_rate5m > 14
+        expr: (sample_api:error_budget_burn_rate1h > 14.4) and (sample_api:error_budget_burn_rate5m > 14.4)
         for: 2m
         labels:
           severity: page
@@ -100,14 +104,34 @@ groups:
           summary: Sample API error budget is burning quickly
 ```
 
-The actual threshold is calculated using the SLO window and alerting policy rather than copying the example value. Input normal, error, and no-traffic time series to test both firing and recovery.
+Run `promtool check rules sample-api.rules.yml` when Prometheus tooling is available. This checks rule validity; it does not supply scrape data. Test sustained 2% errors (burn 20, page after both windows and `for` qualify), 0.1% errors (burn 1, no fast-burn page), a short burst followed by recovery, counter resets, no traffic, and missing scrapes. Zero traffic produces an undefined ratio; missing series can produce no result. Neither proves health. Give scrape availability and expected-traffic absence their own rules and owners. Add slower windows for prolonged lower-rate loss; this minimum fast-burn rule is not the whole paging policy.
 
 ## Judgment of completion and summary
 
 - When an alert occurs, a dashboard/runbook linked to the user impact is opened.
 - You can go back and forth between log and trace by request or trace ID.
 - After recovery, check when the short window and long window normalize.
-- Delete temporary alert rule, demo workload, and telemetry stored data.
+- Remove only the temporary rule and demo workload. Retain incident evidence according to the lab's retention policy.
+
+## Example results
+
+Calculated examples for the stated synthetic request contract, not measurements from a deployed API.
+
+| Input during both windows | Availability | Burn rate | Fast-burn decision |
+|---|---:|---:|---|
+| 980 good + 20 failed per 1,000 | 0.98 | 20 | Fires once the condition persists for 2 minutes |
+| 999 good + 1 failed per 1,000 | 0.999 | 1 | Does not fire |
+| Zero increments on both counters | Undefined (NaN) | Undefined | No health verdict |
+| All series absent | Empty result | Empty result | Investigate observation coverage |
+
+```text
+# promtool check rules sample-api.rules.yml (expected)
+SUCCESS: 3 rules found
+# Synthetic firing alert labels
+alertname=SampleApiFastBurn severity=page
+```
+
+A burst that has ended can leave the 1-hour rate elevated while the 5-minute condition clears. The conjunction should then stop firing. Validate that behavior with time-series fixtures; an alert screenshot alone does not establish recovery.
 
 ## How to interpret the results
 

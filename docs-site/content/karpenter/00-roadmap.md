@@ -63,7 +63,7 @@ As of confirmation date, the official current document uses `karpenter.sh/v1`'s 
 1. What does it mean that Pod is `Pending`?
 2. What decisions do the scheduler and Karpenter each make?
 
-**Confirmation criteria:** Pending has not yet been placed on the node to be executed. The scheduler places pods on nodes, and the karpenter prepares new node capacity to satisfy demands.
+**Confirmation criteria:** Pending includes both waiting for scheduling and waiting for containers to be prepared, such as image downloads. Check `PodScheduled`, `spec.nodeName`, and events before diagnosing capacity. The scheduler binds Pods; Karpenter provisions capacity for eligible unschedulable Pods.
 
 ## Develop operational judgment
 

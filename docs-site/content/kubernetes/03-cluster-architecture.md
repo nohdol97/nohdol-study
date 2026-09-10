@@ -72,7 +72,7 @@ This process is asynchronous. Assuming that all states will be completed immedia
 
 ```bash
 kubectl apply -f object.yaml
-kubectl wait --for=condition=Available deployment/object-demo --timeout=90s
+kubectl rollout status deployment/object-demo --timeout=90s
 kubectl get deployment object-demo \
   -o jsonpath='{.spec.replicas}{" desired / "}{.status.availableReplicas}{" available\n"}'
 ```
@@ -136,6 +136,23 @@ flowchart TD
 The production control plane is designed by dividing the failure domains of API endpoint, API server, controller and scheduler, and etcd. However, having multiple instances is not enough. You should actually practice etcd backup restoration, certificates, load balancer, version compatibility, and quorum loss procedures.
 
 Additionally, the controller and scheduler can determine the active leader through leader election even if multiple instances are running. “There are three processes” and “performing the same decision three times at the same time” are different.
+
+## Example results
+
+Illustrative results for the two-replica object from chapter 2:
+
+```text
+# rollout status after applying object.yaml
+deployment "object-demo" successfully rolled out
+# desired / available JSONPath query
+2 desired / 2 available
+# API readyz verbose response, abbreviated
+[+]ping ok
+...
+readyz check passed
+```
+
+These check different boundaries: the API can be ready while a workload has no ready replicas. A user without access to the non-resource readiness URL may receive Forbidden; this is an authorization result, not an unhealthy API diagnosis. After this exercise, delete only the disposable `object.yaml` resources you created.
 
 ## Explain it in your own words
 

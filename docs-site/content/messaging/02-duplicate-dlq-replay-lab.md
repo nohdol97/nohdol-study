@@ -5,7 +5,7 @@
 ## Lab prerequisites
 
 - **First step**: Understand duplicate processing conditions using a single message and processing record table without a broker.
-- **local database**: Use a PostgreSQL test database that can be deleted and prepare the `processed_events(event_id text primary key)` table.
+- **local database**: Use a disposable PostgreSQL database. The session-local temporary tables below disappear when that session closes.
 - **Work Result**: Select one row that should not be duplicated, such as order status, and record the value before and after processing.
 - **Failure injection**: Process the same `event_id` twice and assume that the process terminates just before the acknowledgment.
 - **AWS Selection Step**: Create SQS source queue and DLQ with a dedicated prefix/tag and determine the cost and person responsible for deletion.
@@ -40,15 +40,35 @@ It is assumed that the message has an immutable event ID.
 }
 ```
 
-Consumers place business effects and processed ID records in the same transaction boundary as much as possible.
+Create the fixed business fixture once in one `psql` session:
+
+```sql
+CREATE TEMP TABLE processed_events (event_id text PRIMARY KEY);
+CREATE TEMP TABLE effect_counter (id integer PRIMARY KEY, applied integer NOT NULL);
+INSERT INTO effect_counter VALUES (1, 0);
+```
+
+Run the following transaction twice in that same session. The returned ID gates the business effect in SQL, so the second delivery cannot increment it:
 
 ```sql
 BEGIN;
-INSERT INTO processed_events(event_id) VALUES ('evt-00042')
-ON CONFLICT DO NOTHING;
--- Perform the business change only if the INSERT above created a new row.
+WITH accepted AS (
+  INSERT INTO processed_events(event_id) VALUES ('evt-00042')
+  ON CONFLICT DO NOTHING
+  RETURNING event_id
+)
+UPDATE effect_counter
+SET applied = applied + 1
+WHERE id = 1 AND EXISTS (SELECT 1 FROM accepted);
 COMMIT;
 ```
+
+```sql
+SELECT (SELECT count(*) FROM processed_events) AS processed,
+       (SELECT applied FROM effect_counter WHERE id = 1) AS effects;
+```
+
+Expect `(processed, effects) = (1, 1)` after both deliveries. Repeat a transaction for a new ID but replace COMMIT with ROLLBACK: both values must stay at one. Retrying that new ID with COMMIT then produces `(2, 2)`. These temporary tables demonstrate atomicity only; production deduplication needs persistent tables, an existing-target check, immutable payload identity, and retention covering the replay horizon.
 
 Simple `SELECT followed by INSERT` can create a concurrent delivery race. Use unique constraints or equivalent atomic conditional write.
 
@@ -83,6 +103,34 @@ In AWS optional, SQS source queue, redrive policy, and DLQ are created with dedi
 - Poison messages create hot loops or disappear without DLQ.
 - The processing/failure/remaining total after redrive does not match the original DLQ count.
 - The atomic boundary is divided, like the side effect before ack and the state record after ack.
+
+## Example results
+
+Expected PostgreSQL transcript for the fixed business fixture:
+
+```text
+# First delivery
+BEGIN
+UPDATE 1
+COMMIT
+# Identical retry
+BEGIN
+UPDATE 0
+COMMIT
+ processed | effects
+-----------+---------
+         1 |       1
+# A new ID followed by ROLLBACK
+ processed | effects
+-----------+---------
+         1 |       1
+# Retry that new ID with COMMIT
+ processed | effects
+-----------+---------
+         2 |       2
+```
+
+The business-effect count, not only the inbox count, is the pass condition. For an illustrative DLQ ledger of 10 messages, 7 successful + 2 failed again + 1 remaining reconciles to 10. These ledger numbers are worksheet inputs; the SQL lab has not exercised a broker or redrive API.
 
 ## How to interpret the results
 

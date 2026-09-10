@@ -1,5 +1,7 @@
 # ADR 003 — Understand Anything Full skill and optional learning linkage adopted as project-local
 
+> Status clarification (2026-09-10): partially superseded by [ADR 004](004-remove-notebooklm-export.md), which withdrew NotebookLM export and its bridge. Understand Anything and Obsidian routing remain active; consult current skills for execution gates.
+
 - Date: 2026-07-25
 - Status: Active
 - Target: Understand Anything, kepano/obsidian-skills, notebooklm-py,

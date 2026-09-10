@@ -32,6 +32,7 @@ stateDiagram-v2
   EXECUTING --> VERIFYING: action result received
   EXECUTING --> UNKNOWN: executor timeout
   UNKNOWN --> VERIFYING: reconcile actual state
+  UNKNOWN --> ESCALATED: reconciliation deadline or evidence gap
   VERIFYING --> SUCCEEDED: user and system gates passed
   VERIFYING --> ROLLING_BACK: degradation or timeout
   ROLLING_BACK --> FAILED: rollback verified
@@ -60,6 +61,8 @@ stateDiagram-v2
 ```
 
 The approval is tied to `plan_digest`, not the natural language of “you can rollback.” If the target revision or scope changes after approval, it must be re-evaluated as a new plan. `expires_at` prevents later execution with old incident evidence. The executor identity must have only the minimum privileges required for this target and operation type.
+
+The digest above is a placeholder. A real plan hash must cover canonicalized target, arguments, preconditions, scope, policy/runbook revision, expiry, and verification rules. Recheck target identity and resource revision atomically at the effect boundary. A lease without fencing does not stop a delayed old executor, and controllers outside that lease protocol may still race. Unknown outcomes need bounded reconciliation and an escalation deadline; they must not remain silently in flight forever.
 
 ## Scope that Kubernetes rollback proves
 

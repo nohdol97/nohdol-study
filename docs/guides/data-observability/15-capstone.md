@@ -30,6 +30,9 @@ def reconcile(events):
     rejected = []
     conflicts = []
     for event in events:
+        if not isinstance(event, dict):
+            rejected.append(event)
+            continue
         event_id = event.get("event_id")
         amount = event.get("amount_cents")
         if (not isinstance(event_id, str) or not event_id
@@ -42,6 +45,12 @@ def reconcile(events):
             continue
         accepted[event_id] = event.copy()
     return accepted, rejected, conflicts
+
+def publish(events, expected_ids):
+    accepted, rejected, conflicts = reconcile(events)
+    if rejected or conflicts or set(accepted) != set(expected_ids):
+        raise ValueError("publication blocked: invalid, conflicting, or incomplete input")
+    return {key: accepted[key] for key in sorted(accepted)}
 
 base = [
     {"event_id": "e1", "amount_cents": 100, "currency": "USD"},
@@ -58,10 +67,21 @@ changed = {"event_id": "e1", "amount_cents": 120, "currency": "USD"}
 assert reconcile(base + [changed])[2] == ["e1"]
 assert set(reconcile(base[:1])[0]) != {"e1", "e2"}  # Missing input detected.
 assert reconcile(list(reversed(base)))[0] == reconcile(base)[0]
+snapshot = publish(base + base, {"e1", "e2"})
+for candidate in (base + [bad], base + [changed], [changed] + base,
+                  base[:1], base + [None],
+                  base + [{"event_id": "e3", "amount_cents": True, "currency": "USD"}]):
+    try:
+        publish(candidate, {"e1", "e2"})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid publication was accepted")
+assert snapshot == publish(base, {"e1", "e2"})
 print("PASS: replay, totals, invalid values, conflicts, missing input, ordering")
 ```
 
-Do not publish a result when `conflicts` is nonempty: this toy function retains the first accepted payload for diagnostics, not as an approved conflict-resolution rule. Define version ordering and correction semantics before teaching the distributed sink to handle updates.
+`publish` blocks rejected, conflicting, or incomplete inputs before returning a replacement snapshot. The previous snapshot remains unchanged on failure. `reconcile` retains the first accepted payload for diagnostics only; the test rejects conflicting payloads in both arrival orders. Define version ordering and correction semantics before teaching the distributed sink to handle updates. This in-memory gate does not implement durable or concurrent publication.
 
 ## Phase 2: files and committed tables
 
@@ -108,6 +128,16 @@ Deliver: account-specific capability notes, quality/lineage/access/recovery chec
 | Missing lineage event | Declared coverage gap and verified affected consumer investigation |
 | Revoked source access | No forbidden retrieval, prompt, answer, or debugging exposure |
 | Bad AI answer | Evidence-based diagnosis and a retained regression evaluation |
+
+## Example results
+
+Output from the self-contained Python fixture:
+
+```text
+PASS: replay, totals, invalid values, conflicts, missing input, ordering
+```
+
+The accepted snapshot has two unique events totaling 350 cents. Both conflict arrival orders, missing input, a negative or boolean amount, and a non-record input are rejected before replacement publication. Assertions abort on regression. Later phases need their own service receipts; this local oracle does not execute Kafka, cloud recovery, telemetry delivery, or AI evaluation.
 
 ## Explain it in your own words
 

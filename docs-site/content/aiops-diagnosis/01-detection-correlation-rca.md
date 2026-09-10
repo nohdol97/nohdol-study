@@ -46,10 +46,10 @@ Google SRE has experienced limited success with complex dependency hierarchies a
 
 ## Priority of Correlation
 
-| relationship | robbery | How to use | margin |
+| relationship | association strength | How to use | limitation |
 |---|---|---|---|
-| Same trace·operation ID | height | span·log connection of the same execution | Missing sampling and transmission |
-| Same deployment·change ID | height | Comparison of changed cohort and old cohort | Simultaneous change/common dependency |
+| Same trace·operation ID | Strong association | Spans and logs from the same execution | Sampling and transmission gaps |
+| Same deployment·change ID | Strong association | Comparison of changed and unchanged cohorts | Simultaneous changes or a common dependency |
 | explicit service dependency | middle | Probe topology radius limit | Difference between actual runtime call and document topology |
 | Same region·tenant·resource | middle | Verify scope of influence matches | high-cardinality and privacy |
 | Nearest timestamp | lowness | Candidate Generation | Coincidental simultaneity, clock drift |
@@ -64,7 +64,8 @@ It is not elevated to a cause just because it is close in time. If errors increa
   "incident_id": "inc-20260903-001",
   "candidate_category": "dependency_capacity",
   "candidate_entity": "orders-db",
-  "evidence_ids": ["metric-q17", "trace-a91", "change-881"],
+  "evidence_ids": ["metric-q17", "trace-a91"],
+  "change_ids": ["deploy-881"],
   "counterevidence": ["old revision cohort also failed"],
   "unknowns": ["orders-db lock snapshot missing"],
   "recommended_queries": ["db-wait-events-v2"],
@@ -77,6 +78,8 @@ The free statement should be the explanation behind this structure. `candidate_c
 RCACopilot collected diagnostic information with handlers for each alert type and created root cause categories and explanations. The results of this study are about a Microsoft cloud incident and its data/handler, so the accuracy cannot be taken from other organizations. The applicable structure has handlers and categories, so collection and evaluation are more reproducible than free description.
 
 ## Step-by-step evaluation
+
+Split datasets by incident family and time, not by individual alert or log line. Keep postmortem conclusions and later mitigation results out of the diagnostic input available at the decision timestamp. Evaluate unresolved and abstained incidents explicitly: report coverage, accuracy among answered cases, false-cause cost, and evidence-reference validity. For example, 80 correct answers out of 100 answered cases among 200 incidents means 80% answered-case accuracy at 50% coverage, not 80% accuracy across all incidents. These are synthetic counts, not a model benchmark.
 
 | step | evaluation unit | example failure |
 |---|---|---|

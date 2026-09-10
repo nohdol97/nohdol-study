@@ -14,7 +14,7 @@ Time series predict the future and recommendations rank the next candidate for t
 | leakage | Error using future information that is unknown at the time of prediction for learning and evaluation |
 | naive baseline | A simple but always compared standard like the previous value/seasonal value |
 | implicit feedback | Actions that may be preferred, such as clicks or views, but do not directly state the non-preference |
-| negative sampling | How to select some of the unobserved items as voice candidates for comparison |
+| negative sampling | Selecting unobserved items as comparison negatives, without claiming they are confirmed dislikes |
 | ranking metric | Indicators such as Recall and NDCG that measure the quality of the top-K order |
 
 1. Fix the prediction timing and actual information to be used.
@@ -68,7 +68,7 @@ When comparing ARIMA·state space model, RNN·LSTM, and encoder-decoder, the sam
 
 Even if the MAE is slightly good, it can be dangerous for capacity action if the peak is set significantly low. [In AIOps diagnosis](#doc=aiops-diagnosis-pipeline), the forecast residual is an anomaly candidate and not a root cause.
 
-## Referral Issue Agreement
+## Recommendation task contract
 
 Collaborative filtering finds relationships in user/item interactions. Items that are not clicked on in implicit feedback do not mean that you dislike them, but may not have been exposed. BPR learns pairwise ranking so that observed items have higher scores than sampled unobserved items. NCF utilizes nonlinear interaction, and graph collaborative filtering utilizes neighbor propagation in the user-item graph.
 
@@ -95,6 +95,8 @@ recommendation_receipt:
 ```
 
 ## operational connection
+
+Use one global evaluation cutoff as well as per-user ordering. A model fitted on another user's future interactions can leak future item popularity into a supposedly historical prediction. Fit scalers, imputers, vocabularies, and feature aggregates only on the training side; require each feature's availability time to be at or before the prediction time. For ranking, report the candidate universe and negative-sampling scheme beside Recall/NDCG. A score measured against 100 sampled negatives is not directly comparable with full-catalog ranking.
 
 1. The schema, time, and duplicate processing of feature events are connected to [Messaging and Event](#doc=messaging-roadmap).
 2. Online feature cache and hot keys are reviewed in [Redis and DynamoDB](#doc=nosql-roadmap).

@@ -64,21 +64,22 @@ Karpenter can use reserved, spot, and on-demand capacity type requirements depen
 
 ## Types of Disruption
 
-Disruption includes flows such as automated methods and cloud provider interruptions determined by the controller. Consolidation can delete and replace empty or underutilized nodes, and drift can lead to the replacement of NodeClaims that do not match NodePool/NodeClass changes. Expiration limits node age, but sets a budget so that many nodes are not replaced at the same time.
+Consolidation and drift are graceful disruption methods subject to NodePool disruption budgets. Expiration, interruption, and node repair are forceful methods: those budgets do not rate-limit their start, and draining need not wait for a healthy replacement. Stagger node ages and test application shutdown against actual termination deadlines; a budget of one does not guarantee that only one expiring node drains at a time.
 
 ```mermaid
 flowchart TD
     N[NodeClaim] --> E{empty·underutilized?}
-    N --> D{drifted·expired?}
-    N --> I{interruption?}
+    N --> D{drifted?}
+    N --> I{expired·interrupted·repair?}
     E --> B[budget·PDB·policy check]
     D --> B
-    I --> B
+    I --> F[forceful path: no NodePool budget gate]
     B --> R[replacement pre-spin when applicable]
     R --> T[taint·drain·terminate]
+    F --> T
 ```
 
-PDB protects application availability from voluntary disruption, but if it is too strict or multiple PDBs overlap, it blocks drain. Don't just trust PDB, set terminationGracePeriod, application shutdown, queue handoff, and node termination deadline.
+PDBs constrain eviction requests, but cannot prevent a provider reclaiming an instance. A configured node `terminationGracePeriod` can also end draining by forcibly deleting remaining Pods. Test PDBs, Pod shutdown grace, queue handoff, and the node/provider deadline as separate boundaries.
 
 ## Observations and Costs
 
@@ -95,3 +96,4 @@ Connect Kubernetes event, Karpenter controller log·metric, NodeClaim condition,
 <!-- source: https://karpenter.sh/docs/concepts/nodeclaims/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
 <!-- source: https://karpenter.sh/docs/concepts/disruption/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
 <!-- source: https://karpenter.sh/docs/concepts/scheduling/ | checked: 2026-09-03 | api-version: karpenter.sh/v1 -->
+<!-- source: https://karpenter.sh/docs/concepts/disruption/ | checked: 2026-09-10 | scope: graceful versus forceful disruption -->

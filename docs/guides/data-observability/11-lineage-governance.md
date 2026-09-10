@@ -70,6 +70,22 @@ Create `raw -> accepted -> daily_revenue -> retrieval_index` with two documented
 
 Test three identities: authorized reader, unauthorized reader, and pipeline writer. The reader should access only allowed rows/columns, the unauthorized reader should fail at the execution boundary, and the writer should not gain unrelated dataset access. Verify the audit record for each attempt. Restore the original policy and check both allow and deny behavior again.
 
+## Example results
+
+Illustrative impact and access review.
+
+```text
+changed: raw
+candidate descendants: accepted, daily_revenue, retrieval_index
+documented consumers: 2
+disabled emitter: INCOMPLETE COVERAGE
+authorized reader: allowed permitted rows/columns
+unauthorized reader: denied
+pipeline writer on unrelated dataset: denied
+```
+
+Fewer descendants after disabling an emitter is not a smaller blast radius. Actual identity-specific executions and audit receipts are needed to pass the policy exercise. Recheck retrieval and debug paths after revocation.
+
 ## Explain it in your own words
 
 Can an accurate lineage edge prove the output is accurate? No; it describes derivation, not correctness. Can a graph prove no other consumer exists? Only within declared, verified coverage. Explain the evidence needed to make a downstream-impact claim.

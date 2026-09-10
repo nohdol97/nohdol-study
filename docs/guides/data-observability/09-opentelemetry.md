@@ -80,6 +80,21 @@ Prerequisites: one synthetic instrumented operation, the local Collector, and th
 
 Next stop the destination, watch queue growth and failures, and restart it before capacity is exhausted. Compare generated and retained event counts. Then exceed the bounded queue in a separate run and record the loss. A green Collector health endpoint is not proof that it exported every span.
 
+## Example results
+
+Illustrative observation receipt; actual debug-exporter formatting depends on the Collector distribution.
+
+```text
+service.name: study-pipeline
+propagation intact: parent and child share trace ID
+propagation broken: disconnected child trace
+destination stopped: bounded export queue grows
+queue exhausted: record dropped or unretained spans
+example count reconciliation: 100 generated - 93 retained = gap of 7
+```
+
+A healthy endpoint or empty queue does not prove lossless export. The debug pipeline demonstrates telemetry receipt; destination-outage behavior needs the separately configured exporter and queue. Record observed counts before claiming recovery.
+
 ## Explain it in your own words
 
 What evidence links a span to the exact input snapshot? Which metric remains available when traces are sampled? Describe how you would detect a telemetry pipeline failure without relying exclusively on that same pipeline.

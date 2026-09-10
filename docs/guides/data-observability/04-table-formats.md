@@ -51,6 +51,19 @@ A retained metadata pointer is useless if its referenced objects were removed. S
 
 Time travel is not a separate backup: accidental loss of the catalog, metadata, or storage can remove both current and old states. A replication or backup strategy must preserve the components needed to reconstruct a readable table. Include access permissions in the restore test.
 
+## Example results
+
+Illustrative table-history worksheet, not product-specific SQL output.
+
+```text
+version A: e1=100, e2=250; unique_events=2; total_cents=350
+version B: append e3=50; unique_events=3; total_cents=400
+read version A after B: unique_events=2; total_cents=350
+missing file referenced by A: read/completeness failure
+```
+
+Record the actual snapshot/version identifier from your engine. Metadata alone cannot restore a physically deleted referenced file. This worksheet does not execute snapshot expiration or vacuum.
+
 ## Explain it in your own words
 
 Can adding a nullable column still break a consumer? Yes: a consumer may assume a fixed projection or schema even when the table protocol allows the change. Explain the difference between storage compatibility and a consumer contract. Describe why blindly deleting “unreferenced” files during a concurrent write can be unsafe.

@@ -1,5 +1,7 @@
 # ADR 002 — Phase 2 Collection·NotebookLM·Graph Maintain Derived Workflow
 
+> Status clarification (2026-09-10): the NotebookLM export portion was withdrawn by [ADR 004](004-remove-notebooklm-export.md). The ingest and graph decisions remain active; the original rationale below is historical.
+
 - Date: 2026-07-25
 - Status: Active
 - Target: Web/paper/video ingest, NotebookLM, deterministic graph, accuracy rules
