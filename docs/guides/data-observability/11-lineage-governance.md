@@ -64,6 +64,72 @@ Keep query permission separate from permission to discover metadata. Even table 
 
 When a source record is removed under your data policy, identify every relevant derivative: table history, materialized marts, cached responses, embeddings, and captured prompts. Decide which are deleted, expired, or retained under an applicable policy. This is an engineering propagation exercise; the course does not prescribe legal retention periods.
 
+## Dataset, job, run, and facet identities
+
+A dataset identity must distinguish namespaces such as production and development; a display name alone is ambiguous. A job identifies the transformation definition, while a run identifies one execution attempt or lifecycle instance according to the integration. A retry can use a new run identity while retaining a parent/logical-operation relationship. The output snapshot identity belongs beside those references so an investigation does not confuse “the same table name” with “the same data.”
+
+Emit appropriate lifecycle events such as START and COMPLETE or FAIL. Events can arrive late or be delivered again, so a lineage backend must reconcile their identities and ordering. A missing COMPLETE can mean a failed run, a still-running job, or lost emission. Compare with scheduler and publication records before declaring a cause.
+
+Facets attach typed metadata to the appropriate entity. Dataset schema belongs with the dataset; a source revision or execution detail belongs with the relevant job/run facet. Use standard facets where they express the meaning; custom facets need stable names and schema references. A field containing arbitrary JSON is not interoperable merely because it is inside an OpenLineage envelope.
+
+### Table lineage versus column lineage
+
+If `daily_revenue.total` is `SUM(orders.amount_cents)`, a column edge identifies the contributing field and transformation. A table edge only says that daily_revenue depends on orders. Renaming an unrelated source column might affect a `SELECT *` consumer even when a more precise projected consumer is safe. Conversely, an unchanged column name with a changed unit can break meaning without changing the graph structure.
+
+Static SQL parsing describes potential dependencies; runtime instrumentation can record what executed. Dynamic SQL, UDF internals, file exports, and manual copies can leave gaps in either approach. State collection coverage explicitly and compare emitted input/output identities with a known fixture graph.
+
+## Compute downstream impact with a cycle-safe traversal
+
+This Python example walks an explicitly declared synthetic graph. It does not discover hidden consumers or validate data truth. The cycle deliberately tests termination; sorted output makes the result reproducible.
+
+<!-- executable: lineage-impact -->
+```python
+edges = {
+    'raw': {'accepted'},
+    'accepted': {'daily_revenue'},
+    'daily_revenue': {'retrieval_index'},
+    'retrieval_index': {'accepted'},
+}
+def descendants(start):
+    seen, pending = {start}, [start]
+    while pending:
+        for node in edges.get(pending.pop(), set()):
+            if node not in seen:
+                seen.add(node)
+                pending.append(node)
+    return sorted(seen - {start})
+
+found = descendants('raw')
+assert found == ['accepted','daily_revenue','retrieval_index']
+print('candidate_impact:', ', '.join(found))
+print('coverage: declared edges only')
+```
+
+Expected output:
+
+```text
+candidate_impact: accepted, daily_revenue, retrieval_index
+coverage: declared edges only
+```
+
+Remove an edge and the answer shrinks without proving the real impact shrank. Attach owners and known consumers to the resulting nodes, then validate the suspected breaking change against their contracts. A lineage service should also report when the relevant collection integration was last observed.
+
+## RBAC, ABAC, masking, and row/column enforcement
+
+RBAC grants capabilities through roles: a transformation role writes a curated table, a consumer role reads an approved view, and a steward role manages metadata. ABAC evaluates attributes of the caller, resource, and context, such as domain membership and classification. Tags are inputs; a query/storage/serving enforcement point must actually evaluate them. Trustworthy attribute issuance matters because a caller-supplied `department=finance` string cannot authorize itself.
+
+Row-level security limits which records are visible; column permissions can prevent selecting sensitive fields; masking transforms a field's visible value under policy. A mask in a view provides little protection if the same role can read the unmasked base table. A shared service identity also needs caller-specific enforcement when acting for users. Test direct table reads, views, exports, caches, and retrieval endpoints under the actual consumer identity.
+
+For PostgreSQL, table owners and privileged roles can bypass RLS under documented conditions. An RLS test run only as the owner therefore does not prove the consumer policy. In a disposable database, compare a non-owner reader's permitted region query with a forbidden-region query and a forbidden-column query. Expected outcomes are permitted rows, zero forbidden rows, and a permission error respectively; use a separate administrative fixture to prove the forbidden rows actually exist.
+
+## Classification, PII, and auditing through derivatives
+
+Classification assigns handling requirements to fields/datasets. Automated detection can suggest candidates such as email-like values, but a pattern does not establish the business purpose or complete sensitivity classification. A hash of a stable identifier can remain linkable; “hashed” should not automatically mean “safe for unrestricted sharing.” Propagate the handling decision to aggregates, extracts, embeddings, and debug captures according to what they can reveal.
+
+An audit record should identify the actor, action, resource/version, policy decision, time, and correlation reference. Capture denied actions and policy changes as well as successful reads. Protect the audit store from the identity being audited and test its observation path. Audit logging answers what was attempted/allowed; it does not prevent a forbidden read by itself.
+
+Catalog tools such as DataHub/OpenMetadata organize discovery, ownership, descriptions, and integration metadata; Marquez specializes in the OpenLineage execution graph. Evaluate identity reconciliation and your actual ingestion adapters first. Ten duplicate representations of one dataset split impact analysis and ownership even if the UI graph looks rich.
+
 ## Failure exercise and interpretation
 
 Create `raw -> accepted -> daily_revenue -> retrieval_index` with two documented consumers. Introduce a breaking amount-unit change. Query descendants to identify candidate impact and owners, then inspect whether the lineage emitter captured the actual transformation. Disable one emitter and repeat: the missing edge must become a coverage gap, not evidence that nothing is affected.
@@ -95,3 +161,4 @@ Continue with [cloud platform implementations](12-cloud-platforms.md).
 <!-- source: https://openlineage.io/docs/spec/object-model/ | checked: 2026-09-10 | datasets, jobs, runs and facets -->
 <!-- source: https://openlineage.io/spec/2-0-2/OpenLineage.json | checked: 2026-09-10 | illustrative event schema -->
 <!-- source: https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-lineage | checked: 2026-09-10 | lineage coverage and permissions are bounded -->
+<!-- source: https://www.postgresql.org/docs/current/ddl-rowsecurity.html | checked: 2026-09-10 | row-policy enforcement and bypass roles -->

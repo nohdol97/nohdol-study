@@ -69,6 +69,28 @@ Write a short decision before adding distributed compute: current daily bytes, p
 
 Maintain a compatibility manifest containing engine version, connector coordinates, Java/Python versions, table protocol/features, OTel distribution, SDK versions, and dbt adapter. Pin a tested set in the project lockfiles. A set of independently current versions is not necessarily a working set.
 
+## Follow one event through five different identities
+
+An event identity, source position, processing run, table snapshot, and trace ID answer different questions. Treating them as interchangeable makes replay and incident analysis ambiguous. For the orders project, carry enough references to make the following chain explicit:
+
+| Reference | Example | Question it answers |
+|---|---|---|
+| Business identity/version | `e1`, source sequence `2` | Which logical change is this? |
+| Transport position | topic orders, partition 0, offset 91 | Where can ingestion resume/replay? |
+| Logical interval and attempt | September 10, attempt run-8 | Which slice and execution produced the candidate? |
+| Input/output version | source snapshot A, accepted snapshot B | Which exact state was read and published? |
+| Trace/span context | trace T, consume span S | Which operations participated in this execution? |
+
+The same e1 can be delivered at two offsets after a producer-side replay. Two attempts can process the same logical interval. A snapshot can combine many input partitions and runs; one trace need not encompass its entire lifetime. The business reconciliation gate uses event/version identities, while the recovery mechanism also needs source positions and committed output references.
+
+## Compare two concrete implementations
+
+For a daily 100 MB report, a scheduled Python/DuckDB transformation can read a versioned input, write a candidate Parquet file, validate counts/totals, and publish a manifest. Its failure boundary is the candidate-to-published transition. Keep yesterday's approved manifest available while labeling its age if today's candidate fails. A distributed cluster adds little value unless a measured requirement justifies its startup and operating work.
+
+For continuously arriving events, Kafka gives the processor a retained log, Spark maintains bounded processing progress/state, and an Iceberg/Delta sink defines committed table visibility. A mart builder then publishes a consumer definition, and OTel/OpenLineage provide execution and derivation evidence. Every additional boundary adds a failure to test: broker acknowledgement, source progress, sink commit, mart approval, and observation delivery.
+
+If Spark crashes after the table commit but before its progress is recorded, sink reconciliation must tolerate replay. If dbt succeeds but the publication gate fails, the consumer should not accidentally read the unapproved candidate. If telemetry export stops, the independent publication ledger still establishes business outcomes while monitoring reports incomplete coverage. These are architecture requirements you can test before choosing a managed product.
+
 ## Exercise and interpretation
 
 Draw two designs: a daily 100 MB report and a continuously updated stream with a five-minute freshness target. Assign storage, processing, scheduling, contract checking, and telemetry to each. Explain every additional process in the second design. Then add a one-hour downstream outage and show where the backlog lives, how long it survives, and who owns recovery.

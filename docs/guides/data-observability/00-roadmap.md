@@ -55,6 +55,28 @@ The arrows are a curriculum design, not a preinstalled integration. Every connec
 | 15 | [Capstone and failure drills](15-capstone.md) | Produce a reproducible portfolio with evidence of recovery |
 | Reference | [Source review and scope](16-source-review.md) | Distinguish the shared conversation from technical evidence |
 
+## Study the mechanism inside each stack
+
+Each technical chapter now separates the individual mechanisms below. Read one section, calculate or run its example, then explain the failure case before continuing. The source register maps the shared conversation's detailed topics to these chapters; it is not enough to recognize their names.
+
+| Study unit | Detailed work |
+|---|---|
+| [SQL and Python](02-sql-python-foundations.md) | Join multiplication, window frames, recursive CTEs, grouping sets, plans/isolation; validation, generators, async/processes, memory and tests |
+| [File layout](03-parquet-object-storage.md) | Row groups/chunks/pages, encoding versus compression, pruning layers, sorted/interleaved experiment, partition/file boundaries |
+| [Table protocols](04-table-formats.md) | Iceberg metadata walk, Delta log/version reads, optimistic conflicts, evolution, deletes, compaction and retention |
+| [Spark execution](05-spark-performance.md) | Catalyst/Tungsten, driver/jobs/stages/tasks, shuffle/partition control, three joins, memory/spill/skew, AQE and UI diagnosis |
+| [Streaming systems](06-kafka-cdc-streaming.md) | Replicas/ISR/acks, idempotence/transactions, assignment/rebalance/offsets, CDC, output modes, watermarks/state, Flink and backpressure |
+| [Models and scheduling](07-modeling-orchestration.md) | Fact/dimension grain, Type 1/2 history, ref/source/macros, incremental replacement, snapshots/tests/contracts, Airflow/Dagster and backfill |
+| [Data reliability](08-quality-contracts-slos.md) | Six quality dimensions, measurable denominators, publication state machine, check tools, SLO burn and missing evidence |
+| [OpenTelemetry](09-opentelemetry.md) | Resources/scopes/spans, context/baggage/links, real SDK propagation, instruments/temporality, head/tail sampling and Collector queues |
+| [Telemetry backends](10-metrics-logs-traces.md) | Counter resets, rate/increase, histogram math, cardinality, LogQL, trace search, Grafana correlation and alert lifecycle |
+| [Governance](11-lineage-governance.md) | Dataset/job/run/facets, column lineage, cycle-safe impact traversal, RBAC/ABAC, row/column enforcement, classification/audit |
+| [Databricks and Snowflake](12-cloud-platforms.md) | Executable-environment pipeline examples, expectations, Auto Loader, Jobs/MLflow; Streams/MERGE, Tasks, dynamic refresh, Snowpark, DMF/Horizon/Cortex |
+| [AI data and evaluation](13-ai-ready-data-evaluation.md) | Cosine/ANN, hybrid fusion/reranking, chunk/index versions, semantic layer/ontology/graph, MCP/tools/agents and layered evaluation |
+| [Platform delivery](14-platform-operations.md) | Runtime/identity boundaries, release bundles, capacity/replay arithmetic, recovery, unit economics and dataset registration |
+
+For an immediate local session, run the marked Python examples in SQL, modeling, quality, metrics, lineage, and retrieval. They use synthetic inputs and print exact expected results. Add DuckDB/dbt and the in-memory OTel SDK lab when those local dependencies are available. Spark, table-engine, and managed-platform exercises state their separate prerequisites and expected results; the course does not imply they ran on your infrastructure.
+
 ## A twelve-month working plan
 
 This is a planning example for roughly eight to ten focused hours per week, not a guarantee of expertise. Advance by demonstrated outcomes. With existing Kafka or observability skills, attempt the chapter exercise first and spend saved time on Spark internals and data correctness.

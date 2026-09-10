@@ -78,6 +78,67 @@ Start with SQL assertions and dbt data tests. Evaluate Great Expectations or Sod
 
 Run checks against a candidate version before exposing it. Store failed-record samples under a controlled policy, record the full failure count, and keep consumers informed about the last valid version. A “drop bad rows” policy changes completeness and must be visible in accounting.
 
+## Six quality dimensions require different evidence
+
+Validity asks whether a value satisfies the declared domain, such as a supported currency and a non-negative integer amount. Uniqueness asks whether identities are repeated; define whether the duplicate fraction counts extra copies or every row belonging to a duplicate group. Completeness asks what expected data is missing, so its denominator comes from a source ledger, control total, or other explicitly qualified expectation. Accuracy asks whether the value matches an authoritative fact, which can fail even when validity passes.
+
+Consistency compares representations that should agree: the sum of accepted order lines versus the order header, or the same currency/unit definition in two marts. Freshness compares a declared event, progress, or publication clock with a deadline. These dimensions can disagree. A fresh 120-cent value may be inaccurate against a 100-cent source, while an old 100-cent value is accurate but stale for a current-state consumer.
+
+Here is a locally executable metric calculation, not a vendor quality-tool API. The source oracle is deliberately explicit, the accepted candidate excludes invalid records, and duplicate deliveries are counted before candidate deduplication. Conflicting values for an identity must go through the capstone conflict gate before using this simplified metric fixture.
+
+<!-- executable: quality-dimensions -->
+```python
+expected = {'e1': 100, 'e2': 250, 'e3': 50}
+deliveries = [('e1',100), ('e1',100), ('e2',270), ('bad',-1)]
+valid = [(key,amount) for key,amount in deliveries
+         if key in expected and type(amount) is int and amount >= 0]
+candidate = dict(valid)  # Only identical duplicates exist in this fixture.
+extra = len(valid) - len(candidate)
+complete = len(set(candidate) & set(expected)) / len(expected)
+accurate = sum(candidate[k] == expected[k] for k in candidate) / len(candidate)
+assert (len(valid), extra, len(candidate)) == (3,1,2)
+assert sum(candidate.values()) == 370
+print(f'validity={len(valid)}/{len(deliveries)}')
+print(f'extra_duplicate_fraction={extra}/{len(valid)}')
+print(f'completeness={complete:.3f} accuracy_on_present={accurate:.3f}')
+print(f'candidate_total={sum(candidate.values())} source_total={sum(expected.values())}')
+print('publication=HOLD: missing e3 and incorrect e2')
+```
+
+Expected output:
+
+```text
+validity=3/4
+extra_duplicate_fraction=1/3
+completeness=0.667 accuracy_on_present=0.500
+candidate_total=370 source_total=400
+publication=HOLD: missing e3 and incorrect e2
+```
+
+A total comparison alone is insufficient: changing e2 to 300 would make the candidate sum 400 while still missing e3 and misrepresenting e2. Keep identity-level reconciliation where the domain requires it. In an empty population, report an explicit no-observation result rather than divide by zero or automatically declare 100% accuracy.
+
+## Turn checks into a publication state machine
+
+Use states such as `BUILDING -> CHECKING -> APPROVED -> PUBLISHED`, with failures producing a held candidate. Bind every result to the candidate version, rule revision, measured population, and completion time. A passing check on version A must not authorize version B written a minute later. Publish with a supported atomic pointer/swap/transaction after all required checks pass, and record the committed output identity.
+
+Warning, quarantine, dropping, and failure are different policies. A warning permits publication with visible defects. Quarantine retains rejected records for repair and requires reconciliation. Dropping changes the delivered population; the dropped count belongs in completeness accounting. Failure blocks the proposed update, but the old version's availability and stale-data label need their own serving design.
+
+For a schema change, first add a compatible field, populate it, run old/new consumer fixtures, then move consumers before removing the old representation. For a semantic change such as gross-to-net revenue, version the definition even if SQL column names/types stay identical. Ownership should specify who approves the rule and who is paged when it fails, rather than assigning every business decision to the platform team.
+
+## dbt, Great Expectations, and Soda in the same workflow
+
+dbt data tests fit relations already built by a SQL transformation graph. Great Expectations organizes expectations into suites and validation workflows; Soda expresses checks through its supported check language and scan/runtime. The useful comparison is whether your execution engine, deployment mode, failed-row handling, and result storage fit the publication boundary. A connector list is not proof that a tool can evaluate the same transaction snapshot the writer will publish.
+
+Keep domain rules tool-independent in meaning, but translate them into the exact supported configuration. The earlier illustrative contract is not SodaCL or a GX suite. For example, “no null event IDs” maps easily across tools; “all expected customer partitions arrived by deadline” requires a schedule/reference population as well as a scan. Decide who stores that population before selecting a check library.
+
+## SLO measurement, burn rate, and volume anomalies
+
+If the allowed failure fraction is 0.001 and the observed failure fraction is 0.02, burn rate is `0.02 / 0.001 = 20`. At a constant comparable event rate, an hour at 20 times the budget rate consumes the same failure allowance as twenty hours at the target rate. Bursty workloads and interval-based SLOs require the actual eligible populations; clock duration alone cannot replace them.
+
+A volume anomaly can detect an unusual drop before a strict reconciliation is available, but seasonality, holidays, and known source pauses affect the baseline. Compare like intervals and segments, record the historical reference, and distinguish an anomaly from a proven missing-record count. An anomaly threshold should not silently waive a zero-tolerance money or access invariant.
+
+Measure the checker too: an independent schedule knows which check results should exist, and a coverage rule detects missing or stale results. Keep SLO history after repair. Backfilling yesterday's interval restores data completeness today but cannot make yesterday's missed deadline on time.
+
 ## Failure exercise and interpretation
 
 Create one missing scheduled interval, one duplicated ID, and one absent check result. The system should identify three different problems. Repair the duplicate, replay the interval, restart the checker, and verify both data and observation coverage. Keep the failure ledger after recovery rather than replacing historical failures with a green current status.
@@ -106,3 +167,5 @@ Continue with [OpenTelemetry](09-opentelemetry.md).
 
 <!-- source: https://docs.getdbt.com/docs/build/data-tests | checked: 2026-09-10 | executable data assertions; contracts and SLO arithmetic are teaching synthesis -->
 <!-- source: https://sre.google/workbook/implementing-slos/ | checked: 2026-09-10 | outcome-oriented SLIs and SLOs -->
+<!-- source: https://docs.greatexpectations.io/docs/core/introduction/ | checked: 2026-09-10 | GX expectations and validation workflow -->
+<!-- source: https://docs.soda.io/soda-cl/soda-cl-overview.html | checked: 2026-09-10 | Soda check-language scope -->

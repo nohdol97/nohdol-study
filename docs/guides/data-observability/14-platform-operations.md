@@ -53,6 +53,40 @@ Watch queue age, storage headroom, source retention, and downstream concurrency 
 
 Define units such as cost per million **valid published events**, cost per refreshed dataset interval, or cost per successful AI task. Include idle compute, retries, scans, compaction, storage, transfer, telemetry, quality checks, and governance services. A lower cost per attempted event can hide dropped data or failed quality gates.
 
+## Docker, Kubernetes, and Terraform in the data path
+
+A container image should make the transform's runtime reproducible: pin a reviewed base/dependency set, package the same module tested in CI, run with the intended user, and supply configuration through the deployment environment. Mutable notebook state and unrecorded packages defeat that purpose. Keep credentials outside the image and build context. Store checkpoints and output in deliberately durable locations, not the container's disposable writable layer.
+
+For Kubernetes, requests affect scheduling and limits affect available resources under the platform's rules. A Spark executor also needs non-heap/native/Python-worker memory, so its pod memory budget cannot be derived only from JVM heap. A liveness probe that restarts a legitimately long batch can create an endless replay loop. Readiness indicates whether a service should receive traffic, not whether yesterday's dataset is complete.
+
+Workload identity should bind the running component to only its source, sink, checkpoint, and telemetry permissions. Network policy and storage permissions enforce different boundaries. Test a forbidden dataset read under the workload's actual identity, and record the denial. Resource isolation also matters: a large historical backfill should not consume all capacity needed for current publication.
+
+Terraform makes infrastructure changes reviewable through configuration and plans. A plan can show the creation of a bucket or role; it does not validate the table's row-level business contract. State and provider credentials require appropriate storage/access. Keep infrastructure rollback distinct from restoring an already changed dataset. The existing infrastructure tracks provide complete container/orchestration/IaC exercises; use them when this project reaches those boundaries.
+
+## A release bundle and a promotion decision
+
+Promote a bundle containing code revision, runtime/dependencies, source/schema/contract revisions, table features, transformation definitions, policy revision, and telemetry schema. A golden input fixture should include a duplicate, conflicting update, null, late correction, delete, missing interval, and unauthorized caller. Compare full and incremental output by keys/values as well as count and sum.
+
+Run a candidate on a bounded interval or shadow destination, then compare consumer queries against the approved version. Keep candidate output isolated until its checks pass. If a release changes a currency or history rule, a code rollback may leave already written rows and an AI index using the new meaning; plan the correction/republication as part of the release design.
+
+Define an explicit promotion condition such as “all hard invariants pass, no forbidden read, current intervals remain within deadline, and measured catch-up capacity exceeds the required rate.” A canary that sees only easy keys does not establish behavior for skewed keys or late updates. Select representative slices deliberately.
+
+## Recovery arithmetic: replay budget and bottlenecks
+
+For backlog `B`, arrival rate `lambda`, and effective processing rate `mu`, a steady-rate drain estimate is `B / (mu-lambda)` when `mu > lambda`. When `mu <= lambda`, the backlog cannot drain. Use units consistently: events, encoded bytes, replicated bytes, and compressed Parquet bytes are different quantities.
+
+Suppose the replay source keeps six hours of history, detection takes two hours, restoration one hour, and catch-up is estimated at two hours. Only one hour remains for variation before the oldest needed input can expire, assuming retention/positions behave as modeled. Include checkpoint age, source clock, and table recovery point in that analysis. Increasing compute helps only if the source, network, key distribution, and sink can supply/use the added throughput.
+
+A platform should expose backfill admission controls, bounded retries, source-retention alarms, and per-dataset publication evidence. Repeatedly retrying a permanent schema error consumes compute while preserving the same bad outcome. Classify retryable transport/capacity failures separately from invalid inputs and incompatible contracts.
+
+## Unit economics and self-service boundaries
+
+Compute cost per million valid published events using the same accounting period for numerator and denominator. Include ingestion, transforms, failed retries, compaction, storage, transfer, query serving, telemetry, and required checks. If a design drops half the eligible events, its apparent throughput/cost improvement must fail the completeness gate before comparison.
+
+A self-service dataset registration can generate pipeline configuration, quality rules, ownership metadata, dashboards, and access-policy requests. The registration schema should require grain, source/change identity, freshness/completeness population, retention, owner, and permitted consumers. Validate it and compile it into reviewable artifacts. Do not let a YAML label such as `certified: true` replace executed checks and an approved owner decision.
+
+Treat the generated platform artifacts as versioned derivatives of the registration and templates. On template changes, show which datasets are affected, test representative fixtures, and roll out gradually. This is the operational bridge from one working pipeline to a platform serving multiple teams.
+
 ## An operator's incident sequence
 
 Start from the impacted consumer and time range. Check observation coverage, identify the last valid publication, and follow run and lineage references upstream. Form candidate causes and look for counterevidence. Contain harmful publication or load, repair the underlying condition, replay a bounded interval, and reconcile expected output. Restore alerts and temporary policies after recovery.

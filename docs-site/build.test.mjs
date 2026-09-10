@@ -62,6 +62,13 @@ test('publishes the complete data and observability course from explicitly selec
   assert.match(byId.get('source-review').html, /chatgpt|shared conversation/);
 });
 
+test('detailed course examples reproduce the documented results', () => {
+  const output = execFileSync('python3', [path.join(SITE_ROOT, 'labs/verify_data_course.py')], {
+    encoding: 'utf8', timeout: 30000,
+  });
+  assert.equal([...output.matchAll(/: PASS/g)].length, 7);
+});
+
 test('the documented local SQL and capstone correctness fixtures execute successfully', async () => {
   const examples = [
     ['02-sql-python-foundations.md', /350/],

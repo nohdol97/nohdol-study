@@ -4,6 +4,8 @@ This English guide maps each skill's purpose, triggers, and boundaries. Executio
 
 The public [Data & Observability course](../../docs/guides/data-observability/00-roadmap.md) is a learning resource, not a new skill. Use existing study routing for guided learning and source verification; its explicitly selected English chapters are published through the docs catalog.
 
+Its [technical depth specification](../../docs/specs/2026-09-10-data-course-depth.md) covers individual stack mechanisms, worked examples, and executable local checks. The detailed source-topic map is in the course's source-review chapter; local fixture success remains separate from managed-platform or distributed-system evidence.
+
 Public lab results distinguish local fixtures, expected environment-dependent outputs, and synthetic review receipts. The [documentation review](../../docs/reviews/2026-09-10-full-documentation-review.md) records verification limits; these examples create no new skills and are not knowledge evidence.
 
 ## archify

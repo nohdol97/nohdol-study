@@ -30,7 +30,7 @@ The root presents the `infra`, `aiops`, and `data-observability` learning paths.
 
 DevOps implements the [DevOps public learning path specification](../docs/specs/2026-09-03-infra-specialist-public-learning-path.md); AIOps implements the [AIOps public learning path specification](../docs/specs/2026-09-03-aiops-public-learning-path.md). Smaller topics provide a roadmap, conceptual model, and guided lab. Broader topics provide chapters for each module. DevOps connects traffic control with backend requests, transactions, capacity, distributed workflows, caching, and compatible deployments. AIOps connects AI Specialist topics—LLMs, vision, on-device models, time series, recommendation, and RAG/MCP—with AI Transformation platforms—GPUs, MLOps/LLMOps, AI DevOps/FinOps, and enterprise agents—through operational evidence, diagnosis, and approved remediation.
 
-The [Data & Observability course](../docs/guides/data-observability/00-roadmap.md) implements its [learning-path specification](../docs/specs/2026-09-10-data-observability-learning-path.md). It follows one evolving project through SQL/Python, Parquet, Iceberg/Delta, Spark, Kafka/CDC, dbt, quality/SLOs, OpenTelemetry, telemetry backends, lineage/governance, Databricks/Snowflake, AI evaluation, and recovery/cost engineering. The course sources live in `docs/` at the user's request; no duplicate article tree is generated.
+The [Data & Observability course](../docs/guides/data-observability/00-roadmap.md) implements its [learning-path specification](../docs/specs/2026-09-10-data-observability-learning-path.md) and [technical depth specification](../docs/specs/2026-09-10-data-course-depth.md). It follows one evolving project through SQL/Python, Parquet, Iceberg/Delta, Spark, Kafka/CDC, dbt, quality/SLOs, OpenTelemetry, telemetry backends, lineage/governance, Databricks/Snowflake, AI evaluation, and recovery/cost engineering. Detailed sections teach the individual execution, state, query, instrumentation, policy, and evaluation mechanisms named in the shared curriculum. The course sources live in `docs/` at the user's request; no duplicate article tree is generated.
 
 ## Reading lab results
 
@@ -52,7 +52,7 @@ npm run preview
 
 Open `http://127.0.0.1:4174/` in your browser.
 
-Optional [local lab checks](labs/README.md) reproduce the PostgreSQL transaction/restore and Prometheus alert fixtures with separately installed tools. They create no cloud resources. The default site test checks JSON and internal links across all 94 documents and compares the two self-contained Python examples with their documented output.
+Optional [local lab checks](labs/README.md) reproduce PostgreSQL transaction/restore, Prometheus alerts, OTel SDK propagation, Parquet layout, and dbt incremental/retry/full-rebuild fixtures with separately installed tools. They create no cloud resources. The default site test checks JSON and internal links across all 94 documents, compares the original two self-contained Python examples with their documented output, and executes seven additional detailed-course fixtures.
 
 ## Publication and deployment
 

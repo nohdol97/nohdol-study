@@ -2,6 +2,24 @@
 
 These checks use synthetic fixtures and separately installed local tools. They do not connect to a cloud account or an existing database. Run the standard `npm test` suite from docs-site/ for catalog, link, JSON, and self-contained Python checks.
 
+## Data and Observability detail labs
+
+Run the seven marked standard-library examples directly from their course Markdown:
+
+```sh
+python3 docs-site/labs/verify_data_course.py
+```
+
+The checker compares actual stdout with documented output for SQL windows/recursion, Python record validation, SCD history, quality dimensions, histogram math, cycle-safe lineage traversal, and hybrid retrieval. No packages or network are required.
+
+For optional local engine checks, use a scratch virtual environment with `opentelemetry-sdk==1.44.0`, `duckdb==1.5.0`, `dbt-duckdb==1.11.0`, and `dbt-core==1.12.4` installed. The verifier installs nothing:
+
+```sh
+python docs-site/labs/verify_data_course.py --optional
+```
+
+It executes actual OTel propagation through an in-memory exporter, both documented Parquet layouts, and the dbt model/macro/property files extracted from the modeling chapter. A fresh temporary dbt project checks initial publication, correction, identical retry, and full-rebuild equality. It also reproduces the documented deletion limitation: the incremental model retains a removed source row until a full rebuild. Anonymous dbt usage reporting is disabled. All tables/files are synthetic and local; no broker, cloud account, model API, or external telemetry destination is used. The temporary receipt directory is retained for inspection.
+
 ## PostgreSQL
 
 Supply the directory of a complete PostgreSQL 18 installation, including `postgres`, `initdb`, `pg_ctl`, `psql`, and backup tools. A client-only libpq package is insufficient.

@@ -143,6 +143,29 @@ The accepted snapshot has two unique events totaling 350 cents. Both conflict ar
 
 Present a fifteen-minute architecture review and a fifteen-minute incident replay. For every success claim, show the fixture, measurement, source version, or policy check that supports it. State what you have not run. Another engineer should be able to reproduce the small tests and understand why larger-scale claims need separate evidence.
 
+## Connect the detailed labs to the capstone
+
+Use the chapter examples as component oracles before wiring services together. From a checkout of this repository, `python3 docs-site/labs/verify_data_course.py` executes the seven marked standard-library examples and compares their printed output with the Markdown. They cover windows/recursion, typed-record rejection, historical attribution, quality dimensions, histogram interpolation, lineage traversal, and hybrid ranking.
+
+For a scratch Python environment with OTel SDK 1.44.0, DuckDB 1.5.0, dbt-duckdb 1.11.0, and dbt-core 1.12.4 already installed, run `python docs-site/labs/verify_data_course.py --optional`. This also creates a fresh local dbt project, runs the exact documented incremental model/macro/tests, verifies correction and retry, compares a full rebuild, and reproduces the model's documented deletion limitation. It installs nothing and uses no cloud credentials. Temporary receipt paths are printed for inspection.
+
+| Bring forward | Integration evidence |
+|---|---|
+| Window and SCD boundary fixtures | Distributed joins preserve keys, historical attribution, and totals |
+| Sorted/interleaved Parquet results | File rewrite preserves rows while the measured scan/planning work changes |
+| Iceberg/Delta version investigation | Every successful publication names a readable snapshot and its retention boundary |
+| Spark plan comparison | A changed join/AQE setting preserves results and has a measured resource explanation |
+| Kafka crash/rebalance cases | Progress advances only across completed work; retries preserve business effects |
+| dbt update and deletion cases | Incremental results match full reconstruction for every supported change type |
+| Quality population fixture | Missing source identities and absent check results both block approval as designed |
+| OTel propagation fixture | Transport headers preserve the intended relationship; lost telemetry is counted separately |
+| Histogram/alert calculations | Backend query output agrees with the fixture population and coverage policy |
+| Lineage/access review | Known descendants are found and forbidden reads fail under actual consumer identities |
+| Cloud implementation | Local and managed outputs, policy outcomes, repair behavior, and cost are compared |
+| Retrieval/evaluation fixture | Authorized evidence remains versioned through ranking, prompts, answers, and traces |
+
+Passing a local component fixture is an entry condition for its integration test. For example, the SDK fixture proves propagation without transport; the Kafka integration must additionally prove carrier serialization and extraction across processes. Keep that distinction in the portfolio so another engineer can reproduce exactly the evidence you collected.
+
 ## Portfolio checklist
 
 Keep architecture decisions, version locks, synthetic fixtures, correctness tests, query plans, incident timelines, restoration receipts, cost calculations, and teardown steps in one project. Never replace a measured failure with an idealized diagram. Revisit this course when the next failure exposes a gap.

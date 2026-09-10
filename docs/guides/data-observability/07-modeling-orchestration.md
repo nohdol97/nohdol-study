@@ -29,6 +29,53 @@ A fact at order-line grain can answer item revenue; a daily aggregate cannot nec
 
 Consider a customer who moves regions on Tuesday. A Monday order may belong to Monday's region for historical reporting but today's region for a current-account view. Both can be useful; a single undocumented join cannot safely stand for both definitions.
 
+## Fact grain, dimensions, and SCD history
+
+An order-line fact can contain quantity and line amount; a customer dimension contains descriptive attributes. A star schema joins facts to dimensions through declared keys. Additive measures can be summed across their valid dimensions; an account balance is not generally additive across time, and an average price cannot be aggregated by averaging subgroup averages without weights. Define numerator and denominator for ratios in the semantic contract.
+
+SCD Type 1 overwrites an attribute, so historical facts joined to the current dimension reflect today's classification. Type 2 creates a new dimension version with a surrogate identity and a validity interval. Half-open intervals `[valid_from, valid_to)` ensure an event exactly at the change instant joins to only the new version. Enforce no overlaps and define the handling of facts before the first known version.
+
+The following runnable SQLite fixture makes the difference visible. Its small integer timestamps are synthetic ordered instants. A real model should use explicitly zoned timestamps and a tie-breaking source sequence.
+
+<!-- executable: scd-history -->
+```python
+import sqlite3
+
+with sqlite3.connect(':memory:') as db:
+    db.executescript("""
+    CREATE TABLE dim_customer(customer TEXT, region TEXT, start_at INT, end_at INT);
+    INSERT INTO dim_customer VALUES ('c1','KR',0,20),('c1','US',20,100);
+    CREATE TABLE facts(event TEXT, customer TEXT, event_at INT, cents INT);
+    INSERT INTO facts VALUES ('e1','c1',10,100),('e2','c1',20,250);
+    """)
+    naive = db.execute('SELECT SUM(cents) FROM facts JOIN dim_customer USING(customer)').fetchone()[0]
+    historical = db.execute("""
+      SELECT region, SUM(cents) FROM facts f JOIN dim_customer d
+      ON f.customer=d.customer AND f.event_at>=d.start_at AND f.event_at<d.end_at
+      GROUP BY region ORDER BY region
+    """).fetchall()
+    current = db.execute("""
+      SELECT region, SUM(cents) FROM facts f JOIN dim_customer d
+      ON f.customer=d.customer AND d.end_at=100 GROUP BY region
+    """).fetchall()
+    assert naive == 700
+    assert historical == [('KR',100),('US',250)]
+    assert current == [('US',350)]
+    print('naive_total:', naive)
+    print('type_2_attribution:', historical)
+    print('current_attribution:', current)
+```
+
+Expected output:
+
+```text
+naive_total: 700
+type_2_attribution: [('KR', 100), ('US', 250)]
+current_attribution: [('US', 350)]
+```
+
+The event at instant 20 belongs to US. Changing `< end_at` to `<= end_at` double-matches the boundary, an error a general non-null test will not catch. A late correction to the dimension may require rebuilding historical fact attribution, not only the current dimension row.
+
 ## dbt's role
 
 `ref` connects model dependencies and relation names; `source` identifies external inputs. Models express transformations, macros share SQL-generation logic, snapshots support change-history workflows, and documentation explains meaning. Adapter and warehouse behavior determine available materializations and constraints.
@@ -54,6 +101,59 @@ models:
 
 These checks do not validate currency, revenue definition, missing upstream events, or update history. Add fixture-based business tests, source reconciliation, and delivery checks for those questions.
 
+## Models, ref, source, and macros
+
+A dbt SQL model describes a SELECT whose materialization controls whether it becomes a view, table, incremental relation, or another adapter-supported object. `ref('stg_orders')` both resolves the upstream model's environment-specific relation and declares a graph dependency. `source('commerce','orders')` resolves an externally loaded relation registered in source properties; it does not perform ingestion. Hard-coding a production schema bypasses that environment/dependency benefit.
+
+A macro generates SQL at compilation time. It is not a row-by-row Python function in the warehouse. Keep units in names so reuse preserves meaning. For example, save this in `macros/cents_to_units.sql` in a dbt project:
+
+```sql
+{% macro cents_to_units(column_name) -%}
+  cast({{ column_name }} as decimal(18,2)) / 100
+{%- endmacro %}
+```
+
+Then `{{ cents_to_units('amount_cents') }}` produces an expression in a model. The argument is trusted project code, not arbitrary user SQL. A currency needing another scale requires another rule; a convenient macro must not silently impose two decimal places on all money.
+
+## Incremental models: selecting changes and replacing keys
+
+An incremental model has two separate responsibilities: select all relevant changes and apply them correctly to existing output. `is_incremental()` is true only under dbt's documented incremental conditions, including an existing target and no full refresh. A configured `unique_key` tells a supported strategy how to match records; it is not a promise that incoming keys are unique or non-null.
+
+This model is a DuckDB/PostgreSQL-style SQL example for a dbt adapter supporting `delete+insert`. Save it as `models/fct_orders.sql` in an existing project with `stg_orders(event_id, amount_cents, updated_at, source_seq)`. Staging must reject conflicting payloads for the same event/sequence and retain the authoritative sequence. The two-day lookback is a fixture policy, not a universal lateness guarantee.
+
+```sql
+{{ config(materialized='incremental', unique_key='event_id',
+          incremental_strategy='delete+insert') }}
+
+with candidates as (
+  select * from {{ ref('stg_orders') }}
+  {% if is_incremental() %}
+  where updated_at >= (
+    select coalesce(max(updated_at), timestamp '1900-01-01') from {{ this }}
+  ) - interval '2 days'
+  {% endif %}
+), ranked as (
+  select *, row_number() over (
+    partition by event_id order by source_seq desc
+  ) as position
+  from candidates
+)
+select event_id, amount_cents, updated_at, source_seq
+from ranked where position=1
+```
+
+The adapter replaces existing matching keys with selected current records. On the initial build, e1=100 and e2=250 give 350 cents. A newer e1 version of 120 should give 370 after the next build; another identical build stays at 370. Appending instead of replacing would produce 470. A correction with a source `updated_at` outside the lookback is missed, so the source must guarantee the change-detection clock or provide a CDC/control-position alternative. Tombstones require explicit delete processing; a SELECT that merely filters deleted rows cannot remove an already published target row.
+
+Verify this in a disposable schema with `dbt run --select +fct_orders`, `dbt test --select fct_orders`, and a keyed comparison with a separately built full-refresh result. Preserve the source fixture, adapter/core versions, and compiled SQL. A successful incremental invocation is not evidence that historical deletions or late updates were covered.
+
+## Snapshots, tests, contracts, and documentation
+
+dbt snapshots preserve detected changes from a mutable source as Type 2 history. The timestamp strategy uses a reliable updated-at column; check-based comparison compares configured values. A daily snapshot sees the state at its runs, so two intermediate changes between runs can be absent from its history. CDC is required when every intermediate source change matters. Do not label snapshot observation time as business effective time without a source contract.
+
+Use generic data tests for reusable assertions such as uniqueness and nullability, and singular SQL tests for a business invariant expressed as failing rows. A test returning no rows passes; this makes an empty model a possible false sense of success unless completeness is checked independently. For example, a singular test can return each fact with zero or multiple valid dimension matches. Unit fixtures test transformation logic against small controlled inputs before a full data build where the dbt version/adapter supports them.
+
+A model contract constrains output columns/types and supported constraints at the model boundary. Constraint enforcement varies by warehouse. Documentation carries descriptions, grain, units, owners, and the meaning of tests; it cannot substitute for their execution. Store artifacts such as the manifest and run results with the release so lineage and test outcomes refer to the same revision. `dbt build` respects graph dependencies and supported test-blocking behavior, but it does not automatically make every model in the project one atomic publication transaction.
+
 ## Orchestrate intervals, not wall-clock guesses
 
 Airflow expresses workflows and supports historical backfill with reprocessing and concurrency controls. Dagster is an alternative to evaluate when asset definitions and their dependencies are the preferred organizing model. Use one initially.
@@ -68,6 +168,14 @@ flowchart LR
   V -->|fail| Q[Keep candidate isolated]
   P --> R[Record run and lineage]
 ```
+
+### Airflow DAGs and Dagster assets
+
+An Airflow DAG expresses task dependencies. A logical date/data interval identifies the period of work; actual start time can be later because of scheduling or resource contention. A retry is another attempt at that interval. Explicitly pass interval boundaries and input versions into transformations, and use scheduler concurrency controls to keep a backfill from exhausting current-production capacity. Task success should follow durable output verification, not precede it.
+
+Dagster's asset-oriented model names the datasets and their dependencies, with partitions representing slices such as dates. A materialization records an asset update, and checks can evaluate its properties. This can make “which partitions are missing?” more natural than reasoning only from task execution. Choose using the operating questions and integrations you need; neither model eliminates transactional publication, data contracts, or source retention.
+
+If a task launches a warehouse query and times out while the query continues, starting another task attempt can create concurrent writers. Record the remote operation ID and reconcile its terminal state before issuing the same logical publication again. A scheduler retry policy is not a distributed cancellation protocol.
 
 ## Backfill exercise
 
@@ -100,3 +208,7 @@ Continue with [quality and SLOs](08-quality-contracts-slos.md).
 <!-- source: https://docs.getdbt.com/docs/build/data-tests | checked: 2026-09-10 | model data tests -->
 <!-- source: https://docs.getdbt.com/docs/mesh/govern/model-contracts | checked: 2026-09-10 | shape versus data tests and adapter constraint support -->
 <!-- source: https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/backfill.html | checked: 2026-09-10 | Airflow 3.3.1 backfill semantics at review -->
+<!-- source: https://docs.getdbt.com/docs/build/incremental-models | checked: 2026-09-10 | change selection, unique_key and full refresh -->
+<!-- source: https://docs.getdbt.com/docs/build/snapshots | checked: 2026-09-10 | timestamp/check strategies and observed history -->
+<!-- source: https://docs.getdbt.com/docs/build/jinja-macros | checked: 2026-09-10 | SQL generation and macros -->
+<!-- source: https://docs.dagster.io/guides/build/assets | checked: 2026-09-10 | assets, materializations and dependencies -->

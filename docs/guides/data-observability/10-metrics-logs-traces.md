@@ -70,6 +70,86 @@ For an illustrative 99.9% SLO, a 1% failure fraction burns budget at ten times t
 
 Prometheus Alertmanager adds routing, grouping, inhibition, and silencing. A silence is an operational action with an expiry and owner. It does not change historical SLO performance. Group notifications by actionable scope; one upstream incident should not automatically page every downstream owner independently.
 
+## Counter, gauge, histogram, and summary in one pipeline
+
+Use a counter for completed publication attempts because each observation adds an event. Use a gauge for current backlog because it rises and falls. Use a histogram for publication delay because threshold compliance and tail behavior matter. A summary with configured quantiles computes rank estimates at the observing client; those ranks cannot normally be combined into a correct fleet percentile.
+
+`rate(counter[5m])` estimates per-second increase while accounting for resets within the range. `increase(counter[1h])` estimates the increase over the range and can be fractional because Prometheus extrapolates to range boundaries. It is not an exact financial ledger. Apply `rate` to individual counters before summing so one process restart is not hidden inside an aggregate. Applying `rate` to a backlog gauge misinterprets decreases as counter behavior.
+
+Suppose process A's counter restarts while B keeps increasing. `sum(rate(...))` preserves the separate reset information; subtracting two fleet-wide summed samples can confuse A's reset with negative work. Keep exact scheduled-publication counts in the ledger and use the metric for operational trends with declared coverage.
+
+## Classic histogram buckets: work the percentile by hand
+
+Classic bucket counts are cumulative: `le="5"` includes every observation in `le="1"`. Retain `le` when aggregating buckets across instances with compatible boundaries. This Python fixture computes cumulative counts and linear interpolation for a deliberately uneven latency distribution.
+
+<!-- executable: histogram-math -->
+```python
+delays = [1, 2, 3, 4, 5, 10, 100, 200, 600, 900]
+bounds = [5, 100, 600, 1000]
+counts = [sum(value <= bound for value in delays) for bound in bounds]
+rank = 0.95 * len(delays)
+lower, upper = 600, 1000
+before, through = counts[2], counts[3]
+estimate = lower + (rank-before)/(through-before)*(upper-lower)
+assert counts == [5,7,9,10]
+assert estimate == 800
+print('cumulative_buckets:', counts)
+print('within_600_seconds: 9/10')
+print('interpolated_p95_seconds:', int(estimate))
+```
+
+Expected output:
+
+```text
+cumulative_buckets: [5, 7, 9, 10]
+within_600_seconds: 9/10
+interpolated_p95_seconds: 800
+```
+
+The actual final observation is 900, while the bucket-based p95 estimate is 800. The histogram knows a rank lies inside `(600,1000]`, not the exact observation positions. Add a bucket at a contractual threshold when measuring its fraction directly. A classic histogram with ten finite boundaries has eleven buckets including `+Inf`, plus count and sum: thirteen series per non-bucket label combination before optional implementation-specific additions.
+
+For the course's declared 600-second threshold, use:
+
+```promql
+sum by (dataset) (rate(data_publication_delay_seconds_bucket{le="600"}[5m]))
+/
+sum by (dataset) (rate(data_publication_delay_seconds_count[5m]))
+```
+
+This includes recorded observations, not intervals that never emitted a delay. Pair it with the independent schedule check. Native histograms change the representation; validate the producer, backend, query, and recording-rule chain together before migrating.
+
+## Cardinality: multiplication and churn
+
+Fifty datasets × four outcomes × three environments × twenty instances is 12,000 combinations. Thirteen classic-histogram constituent series can raise that illustrative maximum to 156,000. Multiplying by one million event IDs makes the metric unsuitable for its aggregate purpose. Real combinations may be sparse, but churn keeps creating historical series even after old workers disappear.
+
+Keep bounded dataset labels in metrics and run/event identities in logs or traces. An exemplar can connect a representative metric observation to a trace where supported; it is a navigation sample, not every request in the bucket. Normalize unique URL paths to route templates where supported so identifiers do not become metric labels accidentally.
+
+## Loki: select streams, then parse log lines
+
+Loki's labels identify streams. A bounded service/environment selector reduces the search space; LogQL can then filter and parse log bodies. Keep `run_id` in the structured body or supported structured metadata rather than creating one indexed stream per run. For JSON lines carrying `reason` and `run_id`, use:
+
+```logql
+{service_name="study-pipeline", environment="study"}
+  |= "QUALITY_FAILED"
+  | json
+  | reason="QUALITY_FAILED"
+  | __error__=""
+```
+
+These stream labels are a course ingestion contract, not guaranteed OTel-to-Loki defaults. The line filter reduces candidate text, parsing exposes fields, and the reason filter selects the event. Inspect parse errors separately; excluding them here must not erase a malformed-log incident. Restrict the time window before widening service scope.
+
+## Tempo, Jaeger, and Grafana correlation
+
+Tempo stores/query-serves traces and provides TraceQL for supported span/trace searches. Jaeger is another tracing backend with its own deployment and query behavior. Recover the execution path after metrics/logs identify a bounded incident. Find a trace by ID or known service, duration, and operation attributes; absence can mean sampling, propagation loss, ingestion failure, or retention expiration.
+
+Grafana joins investigation steps through configured data sources and links. A panel needs a time range, units, aggregation scope, and a route to the relevant run or diagnostic query. A five-minute rate panel and a daily cumulative table can both be correct while appearing inconsistent. Align windows and populations before explaining the difference as loss.
+
+## Recording rules and Alertmanager behavior
+
+A recording rule precomputes a stable PromQL expression, trading storage/evaluation work for predictable query cost and consistent definitions. Version it when its denominator changes. An alerting rule evaluates a condition; a `for` duration requires it to remain active before firing. Scrape gaps, evaluation cadence, and missing series affect that lifecycle, so test absent data and resets alongside positive examples.
+
+Alertmanager groups related notifications, routes them to receivers, applies inhibition, and manages time-bounded silences. Inhibition can reduce duplicate paging when an upstream failure explains downstream symptoms, but it does not mark datasets healthy. Group by an actionable owner/dataset scope; grouping every alert only by environment can hide which consumer needs repair. The [SLO lab](../../../docs-site/content/observability-sre/02-correlation-and-alert-lab.md) contains complete recording/alert rules and promtool fixtures.
+
 ## Failure exercise and interpretation
 
 In an isolated lab, stop publication while keeping the HTTP endpoint alive. The dataset view should fail while service availability can remain healthy. Restore publication and verify the missing intervals are repaired. Then stop telemetry export while publication continues. The observation-coverage view should report unknown evidence, not a sudden zero error rate.
@@ -99,3 +179,5 @@ Continue with [lineage and governance](11-lineage-governance.md).
 <!-- source: https://prometheus.io/docs/prometheus/latest/querying/functions/ | checked: 2026-09-10 | rate, increase, histogram_quantile -->
 <!-- source: https://prometheus.io/docs/alerting/latest/alertmanager/ | checked: 2026-09-10 | grouping, routing, inhibition and silences -->
 <!-- source: https://grafana.com/docs/loki/latest/get-started/labels/ | checked: 2026-09-10 | label cardinality -->
+<!-- source: https://grafana.com/docs/loki/latest/query/log_queries/ | checked: 2026-09-10 | stream selection and parsing -->
+<!-- source: https://grafana.com/docs/tempo/latest/traceql/ | checked: 2026-09-10 | trace search -->
