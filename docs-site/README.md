@@ -1,6 +1,8 @@
 # Public learning guide
 
-This English learning gateway presents DevOps, AIOps, and Data & Observability as separate paths on GitHub Pages. It starts with application developers who can create files and run basic shell commands, then connects terminology, normal behavior, failure, recovery, and operational judgment. The catalog contains 21 topics and 94 documents: 15 DevOps topics with 57 documents, 5 AIOps topics with 20 documents, and one Data & Observability topic with 17 chapters.
+This learning gateway presents DevOps, AIOps, and Data & Observability as separate paths on GitHub Pages. It starts with application developers who can create files and run basic shell commands, then connects terminology, normal behavior, failure, recovery, and operational judgment. The catalog contains 21 topics and 94 documents: 15 DevOps topics with 57 documents, 5 AIOps topics with 20 documents, and one Data & Observability topic with 17 chapters.
+
+The header's Korean/English buttons switch navigation, path and topic introductions, search labels, and diagram controls. The preference survives reload when local storage is available. Articles, titles, summaries, code, and diagram labels remain in English, and search indexes that English text. Interface translations live in `src/i18n.js`; they do not alter source documents or send content to a translation service. See the [language-switch acceptance criteria](../docs/specs/2026-09-11-document-language-switch.md).
 
 - Public URL: <https://nohdol97.github.io/nohdol-study/>
 - Public content: `docs-site/content/<topic>/` and the explicitly selected `docs/guides/data-observability/` course

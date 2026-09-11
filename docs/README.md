@@ -30,6 +30,7 @@ This directory is a MOC (Map of Content) that connects nohdol-study's decisions 
 
 | specs | situation | Target |
 |---|---|---|
+| [Documentation language switch](specs/2026-09-11-document-language-switch.md) | implemented | Korean/English interface, translated navigation metadata, persistence, and English article boundary |
 | [Data course technical depth](specs/2026-09-10-data-course-depth.md) | implemented | Per-mechanism explanations, source coverage map, worked examples, local SDK/SQL/dbt verification, and managed-platform exercises |
 | [Documentation review specification](specs/2026-09-10-documentation-review.md) | implemented | Whole-catalog review, labeled results, regression checks, and historical status clarification |
 | [2026-09-10-data-observability-learning-path](specs/2026-09-10-data-observability-learning-path.md) | implemented | Seventeen source-reviewed chapters in docs/, third public path, executable fixtures, browser checks, and Pages deployment |

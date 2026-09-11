@@ -239,6 +239,7 @@ export async function buildSite({
       copyFile(path.join(SITE_ROOT, 'src', 'index.html'), path.join(outputPath, 'index.html')),
       copyFile(path.join(SITE_ROOT, 'src', 'styles.css'), path.join(outputPath, 'assets', 'styles.css')),
       copyFile(path.join(SITE_ROOT, 'src', 'app.js'), path.join(outputPath, 'assets', 'app.js')),
+      copyFile(path.join(SITE_ROOT, 'src', 'i18n.js'), path.join(outputPath, 'assets', 'i18n.js')),
       copyFile(
         path.join(SITE_ROOT, 'node_modules', 'mermaid', 'dist', 'mermaid.min.js'),
         path.join(outputPath, 'assets', 'mermaid.min.js'),

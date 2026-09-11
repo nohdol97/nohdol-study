@@ -1,3 +1,5 @@
+import { message, savedLanguage, rememberLanguage, localizeCatalog, LANGUAGES } from './i18n.js';
+
 const main = document.querySelector('#main-content');
 const searchInput = document.querySelector('#site-search');
 const themeButton = document.querySelector('.theme-toggle');
@@ -5,7 +7,15 @@ const diagramViewer = document.querySelector('#diagram-viewer');
 const diagramCanvas = diagramViewer.querySelector('[data-diagram-canvas]');
 const diagramZoomOutput = diagramViewer.querySelector('[data-diagram-zoom]');
 
+const languageStorage = {
+  getItem: (key) => localStorage.getItem(key),
+  setItem: (key, value) => localStorage.setItem(key, value),
+};
+let language = savedLanguage(languageStorage);
+const t = (key, values) => message(key, language, values);
+
 let content;
+let originalContent;
 let documentsById;
 let topicsById;
 let pathsById;
@@ -90,11 +100,11 @@ function documentCard(document, index) {
   return `
     <a class="document-card" href="#doc=${encodeURIComponent(document.id)}">
       <span class="document-index">${String(index + 1).padStart(2, '0')}</span>
-      <span class="document-card-copy">
+      <span class="document-card-copy" lang="en">
         <strong>${escapeHtml(document.title)}</strong>
         <span>${escapeHtml(document.summary)}</span>
       </span>
-      <span class="reading-time">${document.readingMinutes} min</span>
+      <span class="reading-time">${t('{count} min', {count: document.readingMinutes})}</span>
       <span class="arrow" aria-hidden="true">↗</span>
     </a>`;
 }
@@ -106,10 +116,10 @@ function renderHome() {
     <section class="hero shell">
       <div class="hero-copy">
         <p class="eyebrow"><span></span>${escapeHtml(content.site.eyebrow)}</p>
-        <h1>Learn operations.<br /><em>Go deeper.</em></h1>
+        <h1>${t('Learn operations.')}<br /><em>${t('Go deeper.')}</em></h1>
         <p class="hero-description">${escapeHtml(content.site.description)}</p>
         <button class="hero-search-trigger" type="button" data-focus-search>
-          <span>Search a topic or keyword</span>
+          <span>${t('Search a topic or keyword')}</span>
           <kbd>/</kbd>
         </button>
       </div>
@@ -117,23 +127,23 @@ function renderHome() {
         <div class="orbit-ring orbit-ring-one"></div>
         <div class="orbit-ring orbit-ring-two"></div>
         <span class="orbit-core">S</span>
-        <span class="orbit-label orbit-label-one">learn</span>
-        <span class="orbit-label orbit-label-two">connect</span>
-        <span class="orbit-label orbit-label-three">operate</span>
+        <span class="orbit-label orbit-label-one">${t('learn')}</span>
+        <span class="orbit-label orbit-label-two">${t('connect')}</span>
+        <span class="orbit-label orbit-label-three">${t('operate')}</span>
       </div>
-      <div class="hero-stats" aria-label="Documentation overview">
-        <div><strong>${content.paths.length}</strong><span>learning paths</span></div>
-        <div><strong>${content.topics.length}</strong><span>topics</span></div>
-        <div><strong>${documentCount}</strong><span>documents</span></div>
+      <div class="hero-stats" aria-label="${t('Documentation overview')}">
+        <div><strong>${content.paths.length}</strong><span>${t('learning paths')}</span></div>
+        <div><strong>${content.topics.length}</strong><span>${t('topics')}</span></div>
+        <div><strong>${documentCount}</strong><span>${t('documents')}</span></div>
       </div>
     </section>
     <section class="topics-section shell" aria-labelledby="topics-title">
       <div class="section-heading">
         <div>
-          <p class="eyebrow"><span></span>CHOOSE A PATH</p>
-          <h2 id="topics-title">Choose your learning path</h2>
+          <p class="eyebrow"><span></span>${t('CHOOSE A PATH')}</p>
+          <h2 id="topics-title">${t('Choose your learning path')}</h2>
         </div>
-        <p>Build systems with DevOps, connect models with AIOps, and follow events into trusted data with Data &amp; Observability.</p>
+        <p>${t('Build systems with DevOps, connect models with AIOps, and follow events into trusted data with Data & Observability.')}</p>
       </div>
       <div class="path-grid">
         ${content.paths
@@ -153,7 +163,7 @@ function renderHome() {
                 <p>${escapeHtml(learningPath.description)}</p>
               </div>
               <div class="topic-card-footer">
-                <span>${topics.length} topics · ${pathDocumentCount} documents</span>
+                <span>${t('{topics} topics · {documents} documents', {topics: topics.length, documents: pathDocumentCount})}</span>
                 <span class="topic-line"></span>
               </div>
             </a>`;
@@ -164,9 +174,9 @@ function renderHome() {
     </section>
     <section class="principle-strip">
       <div class="shell principle-inner">
-        <p>Build operational judgment through essential terms, working examples, failures, and recovery.</p>
-        <strong>Problem → Key terms → Baseline → Failure → Recovery → Operational judgment</strong>
-        <span>Start with plain explanations and connect technical terms to observable evidence.</span>
+        <p>${t('Build operational judgment through essential terms, working examples, failures, and recovery.')}</p>
+        <strong>${t('Problem → Key terms → Baseline → Failure → Recovery → Operational judgment')}</strong>
+        <span>${t('Start with plain explanations and connect technical terms to observable evidence.')}</span>
       </div>
     </section>`;
 }
@@ -177,7 +187,7 @@ function renderPath(learningPath) {
   main.innerHTML = `
     <section class="topic-hero accent-${escapeHtml(learningPath.accent)}">
       <div class="shell">
-        <a class="back-link" href="#"><span aria-hidden="true">←</span> All learning paths</a>
+        <a class="back-link" href="#"><span aria-hidden="true">←</span> ${t('All learning paths')}</a>
         <div class="topic-hero-grid">
           <div>
             <p class="eyebrow"><span></span>${escapeHtml(learningPath.number)} / ${escapeHtml(learningPath.label)}</p>
@@ -185,7 +195,7 @@ function renderPath(learningPath) {
           </div>
           <div class="topic-intro">
             <p>${escapeHtml(learningPath.description)}</p>
-            <span>${topics.length} topics · ${topics.reduce((total, topic) => total + topic.documentIds.length, 0)} documents</span>
+            <span>${t('{topics} topics · {documents} documents', {topics: topics.length, documents: topics.reduce((total, topic) => total + topic.documentIds.length, 0)})}</span>
           </div>
         </div>
       </div>
@@ -193,17 +203,17 @@ function renderPath(learningPath) {
     <section class="topics-section shell" aria-labelledby="path-topics-title">
       <div class="section-heading">
         <div>
-          <p class="eyebrow"><span></span>CHOOSE A TOPIC</p>
-          <h2 id="path-topics-title">${escapeHtml(learningPath.title)} learning path</h2>
+          <p class="eyebrow"><span></span>${t('CHOOSE A TOPIC')}</p>
+          <h2 id="path-topics-title">${t('{title} learning path', {title: escapeHtml(learningPath.title)})}</h2>
         </div>
-        <p>Each topic moves from problems and terms to observing a baseline, isolating failures, verifying recovery, and making operational decisions.</p>
+        <p>${t('Each topic moves from problems and terms to observing a baseline, isolating failures, verifying recovery, and making operational decisions.')}</p>
       </div>
-      <ol class="learning-ladder" aria-label="Learning stages from foundations to operational judgment">
-        <li><strong>1. Problems and terms</strong><span>Understand the problem and unpack unfamiliar terms.</span></li>
-        <li><strong>2. Observe the baseline</strong><span>Run a small example and record evidence of normal behavior.</span></li>
-        <li><strong>3. Isolate the failure</strong><span>Change one condition and find where the flow stops.</span></li>
-        <li><strong>4. Verify recovery</strong><span>Check that the expected user outcome has been restored.</span></li>
-        <li><strong>5. Operational judgment</strong><span>Explain tradeoffs in security, reliability, performance, and cost.</span></li>
+      <ol class="learning-ladder" aria-label="${t('Learning stages from foundations to operational judgment')}">
+        <li><strong>${t('1. Problems and terms')}</strong><span>${t('Understand the problem and unpack unfamiliar terms.')}</span></li>
+        <li><strong>${t('2. Observe the baseline')}</strong><span>${t('Run a small example and record evidence of normal behavior.')}</span></li>
+        <li><strong>${t('3. Isolate the failure')}</strong><span>${t('Change one condition and find where the flow stops.')}</span></li>
+        <li><strong>${t('4. Verify recovery')}</strong><span>${t('Check that the expected user outcome has been restored.')}</span></li>
+        <li><strong>${t('5. Operational judgment')}</strong><span>${t('Explain tradeoffs in security, reliability, performance, and cost.')}</span></li>
       </ol>
       <div class="topic-grid">
         ${topics
@@ -219,7 +229,7 @@ function renderPath(learningPath) {
                 <h3>${escapeHtml(topic.title)}</h3>
                 <p>${escapeHtml(topic.description)}</p>
               </div>
-              <div class="topic-card-footer"><span>${topic.documentIds.length} documents</span><span class="topic-line"></span></div>
+              <div class="topic-card-footer"><span>${t('{count} documents', {count: topic.documentIds.length})}</span><span class="topic-line"></span></div>
             </a>`,
           )
           .join('')}
@@ -242,7 +252,7 @@ function renderTopic(topic) {
           </div>
           <div class="topic-intro">
             <p>${escapeHtml(topic.description)}</p>
-            <span>${documents.length} documents · About ${documents.reduce((sum, item) => sum + item.readingMinutes, 0)} min</span>
+            <span>${t('{documents} documents · About {minutes} min', {documents: documents.length, minutes: documents.reduce((sum, item) => sum + item.readingMinutes, 0)})}</span>
           </div>
         </div>
       </div>
@@ -250,10 +260,10 @@ function renderTopic(topic) {
     <section class="topic-documents shell" aria-labelledby="topic-documents-title">
       <div class="section-heading compact">
         <div>
-          <p class="eyebrow"><span></span>READING ORDER</p>
-          <h2 id="topic-documents-title">Follow this reading order</h2>
+          <p class="eyebrow"><span></span>${t('READING ORDER')}</p>
+          <h2 id="topic-documents-title">${t('Follow this reading order')}</h2>
         </div>
-        <p>Start with the roadmap, then work through the concepts and labs in order.</p>
+        <p>${t('Start with the roadmap, then work through the concepts and labs in order.')}</p>
       </div>
       <div class="document-list">
         ${documents.map(documentCard).join('')}
@@ -272,10 +282,10 @@ function renderDocument(currentDocument) {
 
   main.innerHTML = `
     <div class="reader-shell shell">
-      <aside class="reader-sidebar" aria-label="${escapeHtml(topic.title)} documents">
+      <aside class="reader-sidebar" aria-label="${t('{title} documents', {title: escapeHtml(topic.title)})}">
         <a class="back-link" href="#topic=${encodeURIComponent(topic.id)}"><span aria-hidden="true">←</span> ${escapeHtml(topic.title)}</a>
         <p class="reader-sidebar-label">${escapeHtml(topic.number)} / ${escapeHtml(topic.label)}</p>
-        <nav>
+        <nav lang="en">
           ${documents
             .map(
               (item, index) => `
@@ -290,24 +300,25 @@ function renderDocument(currentDocument) {
       <article class="reader-article">
         <header class="article-header">
           <p class="article-kicker">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</p>
-          <h1>${escapeHtml(currentDocument.title)}</h1>
-          <p class="article-summary">${escapeHtml(currentDocument.summary)}</p>
+          <h1 lang="en">${escapeHtml(currentDocument.title)}</h1>
+          <p class="article-summary" lang="en">${escapeHtml(currentDocument.summary)}</p>
           <div class="article-meta">
-            <span>About ${currentDocument.readingMinutes} min</span>
+            <span>${t('About {count} min', {count: currentDocument.readingMinutes})}</span>
             <span>${escapeHtml(currentDocument.path)}</span>
-            <a href="${escapeHtml(content.site.repository)}/blob/main/${encodeURI(currentDocument.path)}">Markdown source ↗</a>
+            <a href="${escapeHtml(content.site.repository)}/blob/main/${encodeURI(currentDocument.path)}">${t('Markdown source ↗')}</a>
           </div>
         </header>
-        <div class="markdown-body">${currentDocument.html}</div>
-        <nav class="article-pagination" aria-label="Previous and next documents">
+        ${language === 'ko' ? `<p class="document-language-note">${t('The language switch changes the site interface. Document text and code remain in English.')}</p>` : ''}
+        <div class="markdown-body" lang="en">${currentDocument.html}</div>
+        <nav class="article-pagination" aria-label="${t('Previous and next documents')}">
           ${
             previous
-              ? `<a class="previous" href="#doc=${encodeURIComponent(previous.id)}"><span>Previous document</span><strong>← ${escapeHtml(previous.title)}</strong></a>`
+              ? `<a class="previous" href="#doc=${encodeURIComponent(previous.id)}"><span>${t('Previous document')}</span><strong lang="en">← ${escapeHtml(previous.title)}</strong></a>`
               : '<span></span>'
           }
           ${
             next
-              ? `<a class="next" href="#doc=${encodeURIComponent(next.id)}"><span>Next document</span><strong>${escapeHtml(next.title)} →</strong></a>`
+              ? `<a class="next" href="#doc=${encodeURIComponent(next.id)}"><span>${t('Next document')}</span><strong lang="en">${escapeHtml(next.title)} →</strong></a>`
               : '<span></span>'
           }
         </nav>
@@ -348,11 +359,11 @@ async function renderMermaidDiagrams(root) {
 function decorateDiagram(node) {
   if (node.querySelector('.diagram-expand-button')) return;
   node.classList.add('diagram-interactive');
-  node.title = 'Click to expand';
+  node.title = t('Click to expand');
   const button = document.createElement('button');
   button.className = 'diagram-expand-button';
   button.type = 'button';
-  button.innerHTML = '<span aria-hidden="true">↗</span> Expand';
+  button.innerHTML = `<span aria-hidden="true">↗</span> ${t('Expand')}`;
   button.addEventListener('click', (event) => {
     event.stopPropagation();
     openDiagramViewer(node);
@@ -390,7 +401,7 @@ function openDiagramViewer(node) {
   if (!svg) return;
   enlargedDiagram = svg.cloneNode(true);
   enlargedDiagram.removeAttribute('style');
-  enlargedDiagram.setAttribute('aria-label', 'Enlarged diagram');
+  enlargedDiagram.setAttribute('aria-label', t('Enlarged diagram'));
   diagramNaturalWidth = diagramWidth(svg);
   diagramCanvas.replaceChildren(enlargedDiagram);
   if (!diagramViewer.open) diagramViewer.showModal();
@@ -426,14 +437,14 @@ function searchDocuments(query) {
 
 function renderSearch(query) {
   const results = searchDocuments(query);
-  document.title = `“${query}” search — ${content.site.title}`;
+  document.title = t('“{query}” search — {title}', {query, title: content.site.title});
   main.innerHTML = `
     <section class="search-results shell">
-      <a class="back-link" href="#"><span aria-hidden="true">←</span> Gateway</a>
+      <a class="back-link" href="#"><span aria-hidden="true">←</span> ${t('Gateway')}</a>
       <div class="search-results-heading">
-        <p class="eyebrow"><span></span>SEARCH ALL DOCUMENTS</p>
+        <p class="eyebrow"><span></span>${t('SEARCH ALL DOCUMENTS')}</p>
         <h1>“${escapeHtml(query)}”</h1>
-        <p>${results.length} documents found.</p>
+        <p>${t('{count} documents found.', {count: results.length})}</p>
       </div>
       <div class="search-result-list">
         ${
@@ -445,19 +456,20 @@ function renderSearch(query) {
                   return `
                     <a class="search-result" href="#doc=${encodeURIComponent(document.id)}">
                       <span class="search-result-topic">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</span>
-                      <strong>${escapeHtml(document.title)}</strong>
-                      <p>${escapeHtml(document.summary)}</p>
-                      <span class="reading-time">About ${document.readingMinutes} min</span>
+                      <strong lang="en">${escapeHtml(document.title)}</strong>
+                      <p lang="en">${escapeHtml(document.summary)}</p>
+                      <span class="reading-time">${t('About {count} min', {count: document.readingMinutes})}</span>
                     </a>`;
                 })
                 .join('')
-            : `<div class="empty-state"><strong>No matching documents.</strong><p>Try different wording or a shorter keyword.</p></div>`
+            : `<div class="empty-state"><strong>${t('No matching documents.')}</strong><p>${t('Try different wording or a shorter keyword.')}</p></div>`
         }
       </div>
     </section>`;
 }
 
 function renderRoute() {
+  if (!content) return;
   closeDiagramViewer();
   if (activeQuery.trim()) {
     renderSearch(activeQuery.trim());
@@ -472,13 +484,65 @@ function renderRoute() {
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
+
+function applyLanguageChrome() {
+  document.documentElement.lang = language;
+  document.querySelectorAll('[data-i18n]').forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
+  });
+  for (const [attribute, dataKey] of [['aria-label', 'i18nAria'], ['title', 'i18nTitle'], ['placeholder', 'i18nPlaceholder']]) {
+    document.querySelectorAll('[data-' + dataKey.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()) + ']').forEach((node) => {
+      node.setAttribute(attribute, t(node.dataset[dataKey]));
+    });
+  }
+  document.querySelectorAll('[data-language]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.language === language));
+  });
+}
+
+function setLanguage(next) {
+  if (!LANGUAGES.includes(next) || next === language) return;
+  language = next;
+  rememberLanguage(languageStorage, language);
+  applyLanguageChrome();
+  if (content) {
+    const position = window.scrollY;
+    updateContentLanguage();
+    renderRoute();
+    window.scrollTo({top: position, behavior: 'instant'});
+  }
+}
+
+function updateContentLanguage() {
+  content = localizeCatalog(originalContent, language);
+  documentsById = new Map(content.documents.map((item) => [item.id, item]));
+  topicsById = new Map(content.topics.map((item) => [item.id, item]));
+  pathsById = new Map(content.paths.map((item) => [item.id, item]));
+}
+
+function initializeLanguage() {
+  document.querySelectorAll('[data-i18n]').forEach((node) => { node.dataset.i18n = node.textContent.trim(); });
+  for (const [attribute, dataKey, selector] of [
+    ['aria-label', 'i18nAria', '[data-i18n-aria]'],
+    ['title', 'i18nTitle', '[data-i18n-title]'],
+    ['placeholder', 'i18nPlaceholder', '[data-i18n-placeholder]'],
+  ]) {
+    document.querySelectorAll(selector).forEach((node) => { node.dataset[dataKey] = node.getAttribute(attribute); });
+  }
+  document.querySelectorAll('[data-language]').forEach((button) => {
+    button.addEventListener('click', () => setLanguage(button.dataset.language));
+  });
+  applyLanguageChrome();
+}
+
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem('docs-theme', theme);
+  try { localStorage.setItem('docs-theme', theme); } catch { /* Theme still applies in memory. */ }
 }
 
 function initializeTheme() {
-  const saved = localStorage.getItem('docs-theme');
+  let saved;
+  try { saved = localStorage.getItem('docs-theme'); } catch { return; }
   if (saved === 'light' || saved === 'dark') setTheme(saved);
 }
 
@@ -486,10 +550,8 @@ async function initialize() {
   try {
     const response = await fetch('./content.json');
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    content = await response.json();
-    documentsById = new Map(content.documents.map((document) => [document.id, document]));
-    topicsById = new Map(content.topics.map((topic) => [topic.id, topic]));
-    pathsById = new Map(content.paths.map((learningPath) => [learningPath.id, learningPath]));
+    originalContent = await response.json();
+    updateContentLanguage();
     document.querySelectorAll('[data-repository-link]').forEach((link) => {
       link.href = content.site.repository;
       link.target = '_blank';
@@ -497,7 +559,7 @@ async function initialize() {
     });
     renderRoute();
   } catch (error) {
-    main.innerHTML = `<div class="error-state"><strong>Could not load the documents.</strong><p>${escapeHtml(error.message)}</p></div>`;
+    main.innerHTML = `<div class="error-state"><strong>${t('Could not load the documents.')}</strong><p>${escapeHtml(error.message)}</p></div>`;
   }
 }
 
@@ -550,5 +612,6 @@ themeButton.addEventListener('click', () => {
   setTheme(current ? (current === 'dark' ? 'light' : 'dark') : prefersDark ? 'light' : 'dark');
 });
 
+initializeLanguage();
 initializeTheme();
 initialize();

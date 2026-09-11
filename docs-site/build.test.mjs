@@ -132,7 +132,13 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(index, /id="diagram-viewer"/);
   assert.match(index, /<html lang="en">/);
   const styles = await readFile(path.join(outputPath, 'assets', 'styles.css'), 'utf8');
-  assert.doesNotMatch(index + app + styles + JSON.stringify(content), /[\u3131-\u318e\uac00-\ud7a3]/u);
+  assert.doesNotMatch(JSON.stringify(content), /[\u3131-\u318e\uac00-\ud7a3]/u);
+  assert.match(index, /data-language="ko"/);
+  assert.match(index, /data-language="en"/);
+  const i18n = await readFile(path.join(outputPath, 'assets', 'i18n.js'), 'utf8');
+  assert.equal(i18n, await readFile(path.join(SITE_ROOT, 'src', 'i18n.js'), 'utf8'));
+  assert.match(app, /from '\.\/i18n\.js'/);
+  assert.match(styles, /\.language-switch/);
   assert.match(index, /placeholder="Search docs"/);
   assert.match(index, /aria-label="Diagram zoom controls"/);
   assert.match(index, /data-diagram-action="zoom-in"/);

@@ -45,6 +45,7 @@
 - **Concept → execution → recovery**: Each new topic is explained starting with key terms and actual situations, and distinguishes between what the command results prove and what is not yet known. Local·Plan only·AWS optional Boundary, failure judgment, and cleanup are provided according to [spec ](docs/specs/2026-09-03-infra-specialist-public-learning-path.md)
 - **Convert links to internal documents**: Rather than linking user-specified official pages to external links, evolve them into self-contained explanations with relationship/sequence diagrams, executable YAML/`kubectl` examples, failure examples, and recovery flows.
 - **Integrated search and reading screen**: Title/summary/text search, URL direct link, responsive Markdown viewer and dark mode provided
+- **Korean/English interface**: Header buttons switch menus, path and topic introductions, search labels, and diagram controls, with a saved preference. Document text and code remain in English. See the [language-switch specification](docs/specs/2026-09-11-document-language-switch.md).
 - **Public scope gate**: Only build Git tracking Markdown specified in `docs-site/catalog.json`, reject `vault/`·`REGISTRY.md`·`_workspace/`
 - **Pages artifact deployment**: Deploy only `docs-site/dist/` tested by GitHub Actions without committing the artifact.
 - **Direct delivery**: General changes that have passed verification are pushed to `origin/main` without waiting for separate approval and confirmed through Pages deployment.
