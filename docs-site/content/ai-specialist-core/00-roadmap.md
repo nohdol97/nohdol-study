@@ -9,14 +9,14 @@ The AI ​​Specialist path is not a process of listing model names. It is a si
 
 ## Starting point for beginners
 
-| New term | Plain-language meaning |
-|---|---|
-| representation | Converting the original input into a numeric structure that the model can calculate |
-| objective | Loss that the model learns to reduce and business optimization goals |
-| inference | The process of calculating the result of a new input with a learned model |
-| baseline | Simple comparison criteria that complex models should actually win |
-| retrieval | The step of finding candidate evidence from external sources before creating an answer |
-| evaluation | Measuring correctness, quality, cost, safety, and delay under fixed conditions |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| representation | Converting the original input into a numeric structure that the model can calculate | Convert raw inputs into features on which a model can learn useful distinctions. |
+| objective | Loss that the model learns to reduce and business optimization goals | Make the target of learning explicit and check whether it aligns with the business outcome. |
+| inference | The process of calculating the result of a new input with a learned model | Apply a trained model to new inputs under measured latency, capacity, and quality constraints. |
+| baseline | Simple comparison criteria that complex models should actually win | Require a complex model to improve on a simple reference under the same evaluation conditions. |
+| retrieval | The step of finding candidate evidence from external sources before creating an answer | Find relevant external evidence when the answer depends on information beyond model parameters. |
+| evaluation | Measuring correctness, quality, cost, safety, and delay under fixed conditions | Decide whether a candidate meets explicit quality and operational requirements before promotion. |
 
 ```mermaid
 flowchart LR

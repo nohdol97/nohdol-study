@@ -4,14 +4,14 @@
 
 If you want others to be able to continue to use applications that are only running on your computer, you need a server, network, storage space, and access rights. AWS is a cloud service that creates these resources when needed and pays based on usage. It's convenient, but if you don't know what account you created, it can lead to security incidents and unexpected costs.
 
-| New term | Plain-language meaning |
-|---|---|
-| account | Largest ownership boundary where AWS resources, costs, and permissions gather |
-| Region | Geographic regions served by AWS |
-| resource | Objects created and managed by AWS, such as servers, networks, and storage. |
-| IAM | Permissions structure that determines who can do what AWS tasks |
-| VPC | Isolated network that sets addresses and communication rules directly within AWS |
-| role | A bundle of privileges that a person or program temporarily assumes to perform a permitted task. |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| account | Largest ownership boundary where AWS resources, costs, and permissions gather | Separate ownership, billing, and permission boundaries for environments or organizations. |
+| Region | Geographic regions served by AWS | Choose geographic placement according to latency, residency, and recovery requirements. |
+| resource | Objects created and managed by AWS, such as servers, networks, and storage. | Choose the exact AWS object whose ownership, cost, and permissions must be managed. |
+| IAM | Permissions structure that determines who can do what AWS tasks | Grant specific AWS actions to the right identities and diagnose denied requests. |
+| VPC | Isolated network that sets addresses and communication rules directly within AWS | Control workload addressing and allowed communication paths inside an AWS network. |
+| role | A bundle of privileges that a person or program temporarily assumes to perform a permitted task. | Delegate task-specific permissions without handing every workload permanent user credentials. |
 
 In the first step, the currently logged in subject and already existing networks are read without creating any resources. Afterwards, separate judgments are made on “who gave permission” and “whether the network path was opened.”
 

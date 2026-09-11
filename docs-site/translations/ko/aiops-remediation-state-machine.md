@@ -2,14 +2,14 @@
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| operation | 한 remediation 요청과 그 실행·검증 결과를 대표하는 기록 |
-| plan | 실행할 target과 예상 diff, precondition을 고정한 변경안 |
-| commit | 승인된 plan을 실제 상태 변경으로 전환하는 단계 |
-| reconciliation | 원하는 상태와 실제 상태를 다시 읽어 operation을 수렴시키는 과정 |
-| lease | 같은 target을 동시에 바꾸는 executor를 제한하는 시간 있는 소유권 |
-| verification receipt | action 뒤 어떤 query와 기준으로 성공·실패를 판정했는지 남긴 기록 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| operation | 한 remediation 요청과 그 실행·검증 결과를 대표하는 기록 | 재시도가 발생해도 복구 요청 하나의 승인·실행·검증 상태를 추적할 때 쓴다. |
+| plan | 실행할 target과 예상 diff, precondition을 고정한 변경안 | 상태를 바꾸는 실행을 허용하기 전에 대상·차이·가정을 검토할 때 쓴다. |
+| commit | 승인된 plan을 실제 상태 변경으로 전환하는 단계 | 조치 검토와 승인된 실제 효과의 발생 단계를 분리할 때 쓴다. |
+| reconciliation | 원하는 상태와 실제 상태를 다시 읽어 operation을 수렴시키는 과정 | 응답이 불확실할 때 실제 상태를 확인한 뒤 작업을 반복·수정해 복구한다. |
+| lease | 같은 target을 동시에 바꾸는 executor를 제한하는 시간 있는 소유권 | 실행자들의 임시 소유권을 조정하며 오래된 쓰기를 거부해야 할 때는 fencing도 사용한다. |
+| verification receipt | action 뒤 어떤 query와 기준으로 성공·실패를 판정했는지 남긴 기록 | 나중에 복구 판정을 감사할 수 있도록 측정값과 판정 기준을 남긴다. |
 
 ## 먼저 이해하기
 

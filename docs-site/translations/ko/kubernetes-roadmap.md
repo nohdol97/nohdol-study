@@ -4,16 +4,16 @@
 
 애플리케이션을 container 하나로 실행하는 데 성공했다고 가정하자. 사용자가 늘어 같은 container를 세 개 실행해야 하고, 하나가 멈추면 자동으로 교체하고, 새 version을 서비스 중단 없이 배포하려면 여러 상태를 계속 확인해야 한다. Kubernetes는 이 반복 운영을 API와 controller로 자동화한다.
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
-|---|---|
-| 컨테이너(container) | 애플리케이션 process와 실행에 필요한 파일을 격리해 실행하는 단위 |
-| 이미지(image) | container를 만들 때 사용하는 읽기 전용 실행 재료 |
-| 클러스터(cluster) | Kubernetes가 함께 관리하는 control plane과 여러 server의 집합 |
-| 노드(Node) | container가 실제로 실행되는 server |
-| 파드(Pod) | Kubernetes가 한 Node에 함께 배치하고 관리하는 container 묶음 |
-| 네임스페이스(Namespace) | 한 cluster 안에서 관련 resource의 이름·조회·권한·정책 범위를 나누는 논리적 경계 |
-| kubectl | 사용자가 Kubernetes API에 조회·변경 요청을 보내는 명령행 도구 |
-| 원하는 상태(desired state) | “Pod 세 개가 계속 준비돼 있어야 한다”처럼 사용자가 선언한 목표 |
+| 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| 컨테이너(container) | 애플리케이션 process와 실행에 필요한 파일을 격리해 실행하는 단위 | 의존성과 격리된 프로세스를 함께 구성해 애플리케이션 실행 환경을 재현할 때 쓴다. |
+| 이미지(image) | container를 만들 때 사용하는 읽기 전용 실행 재료 | 개발·시험·운영 환경에 검토한 동일한 애플리케이션 내용을 배포할 때 쓴다. |
+| 클러스터(cluster) | Kubernetes가 함께 관리하는 control plane과 여러 server의 집합 | 여러 서버의 애플리케이션 배치와 복구를 함께 조정할 때 필요하다. |
+| 노드(Node) | container가 실제로 실행되는 server | 워크로드가 실행될 계산 자원과 호스트 장애의 위치를 파악할 때 필요하다. |
+| 파드(Pod) | Kubernetes가 한 Node에 함께 배치하고 관리하는 container 묶음 | 밀접하게 연결된 컨테이너를 같은 곳에 배치하고 함께 관리할 때 쓴다. |
+| 네임스페이스(Namespace) | 한 cluster 안에서 관련 resource의 이름·조회·권한·정책 범위를 나누는 논리적 경계 | 클러스터 안에서 팀별 자원을 정리하고 이름·권한·할당량의 적용 범위를 나눌 때 쓴다. |
+| kubectl | 사용자가 Kubernetes API에 조회·변경 요청을 보내는 명령행 도구 | 워크로드 문제를 진단하면서 클러스터 객체를 조회하고 선언한 변경을 전달할 때 쓴다. |
+| 원하는 상태(desired state) | “Pod 세 개가 계속 준비돼 있어야 한다”처럼 사용자가 선언한 목표 | 컨트롤러가 목표와 실제 상태를 비교해 차이를 반복해서 복구하게 할 때 쓴다. |
 
 처음에는 local cluster에 웹 서버 한 개를 배포하고, Pod를 지웠을 때 왜 새 Pod가 생기는지만 확인한다. 그 경험 위에서 API object, controller, scheduler와 network를 차례로 배운다.
 

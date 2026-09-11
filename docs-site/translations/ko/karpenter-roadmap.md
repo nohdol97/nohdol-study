@@ -4,15 +4,15 @@
 
 Kubernetes에 Pod를 만들었지만 실행할 Node에 CPU나 메모리가 부족하면 Pod는 `Pending`, 즉 배치되지 못하고 기다리는 상태가 된다. 사람이 EC2 서버를 추가할 수도 있지만 요청이 갑자기 늘고 줄 때마다 수동으로 맞추기는 어렵다. Karpenter는 기다리는 Pod의 요구를 읽고 적합한 AWS EC2 자원을 선택해 Node를 준비한다.
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
-|---|---|
-| Pod | Kubernetes가 함께 실행하고 관리하는 container 묶음 |
-| Node | Pod가 실제로 실행되는 서버 |
-| 스케줄러(scheduler) | 어떤 Pod를 어느 Node에 둘지 결정하는 Kubernetes 구성 요소 |
-| 요청량(request) | Pod가 실행되기 위해 필요하다고 선언한 CPU·메모리 양 |
-| NodePool | Karpenter가 만들 수 있는 Node의 공통 조건과 한도 |
-| NodeClaim | 특정 Node 하나가 필요하다는 Karpenter의 구체적인 요청 |
-| 중단(disruption) | 교체·통합·만료 등을 위해 실행 중인 Node를 안전하게 비우고 없애는 과정 |
+| 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| Pod | Kubernetes가 함께 실행하고 관리하는 container 묶음 | 밀접하게 연결된 컨테이너를 같은 곳에 배치하고 함께 관리할 때 쓴다. |
+| Node | Pod가 실제로 실행되는 서버 | 워크로드가 실행될 계산 자원과 호스트 장애의 위치를 파악할 때 필요하다. |
+| 스케줄러(scheduler) | 어떤 Pod를 어느 Node에 둘지 결정하는 Kubernetes 구성 요소 | 대기 중인 Pod를 선언된 자원·제약에 맞는 Node에 배치할 때 필요하다. |
+| 요청량(request) | Pod가 실행되기 위해 필요하다고 선언한 CPU·메모리 양 | 배치와 용량 계획이 막연한 추측 대신 선언한 자원 요구를 기준으로 동작하도록 한다. |
+| NodePool | Karpenter가 만들 수 있는 Node의 공통 조건과 한도 | Karpenter가 만들 수 있는 Node의 범위를 정해 자원 공급이 운영 정책을 따르게 한다. |
+| NodeClaim | 특정 Node 하나가 필요하다는 Karpenter의 구체적인 요청 | 자원 공급 시도 하나를 요청한 용량부터 생성된 Node까지 추적할 때 쓴다. |
+| 중단(disruption) | 교체·통합·만료 등을 위해 실행 중인 Node를 안전하게 비우고 없애는 과정 | 워크로드 가용성을 고려하는 퇴거 절차로 Node를 교체·제거할 때 쓴다. |
 
 이 과정은 Kubernetes scheduling과 AWS 기초를 배운 뒤 진행한다. 처음에는 `Pod가 기다림 → Node 요청 생성 → EC2 시작 → Pod 실행` 한 경로만 따라가고, 그다음 비용 절감을 위한 Node 제거가 서비스에 미치는 영향을 배운다.
 

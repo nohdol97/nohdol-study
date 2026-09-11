@@ -4,14 +4,14 @@ A quality alert becomes actionable when it identifies affected outputs, processi
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Job / run / dataset | A processing definition / one execution / an identified data collection |
-| Facet | An extensible metadata structure in OpenLineage |
-| Column lineage | A relationship between input and output columns |
-| RBAC / ABAC | Access based on roles / access based on attributes and policy |
-| Classification | A label such as public, internal, or sensitive that informs handling rules |
-| Audit | A retained record of access and administrative actions |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Job / run / dataset | A processing definition / one execution / an identified data collection | Distinguish a recurring transformation from one execution and the datasets it reads or writes. |
+| Facet | An extensible metadata structure in OpenLineage | Attach structured lineage details without forcing every domain into a single fixed record shape. |
+| Column lineage | A relationship between input and output columns | Trace how sensitive or incorrect input columns affect published output fields. |
+| RBAC / ABAC | Access based on roles / access based on attributes and policy | Express who may access data using roles or evaluated attributes appropriate to the policy. |
+| Classification | A label such as public, internal, or sensitive that informs handling rules | Apply handling, access, and retention rules according to a dataset's sensitivity. |
+| Audit | A retained record of access and administrative actions | Investigate who accessed or changed protected resources and review policy enforcement afterward. |
 
 ## Understand the model first
 

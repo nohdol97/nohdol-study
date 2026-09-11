@@ -6,16 +6,16 @@ AIOps 진단이 “최근 배포가 원인일 가능성이 높다”고 말해�
 
 Google SRE는 잘 정의된 범위의 failover나 traffic switching은 자동화가 사람보다 빠르게 동작할 수 있다고 설명하면서도, 자동 절차가 상황을 악화시킬 수 있으므로 범위를 명확히 제한해야 한다고 경고한다. 이 주제는 자동화를 금지하거나 무조건 확대하지 않는다. 추천만 하는 단계, 사람이 승인해 실행하는 단계, 좁은 범위에서 자동 실행하는 단계를 evidence에 따라 승급한다. 실행 identity·sandbox·durable operation의 선수 계약은 [Enterprise AI와 안전한 에이전트 실행](../../content/ai-transformation-platform/04-enterprise-agent-operations.md), 중복·결과 불명의 일반 원리는 [백엔드 분산 워크플로](../../content/backend-engineering/04-distributed-workflows.md)와 공유한다.
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
-|---|---|
-| remediation | 사용자 피해를 줄이거나 정상 상태를 되찾기 위한 운영 조치 |
-| runbook | 사전 조건·명령·검증·중단·되돌리기를 적은 실행 절차 |
-| dry-run | 실제 상태를 바꾸지 않고 계획과 권한·대상을 검토하는 실행 |
-| blast radius | 조치가 영향을 줄 수 있는 service·region·tenant·resource 범위 |
-| abort condition | 결과가 나빠지거나 증거가 부족할 때 즉시 멈추는 조건 |
-| rollback pointer | 되돌아갈 검증된 revision이나 configuration 식별자 |
-| idempotency key | 같은 조치 요청이 중복돼도 한 operation으로 수렴시키는 키 |
-| outcome verification | 명령 성공이 아니라 사용자 결과와 시스템 상태가 회복됐는지 확인하는 절차 |
+| 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| remediation | 사용자 피해를 줄이거나 정상 상태를 되찾기 위한 운영 조치 | 범위·검증·중단 기준이 정해진 조치로 합의한 사용자 결과를 복원한다. |
+| runbook | 사전 조건·명령·검증·중단·되돌리기를 적은 실행 절차 | 사고의 압박 속에서도 대응 절차를 반복·검토할 수 있게 한다. |
+| dry-run | 실제 상태를 바꾸지 않고 계획과 권한·대상을 검토하는 실행 | 실제 변경 전에 대상·권한·예상 효과를 검사한다. |
+| blast radius | 조치가 영향을 줄 수 있는 service·region·tenant·resource 범위 | 실험·조치의 범위를 제한해 실수 하나가 영향을 주는 사용자·자원 수를 줄인다. |
+| abort condition | 결과가 나빠지거나 증거가 부족할 때 즉시 멈추는 조건 | 영향을 악화시키거나 안전 가정이 성립하지 않는 대응을 중단한다. |
+| rollback pointer | 되돌아갈 검증된 revision이나 configuration 식별자 | 되돌려야 할 수 있는 변경을 시작하기 전에 검증된 복구 대상을 정한다. |
+| idempotency key | 같은 조치 요청이 중복돼도 한 operation으로 수렴시키는 키 | 시간 초과·재시도 뒤의 반복 조치 요청을 하나의 논리적 작업으로 식별한다. |
+| outcome verification | 명령 성공이 아니라 사용자 결과와 시스템 상태가 회복됐는지 확인하는 절차 | 명령 종료만으로 성공을 선언하지 않고 사용자 결과에서 복구를 확인한다. |
 
 ## 조치를 세 등급으로 나누기
 

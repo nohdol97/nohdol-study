@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **commit**: This is an action that confirms the transaction change as final success.
-- **rollback**: This is an action to cancel changes made in a transaction and return to the state before starting.
-- **MVCC**: This is a method of managing which versions of rows are shown to each other by transactions executing simultaneously.
-- **WAL**: A log that records changes in order before changing the data file. It serves as the basis for failure recovery and replication.
-- **VACUUM**: This is the task of organizing old row space that is no longer needed for any transaction so that it can be used again.
-- **query plan**: The table access order and method chosen by PostgreSQL to execute SQL.
+- **commit**: This is an action that confirms the transaction change as final success. **Why it matters / when to use it:** Confirm that a transaction's accepted changes reached its configured success and durability boundary.
+- **rollback**: This is an action to cancel changes made in a transaction and return to the state before starting. **Why it matters / when to use it:** Cancel an unfinished transaction's changes after an error or failed business check.
+- **MVCC**: This is a method of managing which versions of rows are shown to each other by transactions executing simultaneously. **Why it matters / when to use it:** Give concurrent transactions defined visibility rules without treating every read as an exclusive write lock.
+- **WAL**: A log that records changes in order before changing the data file. It serves as the basis for failure recovery and replication. **Why it matters / when to use it:** Retain ordered change records needed to recover or replicate durable database progress.
+- **VACUUM**: This is the task of organizing old row space that is no longer needed for any transaction so that it can be used again. **Why it matters / when to use it:** Make obsolete row space reusable and manage PostgreSQL's transaction-age maintenance needs.
+- **query plan**: The table access order and method chosen by PostgreSQL to execute SQL. **Why it matters / when to use it:** Find expensive scans, joins, and estimate errors before changing indexes or SQL.
 
 At first, only follow one flow: `BEGIN → execute SQL → COMMIT`. MVCC answers “what is visible” and WAL answers “what can be recreated after a failure,” so they are not combined into the same function.
 

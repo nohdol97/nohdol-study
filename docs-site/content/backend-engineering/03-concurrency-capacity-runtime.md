@@ -7,14 +7,14 @@ When requests are slow, increasing the number of workers may increase throughput
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| concurrency | Number of tasks started at the same time and not yet finished |
-| throughput | Number of tasks successfully completed per unit of time |
-| queue | A collection of tasks waiting to be executed |
-| backpressure | Control that slows or rejects upstream input when downstream is saturated |
-| saturation | A state in which useful throughput does not increase even when a resource receives more work. |
-| GC pause | The amount of time application progress is affected while the runtime searches for memory to reclaim. |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| concurrency | Number of tasks started at the same time and not yet finished | Set limits on in-flight work so resource usage and queue growth remain controllable. |
+| throughput | Number of tasks successfully completed per unit of time | Measure completed useful work when comparing capacity or performance changes. |
+| queue | A collection of tasks waiting to be executed | Buffer temporary differences between arrival and processing rates, with a bounded backlog policy. |
+| backpressure | Control that slows or rejects upstream input when downstream is saturated | Keep overload from growing without bound by slowing or rejecting input at a defined boundary. |
+| saturation | A state in which useful throughput does not increase even when a resource receives more work. | Identify when adding work no longer improves throughput and starts increasing delay or failure. |
+| GC pause | The amount of time application progress is affected while the runtime searches for memory to reclaim. | Explain latency spikes that average CPU or throughput measurements can hide. |
 
 1. Measure arrival, latency, and in-flight together under normal load.
 2. Decide where to accept and where to reject overload.

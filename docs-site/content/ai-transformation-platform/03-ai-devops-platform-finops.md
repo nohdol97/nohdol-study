@@ -10,14 +10,14 @@ AI platform is not a collection of installations that manages the GPU cluster on
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| platform contract | Common input of resource·identity·artifact·SLO that workload must declare |
-| quota | Limits on resources and priorities that a team/project can occupy |
-| gang scheduling | Coordinating admission or placement for the required worker group so partial allocation does not strand the job |
-| autoscaling | Control to adjust the number of workload·nodes according to observed demand |
-| chargeback / showback | How to bill or visualize the cost spent to the team |
-| unit economics | The true cost of creating one successful unit of work |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| platform contract | Common input of resource·identity·artifact·SLO that workload must declare | Require workloads to declare the resources, identity, and service promises the platform must enforce. |
+| quota | Limits on resources and priorities that a team/project can occupy | Limit one tenant's consumption so other teams retain their allocated capacity. |
+| gang scheduling | Coordinating admission or placement for the required worker group so partial allocation does not strand the job | Avoid occupying scarce resources with a distributed job that cannot start its required worker group. |
+| autoscaling | Control to adjust the number of workload·nodes according to observed demand | Adapt capacity to changing demand while checking startup delay and downstream bottlenecks. |
+| chargeback / showback | How to bill or visualize the cost spent to the team | Expose or allocate shared costs so teams can make accountable usage decisions. |
+| unit economics | The true cost of creating one successful unit of work | Compare designs by the cost of successful work rather than raw hardware utilization alone. |
 
 1. Define the self-service API and guardrail first.
 2. Connect infrastructure costs with verified output.

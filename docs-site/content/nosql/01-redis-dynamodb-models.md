@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **source of truth**: This is the original data that will ultimately be judged correct when other copies are incorrect.
-- **cache**: A copy of the result that is temporarily stored nearby to reduce slow lookup of the original.
-- **eviction**: This is an operation to remove some keys according to a set policy when memory is insufficient.
-- **persistence**: This method leaves data on a separate storage device so that it can be recovered even if the process is terminated or restarted.
-- **partition**: A unit that divides a lot of data into several storage areas.
-- **secondary index**: An additional index maintained to find data using conditions other than the primary key.
+- **source of truth**: This is the original data that will ultimately be judged correct when other copies are incorrect. **Why it matters / when to use it:** Resolve disagreements between caches, replicas, and other copies using an authoritative record.
+- **cache**: A copy of the result that is temporarily stored nearby to reduce slow lookup of the original. **Why it matters / when to use it:** Reduce repeated origin work for results that can be safely reused for a defined period.
+- **eviction**: This is an operation to remove some keys according to a set policy when memory is insufficient. **Why it matters / when to use it:** Keep a memory-limited cache operating by choosing which entries can be discarded.
+- **persistence**: This method leaves data on a separate storage device so that it can be recovered even if the process is terminated or restarted. **Why it matters / when to use it:** Recover required state after restart instead of relying solely on process memory.
+- **partition**: A unit that divides a lot of data into several storage areas. **Why it matters / when to use it:** Spread storage or processing work while defining the resulting ordering and access boundaries.
+- **secondary index**: An additional index maintained to find data using conditions other than the primary key. **Why it matters / when to use it:** Support additional query patterns without scanning all items by the primary key layout.
 
 At first, consider the case of storing the login session in Redis and the case of retrieving orders in DynamoDB separately. Before comparing the function tables of the two products, first write down the results when data disappears and the commonly used queries.
 

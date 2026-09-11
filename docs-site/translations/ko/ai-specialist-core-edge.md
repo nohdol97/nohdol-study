@@ -8,14 +8,14 @@
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| pruning | weight·channel·block 일부를 제거하거나 0으로 만들어 sparsity를 높이는 방법 |
-| quantization | 실수 값을 더 낮은 bit 정수·부동소수 표현으로 근사하는 방법 |
-| distillation | 큰 teacher의 output·feature를 작은 student 학습 신호로 사용하는 방법 |
-| calibration | quantization range나 confidence를 대표 데이터에서 맞추는 과정 |
-| structured sparsity | channel·block처럼 hardware가 이용하기 쉬운 단위의 희소성 |
-| target artifact | model뿐 아니라 runtime·precision·operator·device 조건이 고정된 배포 묶음 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| pruning | weight·channel·block 일부를 제거하거나 0으로 만들어 sparsity를 높이는 방법 | 기여가 적은 구성 요소를 제거해 모델 축소를 시도하고 정확도·실행 시간 개선을 측정한다. |
+| quantization | 실수 값을 더 낮은 bit 정수·부동소수 표현으로 근사하는 방법 | 대상 런타임이 낮은 정밀도를 적절히 지원할 때 모델 저장·연산 비용을 줄인다. |
+| distillation | 큰 teacher의 output·feature를 작은 student 학습 신호로 사용하는 방법 | 큰 교사 모델을 제공하기에 비용이 높을 때 유용한 동작을 작은 모델로 옮긴다. |
+| calibration | quantization range나 confidence를 대표 데이터에서 맞추는 과정 | 배포 전에 대표 데이터로 양자화 범위를 정하거나 신뢰도 값을 평가한다. |
+| structured sparsity | channel·block처럼 hardware가 이용하기 쉬운 단위의 희소성 | 제거할 모델 구조를 대상 하드웨어가 가속할 수 있는 패턴에 맞춘다. |
+| target artifact | model뿐 아니라 runtime·precision·operator·device 조건이 고정된 배포 묶음 | 모델과 실행 환경을 함께 고정해 배포 동작을 재현할 때 쓴다. |
 
 1. 정확도 baseline과 target hardware 측정 방법을 먼저 고정한다.
 2. 압축률이 아니라 end-to-end task와 device 결과로 승급을 판정한다.

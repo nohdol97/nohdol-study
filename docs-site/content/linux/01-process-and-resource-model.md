@@ -2,11 +2,11 @@
 
 ## Terms introduced in this chapter
 
-- **PID**: This is the number given by Linux to identify the running process. A restart usually changes things.
-- **file descriptor**: A small number that indicates a file or network connection opened by a process.
-- **socket**: A communication endpoint used by two processes to exchange data over the network.
-- **cgroup**: A Linux function that manages the usage and limits of resources such as CPU and memory by grouping multiple processes.
-- **RSS**: This is the approximate size of the area that the process is currently using in real memory.
+- **PID**: This is the number given by Linux to identify the running process. A restart usually changes things. **Why it matters / when to use it:** Attach measurements, signals, and listener ownership to the current process, especially after restarts.
+- **file descriptor**: A small number that indicates a file or network connection opened by a process. **Why it matters / when to use it:** Find leaked or exhausted handles when a process cannot open files or connections.
+- **socket**: A communication endpoint used by two processes to exchange data over the network. **Why it matters / when to use it:** Inspect communicating endpoints to locate missing listeners or stalled connections.
+- **cgroup**: A Linux function that manages the usage and limits of resources such as CPU and memory by grouping multiple processes. **Why it matters / when to use it:** Bound a workload's resource consumption so neighboring workloads retain capacity.
+- **RSS**: This is the approximate size of the area that the process is currently using in real memory. **Why it matters / when to use it:** Track resident-memory pressure and investigate growth before an out-of-memory failure.
 
 When reading for the first time, you only need to make three connections: “service name → current PID → socket and resource of that PID”. Check the detailed figures along with the actual output in the following command.
 

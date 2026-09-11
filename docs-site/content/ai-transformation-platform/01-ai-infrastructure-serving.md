@@ -8,14 +8,14 @@ AI workloads can run in pod form like CPU services, but the bottlenecks and fail
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| HBM / VRAM | High-bandwidth memory where GPU stores model·activation·KV cache |
-| data parallel | How model replicas process different batches and synchronize gradients |
-| tensor / pipeline parallel | A method of dividing the calculations and layers of one model into multiple devices |
-| collective | Communication performed by multiple GPUs together, such as AllReduce and AllGather |
-| continuous batching | Scheduling to exclude completed requests at each decode step and add new requests to the batch |
-| MFU | Utilization perspective that compares the effective model calculation amount to the maximum hardware calculation amount |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| HBM / VRAM | High-bandwidth memory where GPU stores model·activation·KV cache | Budget accelerator memory for weights, activations, and growing request state before admitting work. |
+| data parallel | How model replicas process different batches and synchronize gradients | Scale training across replicated models when the model fits each worker's memory. |
+| tensor / pipeline parallel | A method of dividing the calculations and layers of one model into multiple devices | Distribute a model that is too large or costly for one device, accounting for communication overhead. |
+| collective | Communication performed by multiple GPUs together, such as AllReduce and AllGather | Coordinate distributed tensor exchange so workers can produce consistent training updates. |
+| continuous batching | Scheduling to exclude completed requests at each decode step and add new requests to the batch | Use freed serving slots promptly as requests finish instead of waiting for a fixed batch to drain. |
+| MFU | Utilization perspective that compares the effective model calculation amount to the maximum hardware calculation amount | Check how effectively a training workload turns hardware capacity into useful model computation. |
 
 1. First write down the memory·compute·communication equation of the workload.
 2. It measures not only throughput but also queue·TTFT·TPOT·OOM·cost.

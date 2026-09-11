@@ -4,14 +4,14 @@
 
 Just because a program can access a database doesn't mean it needs the authority to delete all data. The first question of security is “Who is it?” and the second question is “What can we do?” This involves managing secret information such as passwords and evidence that the deployment file has not been changed.
 
-| New term | Plain-language meaning |
-|---|---|
-| identity | Information indicating who the person or program is that sent the request |
-| authentication | The process of verifying that the claimed identity is correct |
-| authorization | The process of determining whether a confirmed identity can perform a specific task |
-| policy | Rules that state which actions will be allowed or denied under what conditions |
-| secret information | Values ​​that, if exposed, may allow others to use the privileges |
-| artifact | Files resulting from build, such as container image or package to be deployed |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| identity | Information indicating who the person or program is that sent the request | Attribute actions to the requesting person or workload before applying permissions. |
+| authentication | The process of verifying that the claimed identity is correct | Reject impersonation before treating a claimed identity as established. |
+| authorization | The process of determining whether a confirmed identity can perform a specific task | Prevent an authenticated identity from performing actions outside its allowed scope. |
+| policy | Rules that state which actions will be allowed or denied under what conditions | Make access decisions repeatable and reviewable instead of relying on ad hoc exceptions. |
+| secret information | Values ​​that, if exposed, may allow others to use the privileges | Recognize values that require restricted access because possession may enable privileged actions. |
+| artifact | Files resulting from build, such as container image or package to be deployed | Deploy and verify a specific build result rather than an ambiguous source or mutable tag. |
 
 Initially, allow only one read operation and ensure that the other operations are actually denied. Afterwards, secret replacement and image verification are extended to the same life cycle of “who creates it, who uses it, and when is it disposed of?”
 

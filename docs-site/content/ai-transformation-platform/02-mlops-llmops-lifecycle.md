@@ -8,14 +8,14 @@ Rather than automatically executing a pipeline, MLOps is a system that reconstru
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| lineage | The relationship between which input, execution, and parent artifact the output came from |
-| registry | Source of truth that manages versioned artifacts and alias/metadata |
-| pipeline | The input, processing, learning, evaluation, and packaging steps are made into reproducible DAG. |
-| eval suite | Evaluation bundle with fixed dataset, metric, judge·policy, and threshold |
-| drift | Data·prediction·A phenomenon in which the distribution of work results differs from the baseline |
-| promotion | Decision to allow a candidate to pass through the gate and move to the limited serving stage |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| lineage | The relationship between which input, execution, and parent artifact the output came from | Trace an output to its inputs and runs when reproducing results or investigating changes. |
+| registry | Source of truth that manages versioned artifacts and alias/metadata | Select a reviewed artifact version and record which version an alias or deployment refers to. |
+| pipeline | The input, processing, learning, evaluation, and packaging steps are made into reproducible DAG. | Make multi-step learning workflows repeatable and inspectable instead of relying on notebook order. |
+| eval suite | Evaluation bundle with fixed dataset, metric, judge·policy, and threshold | Compare candidates under the same versioned examples and acceptance criteria. |
+| drift | Data·prediction·A phenomenon in which the distribution of work results differs from the baseline | Detect distribution changes that may invalidate a model's earlier evaluation or monitoring baseline. |
+| promotion | Decision to allow a candidate to pass through the gate and move to the limited serving stage | Prevent an unqualified candidate from reaching serving simply because its build succeeded. |
 
 1. Connect the ID of dataset→run→artifact→suite→bundle→deployment.
 2. Automatic learning and automatic production promotion are set as separate permissions/gates.

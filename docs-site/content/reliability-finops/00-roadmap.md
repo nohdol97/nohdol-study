@@ -4,14 +4,14 @@
 
 The requirement to “never stop” is difficult to realistically design or cost. Instead, numbers and events determine how successful the user must be, how long it will take to recover if a failure occurs, and how much data can be lost. Together, we determine the necessary resources and costs to satisfy that goal.
 
-| New term | Plain-language meaning |
-|---|---|
-| availability | The extent to which users were actually able to use the functionality they needed |
-| failure | A state in which part of a system fails to perform its expected function. |
-| Redundancy | A design that places the same role in multiple places so that operation continues even if one fails |
-| RTO | Target time allowed for service to be available again after a failure begins |
-| RPO | The time range of data you allow yourself to go back in time and lose during the recovery process. |
-| Capacity | Amount of requests, storage, and processing that the system can handle |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| availability | The extent to which users were actually able to use the functionality they needed | Measure whether users can complete required actions, not merely whether servers are running. |
+| failure | A state in which part of a system fails to perform its expected function. | Identify a broken function precisely so recovery targets the user-visible problem. |
+| Redundancy | A design that places the same role in multiple places so that operation continues even if one fails | Keep an alternate serving path when one component fails, while checking shared dependencies. |
+| RTO | Target time allowed for service to be available again after a failure begins | Choose and rehearse a recovery approach that fits the maximum acceptable interruption. |
+| RPO | The time range of data you allow yourself to go back in time and lose during the recovery process. | Set backup and replication requirements according to how much recent progress may be lost. |
+| Capacity | Amount of requests, storage, and processing that the system can handle | Check whether expected demand and failure scenarios fit the available processing and storage. |
 
 In this process, numbers are not memorized. We set a goal for one small service, measure the actual recovery time and data loss in a failure experiment, and then explain what choices the results require regarding cost.
 

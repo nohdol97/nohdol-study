@@ -4,14 +4,14 @@
 
 If the ordering service directly calls the payment service, and the payment service stops for a moment, the order request may also fail. If you have a system that stores messages in the middle, the ordering service can leave the fact that “payment is required” and the payment service can process it after recovery. Instead, the application must deal with the problem of the same message coming twice or in a different order.
 
-| New term | Plain-language meaning |
-|---|---|
-| message | One piece of data to be passed to another program |
-| producer | program to send a message |
-| consumer | Program that receives and processes messages |
-| queue | A line that stores messages to be processed until they are received by the consumer. |
-| Acknowledgment | A signal to the messaging system that the consumer has finished processing |
-| idempotency | Even if the same request is processed multiple times, the results are the same as processing it once. |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| message | One piece of data to be passed to another program | Carry a task or event across a program boundary with an explicit processing contract. |
+| producer | program to send a message | Define who creates events and owns their identities, schemas, and publication behavior. |
+| consumer | Program that receives and processes messages | Define who turns delivered records into business effects and handles retries or duplicates. |
+| queue | A line that stores messages to be processed until they are received by the consumer. | Buffer temporary differences between arrival and processing rates, with a bounded backlog policy. |
+| Acknowledgment | A signal to the messaging system that the consumer has finished processing | Tell the broker when processing reached the agreed completion boundary so delivery can advance. |
+| idempotency | Even if the same request is processed multiple times, the results are the same as processing it once. | Allow uncertain requests to be retried without intentionally repeating the business effect. |
 
 The first lab inserts the same event twice and changes the result only once. After that, you learn step by step retry, failure message storage (DLQ), and reprocessing of past events.
 

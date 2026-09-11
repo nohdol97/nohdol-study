@@ -8,14 +8,14 @@ The vision model chooses how to preserve the local structure of pixels and how t
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| convolution | An operation to find local patterns by sharing a small kernel throughout the space. |
-| residual | Connections that help the learning path of a deep network by adding input to the transformation result. |
-| patch embedding | An expression that divides an image into patches and changes it like a token sequence. |
-| detection | The problem of predicting the class and location set of an object |
-| segmentation | Problem predicting the class of each pixel or area |
-| latent | Internal representation more compressed than observed data |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| convolution | An operation to find local patterns by sharing a small kernel throughout the space. | Learn local spatial patterns with shared weights instead of separate parameters at every location. |
+| residual | Connections that help the learning path of a deep network by adding input to the transformation result. | Help deep networks preserve information and train through shorter additive paths. |
+| patch embedding | An expression that divides an image into patches and changes it like a token sequence. | Convert image regions into sequence inputs that a transformer can process. |
+| detection | The problem of predicting the class and location set of an object | Locate individual objects when knowing only the image's overall class is insufficient. |
+| segmentation | Problem predicting the class of each pixel or area | Identify precise occupied regions when bounding boxes cannot express the required shape. |
+| latent | Internal representation more compressed than observed data | Perform learning or generation in a compact representation while checking which details are retained. |
 
 1. Starting from the output structure of the task, it is divided into classification·detection·segmentation·generation.
 2. Verify whether it is better than the baseline in the dataset split and target environment.

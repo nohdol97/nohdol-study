@@ -4,14 +4,14 @@
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| symptom node | 사용자가 실제로 겪은 오류·지연·기능 실패 |
-| evidence edge | 두 기록이 같은 요청·배포·자원·시간 창에 속함을 보여 주는 연결 |
-| correlation ID | 서로 다른 신호에서 같은 실행을 찾는 안정적인 식별자 |
-| observation window | incident 분석에 포함할 시작·종료 시간 범위 |
-| provenance | evidence가 어느 collector·query·revision에서 왔는지 나타내는 출처 |
-| cardinality | attribute가 가질 수 있는 서로 다른 값의 개수 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| symptom node | 사용자가 실제로 겪은 오류·지연·기능 실패 | 간접적인 인프라 신호를 따라가기 전에 사용자 피해에 조사 기준을 둔다. |
+| evidence edge | 두 기록이 같은 요청·배포·자원·시간 창에 속함을 보여 주는 연결 | 시간상 우연한 일치를 입증된 원인으로 오인하지 않도록 근거 관계를 명시한다. |
+| correlation ID | 서로 다른 신호에서 같은 실행을 찾는 안정적인 식별자 | 타임스탬프만으로 추측하지 않고 실행 하나에 대응하는 로그·트레이스를 찾는다. |
+| observation window | incident 분석에 포함할 시작·종료 시간 범위 | 같은 사고 기간의 신호를 비교하고 무관한 이벤트를 제외한다. |
+| provenance | evidence가 어느 collector·query·revision에서 왔는지 나타내는 출처 | 운영 주장을 뒷받침하는 수집 방법과 소스 리비전까지 추적할 때 쓴다. |
+| cardinality | attribute가 가질 수 있는 서로 다른 값의 개수 | 변동이 큰 속성을 텔레메트리에 추가하기 전에 그룹 수·저장량 증가를 예상한다. |
 
 ## 먼저 이해하기
 

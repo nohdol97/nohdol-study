@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **broker**: An intermediate system that receives messages from producers, stores them, and delivers them to consumers.
-- **delivery**: This is when the broker attempts to process a message to the consumer.
-- **retry**: Retrying failed processing according to certain conditions.
-- **DLQ**: A queue that separates messages that have not been processed multiple times from the main flow and stores them for investigation.
-- **ordering**: This is a guarantee that multiple messages are processed in the same order and within what scope they are sent by the producer.
-- **replay**: This is the process of rereading and processing messages or events stored in the past.
+- **broker**: An intermediate system that receives messages from producers, stores them, and delivers them to consumers. **Why it matters / when to use it:** Decouple producer and consumer availability through an intermediary with explicit delivery behavior.
+- **delivery**: This is when the broker attempts to process a message to the consumer. **Why it matters / when to use it:** State which losses or duplicates consumers must handle instead of equating receipt with completion.
+- **retry**: Retrying failed processing according to certain conditions. **Why it matters / when to use it:** Recover from transient failures when another attempt is safe and fits the remaining budget.
+- **DLQ**: A queue that separates messages that have not been processed multiple times from the main flow and stores them for investigation. **Why it matters / when to use it:** Isolate repeatedly failing records so responders can inspect and repair them without blocking all work.
+- **ordering**: This is a guarantee that multiple messages are processed in the same order and within what scope they are sent by the producer. **Why it matters / when to use it:** Preserve business sequences where processing a later event first would change the result.
+- **replay**: This is the process of rereading and processing messages or events stored in the past. **Why it matters / when to use it:** Rebuild derived state or recover missed processing from retained events under a deduplication policy.
 
 The fact that the message has been stored in the broker is different from the fact that the task has been processed. First, we look at where the process can end between the three steps `delivery → business change → acknowledgment`.
 

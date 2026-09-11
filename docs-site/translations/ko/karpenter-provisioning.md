@@ -2,12 +2,12 @@
 
 ## 이 장에서 처음 쓰는 말
 
-- **provisioning**: workload를 실행할 수 있도록 새 compute resource를 선택하고 준비하는 과정이다.
-- **requirement**: Pod나 NodePool이 허용하거나 요구하는 CPU architecture, zone, capacity type 같은 조건이다.
-- **capacity type**: EC2를 On-Demand나 Spot 같은 구매 방식으로 구분한 값이다.
-- **consolidation**: workload를 더 적은 Node로 안전하게 옮길 수 있을 때 불필요한 Node를 줄이는 동작이다.
-- **PDB**: 자발적인 중단 중 동시에 사용할 수 없게 되어도 되는 Pod 수를 제한하는 Kubernetes 정책이다.
-- **graceful termination**: process가 진행 중인 일을 정리할 시간을 주고 종료하는 절차다.
+- **provisioning**: workload를 실행할 수 있도록 새 compute resource를 선택하고 준비하는 과정이다. **왜 필요한가요 · 언제 쓰나요:** 실행 조건에 맞는 워크로드가 기존 Node에 들어가지 못할 때 계산 용량을 공급한다.
+- **requirement**: Pod나 NodePool이 허용하거나 요구하는 CPU architecture, zone, capacity type 같은 조건이다. **왜 필요한가요 · 언제 쓰나요:** 호환되지 않는 하드웨어·가용 영역·구매 옵션에 워크로드가 배치되는 것을 막는다.
+- **capacity type**: EC2를 On-Demand나 Spot 같은 구매 방식으로 구분한 값이다. **왜 필요한가요 · 언제 쓰나요:** 계산 자원을 선택할 때 워크로드의 중단 허용도와 구매 조건을 함께 판단한다.
+- **consolidation**: workload를 더 적은 Node로 안전하게 옮길 수 있을 때 불필요한 Node를 줄이는 동작이다. **왜 필요한가요 · 언제 쓰나요:** 남은 배치가 워크로드를 유지할 수 있음을 확인한 뒤 유휴 용량 비용을 줄인다.
+- **PDB**: 자발적인 중단 중 동시에 사용할 수 없게 되어도 되는 Pod 수를 제한하는 Kubernetes 정책이다. **왜 필요한가요 · 언제 쓰나요:** 계획된 유지 관리 중 동시 자발적 퇴거를 제한해 워크로드의 가용성 요구를 반영한다.
+- **graceful termination**: process가 진행 중인 일을 정리할 시간을 주고 종료하는 절차다. **왜 필요한가요 · 언제 쓰나요:** 프로세스를 멈추기 전에 진행 중인 작업을 끝내거나 복구 지점을 남길 시간을 준다.
 
 처음에는 Node를 만드는 경로와 Node를 없애는 경로를 따로 본다. 빠르게 만들 수 있다는 사실만으로 안전하게 줄일 수 있는 것은 아니며 두 경로의 성공 증거도 다르다.
 

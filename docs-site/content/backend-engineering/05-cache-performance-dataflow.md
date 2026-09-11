@@ -7,14 +7,14 @@ Caches reduce slow computations and transfers, but create new state, freshness, 
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| cache key | Identification information to retrieve stored responses or values |
-| freshness | Period and conditions for reuse without re-burying the original |
-| validator | An ETag-like value that conditionally checks if the stored value is still valid. |
-| invalidation | Removing and updating cache entries that should no longer be reused after changing the original |
-| stampede | A phenomenon in which many requests start calculating the original at the same time on the same miss. |
-| benchmark | Before-and-after measurements on a fixed workload and environment |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| cache key | Identification information to retrieve stored responses or values | Separate cached results by every input that changes their meaning or access scope. |
+| freshness | Period and conditions for reuse without re-burying the original | Decide whether a cached response may be reused or must be checked against its origin. |
+| validator | An ETag-like value that conditionally checks if the stored value is still valid. | Validate cached content conditionally without always transferring the full response again. |
+| invalidation | Removing and updating cache entries that should no longer be reused after changing the original | Stop serving obsolete cached data after the authoritative value changes. |
+| stampede | A phenomenon in which many requests start calculating the original at the same time on the same miss. | Recognize synchronized cache misses and protect the origin from a burst of duplicate recomputation. |
+| benchmark | Before-and-after measurements on a fixed workload and environment | Check whether an optimization improves the intended workload under comparable conditions. |
 
 1. First, determine the source of truth and the allowable stale window.
 2. Then design the cache key, population, invalidation and failure policies.

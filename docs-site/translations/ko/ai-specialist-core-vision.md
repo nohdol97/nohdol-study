@@ -8,14 +8,14 @@ Vision 모델은 pixel의 지역 구조를 어떻게 보존하고 전역 관계�
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| convolution | 작은 kernel을 공간 전체에 공유해 지역 pattern을 찾는 연산 |
-| residual | 입력을 변환 결과에 더해 깊은 network의 학습 경로를 돕는 연결 |
-| patch embedding | 이미지를 patch로 나누어 token sequence처럼 바꾸는 표현 |
-| detection | 객체의 class와 위치 집합을 예측하는 문제 |
-| segmentation | 각 pixel 또는 영역의 class를 예측하는 문제 |
-| latent | 관측 데이터보다 압축된 내부 표현 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| convolution | 작은 kernel을 공간 전체에 공유해 지역 pattern을 찾는 연산 | 위치마다 별도 파라미터를 두지 않고 공유 가중치로 지역적인 공간 패턴을 학습한다. |
+| residual | 입력을 변환 결과에 더해 깊은 network의 학습 경로를 돕는 연결 | 깊은 신경망에서 정보를 보존하고 더 짧은 덧셈 경로로 학습을 돕는다. |
+| patch embedding | 이미지를 patch로 나누어 token sequence처럼 바꾸는 표현 | 이미지 영역을 transformer가 처리할 수 있는 시퀀스 입력으로 바꾼다. |
+| detection | 객체의 class와 위치 집합을 예측하는 문제 | 이미지 전체의 분류만으로 부족하고 개별 물체의 위치가 필요할 때 쓴다. |
+| segmentation | 각 pixel 또는 영역의 class를 예측하는 문제 | 경계 상자만으로 필요한 모양을 표현할 수 없을 때 정확한 영역을 구분한다. |
+| latent | 관측 데이터보다 압축된 내부 표현 | 어떤 세부 정보가 보존되는지 확인하면서 압축된 표현에서 학습·생성을 수행한다. |
 
 1. task의 output 구조부터 classification·detection·segmentation·generation으로 나눈다.
 2. dataset split과 target 환경에서 baseline보다 나은지 검증한다.

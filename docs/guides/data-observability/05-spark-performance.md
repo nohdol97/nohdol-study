@@ -4,15 +4,15 @@ Writing a DataFrame transformation is the beginning. The deeper skill is explain
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Driver | The process coordinating the application and its work |
-| Executor | A worker process running tasks and holding execution data |
-| Job / stage / task | Work triggered by an action / a scheduling phase / one partition's work |
-| Shuffle | Redistribution of records across partitions, often through network and disk |
-| Skew | Uneven work or data distribution that creates slow partitions |
-| Spill | Moving intermediate data to disk when execution cannot keep it in memory |
-| AQE | Adaptive Query Execution: changing supported plan choices using runtime statistics |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Driver | The process coordinating the application and its work | Inspect planning and coordination bottlenecks separately from executor task processing. |
+| Executor | A worker process running tasks and holding execution data | Run partition tasks and identify worker memory, disk, and CPU limits during tuning. |
+| Job / stage / task | Work triggered by an action / a scheduling phase / one partition's work | Map a slow action to its scheduling boundary and the particular partitions causing delay. |
+| Shuffle | Redistribution of records across partitions, often through network and disk | Bring related keys together for joins or aggregation while accounting for network and disk work. |
+| Skew | Uneven work or data distribution that creates slow partitions | Recognize uneven partitions so tuning targets stragglers instead of only increasing all resources. |
+| Spill | Moving intermediate data to disk when execution cannot keep it in memory | Understand how an operation can continue beyond available memory and why disk I/O increases. |
+| AQE | Adaptive Query Execution: changing supported plan choices using runtime statistics | Adapt supported query-plan choices to runtime measurements when initial estimates are inaccurate. |
 
 ## Understand the model first
 

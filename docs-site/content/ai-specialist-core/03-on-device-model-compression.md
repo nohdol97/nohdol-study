@@ -8,14 +8,14 @@ The purpose of model compression is not to reduce the number of parameters, but 
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| pruning | How to increase sparsity by removing some of the weight·channel·block or setting it to 0 |
-| quantization | How to approximate real numbers with lower bit integer/floating point representations |
-| distillation | How to use the output/feature of a large teacher as a learning signal for a small student |
-| calibration | The process of adjusting the quantization range or confidence from representative data |
-| structured sparsity | Scarcity of units that are easy for hardware to use, such as channel·block |
-| target artifact | A bundle of deployments with fixed runtime·precision·operator·device conditions as well as model |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| pruning | How to increase sparsity by removing some of the weight·channel·block or setting it to 0 | Explore smaller models by removing low-value components, then measure accuracy and actual runtime gains. |
+| quantization | How to approximate real numbers with lower bit integer/floating point representations | Reduce model storage and arithmetic cost when the target runtime supports lower precision adequately. |
+| distillation | How to use the output/feature of a large teacher as a learning signal for a small student | Transfer useful teacher behavior to a smaller model when serving the teacher is too costly. |
+| calibration | The process of adjusting the quantization range or confidence from representative data | Choose quantization ranges or assess confidence using representative data before deployment. |
+| structured sparsity | Scarcity of units that are easy for hardware to use, such as channel·block | Align removed model structure with patterns the target hardware can accelerate. |
+| target artifact | A bundle of deployments with fixed runtime·precision·operator·device conditions as well as model | Reproduce deployment behavior by fixing the model together with its execution environment. |
 
 1. The accuracy baseline and target hardware measurement method are first fixed.
 2. Promotion is determined based on end-to-end task and device results, not compression ratio.

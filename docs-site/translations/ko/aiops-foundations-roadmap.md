@@ -6,15 +6,15 @@ AIOps는 운영 화면에 챗봇을 붙이거나 모든 alert를 AI에게 읽히
 
 먼저 [Observability와 SRE](../../content/observability-sre/00-roadmap.md)에서 metric·log·trace·SLO의 역할을 익힌다. [AI Specialist](../../content/ai-specialist-core/00-roadmap.md)의 model·retrieval 결과와 [AI Transformation](../../content/ai-transformation-platform/00-roadmap.md)의 bundle·deployment·tool operation ID도 이 단계에서 운영 신호와 만난다. 여기서는 여기에 Kubernetes event, deployment·configuration change, service owner와 topology를 더해 `incident bundle`을 만든다. 이 bundle이 있어야 [이상 탐지와 장애 진단](../../content/aiops-diagnosis/00-roadmap.md)이 매번 다른 데이터를 임의로 읽지 않고 같은 사건을 재현할 수 있다.
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
-|---|---|
-| AIOps | 운영 데이터를 분석해 탐지·진단·조치 결정을 보조하는 기술과 운영 절차 |
-| telemetry | 시스템이 밖으로 내보내는 metric·log·trace 같은 관측 데이터 |
-| semantic convention | 서로 다른 시스템이 같은 의미를 같은 이름과 단위로 기록하기 위한 약속 |
-| topology | service·dependency·deployment·resource가 어떻게 연결되는지 나타낸 관계 |
-| change event | 배포·설정·feature flag처럼 시스템 동작을 바꾼 사건 |
-| incident bundle | 한 장애의 시간 범위, 영향, 신호, 변경, 후보와 판단을 묶은 재현 가능한 기록 |
-| ground truth | 사건이 끝난 뒤 사람과 증거로 확정한 원인·영향·조치 label |
+| 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| AIOps | 운영 데이터를 분석해 탐지·진단·조치 결정을 보조하는 기술과 운영 절차 | 수동 분류만으로 감당하기 어려울 때 대응자의 운영 근거 정리와 판단을 돕는다. |
+| telemetry | 시스템이 밖으로 내보내는 metric·log·trace 같은 관측 데이터 | 문제 해결·서비스 측정·사고 분석에 사용할 관측 근거를 제공한다. |
+| semantic convention | 서로 다른 시스템이 같은 의미를 같은 이름과 단위로 기록하기 위한 약속 | 이름·단위·의미가 몰래 섞이지 않도록 여러 서비스의 신호를 연결·비교한다. |
+| topology | service·dependency·deployment·resource가 어떻게 연결되는지 나타낸 관계 | 사고 중 의존성을 따라 가능한 원인과 영향을 받는 사용자의 범위를 좁힌다. |
+| change event | 배포·설정·feature flag처럼 시스템 동작을 바꾼 사건 | 최근 배포·설정 변경이 관측한 증상을 설명할 수 있는지 검토한다. |
+| incident bundle | 한 장애의 시간 범위, 영향, 신호, 변경, 후보와 판단을 묶은 재현 가능한 기록 | 조사자들에게 범위가 정해진 같은 근거 집합을 제공해 진단을 재현·검토한다. |
+| ground truth | 사건이 끝난 뒤 사람과 증거로 확정한 원인·영향·조치 label | 모델 간 동의 대신 사후 확인한 사고 결과를 기준으로 진단 예측을 평가한다. |
 
 ## AIOps가 읽을 수 있는 운영 기반
 

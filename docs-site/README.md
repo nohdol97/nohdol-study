@@ -17,7 +17,7 @@ Only the selected course in `docs/guides/data-observability/` is published from 
 When a user provides an official documentation link, read the source and expand the appropriate chapter in the topic's learning sequence. Each article combines verified facts with an independently written explanation, comparisons, and examples. Consult the official documentation for exact version-specific APIs and the complete set of options.
 
 1. Start with a familiar problem that explains why the technology is needed.
-2. Introduce technical terms with plain-language definitions and their official English names.
+2. Introduce technical terms with plain-language definitions, official English names, and a concrete reason to use or understand them. Explain the problem addressed and the relevant situation; for failure phenomena, explain why recognizing them matters.
 3. Trace an input through the steps that produce a result.
 4. Specify prerequisites and establish a working baseline.
 5. Change one condition to cause a failure and compare observations before and after it.
@@ -37,6 +37,8 @@ DevOps implements the [DevOps public learning path specification](../docs/specs/
 The [Data & Observability course](../docs/guides/data-observability/00-roadmap.md) implements its [learning-path specification](../docs/specs/2026-09-10-data-observability-learning-path.md) and [technical depth specification](../docs/specs/2026-09-10-data-course-depth.md). It follows one evolving project through SQL/Python, Parquet, Iceberg/Delta, Spark, Kafka/CDC, dbt, quality/SLOs, OpenTelemetry, telemetry backends, lineage/governance, Databricks/Snowflake, AI evaluation, and recovery/cost engineering. Detailed sections teach the individual execution, state, query, instrumentation, policy, and evaluation mechanisms named in the shared curriculum. The course sources live in `docs/` at the user's request; no duplicate article tree is generated.
 
 ## Reading lab results
+
+Every glossary definition includes separate English and Korean purpose copy. Definition tables use a third column, `Why it matters / when to use it`; definition lists append the bold label with the same wording. The Korean label is `왜 필요한가요 · 언제 쓰나요`. The build extracts both purposes into the glossary and rejects missing copy in either language, including core technology entries. Preserve chapter-specific meanings when the same word appears in different domains. Rationale is teaching synthesis grounded in the chapter's explanation, not a claim that every named technology should always be adopted.
 
 Each hands-on chapter and Data & Observability exercise provides an **Example results** section. Runnable fixtures distinguish expected values from variable names, times, and IDs; plan-only assignments provide explicitly synthetic review receipts. Compare the normal, failed, and recovered states and record command exits as well as business outcomes. Never copy a worksheet receipt into an execution record.
 

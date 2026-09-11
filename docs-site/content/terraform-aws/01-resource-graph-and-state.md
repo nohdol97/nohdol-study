@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **HCL**: Syntax used in Terraform configuration files. Usually written in the `.tf` file.
-- **resource address**: A unique name that points to a resource within the configuration. Example: `aws_vpc.main`.
-- **remote object**: A resource that actually exists in a service outside of Terraform, such as AWS.
-- **binding**: A connection relationship in which the Terraform address and the actual remote object are the same.
-- **dependency**: A relationship in which one resource requires the results of another resource and must be created first.
-- **module**: A bundle of related Terraform settings with inputs and outputs.
+- **HCL**: Syntax used in Terraform configuration files. Usually written in the `.tf` file. **Why it matters / when to use it:** Express infrastructure blocks, inputs, and references in Terraform's configuration language.
+- **resource address**: A unique name that points to a resource within the configuration. Example: `aws_vpc.main`. **Why it matters / when to use it:** Select the exact configured object for inspection, import, or a planned change.
+- **remote object**: A resource that actually exists in a service outside of Terraform, such as AWS. **Why it matters / when to use it:** Distinguish the provider's real object from the local code and state describing it.
+- **binding**: A connection relationship in which the Terraform address and the actual remote object are the same. **Why it matters / when to use it:** Prevent one configured address from accidentally managing the wrong existing object.
+- **dependency**: A relationship in which one resource requires the results of another resource and must be created first. **Why it matters / when to use it:** Order creation and changes so required inputs exist before dependent work runs.
+- **module**: A bundle of related Terraform settings with inputs and outputs. **Why it matters / when to use it:** Reuse a reviewed infrastructure design with explicit inputs across environments.
 
 At first, you can think of configuration as a “blueprint” and state as “a ledger that lists which resources the items in the blueprint actually are.” However, the difference is that state is not a simple copy, but operational data for finding and changing actual resources.
 

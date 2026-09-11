@@ -4,14 +4,14 @@ Suppose a job writes twenty Parquet files and crashes after the twelfth. A direc
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Snapshot or version | An identified committed state that a reader can reference |
-| Manifest | Iceberg metadata describing a collection of content files |
-| Catalog | A mechanism for locating tables and coordinating their metadata, depending on implementation |
-| Optimistic concurrency | Prepare a change, validate against intervening changes, then commit or retry |
-| Compaction | Rewriting a file layout to reduce fragmentation without changing the intended rows |
-| Retention | How long versions and their supporting files remain available |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Snapshot or version | An identified committed state that a reader can reference | Reproduce a query or recovery decision against an identified committed table state. |
+| Manifest | Iceberg metadata describing a collection of content files | Plan Iceberg reads using recorded file metadata instead of discovering table membership from directory contents. |
+| Catalog | A mechanism for locating tables and coordinating their metadata, depending on implementation | Locate the authoritative table metadata and coordinate updates under the catalog's commit contract. |
+| Optimistic concurrency | Prepare a change, validate against intervening changes, then commit or retry | Allow concurrent preparation while rejecting or retrying changes that conflict at commit. |
+| Compaction | Rewriting a file layout to reduce fragmentation without changing the intended rows | Reduce excessive small-file overhead while preserving the intended table contents. |
+| Retention | How long versions and their supporting files remain available | Keep enough history for replay, investigation, and recovery without assuming storage can be unlimited. |
 
 ## Understand the model first
 

@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **provisioning**: The process of selecting and preparing new compute resources to run workloads.
-- **requirement**: Conditions such as CPU architecture, zone, and capacity type that Pod or NodePool allows or requires.
-- **capacity type**: A value that classifies EC2 by purchase method such as On-Demand or Spot.
-- **consolidation**: An operation to reduce unnecessary nodes when the workload can be safely moved to fewer nodes.
-- **PDB**: A Kubernetes policy that limits the number of Pods that can become unavailable simultaneously during a voluntary outage.
-- **graceful termination**: A procedure that terminates a process by giving it time to organize its ongoing work.
+- **provisioning**: The process of selecting and preparing new compute resources to run workloads. **Why it matters / when to use it:** Supply missing compute capacity when eligible workloads cannot fit existing Nodes.
+- **requirement**: Conditions such as CPU architecture, zone, and capacity type that Pod or NodePool allows or requires. **Why it matters / when to use it:** Prevent placement on incompatible hardware, zones, or purchasing options.
+- **capacity type**: A value that classifies EC2 by purchase method such as On-Demand or Spot. **Why it matters / when to use it:** Balance workload interruption tolerance and purchasing constraints when selecting compute capacity.
+- **consolidation**: An operation to reduce unnecessary nodes when the workload can be safely moved to fewer nodes. **Why it matters / when to use it:** Reduce unused capacity cost after proving the remaining placement can sustain the workload.
+- **PDB**: A Kubernetes policy that limits the number of Pods that can become unavailable simultaneously during a voluntary outage. **Why it matters / when to use it:** Limit concurrent voluntary evictions so planned maintenance respects the workload's availability needs.
+- **graceful termination**: A procedure that terminates a process by giving it time to organize its ongoing work. **Why it matters / when to use it:** Let in-flight work finish or checkpoint before the process is stopped.
 
 At first, the path to create a node and the path to destroy a node are viewed separately. Just because it can be made quickly doesn't mean it can be safely reduced, and the evidence for success for the two routes is different.
 

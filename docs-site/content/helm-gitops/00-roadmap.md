@@ -4,14 +4,14 @@
 
 To deploy an application in Kubernetes, you need several YAML files such as Deployment, Service, and Settings. If you copy and modify each development, verification, and operation environment, different files will increase and it will be difficult to know which values ​​have actually been deployed. Helm manages repeated YAML frames and changed values ​​by grouping them together.
 
-| New term | Plain-language meaning |
-|---|---|
-| manifest | YAML document listing what to create in Kubernetes |
-| chart | Helm package that bundles the manifest template and default values |
-| template | A document frame where the final YAML is created by entering values. |
-| values | Inputs such as image and replica number that vary depending on the environment |
-| release | A record of installing one chart to a cluster with specific values. |
-| GitOps | An operating method that continuously compares the actual cluster with the desired state written in Git |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| manifest | YAML document listing what to create in Kubernetes | Declare Kubernetes objects in a form that can be reviewed and reapplied. |
+| chart | Helm package that bundles the manifest template and default values | Package related Kubernetes resources as a configurable installation unit. |
+| template | A document frame where the final YAML is created by entering values. | Reuse a resource structure while varying environment-specific inputs. |
+| values | Inputs such as image and replica number that vary depending on the environment | Vary deployment choices without copying and editing the entire template. |
+| release | A record of installing one chart to a cluster with specific values. | Track which chart and values were installed so upgrades and rollback targets are identifiable. |
+| GitOps | An operating method that continuously compares the actual cluster with the desired state written in Git | Use reviewed Git changes as the operational target and continuously reconcile the cluster. |
 
 Helm is a tool that creates and installs YAML, and GitOps is a method of managing whether the actual state remains the same as Git. Rather than memorizing both concepts at once, first visually check the final YAML created by Helm and then learn automatic convergence of GitOps.
 

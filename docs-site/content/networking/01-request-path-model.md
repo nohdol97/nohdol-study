@@ -4,12 +4,12 @@
 
 ## Terms introduced in this chapter
 
-- **client**: This is the program that initiates the request. It can be a browser or `curl`.
-- **backend**: A server program that processes actual business logic and creates responses.
-- **packet**: A small unit through which the network divides and transmits data.
-- **TCP**: This is a rule that creates an ordered byte transmission path between two programs.
-- **TLS**: A rule that verifies the identity of the other server and encrypts communication content.
-- **load balancer**: It is an intermediate point that forwards incoming requests to one of several backends.
+- **client**: This is the program that initiates the request. It can be a browser or `curl`. **Why it matters / when to use it:** Locate request initiation and control the caller's timeout, retries, and observations.
+- **backend**: A server program that processes actual business logic and creates responses. **Why it matters / when to use it:** Separate request forwarding from the application that owns the business result.
+- **packet**: A small unit through which the network divides and transmits data. **Why it matters / when to use it:** Inspect loss, routing, and delivery at the network layer when requests fail.
+- **TCP**: This is a rule that creates an ordered byte transmission path between two programs. **Why it matters / when to use it:** Exchange an ordered byte stream when the application needs reliable transport between endpoints.
+- **TLS**: A rule that verifies the identity of the other server and encrypts communication content. **Why it matters / when to use it:** Protect traffic in transit and verify the intended peer before exchanging sensitive data.
+- **load balancer**: It is an intermediate point that forwards incoming requests to one of several backends. **Why it matters / when to use it:** Spread requests over available backends and remove unhealthy destinations from eligible traffic.
 
 The point of this chapter is not to memorize abbreviations, but to ensure that the results of the previous step become the input to the next step. If DNS doesn't give you an IP, there's nothing to try for a TCP connection yet.
 

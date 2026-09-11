@@ -6,13 +6,13 @@ Internet service is initially a running program. For example, if you run a web a
 
 There is no need to memorize many commands from the beginning. In this process, a program is executed on a small web server, a request is sent, an error is made on purpose, and the evidence left by the operating system is read.
 
-| New term | Plain-language meaning |
-|---|---|
-| Operating system (OS) | Basic software that divides resources between programs and CPU, memory, and disk |
-| process | One task in which the stored program is actually running |
-| service | A unit named Operation that starts a process and restarts it if it fails. |
-| port | A number that identifies which program will receive the network request |
-| kernel | A core part of the operating system that connects a process's resource requests with the actual hardware. |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| Operating system (OS) | Basic software that divides resources between programs and CPU, memory, and disk | Share hardware among programs through common interfaces and resource controls. |
+| process | One task in which the stored program is actually running | Identify which running program owns resource usage, failures, and termination behavior. |
+| service | A unit named Operation that starts a process and restarts it if it fails. | Start a named workload consistently and manage its restart and shutdown lifecycle. |
+| port | A number that identifies which program will receive the network request | Direct traffic to the intended listener and distinguish network reachability from application readiness. |
+| kernel | A core part of the operating system that connects a process's resource requests with the actual hardware. | Explain how application requests become CPU, memory, filesystem, and network operations. |
 
 The first goal is to connect these five words with actual command output. Then we go into more detailed concepts such as file descriptor, cgroup, and OOM.
 

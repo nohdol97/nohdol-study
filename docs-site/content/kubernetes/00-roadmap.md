@@ -4,16 +4,16 @@
 
 Assume that you succeed in running the application as a single container. As the number of users increases, you need to run three of the same container, automatically replace it if one stops, and continuously check various statuses to deploy a new version without service interruption. Kubernetes automates this repetitive operation with APIs and controllers.
 
-| New term | Plain-language meaning |
-|---|---|
-| container | A unit that isolates and executes application processes and files required for execution |
-| image | Read-only execution material used when creating a container |
-| cluster | A set of control planes and multiple servers managed together by Kubernetes |
-| Node | The server where the container actually runs |
-| Pod | A bundle of containers that Kubernetes deploys and manages together on one node. |
-| Namespace | A logical boundary that divides the name, inquiry, authority, and policy scope of related resources within a cluster. |
-| kubectl | Command-line tool that allows users to send inquiry/change requests to the Kubernetes API |
-| desired state | A user-declared goal, such as “I need to keep three Pods ready” |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| container | A unit that isolates and executes application processes and files required for execution | Package dependencies with isolated processes so applications can run in repeatable environments. |
+| image | Read-only execution material used when creating a container | Distribute the same reviewed application contents to development, testing, and production. |
+| cluster | A set of control planes and multiple servers managed together by Kubernetes | Coordinate placement and recovery across servers instead of managing each application host separately. |
+| Node | The server where the container actually runs | Locate the compute capacity and host failures that determine whether workloads can run. |
+| Pod | A bundle of containers that Kubernetes deploys and manages together on one node. | Give tightly coupled containers a shared scheduling and lifecycle boundary. |
+| Namespace | A logical boundary that divides the name, inquiry, authority, and policy scope of related resources within a cluster. | Organize teams' resources and scope names, permissions, and quotas within one cluster. |
+| kubectl | Command-line tool that allows users to send inquiry/change requests to the Kubernetes API | Inspect cluster objects and submit declarative changes while diagnosing workload problems. |
+| desired state | A user-declared goal, such as “I need to keep three Pods ready” | Let controllers compare the target with reality and repair deviations repeatedly. |
 
 First, deploy a web server on a local cluster and check why a new Pod is created when a Pod is deleted. Based on that experience, you learn API object, controller, scheduler, and network in order.
 

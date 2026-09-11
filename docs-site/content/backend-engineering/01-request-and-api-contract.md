@@ -8,14 +8,14 @@ An API contract is not a list of endpoints, but rather a set of semantics that a
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| resource | What the API identifies and represents |
-| safe | Method properties that do not require the caller to change state |
-| idempotent | Even if the same request is repeated, the intended server effect is the same as once. |
-| representation | A value that expresses the current state of the resource in a transmittable format. |
-| problem detail | Common machine-readable error body formats |
-| operation | One business task that runs longer than it responds and its state |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| resource | What the API identifies and represents | Give callers a stable object to identify, read, and change through an API contract. |
+| safe | Method properties that do not require the caller to change state | Distinguish read-intended HTTP methods from requested mutations when designing clients and APIs. |
+| idempotent | Even if the same request is repeated, the intended server effect is the same as once. | Decide when repeating a request can preserve its intended server effect after an uncertain response. |
+| representation | A value that expresses the current state of the resource in a transmittable format. | Let clients read or exchange a resource's state through a defined response format. |
+| problem detail | Common machine-readable error body formats | Give clients consistent machine-readable failure information for handling and diagnosis. |
+| operation | One business task that runs longer than it responds and its state | Expose progress and results for work that outlasts the initial HTTP response. |
 
 1. First, write the user's intention as a resource and method.
 2. Next, connect the success, failure, duplicate, and processing states with client actions.

@@ -49,9 +49,12 @@ export function articleTerms(english, korean) {
   const clean = (value) => value.replaceAll('`', '').replace(/\*\*([^*]+)\*\*/g, '$1').trim();
   const tables = en.flatMap((table, index) => {
     if (!/^(?:term|new term|concept|word)$/i.test(clean(table.header[0]?.text ?? ''))) return [];
-    return table.rows.filter((row) => row.length === 2).map((row, n) => ({
+    return table.rows.filter((row) => row.length === 2 || clean(table.header[2]?.text ?? '') === 'Why it matters / when to use it').map((row, n) => ({
       term: clean(row[0].text), english: clean(row[1].text),
       korean: clean(ko[index].rows[n][1].text),
+      ...(clean(table.header[2]?.text ?? '') === 'Why it matters / when to use it' ? {
+        whyEn: clean(row[2]?.text ?? ''), whyKo: clean(ko[index].rows[n][2]?.text ?? ''),
+      } : {}),
     }));
   });
   const enBlocks = meaningful(marked.lexer(english)), koBlocks = meaningful(marked.lexer(korean));
@@ -64,8 +67,23 @@ export function articleTerms(english, korean) {
       const a = item.text.match(/^\*\*([^*]+)\*\*:\s*(.+)$/s);
       const b = koBlocks[index].items[n].text.match(/^\*\*([^*]+)\*\*:\s*(.+)$/s);
       if (a && !b) fail('terminology', 'missing paired definition');
-      if (a) lists.push({term: clean(a[1]), english: clean(a[2]), korean: clean(b[2])});
+      if (a) {
+        const [enMeaning, whyEn] = a[2].split(' **Why it matters / when to use it:** ');
+        const [koMeaning, whyKo] = b[2].split(' **왜 필요한가요 · 언제 쓰나요:** ');
+        lists.push({term: clean(a[1]), english: clean(enMeaning), korean: clean(koMeaning),
+          ...(whyEn !== undefined || whyKo !== undefined ? {whyEn: clean(whyEn ?? ''), whyKo: clean(whyKo ?? '')} : {}),
+        });
+      }
     }
   }
   return [...tables, ...lists];
+}
+
+export function validateTermPurposes(terms, location) {
+  for (const term of terms) {
+    if (typeof term.whyEn !== 'string' || term.whyEn.trim().length < 20 || !/[A-Za-z]/.test(term.whyEn)
+      || typeof term.whyKo !== 'string' || term.whyKo.trim().length < 20 || !/[가-힣]/u.test(term.whyKo)) {
+      throw new Error(`missing bilingual term purpose: ${location}: ${term.term}`);
+    }
+  }
 }

@@ -4,13 +4,13 @@ A useful platform starts with a consumer promise: for example, validated orders 
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Storage format | How bytes are represented inside a file, such as Parquet |
-| Table format | How files and metadata form a committed table version |
-| Compute engine | Software that executes a query or transformation |
-| Control plane | Definitions, permissions, schedules, and metadata that direct execution |
-| Data plane | Processes and storage that actually move and transform data |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Storage format | How bytes are represented inside a file, such as Parquet | Choose a file representation that fits analytical access, compression, and interoperability needs. |
+| Table format | How files and metadata form a committed table version | Define which files form one accepted table state when readers and writers operate concurrently. |
+| Compute engine | Software that executes a query or transformation | Execute the required transformations while measuring the work caused by the chosen plan. |
+| Control plane | Definitions, permissions, schedules, and metadata that direct execution | Separate definitions and policies that direct work from the data-moving execution itself. |
+| Data plane | Processes and storage that actually move and transform data | Locate the throughput, failure, and access boundaries where data is actually processed. |
 
 ## Understand the model first
 

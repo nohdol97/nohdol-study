@@ -7,14 +7,14 @@ If there is more than one process and network, the actual state cannot be known 
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| partial failure | Only some components fail and the overall results are not immediately known. |
-| delivery | Rules by which messages are passed between broker and consumer |
-| deduplication | Avoid repeating work effects by remembering stable identifiers that have already been processed |
-| fencing token | A monotonically increasing generation value that rejects late writes from old owners. |
-| compensation | Follow-up work that undoes or offsets the effects that have already been completed |
-| reconciliation | Repeat to converge the difference by rereading the desired state and the actual state |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| partial failure | Only some components fail and the overall results are not immediately known. | Design recovery for ambiguous multi-system outcomes instead of assuming all components fail together. |
+| delivery | Rules by which messages are passed between broker and consumer | State which losses or duplicates consumers must handle instead of equating receipt with completion. |
+| deduplication | Avoid repeating work effects by remembering stable identifiers that have already been processed | Prevent retained or retried event copies from producing duplicate business effects. |
+| fencing token | A monotonically increasing generation value that rejects late writes from old owners. | Reject delayed writes from an expired owner after another executor acquires ownership. |
+| compensation | Follow-up work that undoes or offsets the effects that have already been completed | Repair completed external effects when a larger workflow cannot finish as intended. |
+| reconciliation | Repeat to converge the difference by rereading the desired state and the actual state | Recover from uncertain acknowledgments by checking actual state before repeating or repairing work. |
 
 1. Adds response loss and redundant delivery at all network boundaries.
 2. Next, design an identifier and state transition to retrieve the results.

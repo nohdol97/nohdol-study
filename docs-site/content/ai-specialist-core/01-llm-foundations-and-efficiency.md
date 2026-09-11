@@ -8,14 +8,14 @@ In order to operate LLM, you need to know what calculations are made for one tok
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| token | The tokenizer divides the string into integer units of the model vocabulary. |
-| embedding | Expression of token ID converted into learnable vector |
-| causal mask | Restrictions that prevent current location from seeing future tokens |
-| attention | Calculation of weighted sum of values ​​based on query and key relationship |
-| prefill / decode | Step of processing input tokens all at once / Step of sequentially generating the next token |
-| KV cache | Memory that reuses already calculated past key·values ​​during decoding |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| token | The tokenizer divides the string into integer units of the model vocabulary. | Represent text in discrete model inputs and measure context length and generation work. |
+| embedding | Expression of token ID converted into learnable vector | Turn discrete token IDs into learnable numeric inputs before contextual model computation. |
+| causal mask | Restrictions that prevent current location from seeing future tokens | Prevent next-token training from accessing future tokens unavailable during generation. |
+| attention | Calculation of weighted sum of values ​​based on query and key relationship | Combine relevant context positions when computing a token's representation. |
+| prefill / decode | Step of processing input tokens all at once / Step of sequentially generating the next token | Separate input processing from sequential generation when diagnosing latency and serving capacity. |
+| KV cache | Memory that reuses already calculated past key·values ​​during decoding | Avoid recalculating past attention keys and values for every generated token, at a memory cost. |
 
 1. Follow the tensor shape by hand from token ID to logit.
 2. Quality indicators and trade-offs of memory, latency, and throughput are measured separately.

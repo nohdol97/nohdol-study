@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **least privilege**: This is the principle of giving only the minimum privileges necessary for a task and disallowing any tasks that are not necessary.
-- **temporary credential**: Temporary login information that becomes unusable after a certain period of time.
-- **encryption key**: This is a secret value used when converting data into an unreadable form and restoring it.
-- **rotation**: The process of replacing a secret or key with a new value and safely discarding the old value.
-- **digest**: A fixed length value calculated from the file contents. Used when comparing whether content has changed.
-- **provenance**: A provenance record that shows which source and build process the artifact was created from.
+- **least privilege**: This is the principle of giving only the minimum privileges necessary for a task and disallowing any tasks that are not necessary. **Why it matters / when to use it:** Limit the damage a compromised or mistaken identity can cause.
+- **temporary credential**: Temporary login information that becomes unusable after a certain period of time. **Why it matters / when to use it:** Reduce the period during which a leaked credential can be reused.
+- **encryption key**: This is a secret value used when converting data into an unreadable form and restoring it. **Why it matters / when to use it:** Control who can decrypt protected data and manage that access separately from storage access.
+- **rotation**: The process of replacing a secret or key with a new value and safely discarding the old value. **Why it matters / when to use it:** Replace exposed or aging credentials while verifying consumers can use the new value.
+- **digest**: A fixed length value calculated from the file contents. Used when comparing whether content has changed. **Why it matters / when to use it:** Identify exact content and detect mismatches; authenticity still requires a trusted reference.
+- **provenance**: A provenance record that shows which source and build process the artifact was created from. **Why it matters / when to use it:** Trace a deployable artifact to its source and build process before trusting its origin.
 
 Initially, allow only one action to a subject and ensure that other actions are denied. We then expand the scope to the entire life cycle of how identities, secrets, and artifacts are created, used, and disposed of.
 

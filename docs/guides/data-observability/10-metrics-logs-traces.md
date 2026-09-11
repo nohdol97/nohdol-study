@@ -4,14 +4,14 @@ A dashboard should answer a question and lead to a decision. Begin with “Can a
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Counter | A cumulative count that can reset when its producer restarts |
-| Gauge | A current value that can increase or decrease |
-| Histogram | A representation of an observed value distribution |
-| Summary | Observations with client-calculated quantiles where configured |
-| Label cardinality | The number of distinct label combinations creating time series |
-| Burn rate | Observed failure fraction divided by the SLO's allowed failure fraction |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Counter | A cumulative count that can reset when its producer restarts | Count cumulative events and derive rates over a chosen window with reset-aware queries. |
+| Gauge | A current value that can increase or decrease | Observe current levels such as queue depth or active work that can rise and fall. |
+| Histogram | A representation of an observed value distribution | Inspect distributions and threshold fractions that averages alone would conceal. |
+| Summary | Observations with client-calculated quantiles where configured | Obtain configured per-producer quantiles when their aggregation limitations fit the question. |
+| Label cardinality | The number of distinct label combinations creating time series | Estimate time-series growth before adding labels that would make monitoring costly or unstable. |
+| Burn rate | Observed failure fraction divided by the SLO's allowed failure fraction | Relate current failure intensity to how quickly an SLO's error allowance is being consumed. |
 
 ## Understand the model first
 

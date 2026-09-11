@@ -4,14 +4,14 @@
 
 Suppose the application responds, “I reduced the account balance by 10,000 won.” Even if other users change their balances at the same time or the server is shut down immediately, the results must remain safe and secure exactly once. PostgreSQL operation goes beyond using SQL grammar and involves managing what is visible and what remains on disk when multiple requests change data simultaneously.
 
-| New term | Plain-language meaning |
-|---|---|
-| database | A system that stores structured data and coordinates reading and writing of multiple programs |
-| transaction | A unit of work that either succeeds or cancels multiple data changes. |
-| row | One line of data representing one object in a table |
-| lock | A device that makes some operations wait so that conflicting changes do not complete at the same time. |
-| index | Separate structures to help you quickly find the data you want without having to read every row |
-| backup | A copy of your data set aside for recovery if the original disappears |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| database | A system that stores structured data and coordinates reading and writing of multiple programs | Keep shared data durable and coordinate concurrent access under defined rules. |
+| transaction | A unit of work that either succeeds or cancels multiple data changes. | Keep related data changes together so a partially completed business operation is not accepted. |
+| row | One line of data representing one object in a table | Declare the unit represented by a record before designing keys, joins, and totals. |
+| lock | A device that makes some operations wait so that conflicting changes do not complete at the same time. | Serialize conflicting operations when simultaneous completion would break data rules. |
+| index | Separate structures to help you quickly find the data you want without having to read every row | Reduce work for selective lookups, while accounting for extra storage and write maintenance. |
+| backup | A copy of your data set aside for recovery if the original disappears | Retain a recoverable copy when deletion, corruption, or infrastructure loss affects the original. |
 
 Terms like MVCC, WAL, and VACUUM are internal methods to solve the above problem. First, we directly observe transactions and locks, and then connect the time when data is seen and the process of safely remaining on disk.
 

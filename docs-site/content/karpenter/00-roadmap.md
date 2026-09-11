@@ -4,15 +4,15 @@
 
 If a Pod is created in Kubernetes, but the Node to run it does not have enough CPU or memory, the Pod cannot be deployed and goes into a waiting state, `Pending`. People can add EC2 servers, but it is difficult to manually adjust them as requests suddenly increase or decrease. Karpenter reads the requests of waiting Pods and prepares Nodes by selecting appropriate AWS EC2 resources.
 
-| New term | Plain-language meaning |
-|---|---|
-| Pod | A bundle of containers that Kubernetes runs and manages together |
-| Node | The server where the pods actually run |
-| scheduler | Kubernetes component that determines which Pods to place on which Node |
-| request | Amount of CPU and memory declared needed for the Pod to run |
-| NodePool | Common conditions and limits of nodes that Karpenter can create |
-| NodeClaim | Karpenter's specific request for one specific Node |
-| disruption | The process of safely emptying and destroying running nodes for replacement, integration, expiration, etc. |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| Pod | A bundle of containers that Kubernetes runs and manages together | Give tightly coupled containers a shared scheduling and lifecycle boundary. |
+| Node | The server where the pods actually run | Locate the compute capacity and host failures that determine whether workloads can run. |
+| scheduler | Kubernetes component that determines which Pods to place on which Node | Place pending Pods on eligible Nodes according to declared resources and constraints. |
+| request | Amount of CPU and memory declared needed for the Pod to run | Give placement and capacity planning a declared resource requirement instead of an implicit guess. |
+| NodePool | Common conditions and limits of nodes that Karpenter can create | Bound which Nodes Karpenter may create so provisioning follows operational policy. |
+| NodeClaim | Karpenter's specific request for one specific Node | Trace one provisioning attempt from its requested capacity through the resulting Node. |
+| disruption | The process of safely emptying and destroying running nodes for replacement, integration, expiration, etc. | Replace or remove Nodes through a controlled drain process that respects workload availability. |
 
 This course is conducted after learning Kubernetes scheduling and AWS basics. At first, we follow only one path, `Pod waits → create a Node request → launch EC2 → run the Pod`, and then learn the impact of removing nodes to reduce costs on the service.
 

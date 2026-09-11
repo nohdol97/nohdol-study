@@ -2,14 +2,14 @@
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| control plane | A layer that declares and verifies which listeners, routes, and policies should exist |
-| data plane | Layer that receives the actual request, forwards it to the backend, and executes timeout, retry, and limit |
-| route attachment | The process where the route and gateway meet each other's conditions and are actually connected |
-| per-try timeout | Time allowed for one upstream attempt |
-| outer deadline | Total upper limit from receipt of initial request to final response |
-| retry storm | A phenomenon in which additional attempts during failure increase the load and cause more failures. |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| control plane | A layer that declares and verifies which listeners, routes, and policies should exist | Review traffic intent separately from request execution and inspect whether configuration was accepted. |
+| data plane | Layer that receives the actual request, forwards it to the backend, and executes timeout, retry, and limit | Observe where the configured routing, timeout, and retry policies actually affect requests. |
+| route attachment | The process where the route and gateway meet each other's conditions and are actually connected | Verify that a declared route is eligible for a Gateway before blaming backend networking. |
+| per-try timeout | Time allowed for one upstream attempt | Stop one slow attempt early enough to preserve the overall request budget. |
+| outer deadline | Total upper limit from receipt of initial request to final response | Ensure all nested attempts and backoff fit within the caller's total time allowance. |
+| retry storm | A phenomenon in which additional attempts during failure increase the load and cause more failures. | Recognize load amplification during an outage and cap or disable unsafe retries. |
 
 ## Understand the model first
 

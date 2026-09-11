@@ -8,15 +8,15 @@ Streaming correctness becomes visible when a process stops between reading an ev
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Partition / offset | An ordered log segment / a position within it |
-| Consumer group | Consumers sharing partition consumption responsibility |
-| Rebalance | A change in partition assignments among consumers |
-| CDC | Change Data Capture: turning database changes into records for downstream use |
-| Event time / processing time | When the event occurred / when a processor handled it |
-| Watermark | An event-time progress boundary used by supported stateful operations |
-| Checkpoint | Recorded progress and state needed for a processor to recover |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Partition / offset | An ordered log segment / a position within it | Define ordering scope and record where each consumer can resume after interruption. |
+| Consumer group | Consumers sharing partition consumption responsibility | Share partition processing among workers and rebalance responsibility as group membership changes. |
+| Rebalance | A change in partition assignments among consumers | Redistribute partitions when consumers join or leave while checking pauses and duplicate work. |
+| CDC | Change Data Capture: turning database changes into records for downstream use | Keep downstream copies current using database changes instead of repeatedly copying every source row. |
+| Event time / processing time | When the event occurred / when a processor handled it | Separate when business events happened from arrival delays when building time-based results. |
+| Watermark | An event-time progress boundary used by supported stateful operations | Bound eligible state and lateness handling for supported streaming operations under an explicit policy. |
+| Checkpoint | Recorded progress and state needed for a processor to recover | Resume a processor from retained progress and state after a failure, with sink correctness checked separately. |
 
 ## Understand the model first
 

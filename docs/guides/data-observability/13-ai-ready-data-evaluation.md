@@ -4,14 +4,14 @@ An assistant needs more than clean rows. It needs discoverable meaning, authoriz
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Embedding | A numerical representation used for similarity-based retrieval |
-| Hybrid retrieval | Combining lexical and vector-based retrieval signals |
-| Reranking | Reordering a candidate set using a more specific relevance model |
-| RAG | Retrieval-Augmented Generation: supplying retrieved evidence to a generator |
-| Semantic layer | Governed definitions of metrics and their allowed dimensions/relationships |
-| Evaluation set | Versioned examples and expected criteria used to assess behavior |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Embedding | A numerical representation used for similarity-based retrieval | Retrieve semantically related candidates when wording differs from the query. |
+| Hybrid retrieval | Combining lexical and vector-based retrieval signals | Combine exact-term strengths with semantic matches when either retrieval method alone misses evidence. |
+| Reranking | Reordering a candidate set using a more specific relevance model | Improve final relevance after a cheaper first-stage search has narrowed the candidate set. |
+| RAG | Retrieval-Augmented Generation: supplying retrieved evidence to a generator | Supply source-specific evidence for answers while checking authorization, citation support, and evaluation. |
+| Semantic layer | Governed definitions of metrics and their allowed dimensions/relationships | Keep business metrics consistent across dashboards and generated queries. |
+| Evaluation set | Versioned examples and expected criteria used to assess behavior | Reproduce candidate comparisons and avoid judging improvements from a few favorable examples. |
 
 ## Understand the model first
 

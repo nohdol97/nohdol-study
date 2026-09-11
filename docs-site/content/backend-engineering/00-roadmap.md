@@ -9,14 +9,14 @@ Backend is not just about writing API code. The user's intent comes in as a requ
 
 ## Starting point for beginners
 
-| New term | Plain-language meaning |
-|---|---|
-| API contract | A promise that determines what the caller will send and what results and errors will be received. |
-| invariant | Business rule that must be true even if requests come in at the same time |
-| idempotency | The nature of the work effect converging even if a request with the same intent is sent again |
-| backpressure | Control that tells upstream to reduce speed when there is more input than can be processed |
-| outbox | A pattern that records business data changes and events to be issued together in one DB transaction |
-| Compatible Changes | Changes that do not break the consumer while the old and new versions run simultaneously |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| API contract | A promise that determines what the caller will send and what results and errors will be received. | Let clients and servers evolve with explicit expectations for requests, results, and errors. |
+| invariant | Business rule that must be true even if requests come in at the same time | Turn business correctness into rules that every concurrent execution must preserve. |
+| idempotency | The nature of the work effect converging even if a request with the same intent is sent again | Allow uncertain requests to be retried without intentionally repeating the business effect. |
+| backpressure | Control that tells upstream to reduce speed when there is more input than can be processed | Keep overload from growing without bound by slowing or rejecting input at a defined boundary. |
+| outbox | A pattern that records business data changes and events to be issued together in one DB transaction | Avoid losing a required event between committing business data and publishing to another system. |
+| Compatible Changes | Changes that do not break the consumer while the old and new versions run simultaneously | Keep old and new consumers working during rolling deployments and staged migrations. |
 
 At first, do not memorize the technology name. You just need to be able to follow each line below as an actual example.
 

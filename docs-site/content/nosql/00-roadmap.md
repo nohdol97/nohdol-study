@@ -4,14 +4,14 @@
 
 All data does not need to be stored in the same format in the same database. Login credentials that can disappear after 10 minutes and order records that need to remain for years have different needs. This process does not start with the conclusion that “NoSQL is faster,” but first determines which questions to ask and how often and whether data can be lost.
 
-| New term | Plain-language meaning |
-|---|---|
-| key | A unique name to use when finding your data again. |
-| value | Actual data stored by linking to the key |
-| TTL | Time remaining until data disappears automatically |
-| memory | Storage space that is very fast but requires separate consideration of how to preserve it after a power failure |
-| partition key | A key used by DynamoDB to determine where to place data. |
-| Consistency | Guarantees that the latest value is visible when read immediately after writing |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| key | A unique name to use when finding your data again. | Retrieve or update the intended item without scanning unrelated values. |
+| value | Actual data stored by linking to the key | Store the application information that will be retrieved through its key. |
+| TTL | Time remaining until data disappears automatically | Expire short-lived data such as sessions or caches according to an explicit lifetime policy. |
+| memory | Storage space that is very fast but requires separate consideration of how to preserve it after a power failure | Serve frequently accessed data quickly while designing persistence and capacity separately. |
+| partition key | A key used by DynamoDB to determine where to place data. | Distribute DynamoDB access and avoid concentrating a workload on a few placement keys. |
+| Consistency | Guarantees that the latest value is visible when read immediately after writing | Choose the required read visibility when stale data would change the application's decision. |
 
 Redis and DynamoDB both use keys, but they are not substitutes for the same product. Learn the difference between Redis' expiring cache and DynamoDB's persistent order inquiry as separate examples.
 

@@ -8,14 +8,14 @@ MLOps는 pipeline을 자동 실행하는 것보다 어떤 data·code·parameter�
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| lineage | 산출물이 어떤 입력·실행·부모 artifact에서 나왔는지 잇는 관계 |
-| registry | versioned artifact와 alias·metadata를 관리하는 정본 |
-| pipeline | 입력·처리·학습·평가·packaging 단계를 재현 가능한 DAG로 만든 것 |
-| eval suite | dataset, metric, judge·policy와 threshold가 고정된 평가 묶음 |
-| drift | data·prediction·업무 결과의 분포가 기준선과 달라지는 현상 |
-| promotion | candidate가 gate를 통과해 제한된 serving 단계로 이동하는 결정 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| lineage | 산출물이 어떤 입력·실행·부모 artifact에서 나왔는지 잇는 관계 | 결과 재현이나 변경 조사 때 출력을 입력·실행 기록까지 추적한다. |
+| registry | versioned artifact와 alias·metadata를 관리하는 정본 | 검토한 아티팩트 버전을 선택하고 별칭·배포가 가리키는 버전을 기록한다. |
+| pipeline | 입력·처리·학습·평가·packaging 단계를 재현 가능한 DAG로 만든 것 | 노트북 실행 순서에 의존하지 않고 여러 단계의 학습 흐름을 재현·검토할 수 있게 한다. |
+| eval suite | dataset, metric, judge·policy와 threshold가 고정된 평가 묶음 | 버전이 정해진 동일한 예제·승인 기준으로 후보들을 비교한다. |
+| drift | data·prediction·업무 결과의 분포가 기준선과 달라지는 현상 | 이전 모델 평가나 감시 기준을 더 이상 믿기 어렵게 만드는 분포 변화를 찾을 때 필요하다. |
+| promotion | candidate가 gate를 통과해 제한된 serving 단계로 이동하는 결정 | 빌드 성공만으로 자격을 갖추지 못한 후보가 서빙에 들어가지 못하게 한다. |
 
 1. dataset→run→artifact→suite→bundle→deployment의 ID를 연결한다.
 2. 자동 학습과 자동 production 승급을 별도 권한·gate로 둔다.

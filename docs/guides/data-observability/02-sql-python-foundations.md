@@ -4,13 +4,13 @@ A distributed engine can multiply an incorrect join very efficiently. Begin by d
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Grain | What a single row represents, such as one order line |
-| Cardinality | The number of values or rows; in a join, how many matches each side can produce |
-| Window function | A calculation across related rows without collapsing them into one aggregate row |
-| Query plan | The engine's steps for obtaining the result |
-| Idempotence | Repeating the same logical operation preserves the intended outcome |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Grain | What a single row represents, such as one order line | Prevent double counting and invalid joins by stating exactly what each row represents. |
+| Cardinality | The number of values or rows; in a join, how many matches each side can produce | Predict join expansion and detect unintended many-to-many matches before trusting totals. |
+| Window function | A calculation across related rows without collapsing them into one aggregate row | Calculate rankings, running totals, or neighboring values while keeping individual rows visible. |
+| Query plan | The engine's steps for obtaining the result | Explain scans, joins, exchanges, and estimates before deciding which query optimization to try. |
+| Idempotence | Repeating the same logical operation preserves the intended outcome | Retry or replay an uncertain operation without changing its intended business result. |
 
 ## Understand the model first
 

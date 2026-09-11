@@ -10,14 +10,14 @@ AI platform은 GPU cluster를 대신 관리해 주는 설치 모음이 아니다
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| platform contract | workload가 선언해야 할 resource·identity·artifact·SLO의 공통 입력 |
-| quota | 팀·project가 점유할 수 있는 자원과 우선순위의 한계 |
-| gang scheduling | 필요한 워커 집단의 승인·배치를 조정해 일부만 할당받고 작업이 멈춰 있는 상황을 방지하는 것 |
-| autoscaling | 관찰한 demand에 따라 workload·node 수를 조정하는 제어 |
-| chargeback / showback | 소비한 비용을 팀에 청구하거나 가시화하는 방식 |
-| unit economics | 성공한 업무 단위 하나를 만드는 데 든 실제 비용 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| platform contract | workload가 선언해야 할 resource·identity·artifact·SLO의 공통 입력 | 플랫폼이 적용해야 할 자원·신원·서비스 약속을 워크로드가 선언하도록 한다. |
+| quota | 팀·project가 점유할 수 있는 자원과 우선순위의 한계 | 한 사용 주체의 소비를 제한해 다른 팀이 할당된 용량을 유지하도록 한다. |
+| gang scheduling | 필요한 워커 집단의 승인·배치를 조정해 일부만 할당받고 작업이 멈춰 있는 상황을 방지하는 것 | 필요한 워커 집합을 시작하지 못하는 분산 작업이 희소 자원을 점유하는 상황을 줄인다. |
+| autoscaling | 관찰한 demand에 따라 workload·node 수를 조정하는 제어 | 시작 지연·하위 병목을 확인하면서 변하는 수요에 맞춰 용량을 조정한다. |
+| chargeback / showback | 소비한 비용을 팀에 청구하거나 가시화하는 방식 | 팀이 책임 있는 사용 결정을 내리도록 공유 비용을 보여 주거나 배분한다. |
+| unit economics | 성공한 업무 단위 하나를 만드는 데 든 실제 비용 | 단순 하드웨어 사용률 대신 성공한 업무 단위의 비용으로 설계를 비교한다. |
 
 1. self-service API와 guardrail을 먼저 정의한다.
 2. infrastructure 비용을 verified output과 연결한다.

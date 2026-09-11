@@ -6,15 +6,15 @@ The fact that unusual values ​​were seen during operation is neither an inci
 
 The prerequisite topics are [AIOps Signals and Operational Topology](../aiops-foundations/00-roadmap.md) and [Observability and SRE](../observability-sre/00-roadmap.md). Time series anomaly and retrieval·LLM candidates follow the evaluation boundaries of [AI Specialist's time series·recommendation](../ai-specialist-core/04-time-series-and-recommendation.md) and [RAG·MCP](../ai-specialist-core/05-rag-graph-mcp.md), respectively. If you only create an anomaly score without an input contract and SLO, normal batch work or increased traffic will be called a failure, and alerts from multiple services will be incorrectly grouped together. The diagnosis result is not an automatic execution command, but a candidate with evidence and disconfirmation conditions, and the actual action goes through a separate gate in [Approved Automatic Recovery](../aiops-remediation/00-roadmap.md).
 
-| New term | Plain-language meaning |
-|---|---|
-| static rule | Rules for finding anomalies based on explicit conditions set by a person |
-| baseline | Normal comparison section with similar time, day, and traffic conditions |
-| anomaly score | A score indicating how far an observation deviates from the baseline |
-| alert correlation | The process of grouping multiple alerts by relationship and time to determine whether they belong to the same incident |
-| root cause candidate | Candidate cause that has explanatory power based on current evidence but still needs to be verified |
-| diagnostic handler | Query and evidence retrieval procedures appropriate for the alert type |
-| abstain | The choice not to draw a conclusion on the cause due to insufficient evidence |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| static rule | Rules for finding anomalies based on explicit conditions set by a person | Detect known failure conditions with an inspectable threshold or explicit business rule. |
+| baseline | Normal comparison section with similar time, day, and traffic conditions | Compare an observation with a relevant normal period before calling it abnormal. |
+| anomaly score | A score indicating how far an observation deviates from the baseline | Rank unusual observations for investigation without equating unusualness with a confirmed incident. |
+| alert correlation | The process of grouping multiple alerts by relationship and time to determine whether they belong to the same incident | Reduce duplicate triage by grouping related alerts while preserving evidence for each one. |
+| root cause candidate | Candidate cause that has explanatory power based on current evidence but still needs to be verified | Keep competing explanations testable until evidence supports a diagnosis. |
+| diagnostic handler | Query and evidence retrieval procedures appropriate for the alert type | Run the queries appropriate to the failure class instead of collecting arbitrary evidence. |
+| abstain | The choice not to draw a conclusion on the cause due to insufficient evidence | Avoid unsafe certainty or action when the available evidence cannot justify a diagnosis. |
 
 ## Don't Mix the Five Steps
 

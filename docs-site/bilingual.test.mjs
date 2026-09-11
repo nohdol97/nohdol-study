@@ -6,7 +6,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {marked} from 'marked';
 import {buildSite, loadCatalog} from './build.mjs';
-import {renderParallel, articleTerms} from './bilingual.mjs';
+import {renderParallel, articleTerms, validateTermPurposes} from './bilingual.mjs';
 import {savedReadingMode} from './src/reading.js';
 import {CORE_TERMS, configureTerms, termsForDocument} from './src/terms.js';
 
@@ -17,6 +17,7 @@ test('all 94 translations preserve examples, source records and document destina
   const payload = await buildSite({checkOnly: true});
   const ids = new Set(payload.documents.map((d) => d.id));
   configureTerms(payload.documents);
+  assert.equal(payload.documents.flatMap((doc) => doc.terms).length, 403, 'no definition may disappear during purpose extraction');
   for (const doc of payload.documents) {
     const en = await readFile(path.join(root, doc.path), 'utf8');
     const ko = await readFile(path.join(root, doc.translation.path), 'utf8');
@@ -27,13 +28,45 @@ test('all 94 translations preserve examples, source records and document destina
     assert.match(doc.koreanSearchText, /[가-힣]/u);
     assert.equal([...doc.parallelHtml.matchAll(/<pre\b/g)].length, [...doc.html.matchAll(/<pre\b/g)].length, `${doc.id}: shared examples appear once`);
     assert.ok(termsForDocument(doc).length > 0, `${doc.id}: terminology available`);
+    for (const term of termsForDocument(doc)) {
+      assert.doesNotThrow(() => validateTermPurposes([term], doc.id));
+      assert.notEqual(term.whyEn, term.english, `${doc.id}: purpose must add context beyond the definition`);
+      assert.notEqual(term.whyKo, term.korean);
+    }
+    for (const term of doc.terms) {
+      assert.ok(en.includes(term.whyEn), `${doc.id}: English purpose must remain in Markdown`);
+      assert.ok(ko.includes(term.whyKo), `${doc.id}: Korean purpose must remain in Markdown`);
+    }
     for (const m of doc.parallelHtml.matchAll(/href="#doc=([^"&]+)[^"]*"/g)) assert.ok(ids.has(m[1]), `${doc.id}: ${m[1]}`);
     assert.doesNotMatch(doc.parallelHtml, /<script\b|<!-- source:/i);
   }
   for (const term of CORE_TERMS) {
     assert.ok(ids.has(term.chapter));
-    for (const field of ['english', 'korean', 'exampleEn', 'exampleKo', 'distinctionEn', 'distinctionKo']) assert.ok(term[field], `${term.term}: ${field}`);
+    for (const field of ['english', 'korean', 'whyEn', 'whyKo', 'exampleEn', 'exampleKo', 'distinctionEn', 'distinctionKo']) assert.ok(term[field], `${term.term}: ${field}`);
   }
+});
+
+test('table and list purposes are extracted separately from their bilingual definitions', () => {
+  const reason = {whyEn: 'Locate the current process before inspecting its resources.', whyKo: '자원을 조사하기 전에 현재 실행 중인 프로세스를 찾는 데 쓴다.'};
+  const expected = [{term: 'PID', english: 'Process identifier', korean: '프로세스 식별자', ...reason}];
+  assert.deepEqual(articleTerms(`| Term | Meaning | Why it matters / when to use it |\n|---|---|---|\n| PID | Process identifier | ${reason.whyEn} |`, `| 용어 | 의미 | 왜 필요한가요 · 언제 쓰나요 |\n|---|---|---|\n| PID | 프로세스 식별자 | ${reason.whyKo} |`), expected);
+  assert.deepEqual(articleTerms(`## Terms introduced in this chapter\n\n- **PID**: Process identifier **Why it matters / when to use it:** ${reason.whyEn}`, `## 이 장의 용어\n\n- **PID**: 프로세스 식별자 **왜 필요한가요 · 언제 쓰나요:** ${reason.whyKo}`), expected);
+  for (const partial of [{}, {whyEn: reason.whyEn}, {whyKo: reason.whyKo}, {...reason, whyKo: ''}]) assert.throws(() => validateTermPurposes([{term: 'PID', ...partial}], 'fixture'), /missing bilingual term purpose.*PID/);
+});
+
+test('a published chapter cannot omit purpose copy in either language', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'term-purpose-'));
+  const catalog = JSON.parse(await readFile(new URL('./catalog.json', import.meta.url), 'utf8'));
+  catalog.paths = [{...catalog.paths[0], topicIds: [catalog.topics[0].id]}];
+  catalog.topics = [{...catalog.topics[0], documents: [catalog.topics[0].documents[0]]}];
+  const doc = catalog.topics[0].documents[0];
+  const source = `# ${doc.title}\n\n| Term | Meaning | Why it matters / when to use it |\n|---|---|---|\n| PID | Process identifier | Locate the current process before inspecting its resources. |\n`;
+  const {createHash} = await import('node:crypto');
+  doc.path = 'english.md'; doc.translation.path = 'korean.md'; doc.translation.sourceSha256 = createHash('sha256').update(source).digest('hex');
+  await writeFile(path.join(dir, doc.path), source);
+  await writeFile(path.join(dir, doc.translation.path), `# ${doc.translation.title}\n\n| 용어 | 의미 | 왜 필요한가요 · 언제 쓰나요 |\n|---|---|---|\n| PID | 프로세스 식별자 | |\n`);
+  const catalogPath = path.join(dir, 'catalog.json'); await writeFile(catalogPath, JSON.stringify(catalog));
+  await assert.rejects(() => buildSite({catalogPath, repositoryRoot: dir, requireTracked: false, checkOnly: true}), /missing bilingual term purpose.*PID/);
 });
 
 test('paired lists, headings, tables, and quoted text keep shared code once', () => {

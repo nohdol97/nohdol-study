@@ -4,14 +4,14 @@ The platform owner cannot decide alone what “good data” means. A domain owne
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Validity | Whether values meet declared type, range, or format rules |
-| Completeness | Whether expected records or fields are present |
-| Accuracy | Agreement with the real-world fact or an authoritative reference |
-| Freshness | How current the data is under a specified clock and delivery model |
-| Contract | A versioned agreement covering meaning, ownership, structure, and service expectations |
-| Error budget | The amount of failure allowed by an SLO over its defined window |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Validity | Whether values meet declared type, range, or format rules | Reject values that violate the accepted schema or domain before publishing data. |
+| Completeness | Whether expected records or fields are present | Detect absent expected inputs that cannot be found by testing only the rows that arrived. |
+| Accuracy | Agreement with the real-world fact or an authoritative reference | Check truth against a trusted reference when syntactically valid data may still be wrong. |
+| Freshness | How current the data is under a specified clock and delivery model | Detect stale delivery using the clock and consumer expectations defined for the dataset. |
+| Contract | A versioned agreement covering meaning, ownership, structure, and service expectations | Give producers and consumers a reviewable agreement for meaning, changes, and service obligations. |
+| Error budget | The amount of failure allowed by an SLO over its defined window | Prioritize reliability and release decisions according to the failure allowance that remains. |
 
 ## Understand the model first
 

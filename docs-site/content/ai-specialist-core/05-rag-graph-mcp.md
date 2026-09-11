@@ -8,14 +8,14 @@ RAG is not a technology that adds a lot of documents to the LLM, but a search sy
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| chunk | Units and metadata that divide the source for search |
-| embedding | Vector expression for calculating semantic proximity |
-| ANN | Search to quickly find close candidates without comparing all vectors exactly. |
-| reranker | Steps to reorder the fast candidate set to a more expensive model |
-| grounding | The nature of the argument in the answer that is actually supported by the evidence provided |
-| tool | A boundary that is an external function that model can propose to call and requires separate permissions. |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| chunk | Units and metadata that divide the source for search | Retrieve manageable evidence passages while retaining source and permission context. |
+| embedding | Vector expression for calculating semantic proximity | Compare candidate meanings in vector space when exact word matching misses relevant evidence. |
+| ANN | Search to quickly find close candidates without comparing all vectors exactly. | Reduce vector-search work at large scale while measuring the recall lost by approximation. |
+| reranker | Steps to reorder the fast candidate set to a more expensive model | Spend a stronger relevance model on a small candidate set instead of the entire corpus. |
+| grounding | The nature of the argument in the answer that is actually supported by the evidence provided | Check that an answer's claims follow from authorized evidence rather than plausible wording alone. |
+| tool | A boundary that is an external function that model can propose to call and requires separate permissions. | Let a model request external information or actions through a controlled permission boundary. |
 
 1. Create corpus·query·relevance and abstention standards before answer.
 2. Separate retrieval failure, generation failure, and action authorization.

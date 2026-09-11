@@ -6,15 +6,15 @@
 
 선수 주제는 [AIOps 신호와 운영 토폴로지](../../content/aiops-foundations/00-roadmap.md)와 [Observability와 SRE](../../content/observability-sre/00-roadmap.md)다. 시계열 anomaly와 retrieval·LLM 후보는 각각 [AI Specialist의 시계열·추천](../../content/ai-specialist-core/04-time-series-and-recommendation.md)과 [RAG·MCP](../../content/ai-specialist-core/05-rag-graph-mcp.md)의 평가 경계를 따른다. 입력 계약과 SLO 없이 anomaly score만 만들면 정상적인 batch 작업이나 traffic 증가를 장애로 부르고, 여러 서비스의 alert를 잘못 묶는다. 진단 결과는 자동 실행 명령이 아니라 evidence와 반증 조건이 붙은 후보이며, 실제 조치는 [승인된 자동 복구](../../content/aiops-remediation/00-roadmap.md)에서 별도 gate를 거친다.
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
-|---|---|
-| static rule | 사람이 정한 명시적 조건으로 이상을 찾는 규칙 |
-| baseline | 시간·요일·traffic 조건이 비슷한 정상 비교 구간 |
-| anomaly score | 관측값이 기준선에서 얼마나 벗어났는지 나타내는 점수 |
-| alert correlation | 여러 alert가 같은 incident에 속하는지 관계와 시간으로 묶는 과정 |
-| root cause candidate | 현재 evidence로 설명력이 있지만 아직 검증해야 하는 원인 후보 |
-| diagnostic handler | alert 종류에 맞는 query와 evidence 회수 절차 |
-| abstain | 근거가 부족해 원인 결론을 내리지 않는 선택 |
+| 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| static rule | 사람이 정한 명시적 조건으로 이상을 찾는 규칙 | 검토 가능한 임계값이나 명시적 업무 규칙으로 알려진 실패 조건을 탐지한다. |
+| baseline | 시간·요일·traffic 조건이 비슷한 정상 비교 구간 | 관측을 비정상으로 판단하기 전에 조건이 맞는 정상 기간과 비교한다. |
+| anomaly score | 관측값이 기준선에서 얼마나 벗어났는지 나타내는 점수 | 이례적이라는 이유만으로 사고를 확정하지 않고 조사할 관측의 우선순위를 정한다. |
+| alert correlation | 여러 alert가 같은 incident에 속하는지 관계와 시간으로 묶는 과정 | 관련 경보를 묶어 중복 분류를 줄이되 각 경보의 근거는 보존한다. |
+| root cause candidate | 현재 evidence로 설명력이 있지만 아직 검증해야 하는 원인 후보 | 근거가 진단을 뒷받침할 때까지 여러 설명 후보를 검증 가능한 상태로 유지한다. |
+| diagnostic handler | alert 종류에 맞는 query와 evidence 회수 절차 | 임의로 자료를 모으는 대신 실패 유형에 맞는 질의를 수행한다. |
+| abstain | 근거가 부족해 원인 결론을 내리지 않는 선택 | 현재 근거로 진단을 정당화할 수 없을 때 위험한 확신이나 조치를 피한다. |
 
 ## 다섯 단계를 섞지 않기
 

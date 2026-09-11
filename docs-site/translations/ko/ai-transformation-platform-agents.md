@@ -8,14 +8,14 @@ enterprise agent는 LLM이 여러 tool을 자율 호출하는 데서 완성되�
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| host / client / server | 사용자를 통제하는 앱 / server 연결 / data·tool 제공 주체의 분리 |
-| workload identity | agent process가 어떤 system principal로 실행되는지 나타내는 신원 |
-| delegated authority | 사용자가 특정 목적·resource·기간에 맡긴 제한된 권한 |
-| sandbox | code·tool이 접근할 file·network·process를 기술적으로 제한한 환경 |
-| durable execution | process 재시작 뒤에도 step 상태를 복구하고 중복 효과를 수렴하는 실행 |
-| plan / commit | 변경안을 검토하는 단계와 실제 effect를 발생시키는 단계를 분리한 계약 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| host / client / server | 사용자를 통제하는 앱 / server 연결 / data·tool 제공 주체의 분리 | MCP 연동을 설계할 때 사용자 제어·프로토콜 연결·기능 제공 역할을 나눈다. |
+| workload identity | agent process가 어떤 system principal로 실행되는지 나타내는 신원 | 에이전트가 무제한 사용자 자격 증명을 물려받지 않고 추적 가능한 자체 권한을 갖게 한다. |
+| delegated authority | 사용자가 특정 목적·resource·기간에 맡긴 제한된 권한 | 에이전트의 행동을 사용자가 의도한 목적·자원·기간으로 제한한다. |
+| sandbox | code·tool이 접근할 file·network·process를 기술적으로 제한한 환경 | 생성되거나 신뢰하지 않는 코드가 파일·네트워크·프로세스에 미치는 영향을 제한한다. |
+| durable execution | process 재시작 뒤에도 step 상태를 복구하고 중복 효과를 수렴하는 실행 | 중단 후 긴 워크플로를 재개하면서 재시도와 이미 완료된 효과를 조정한다. |
+| plan / commit | 변경안을 검토하는 단계와 실제 effect를 발생시키는 단계를 분리한 계약 | 실제 자원에 효과를 발생시키기 전에 변경 제안과 범위를 검토한다. |
 
 1. model이 볼 data와 실행할 authority를 별도 표로 만든다.
 2. 모든 effect를 idempotent operation과 receipt로 수렴시킨다.

@@ -4,14 +4,14 @@
 
 ## 이 장에서 처음 쓰는 말
 
-| 용어 | 의미 |
-|---|---|
-| 관리형 계산(managed compute) | 공급자에게 공급·운영 일부를 맡긴 처리 용량 |
-| Unity Catalog | 지원 자산에 대한 Databricks 거버넌스·탐색 계층 |
-| Lakeflow | Databricks의 수집·파이프라인·작업 기능군 |
-| 동적 테이블(dynamic table) | 쿼리로 정의하고 갱신으로 유지하는 Snowflake 테이블 |
-| DMF | 데이터 속성을 측정하는 Snowflake Data Metric Function |
-| Warehouse | Snowflake에서 지원 워크로드를 처리하는 계산 자원 |
+| 용어 | 의미 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| 관리형 계산(managed compute) | 공급자에게 공급·운영 일부를 맡긴 처리 용량 | 워크로드 정확성·비용에 대한 책임은 유지하면서 인프라 운영의 일부를 위임한다. |
+| Unity Catalog | 지원 자산에 대한 Databricks 거버넌스·탐색 계층 | 지원되는 Databricks 워크로드에서 자산 검색과 접근 통제를 함께 관리한다. |
+| Lakeflow | Databricks의 수집·파이프라인·작업 기능군 | Databricks 데이터 엔지니어링 도구에서 수집·변환·작업 실행을 조정한다. |
+| 동적 테이블(dynamic table) | 쿼리로 정의하고 갱신으로 유지하는 Snowflake 테이블 | 신선도 요구를 명시하고 관리되는 갱신 동작으로 쿼리가 정의한 분석 결과를 유지한다. |
+| DMF | 데이터 속성을 측정하는 Snowflake Data Metric Function | 데이터 속성을 반복 측정해 기록된 결과로 품질 기대를 평가한다. |
+| Warehouse | Snowflake에서 지원 워크로드를 처리하는 계산 자원 | 동시성·지출을 관리하면서 워크로드용 Snowflake 계산 자원을 할당·조정한다. |
 
 ## 먼저 이해하기
 

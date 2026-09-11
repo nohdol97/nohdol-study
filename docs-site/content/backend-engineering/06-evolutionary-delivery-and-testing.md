@@ -8,14 +8,14 @@ Deployment is not the moment of executing a new binary, but the period when old 
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| expand-contract | First, add expressions that will be used together in the old and new versions, and then remove old expressions after conversion. |
-| contract test | A test to check whether the actual implementation adheres to the requests and responses agreed upon by the provider and consumer. |
-| shadow read | Validation that compares the results of a new path to existing results without writing them to the user. |
-| canary | Steps to expose new changes to only some traffic·tenant·resources |
-| rollback | Reverting an execution artifact to a previous revision |
-| roll forward | Forward deployment of a modified version when a simple rollback is risky due to data or external effects. |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| expand-contract | First, add expressions that will be used together in the old and new versions, and then remove old expressions after conversion. | Change schemas or APIs gradually while old and new versions coexist. |
+| contract test | A test to check whether the actual implementation adheres to the requests and responses agreed upon by the provider and consumer. | Detect incompatible provider changes before they break dependent consumers. |
+| shadow read | Validation that compares the results of a new path to existing results without writing them to the user. | Compare a new read path with the established one before relying on it for user responses. |
+| canary | Steps to expose new changes to only some traffic·tenant·resources | Observe a release on a limited population before exposing all users to its risk. |
+| rollback | Reverting an execution artifact to a previous revision | Restore a known deployment revision when a new release harms behavior and reversal remains compatible. |
+| roll forward | Forward deployment of a modified version when a simple rollback is risky due to data or external effects. | Repair behavior with a compatible new version when reversing the old change would worsen state. |
 
 1. Create a coexistence matrix before and after the change.
 2. Determine entry, interruption, rollback, and completion evidence for each step.

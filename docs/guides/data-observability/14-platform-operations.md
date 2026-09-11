@@ -4,14 +4,14 @@ A platform is operable when another engineer can change it, diagnose it, and res
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| RPO | Recovery Point Objective: the acceptable amount of lost progress/data measured against a recovery point |
-| RTO | Recovery Time Objective: the target time to restore the agreed service outcome |
-| Canary | A constrained rollout used to observe a change before widening it |
-| Backpressure | Slowing upstream work when downstream capacity is insufficient |
-| Workload identity | The identity a running service uses to obtain permissions |
-| Unit cost | Total relevant cost divided by a meaningful unit of successful work |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| RPO | Recovery Point Objective: the acceptable amount of lost progress/data measured against a recovery point | Set backup and replication requirements according to how much recent progress may be lost. |
+| RTO | Recovery Time Objective: the target time to restore the agreed service outcome | Choose and rehearse a recovery approach that fits the maximum acceptable interruption. |
+| Canary | A constrained rollout used to observe a change before widening it | Limit exposure while comparing a new release's outcomes with an established baseline. |
+| Backpressure | Slowing upstream work when downstream capacity is insufficient | Prevent an overloaded downstream stage from creating unbounded upstream queues or wasted work. |
+| Workload identity | The identity a running service uses to obtain permissions | Give a running service scoped permissions and attributable actions without embedding permanent user secrets. |
+| Unit cost | Total relevant cost divided by a meaningful unit of successful work | Compare operating designs using all relevant costs per valid successful output. |
 
 ## Understand the model first
 

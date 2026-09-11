@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { marked, Renderer } from 'marked';
 import { createHash } from 'node:crypto';
-import { renderParallel, articleTerms } from './bilingual.mjs';
+import { renderParallel, articleTerms, validateTermPurposes } from './bilingual.mjs';
+import { CORE_TERMS } from './src/terms.js';
 
 const SITE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPOSITORY_ROOT = path.resolve(SITE_ROOT, '..');
@@ -200,6 +201,7 @@ export async function buildSite({
   requireTracked = true,
 } = {}) {
   const catalog = await loadCatalog({ catalogPath, repositoryRoot, requireTracked });
+  validateTermPurposes(CORE_TERMS, 'core glossary');
   const repositoryReal = await realpath(repositoryRoot);
   const topicPathById = new Map();
   for (const learningPath of catalog.paths) {
@@ -234,6 +236,8 @@ export async function buildSite({
       const korean = await readFile(translationReal, 'utf8');
       invariant(korean.startsWith(`# ${translation.title}\n`), `Korean title mismatch: ${document.id}`);
       const text = plainText(source);
+      const terms = articleTerms(source, korean);
+      validateTermPurposes(terms, document.id);
       documents.push({
         ...document,
         topicId: topic.id,
@@ -241,7 +245,7 @@ export async function buildSite({
         readingMinutes: readingMinutes(text),
         searchText: text,
         koreanSearchText: plainText(korean),
-        terms: articleTerms(source, korean),
+        terms,
         parallelHtml: renderParallel(source, korean,
           (block) => renderMarkdown(block, document.path, documentIdByPath, catalog.site.repository),
           (block) => renderMarkdown(block, translation.path, documentIdByPath, catalog.site.repository), document.id),

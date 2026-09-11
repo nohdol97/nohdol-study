@@ -10,14 +10,14 @@ AI Transformation은 model API를 도입하는 일이 아니라 data 수집, 학
 
 ## 처음 보는 사람을 위한 출발점
 
-| 처음 만나는 말 | 학습용 쉬운 뜻 |
-|---|---|
-| AI infrastructure | GPU·network·storage·scheduler·serving runtime을 운영하는 기반 |
-| MLOps / LLMOps | dataset·model·prompt·index·평가와 배포 이력을 재현하는 체계 |
-| continuous training | 새 data와 기준에 따라 학습 후보를 반복 생성하는 과정 |
-| model serving | 여러 요청이 model inference를 안전한 latency와 capacity로 공유하는 계층 |
-| capability bundle | model뿐 아니라 prompt·tool·policy·workflow와 runtime을 함께 고정한 배포 단위 |
-| receipt | 누가 무엇을 어떤 입력·정책·결과로 실행했는지 남긴 검증 기록 |
+| 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| AI infrastructure | GPU·network·storage·scheduler·serving runtime을 운영하는 기반 | 학습·추론의 신뢰성을 뒷받침하는 공통 실행 용량을 제공한다. |
+| MLOps / LLMOps | dataset·model·prompt·index·평가와 배포 이력을 재현하는 체계 | 데이터·모델·프롬프트·평가·배포 전반의 변경을 재현하고 통제한다. |
+| continuous training | 새 data와 기준에 따라 학습 후보를 반복 생성하는 과정 | 데이터가 바뀔 때 새 학습 후보를 만들되 평가·승인 절차를 유지한다. |
+| model serving | 여러 요청이 model inference를 안전한 latency와 capacity로 공유하는 계층 | 명시한 지연·과부하 정책 아래 여러 클라이언트가 추론 용량을 공유하도록 한다. |
+| capability bundle | model뿐 아니라 prompt·tool·policy·workflow와 runtime을 함께 고정한 배포 단위 | 모델과 프롬프트·도구·정책·런타임 설정이 서로 맞지 않는 배포를 막는다. |
+| receipt | 누가 무엇을 어떤 입력·정책·결과로 실행했는지 남긴 검증 기록 | 계획·생성 답변을 실행 증거로 취급하지 않고 실제 실행 내용을 재구성할 때 쓴다. |
 
 ```mermaid
 flowchart LR

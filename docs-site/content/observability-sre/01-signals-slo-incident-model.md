@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **telemetry**: This is metric·log·trace data that the system exports so that its state can be observed externally.
-- **latency**: This is the time it takes to receive a response after sending a request.
-- **error rate**: The ratio of failed requests out of all requests.
-- **SLI**: This is a method of measuring the results received by the user in actual numbers.
-- **SLO**: This is the goal that SLI must achieve over a set period of time.
-- **incident**: An incident that has user impact and requires detection, response, recovery, and learning.
+- **telemetry**: This is metric·log·trace data that the system exports so that its state can be observed externally. **Why it matters / when to use it:** Provide observable evidence for troubleshooting, service measurement, and incident analysis.
+- **latency**: This is the time it takes to receive a response after sending a request. **Why it matters / when to use it:** Measure user waiting time and locate slow steps before adjusting request budgets.
+- **error rate**: The ratio of failed requests out of all requests. **Why it matters / when to use it:** Compare failures with eligible attempts so traffic changes do not disguise reliability changes.
+- **SLI**: This is a method of measuring the results received by the user in actual numbers. **Why it matters / when to use it:** Turn a user's success or failure into a consistently measurable operational signal.
+- **SLO**: This is the goal that SLI must achieve over a set period of time. **Why it matters / when to use it:** Agree on an acceptable service outcome and prioritize work against that target.
+- **incident**: An incident that has user impact and requires detection, response, recovery, and learning. **Why it matters / when to use it:** Coordinate recovery and learning around a defined period of user harm.
 
 Metrics, log, and trace are not competing tools. The same request is explained from different angles. Initially, the three signals are connected using two clues: the request ID and the time of occurrence.
 

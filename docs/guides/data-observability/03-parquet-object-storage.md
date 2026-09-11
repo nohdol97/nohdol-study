@@ -4,14 +4,14 @@ A query that requests two columns should not need to decode every field in every
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Row group | A horizontal group of rows stored as separate column chunks |
-| Column chunk | The data for one column within a row group |
-| Page | A smaller encoded unit within a column chunk |
-| Column pruning | Reading only columns needed by a query |
-| Predicate pushdown | Passing a filter into the reader so it can avoid or reduce work |
-| Object key | The name used to identify one object in a storage service |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Row group | A horizontal group of rows stored as separate column chunks | Balance scan parallelism and statistics-based skipping against file-layout overhead. |
+| Column chunk | The data for one column within a row group | Locate and read the required column's bytes within a Parquet row group. |
+| Page | A smaller encoded unit within a column chunk | Understand the finer encoding and read units that affect compression and supported skipping. |
+| Column pruning | Reading only columns needed by a query | Avoid reading unrelated columns when a query needs only a small part of a wide table. |
+| Predicate pushdown | Passing a filter into the reader so it can avoid or reduce work | Reduce data passed to later operators when the reader can evaluate or exploit the filter. |
+| Object key | The name used to identify one object in a storage service | Address a specific stored object and design naming that supports access and lifecycle policies. |
 
 ## Understand the model first
 

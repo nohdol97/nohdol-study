@@ -6,16 +6,16 @@ When service A calls service B, the request does not travel to the destination a
 
 This topic is not a refresher on network fundamentals. First, read [Network and Request Path](../networking/00-roadmap.md), understand Kubernetes' service and workload, and then connect **who owns the route**, **how many times a request can be attempted**, and **when to exclude a failed upstream and when to return it**. Retryable business semantics and application queues are [received from Operational Backend Engineering](../backend-engineering/00-roadmap.md), and are also a prerequisite topic of [Approved Automated Recovery and Operations Learning](../aiops-remediation/00-roadmap.md), since this boundary must exist first for AIOps' autohealing to change traffic.
 
-| New term | Plain-language meaning |
-|---|---|
-| Gateway | A common entry point that receives requests from external sources or other services. |
-| Route | Rules that state which condition requests will be sent to which backend |
-| upstream | A back-end service where the proxy sends the request on behalf of |
-| deadline | Total time allowed from initial request to final response |
-| retry budget | A cap on additional attempts allowed relative to normal request volume |
-| circuit breaker | A boundary that quickly rejects connections, waiting, requests, and retries when they exceed the upper limit. |
-| outlier detection | Ability to exclude backends that repeatedly fail from the healthy set for a certain period of time |
-| blast radius | The extent to which a change or failure can affect |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| Gateway | A common entry point that receives requests from external sources or other services. | Centralize traffic entry policy such as listeners, certificates, and route attachment. |
+| Route | Rules that state which condition requests will be sent to which backend | Send each matching application request to the intended backend under an explicit rule. |
+| upstream | A back-end service where the proxy sends the request on behalf of | Identify the next service a proxy depends on when diagnosing forwarding failures. |
+| deadline | Total time allowed from initial request to final response | Bound total user waiting time so nested work cannot consume unlimited time. |
+| retry budget | A cap on additional attempts allowed relative to normal request volume | Prevent retries from consuming the capacity needed for useful first attempts. |
+| circuit breaker | A boundary that quickly rejects connections, waiting, requests, and retries when they exceed the upper limit. | Reject excess work early when connection or request limits would otherwise worsen overload. |
+| outlier detection | Ability to exclude backends that repeatedly fail from the healthy set for a certain period of time | Reduce traffic to repeatedly failing instances while healthy alternatives are available. |
+| blast radius | The extent to which a change or failure can affect | Constrain the scope of experiments and actions so one mistake affects fewer users or resources. |
 
 ## Questions This Topic Answers
 

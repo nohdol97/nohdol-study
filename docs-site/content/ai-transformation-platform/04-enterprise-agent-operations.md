@@ -8,14 +8,14 @@ The enterprise agent is not complete with LLM autonomously calling multiple tool
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| host / client / server | Separation of app/server connection/data/tool ​​provider that controls users |
-| workload identity | An identity that indicates under which system principal the agent process runs. |
-| delegated authority | Limited authority granted by the user for a specific purpose/resource/period |
-| sandbox | An environment in which the files, networks, and processes that code and tools can access are technologically restricted. |
-| durable execution | Execution to restore step state and converge redundancy effects even after process restart |
-| plan / commit | A contract that separates the stage of reviewing a change proposal and the stage of generating actual effects |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| host / client / server | Separation of app/server connection/data/tool ​​provider that controls users | Separate user control, protocol connections, and capability providers when designing MCP integrations. |
+| workload identity | An identity that indicates under which system principal the agent process runs. | Give an agent its own accountable permissions rather than inheriting an unrestricted user's credentials. |
+| delegated authority | Limited authority granted by the user for a specific purpose/resource/period | Limit an agent's actions to the user's intended purpose, resources, and time window. |
+| sandbox | An environment in which the files, networks, and processes that code and tools can access are technologically restricted. | Constrain the impact of generated or untrusted code on files, networks, and processes. |
+| durable execution | Execution to restore step state and converge redundancy effects even after process restart | Resume long workflows after interruption while coordinating retries and already completed effects. |
+| plan / commit | A contract that separates the stage of reviewing a change proposal and the stage of generating actual effects | Review a proposed change and its scope before permitting effects on real resources. |
 
 1. Create a separate table of data to be viewed by the model and authority to be executed.
 2. All effects converge to idempotent operation and receipt.

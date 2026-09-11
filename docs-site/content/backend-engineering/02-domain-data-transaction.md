@@ -8,14 +8,14 @@ Order amount must be non-negative, the same coupon can only be applied once per 
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| invariant | Business rules that must be true before and after a transaction |
-| aggregate | Boundaries of work status that must be consistently changed together |
-| constraint | Structure, value, and relationship rules that DB enforces on all write paths |
-| isolation | Rules that determine how much concurrent transactions can see each other's intermediate states |
-| write skew | A phenomenon in which the read conditions of each transaction are correct, but the result of committing them together breaks the rule. |
-| outbox | A table that records work status and events scheduled to be issued in the same commit. |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| invariant | Business rules that must be true before and after a transaction | Turn business correctness into rules that every concurrent execution must preserve. |
+| aggregate | Boundaries of work status that must be consistently changed together | Choose which business state must change consistently together before defining transaction boundaries. |
+| constraint | Structure, value, and relationship rules that DB enforces on all write paths | Enforce data rules even when writes come from different applications or maintenance jobs. |
+| isolation | Rules that determine how much concurrent transactions can see each other's intermediate states | Choose the concurrency anomalies the application must prevent and test those choices explicitly. |
+| write skew | A phenomenon in which the read conditions of each transaction are correct, but the result of committing them together breaks the rule. | Recognize when individually valid transactions jointly break a rule and choose stronger coordination. |
+| outbox | A table that records work status and events scheduled to be issued in the same commit. | Avoid losing a required event between committing business data and publishing to another system. |
 
 1. First, we transform the natural language task rule into two competing requests.
 2. Next, decide which rules the DB will enforce and which conflicts the application will retry.

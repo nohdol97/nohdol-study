@@ -4,14 +4,14 @@ Learning a managed platform is more useful after you can state what the pipeline
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Managed compute | Processing capacity whose provisioning and operation are partly delegated to a provider |
-| Unity Catalog | Databricks' governance and discovery layer for supported assets |
-| Lakeflow | Databricks' family of ingestion, pipeline, and job capabilities |
-| Dynamic table | A Snowflake query-defined table maintained through refreshes |
-| DMF | Snowflake Data Metric Function, used to measure data properties |
-| Warehouse | In Snowflake, a compute resource used for supported workloads |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Managed compute | Processing capacity whose provisioning and operation are partly delegated to a provider | Delegate part of infrastructure operation while retaining responsibility for workload correctness and cost. |
+| Unity Catalog | Databricks' governance and discovery layer for supported assets | Coordinate asset discovery and access governance across supported Databricks workloads. |
+| Lakeflow | Databricks' family of ingestion, pipeline, and job capabilities | Coordinate ingestion, transformations, and jobs within Databricks' data-engineering tooling. |
+| Dynamic table | A Snowflake query-defined table maintained through refreshes | Maintain a query-defined analytical result through managed refresh behavior with explicit freshness requirements. |
+| DMF | Snowflake Data Metric Function, used to measure data properties | Measure data properties repeatedly so quality expectations can be evaluated on recorded results. |
+| Warehouse | In Snowflake, a compute resource used for supported workloads | Assign and size Snowflake compute for a workload while managing concurrency and spending. |
 
 ## Understand the model first
 

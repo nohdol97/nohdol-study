@@ -6,16 +6,16 @@ Even if the AIOps diagnosis says, “Recent deployment is most likely the cause,
 
 Google SRE explains that automation can operate faster than humans with a well-defined scope of failover or traffic switching, but warns that the scope must be clearly limited because automated procedures can make the situation worse. This topic does not prohibit or unconditionally expand automation. The stages of recommendation only, stages of human approval and execution, and automatic execution in a narrow scope are promoted based on evidence. The prerequisite contract for execution identity·sandbox·durable operation is shared with [Enterprise AI and secure agent execution](../ai-transformation-platform/04-enterprise-agent-operations.md), and the general principle of duplication and unknown results is shared with [backend distributed workflow](../backend-engineering/04-distributed-workflows.md).
 
-| New term | Plain-language meaning |
-|---|---|
-| remediation | Operational actions to reduce harm to users or restore normalcy |
-| runbook | Execution procedure that includes preconditions, commands, verification, abort, and revert |
-| dry-run | Execution of reviewing plans, authorities and targets without changing the actual state |
-| blast radius | Scope of service·region·tenant·resource that action can affect |
-| abort condition | Conditions to stop immediately when results worsen or evidence is lacking |
-| rollback pointer | Validated revision or configuration identifier to return to |
-| idempotency key | Key that converges into one operation even if the same action request is duplicated |
-| outcome verification | A procedure that verifies that the user results and system state have been restored, rather than a command success. |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| remediation | Operational actions to reduce harm to users or restore normalcy | Restore an agreed user outcome through a scoped action with verification and abort criteria. |
+| runbook | Execution procedure that includes preconditions, commands, verification, abort, and revert | Make response steps repeatable and reviewable under incident pressure. |
+| dry-run | Execution of reviewing plans, authorities and targets without changing the actual state | Check targets, permissions, and proposed effects before executing a real change. |
+| blast radius | Scope of service·region·tenant·resource that action can affect | Constrain the scope of experiments and actions so one mistake affects fewer users or resources. |
+| abort condition | Conditions to stop immediately when results worsen or evidence is lacking | Stop a response that is worsening impact or no longer meets its safety assumptions. |
+| rollback pointer | Validated revision or configuration identifier to return to | Name a verified recovery target before starting a change that may need reversal. |
+| idempotency key | Key that converges into one operation even if the same action request is duplicated | Recognize repeated action requests as one logical operation after timeouts or retries. |
+| outcome verification | A procedure that verifies that the user results and system state have been restored, rather than a command success. | Confirm recovery in user results rather than declaring success from a command exit alone. |
 
 ## Divide actions into three classes
 

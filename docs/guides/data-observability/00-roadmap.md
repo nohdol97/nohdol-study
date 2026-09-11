@@ -6,14 +6,14 @@ Build the ability to explain where data came from, why a result is trustworthy, 
 
 Imagine an order dashboard that returns HTTP 200 while showing yesterday's revenue. The API is available, but the data product is failing. Now imagine an assistant answering from that same table: a fast model produces a confidently outdated answer. Learning to diagnose both situations requires following the data beyond individual tools.
 
-| New term | Plain-language meaning |
-|---|---|
-| Data product | A dataset with a defined consumer, meaning, owner, and delivery promise |
-| Pipeline | Steps that ingest, transform, validate, and publish data |
-| Observability | Evidence that helps explain behavior inside a system |
-| Data reliability | Delivering correct-enough, complete-enough data within an agreed time and recovery boundary |
-| Lineage | Recorded relationships between inputs, processing runs, and outputs |
-| SLI / SLO | A measured outcome / the target agreed for that outcome |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| Data product | A dataset with a defined consumer, meaning, owner, and delivery promise | Give consumers a dependable agreement about a dataset's meaning, owner, and delivery. |
+| Pipeline | Steps that ingest, transform, validate, and publish data | Organize ingestion through publication into steps whose failures and outputs can be checked. |
+| Observability | Evidence that helps explain behavior inside a system | Explain failures and changing behavior using evidence from inside the running system. |
+| Data reliability | Delivering correct-enough, complete-enough data within an agreed time and recovery boundary | Align quality and delivery checks with what the data consumer actually needs. |
+| Lineage | Recorded relationships between inputs, processing runs, and outputs | Find upstream inputs and downstream consequences when data changes or a run fails. |
+| SLI / SLO | A measured outcome / the target agreed for that outcome | Express the consumer's service promise as a measurable outcome and agreed target. |
 
 You should be able to run a shell command, read a small Python program, and write a basic SQL query. If these are new, spend the first month on the foundations chapter. Kafka experience helps, but the progression does not assume an employer, job title, or particular production history.
 

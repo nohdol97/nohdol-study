@@ -2,14 +2,14 @@
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| operation | Records representing a remediation request and its execution/verification results |
-| plan | Change plan that fixes the execution target, expected diff, and precondition |
-| commit | Steps to convert an approved plan into an actual status change |
-| reconciliation | The process of converging the operation by rereading the desired state and the actual state |
-| lease | Timed ownership to limit executors changing the same target simultaneously |
-| verification receipt | A record of what queries and criteria were used to determine success or failure after an action. |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| operation | Records representing a remediation request and its execution/verification results | Track approval, execution, and verification of one remediation request across retries. |
+| plan | Change plan that fixes the execution target, expected diff, and precondition | Review targets, differences, and assumptions before authorizing a state-changing operation. |
+| commit | Steps to convert an approved plan into an actual status change | Separate reviewing an action from producing its approved real-world effects. |
+| reconciliation | The process of converging the operation by rereading the desired state and the actual state | Recover from uncertain acknowledgments by checking actual state before repeating or repairing work. |
+| lease | Timed ownership to limit executors changing the same target simultaneously | Coordinate temporary ownership among executors; use fencing when stale writes must be rejected. |
+| verification receipt | A record of what queries and criteria were used to determine success or failure after an action. | Retain the measurements and criteria needed to audit a recovery verdict later. |
 
 ## Understand the model first
 

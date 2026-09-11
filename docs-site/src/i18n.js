@@ -8,6 +8,7 @@ const korean = {
   'Terms in this chapter': '먼저 알아둘 용어',
   'Select an underlined term to read its explanation.': '밑줄이 있는 용어를 누르면 설명을 확인할 수 있습니다.',
   'Meaning': '무엇인가요?',
+  'Why it matters / when to use it': '왜 필요한가요 · 언제 쓰나요',
   'Small example': '작은 예시',
   'Do not confuse with': '헷갈리지 마세요',
   'Official documentation': '공식 문서',

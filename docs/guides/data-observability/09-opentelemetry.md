@@ -4,14 +4,14 @@ A failed pipeline can leave clues in a scheduler log, an executor metric, and a 
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Span / trace | A recorded operation / related operations connected through trace context |
-| Resource | Attributes identifying the entity producing telemetry, such as a service |
-| Context propagation | Passing execution context across calls and message boundaries |
-| Baggage | Propagated key/value context that can travel with requests |
-| OTLP | OpenTelemetry's telemetry transport protocol |
-| Sampling | Selecting which trace information to retain under a defined policy |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Span / trace | A recorded operation / related operations connected through trace context | Explain one request's work across operation boundaries and identify where latency accumulated. |
+| Resource | Attributes identifying the entity producing telemetry, such as a service | Attribute telemetry to the producing service or instance when comparing deployments and failures. |
+| Context propagation | Passing execution context across calls and message boundaries | Keep causal execution links intact across HTTP calls or message processing boundaries. |
+| Baggage | Propagated key/value context that can travel with requests | Carry small approved context values across calls when downstream components need them. |
+| OTLP | OpenTelemetry's telemetry transport protocol | Send telemetry through a common protocol instead of writing a separate transport for every backend. |
+| Sampling | Selecting which trace information to retain under a defined policy | Control trace volume and cost while documenting which evidence the selection policy can lose. |
 
 ## Understand the model first
 

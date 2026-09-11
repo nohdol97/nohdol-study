@@ -4,12 +4,12 @@
 
 ## Terms introduced in this chapter
 
-- **principal**: The identity of the person or program sending the request to AWS.
-- **credential**: Login information used to prove your identity. Temporary credentials take precedence over long-term access keys.
-- **API**: A designated channel through which a program requests AWS to “show me a list” or “create a resource.”
-- **subnet**: Divides the VPC's IP address range into smaller zones.
-- **route table**: A set of rules that determine which next point to send traffic to based on the destination address.
-- **availability zone (AZ)**: An operational zone that separates power and facility failure boundaries within a region.
+- **principal**: The identity of the person or program sending the request to AWS. **Why it matters / when to use it:** Determine whose policies apply when evaluating an AWS request.
+- **credential**: Login information used to prove your identity. Temporary credentials take precedence over long-term access keys. **Why it matters / when to use it:** Prove the requester's identity to a service; protect and limit the credential's lifetime.
+- **API**: A designated channel through which a program requests AWS to “show me a list” or “create a resource.” **Why it matters / when to use it:** Automate repeatable AWS queries and changes through a defined request interface.
+- **subnet**: Divides the VPC's IP address range into smaller zones. **Why it matters / when to use it:** Group network interfaces into address ranges with the intended placement and routing.
+- **route table**: A set of rules that determine which next point to send traffic to based on the destination address. **Why it matters / when to use it:** Make destination-specific forwarding decisions explicit and reviewable.
+- **availability zone (AZ)**: An operational zone that separates power and facility failure boundaries within a region. **Why it matters / when to use it:** Place redundant workloads across distinct facility failure boundaries within a region.
 
 At first, just note that both `the identity is authorized to perform the operation` and `a communication path to the destination exists` are required for a single request to succeed. You cannot find the cause by checking just one of the two.
 

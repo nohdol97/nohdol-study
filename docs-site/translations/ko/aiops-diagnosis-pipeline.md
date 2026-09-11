@@ -2,14 +2,14 @@
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| symptom detector | 사용자 오류·지연·가용성 저하를 직접 찾는 규칙 |
-| cause hint | CPU·queue·deployment처럼 원인을 좁히는 내부 신호 |
-| change correlation | symptom 전후의 배포·설정 변경을 후보에 연결하는 것 |
-| topology radius | 영향 service에서 dependency를 몇 단계까지 탐색할지 정한 범위 |
-| confidence | 주어진 evidence와 평가 기준 안에서 후보를 선택한 정도 |
-| counterevidence | 그 후보가 원인이라면 관측돼야 하지만 실제로는 반대인 증거 |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| symptom detector | 사용자 오류·지연·가용성 저하를 직접 찾는 규칙 | 인프라 측정이 정상처럼 보일 때도 사용자에게 발생한 실패를 탐지한다. |
+| cause hint | CPU·queue·deployment처럼 원인을 좁히는 내부 신호 | 내부 신호를 인과관계의 증명으로 취급하지 않고 다음 구분 검사를 선택한다. |
+| change correlation | symptom 전후의 배포·설정 변경을 후보에 연결하는 것 | 대안 설명도 확인하면서 최근 변경을 조사 우선순위에 올린다. |
+| topology radius | 영향 service에서 dependency를 몇 단계까지 탐색할지 정한 범위 | 사고 조사에 느슨하게 관련된 모든 서비스가 포함되지 않도록 그래프 탐색 범위를 제한한다. |
+| confidence | 주어진 evidence와 평가 기준 안에서 후보를 선택한 정도 | 가용 근거가 후보를 얼마나 지지하며 어디에 불확실성이 남는지 전달한다. |
+| counterevidence | 그 후보가 원인이라면 관측돼야 하지만 실제로는 반대인 증거 | 선호하는 진단이 불필요하거나 해로운 조치로 이어지기 전에 반대 근거로 검토한다. |
 
 ## 먼저 이해하기
 

@@ -8,14 +8,14 @@ Raw records become a product when consumers can depend on their grain, history, 
 
 ## Terms introduced in this chapter
 
-| Term | Meaning |
-|---|---|
-| Fact / dimension | A measurement or event / descriptive context used to interpret it |
-| Star schema | Facts connected to descriptive dimensions through defined keys |
-| SCD Type 1 / Type 2 | Replace prior descriptive values / retain their effective history |
-| Incremental model | A model that processes a selected change set rather than always rebuilding everything |
-| Backfill | Reprocessing a defined historical interval |
-| Data interval | The time range a scheduled computation is responsible for |
+| Term | Meaning | Why it matters / when to use it |
+|---|---|---|
+| Fact / dimension | A measurement or event / descriptive context used to interpret it | Separate measurable events from descriptive context so aggregation and attribution stay meaningful. |
+| Star schema | Facts connected to descriptive dimensions through defined keys | Give analytical queries explicit fact-to-dimension joins at declared grains. |
+| SCD Type 1 / Type 2 | Replace prior descriptive values / retain their effective history | Choose whether reports use today's attributes or the attributes valid when an event happened. |
+| Incremental model | A model that processes a selected change set rather than always rebuilding everything | Avoid full recomputation when a correctly bounded change set can update the result. |
+| Backfill | Reprocessing a defined historical interval | Repair missing or corrected historical intervals without silently changing unrelated periods. |
+| Data interval | The time range a scheduled computation is responsible for | Make scheduled work's time responsibility explicit so missing intervals and retries can be checked. |
 
 ## Understand the model first
 

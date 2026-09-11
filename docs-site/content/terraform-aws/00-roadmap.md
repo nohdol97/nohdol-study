@@ -4,14 +4,14 @@
 
 You can create servers and networks by directly clicking them on the AWS screen. But when you want to recreate the same experience or review the reasons for a change, you rely on your memory of “who pressed what.” Terraform is a tool that writes down the infrastructure you want to create in a file, compares it to the current state, and shows the change schedule.
 
-| New term | Plain-language meaning |
-|---|---|
-| configuration | A file containing the code you want to create |
-| resource | Objects that Terraform creates, searches, and changes as a unit |
-| provider | Plugin to forward Terraform requests to external service APIs such as AWS |
-| state | A record to remember that the resources in your code and the actual AWS resources are the same thing. |
-| plan | A proposal that shows what will be created, changed, or deleted if applied now. |
-| Apply | Steps to request the reviewed plan from an actual external service |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| configuration | A file containing the code you want to create | Review, version, and reproduce infrastructure intent instead of relying on remembered manual steps. |
+| resource | Objects that Terraform creates, searches, and changes as a unit | Declare a manageable infrastructure unit so Terraform can plan its creation and changes. |
+| provider | Plugin to forward Terraform requests to external service APIs such as AWS | Translate declared resources into the target platform's API operations. |
+| state | A record to remember that the resources in your code and the actual AWS resources are the same thing. | Match configuration addresses to existing objects so changes update the intended resources. |
+| plan | A proposal that shows what will be created, changed, or deleted if applied now. | Review targets, differences, and assumptions before authorizing a state-changing operation. |
+| Apply | Steps to request the reviewed plan from an actual external service | Execute a reviewed infrastructure change after checking its account and scope. |
 
 The first lab does not create AWS resources. After learning the `write → validate → inspect the plan` flow with small local resources, you first learn the habit of checking accounts and scope of changes in AWS.
 

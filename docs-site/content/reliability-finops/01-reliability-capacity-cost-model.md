@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **Reliability**: The property of a system to continue performing its expected function for a required period of time.
-- **SLI/SLO**: How to measure real user results and what the goals are for those measurements.
-- **failure mode**: A scenario that specifically describes what can fail and how.
-- **Restore/recovery**: The process of making data and services usable again using a backup or remaining system.
-- **Capacity margin**: Processing capacity reserved to withstand surges beyond normal usage or some failures.
-- **FinOps**: An operating method that measures and improves cloud costs by linking them with technology and business ownership.
+- **Reliability**: The property of a system to continue performing its expected function for a required period of time. **Why it matters / when to use it:** Evaluate sustained successful operation across failures, changes, and recovery periods.
+- **SLI/SLO**: How to measure real user results and what the goals are for those measurements. **Why it matters / when to use it:** Connect measured user outcomes to an agreed target when prioritizing reliability work.
+- **failure mode**: A scenario that specifically describes what can fail and how. **Why it matters / when to use it:** Design focused failure drills and controls for a specific way the system can break.
+- **Restore/recovery**: The process of making data and services usable again using a backup or remaining system. **Why it matters / when to use it:** Prove that retained data and replacement components can actually restore usable service.
+- **Capacity margin**: Processing capacity reserved to withstand surges beyond normal usage or some failures. **Why it matters / when to use it:** Absorb demand spikes or lost replicas without immediately exhausting all remaining capacity.
+- **FinOps**: An operating method that measures and improves cloud costs by linking them with technology and business ownership. **Why it matters / when to use it:** Connect infrastructure spending to accountable owners and meaningful business outcomes.
 
 At first, using the small order API as an example, we asked questions such as “What percentage of requests should succeed in 30 days?” and “If the database disappears, how long do we have to recover from it?” Add numbers to both questions. Complex architectures are chosen after a goal has been established.
 

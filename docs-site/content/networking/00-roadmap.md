@@ -4,14 +4,14 @@
 
 Let's start with a situation where you enter an address in your browser, but the screen doesn't open. It cannot be fixed with just one sentence, “The Internet doesn’t work.” You need to determine whether it was a failure to convert the address to a number, whether the path to the server was blocked, or whether the server was not ready to receive the request.
 
-| New term | Plain-language meaning |
-|---|---|
-| hostname | A server name that is easy for people to remember. Example: `api.example.com` |
-| IP address | A numeric address used to locate a computer or connection point on a network. |
-| DNS | A system that retrieves records for a name, including addresses through A/AAAA records; reverse lookup is a separate query |
-| route | Rules that determine which direction to send packets to the destination IP |
-| port | A number that identifies the program that will receive the request within a computer |
-| connection | A communication state that allows two programs to exchange data |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| hostname | A server name that is easy for people to remember. Example: `api.example.com` | Keep service addresses understandable while allowing address records to change independently. |
+| IP address | A numeric address used to locate a computer or connection point on a network. | Identify a network destination when checking routing and endpoint reachability. |
+| DNS | A system that retrieves records for a name, including addresses through A/AAAA records; reverse lookup is a separate query | Resolve service names before connecting and isolate name-resolution failures from transport failures. |
+| route | Rules that determine which direction to send packets to the destination IP | Choose the next network hop and explain why packets reach or miss a destination. |
+| port | A number that identifies the program that will receive the request within a computer | Direct traffic to the intended listener and distinguish network reachability from application readiness. |
+| connection | A communication state that allows two programs to exchange data | Reason about setup, reuse, timeout, and closure costs along a request path. |
 
 This process tests each step, from name resolution to application response. At first, only success and failure of `curl` are compared, and then the scope is expanded to specialized boundaries such as TCP, TLS, and load balancer.
 

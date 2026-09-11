@@ -6,15 +6,15 @@ AIOps is not about attaching a chatbot to the operation screen or having all ale
 
 First, learn the role of metric·log·trace·SLO in [Observability and SRE](../observability-sre/00-roadmap.md). [AI Specialist](../ai-specialist-core/00-roadmap.md)'s model·retrieval result and [AI Transformation](../ai-transformation-platform/00-roadmap.md)'s bundle·deployment·tool operation ID also meet operation signals at this stage. Here, we add Kubernetes event, deployment·configuration change, service owner, and topology to create `incident bundle`. With this bundle, [anomaly detection and fault diagnosis](../aiops-diagnosis/00-roadmap.md) can reproduce the same event without arbitrarily reading different data each time.
 
-| New term | Plain-language meaning |
-|---|---|
-| AIOps | Technology and operating procedures that analyze operational data to assist in detection, diagnosis, and action decisions |
-| telemetry | Observation data such as metrics, log, and trace sent out by the system |
-| semantic convention | A promise for different systems to record the same meaning under the same name and unit. |
-| topology | Relationship showing how service·dependency·deployment·resource are connected |
-| change event | Events that change system behavior, such as deployment·configuration·feature flag |
-| incident bundle | A reproducible record of a disturbance's time horizon, impacts, signals, changes, candidates and judgments |
-| ground truth | Cause, effect, and action label confirmed by people and evidence after the incident is over |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| AIOps | Technology and operating procedures that analyze operational data to assist in detection, diagnosis, and action decisions | Help responders organize operational evidence and decisions when manual triage cannot keep up. |
+| telemetry | Observation data such as metrics, log, and trace sent out by the system | Provide observable evidence for troubleshooting, service measurement, and incident analysis. |
+| semantic convention | A promise for different systems to record the same meaning under the same name and unit. | Join and compare signals across services without silently mixing names, units, or meanings. |
+| topology | Relationship showing how service·dependency·deployment·resource are connected | Follow dependencies to scope possible causes and affected users during an incident. |
+| change event | Events that change system behavior, such as deployment·configuration·feature flag | Test whether a recent deployment or configuration change plausibly explains the observed symptom. |
+| incident bundle | A reproducible record of a disturbance's time horizon, impacts, signals, changes, candidates and judgments | Give investigators the same bounded evidence set so diagnosis can be replayed and reviewed. |
+| ground truth | Cause, effect, and action label confirmed by people and evidence after the incident is over | Evaluate diagnostic predictions against adjudicated incident outcomes rather than model agreement. |
 
 ## An operational foundation that AIOps can read
 

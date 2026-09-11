@@ -10,14 +10,14 @@ AI Transformation is not about introducing a model API, but about changing data 
 
 ## Starting point for beginners
 
-| New term | Plain-language meaning |
-|---|---|
-| AI infrastructure | Foundation for operating GPU·network·storage·scheduler·serving runtime |
-| MLOps / LLMOps | A system that reproduces dataset·model·prompt·index·evaluation and deployment history |
-| continuous training | The process of repeatedly generating learning candidates based on new data and criteria |
-| model serving | A layer where multiple requests share model inference with safe latency and capacity |
-| capability bundle | A deployment unit that fixes not only the model but also the prompt·tool·policy·workflow and runtime together. |
-| receipt | Verification record of who implemented what and with what inputs, policies, and results |
+| New term | Plain-language meaning | Why it matters / when to use it |
+|---|---|---|
+| AI infrastructure | Foundation for operating GPU·network·storage·scheduler·serving runtime | Provide the shared execution capacity on which training and inference reliability depend. |
+| MLOps / LLMOps | A system that reproduces dataset·model·prompt·index·evaluation and deployment history | Reproduce and govern changes across data, models, prompts, evaluation, and deployment. |
+| continuous training | The process of repeatedly generating learning candidates based on new data and criteria | Generate updated candidates as data changes while keeping evaluation and promotion gates. |
+| model serving | A layer where multiple requests share model inference with safe latency and capacity | Share inference capacity across clients under explicit latency and overload policies. |
+| capability bundle | A deployment unit that fixes not only the model but also the prompt·tool·policy·workflow and runtime together. | Avoid deploying a model with mismatched prompts, tools, policies, or runtime settings. |
+| receipt | Verification record of who implemented what and with what inputs, policies, and results | Reconstruct what actually executed instead of treating a plan or generated answer as execution proof. |
 
 ```mermaid
 flowchart LR

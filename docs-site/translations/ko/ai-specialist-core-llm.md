@@ -8,14 +8,14 @@ LLM을 운영하려면 prompt API보다 먼저 한 token이 어떤 계산을 거
 
 ## 이 장에서 처음 쓰는 말
 
-| 말 | 이 장에서의 뜻 |
-|---|---|
-| token | tokenizer가 문자열을 모델 vocabulary의 정수 단위로 나눈 값 |
-| embedding | token ID를 학습 가능한 vector로 바꾼 표현 |
-| causal mask | 현재 위치가 미래 token을 보지 못하게 하는 제한 |
-| attention | query와 key 관계로 value를 가중 합하는 계산 |
-| prefill / decode | 입력 token을 한꺼번에 처리하는 단계 / 다음 token을 순차 생성하는 단계 |
-| KV cache | 이미 계산한 과거 key·value를 decode 동안 재사용하는 memory |
+| 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
+|---|---|---|
+| token | tokenizer가 문자열을 모델 vocabulary의 정수 단위로 나눈 값 | 텍스트를 모델의 이산 입력으로 표현하고 문맥 길이·생성 작업량을 측정한다. |
+| embedding | token ID를 학습 가능한 vector로 바꾼 표현 | 문맥을 반영하는 모델 계산 전에 이산 토큰 ID를 학습 가능한 수치 입력으로 바꾼다. |
+| causal mask | 현재 위치가 미래 token을 보지 못하게 하는 제한 | 다음 토큰 학습이 생성 시점에는 볼 수 없는 미래 토큰을 참조하지 못하게 한다. |
+| attention | query와 key 관계로 value를 가중 합하는 계산 | 토큰의 표현을 계산할 때 관련 있는 문맥 위치의 정보를 함께 반영한다. |
+| prefill / decode | 입력 token을 한꺼번에 처리하는 단계 / 다음 token을 순차 생성하는 단계 | 지연·서빙 용량을 진단할 때 입력 처리와 순차 생성을 구분한다. |
+| KV cache | 이미 계산한 과거 key·value를 decode 동안 재사용하는 memory | 메모리를 사용하는 대신 토큰 생성마다 과거 attention의 키·값을 다시 계산하는 일을 줄인다. |
 
 1. token ID에서 logit까지 tensor shape를 손으로 따라간다.
 2. 품질 지표와 memory·latency·throughput의 trade-off를 분리해 측정한다.

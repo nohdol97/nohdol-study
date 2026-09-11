@@ -4,14 +4,14 @@
 
 ## Terms introduced in this chapter
 
-| word | Meaning in this chapter |
-|---|---|
-| symptom node | Errors, delays, and feature failures actually experienced by users |
-| evidence edge | A connection showing that two records belong to the same request, deployment, resource, or time window. |
-| correlation ID | Stable identifier to find the same execution in different signals |
-| observation window | Start and end time range to include in incident analysis |
-| provenance | Source indicating which collector·query·revision the evidence came from |
-| cardinality | Number of different values ​​an attribute can have |
+| word | Meaning in this chapter | Why it matters / when to use it |
+|---|---|---|
+| symptom node | Errors, delays, and feature failures actually experienced by users | Anchor investigation in user harm before following indirect infrastructure signals. |
+| evidence edge | A connection showing that two records belong to the same request, deployment, resource, or time window. | Make evidence relationships explicit so temporal coincidence is not mistaken for a proven cause. |
+| correlation ID | Stable identifier to find the same execution in different signals | Find matching logs and traces for one execution without guessing from timestamps alone. |
+| observation window | Start and end time range to include in incident analysis | Compare signals over the same incident period and exclude unrelated events. |
+| provenance | Source indicating which collector·query·revision the evidence came from | Trace an operational claim back to the collection method and source revision that support it. |
+| cardinality | Number of different values ​​an attribute can have | Estimate grouping and storage growth before adding high-variation attributes to telemetry. |
 
 ## Understand the model first
 

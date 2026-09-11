@@ -2,12 +2,12 @@
 
 ## Terms introduced in this chapter
 
-- **render**: This is the process of creating the final YAML that Kubernetes will receive by inserting values ​​into the template.
-- **desired state**: A desired state declared in Git or a configuration file that “this is how it should be”.
-- **live state**: The status of resources that actually exist in the current cluster.
-- **sync**: This is an operation to create, change, and delete resources to reduce the difference between the desired state and the live state.
-- **drift**: A phenomenon in which the desired state and the actual state differ.
-- **CRD**: A definition that adds a new type of resource to Kubernetes.
+- **render**: This is the process of creating the final YAML that Kubernetes will receive by inserting values ​​into the template. **Why it matters / when to use it:** Inspect the actual manifests before installation to catch unintended generated configuration.
+- **desired state**: A desired state declared in Git or a configuration file that “this is how it should be”. **Why it matters / when to use it:** Let controllers compare the target with reality and repair deviations repeatedly.
+- **live state**: The status of resources that actually exist in the current cluster. **Why it matters / when to use it:** Compare actual objects with declared intent before claiming a deployment converged.
+- **sync**: This is an operation to create, change, and delete resources to reduce the difference between the desired state and the live state. **Why it matters / when to use it:** Bring the cluster toward reviewed configuration after checking which changes reconciliation will make.
+- **drift**: A phenomenon in which the desired state and the actual state differ. **Why it matters / when to use it:** Detect differences between reviewed Git intent and live objects before deciding how to reconcile them.
+- **CRD**: A definition that adds a new type of resource to Kubernetes. **Why it matters / when to use it:** Represent a domain-specific object through Kubernetes' declarative API and controller workflows.
 
 At first, only check `template + values = manifest` directly. Next, separate and understand release, which is a record of the manifest being installed on the cluster, and GitOps, which continuously checks for differences based on Git.
 
