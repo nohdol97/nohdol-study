@@ -76,7 +76,7 @@
             "path": "docs-site/translations/ko/kubernetes-roadmap.md",
             "title": "쿠버네티스 전체 학습 로드맵",
             "summary": "컨테이너·이미지·클러스터·Node·Pod의 쉬운 뜻부터 전체 학습 순서를 잡습니다.",
-            "sourceSha256": "339b440b2eea95dc6aaf5e288a34b85f3e164a00c74529b92e658068fbacd25f"
+            "sourceSha256": "b2918a84f390132f763c254905d04dd1a7905223cbde9dae4741e50f400486a8"
           }
         },
         {
@@ -218,7 +218,7 @@
             "path": "docs-site/translations/ko/linux-roadmap.md",
             "title": "Linux 시스템 운영 로드맵",
             "summary": "프로그램·프로세스·서비스·포트가 무엇인지 익히고 첫 Linux 진단 순서를 잡습니다.",
-            "sourceSha256": "86da6ccb618f89b61032856ac1a114e7316196bf1bb6785e5753e85ed8b61e37"
+            "sourceSha256": "cbd219c3e02264761989aab22d8125008ade5adedbd1652a6ed0149289b86426"
           }
         },
         {
@@ -230,7 +230,7 @@
             "path": "docs-site/translations/ko/linux-process-resources.md",
             "title": "Process와 resource의 연결",
             "summary": "서비스 이름에서 실제 프로세스와 열린 파일·포트, 사용 중인 자원을 찾아갑니다.",
-            "sourceSha256": "17c7e223509a0231c45dafc34791a1409769c5b33ca0c58106a501a528dd8dc7"
+            "sourceSha256": "8351b2d4f43473cbf0150103b2efdfef4e172b736356bfec42fa217e181d3efd"
           }
         },
         {
@@ -264,7 +264,7 @@
             "path": "docs-site/translations/ko/networking-roadmap.md",
             "title": "네트워크와 요청 경로 로드맵",
             "summary": "호스트 이름·IP 주소·포트부터 시작해 ‘접속이 안 된다’를 작은 문제로 나눕니다.",
-            "sourceSha256": "41b57fbb3f4aa2dad1c3d9c73f973cdba4a35591044dfa0b64f75069baddc4c6"
+            "sourceSha256": "8188538133108304e60e6a1865a721e91876609773d73e9dfd7d40b91043dc10"
           }
         },
         {
@@ -276,7 +276,7 @@
             "path": "docs-site/translations/ko/networking-request-path.md",
             "title": "DNS부터 backend까지",
             "summary": "DNS 결과가 TCP 연결과 TLS 확인, HTTP 응답으로 이어지는 과정을 한 요청으로 따라갑니다.",
-            "sourceSha256": "d941b16954ebec9f32f8431d8a348dff868db16079e1aa99d668dc41fdc34719"
+            "sourceSha256": "0ce91c51f800eb629f32dd720ba80d981472220073937289c8e294298bd97aeb"
           }
         },
         {
@@ -310,7 +310,7 @@
             "path": "docs-site/translations/ko/aws-foundations-roadmap.md",
             "title": "AWS 인프라 기반 로드맵",
             "summary": "계정·리전·IAM·VPC의 쉬운 뜻과 AWS를 안전하게 살펴보는 순서를 익힙니다.",
-            "sourceSha256": "20fe72fa7d45585cac01a42343c3ee836b7384d37c01d0d69475620dd78cffa3"
+            "sourceSha256": "5b637c0ac0cec9928dc1959bb2974e6011b6422c6beb1190dbbdfcfc0f9bd365"
           }
         },
         {
@@ -322,7 +322,7 @@
             "path": "docs-site/translations/ko/aws-foundations-identity-network.md",
             "title": "Account, identity와 network boundary",
             "summary": "한 AWS 요청이 성공하려면 작업 권한과 네트워크 경로가 모두 필요한 이유를 배웁니다.",
-            "sourceSha256": "ffe43ca19ba478c8c29cdbb3ded5c7dfa598c8144179d3965f2e367b505cafd1"
+            "sourceSha256": "f82bf8f5ac4ea13e6ab9f84b289985adef4c2ae8e23dddd033c8d730f630616c"
           }
         },
         {
@@ -356,7 +356,7 @@
             "path": "docs-site/translations/ko/terraform-aws-roadmap.md",
             "title": "Terraform on AWS 로드맵",
             "summary": "Terraform 코드, 상태 기록과 실제 AWS 자원이 서로 어떻게 연결되는지부터 시작합니다.",
-            "sourceSha256": "08eac17b8cbc9de32330d99244540c9b2ad701bb5164b3169ebb00f45ed653a0"
+            "sourceSha256": "f19cd675ad4cb7dae1927cb844add26f6e9399a45bcfda6eecb18733586401e1"
           }
         },
         {
@@ -368,7 +368,7 @@
             "path": "docs-site/translations/ko/terraform-aws-resource-state.md",
             "title": "Resource graph와 state",
             "summary": "자원 사이의 순서가 생기는 이유와 여러 사람이 같은 상태를 안전하게 다루는 방법을 배웁니다.",
-            "sourceSha256": "7bc3579844eea407855c89eb7b8a4a9dac86a2339f8eaf6c30db1196c7832827"
+            "sourceSha256": "93c40c6cc2ee1194fdd5186fc19a4c2bcb312a9e722259fa8a56a5ec913f1b33"
           }
         },
         {
@@ -402,7 +402,7 @@
             "path": "docs-site/translations/ko/helm-gitops-roadmap.md",
             "title": "Helm Charts와 GitOps 로드맵",
             "summary": "차트·값·최종 YAML·릴리스가 무엇인지 익히고 Helm과 GitOps의 역할을 나눕니다.",
-            "sourceSha256": "7bb60f17ad9f66e75ad21e52f081104c030470ac666704f8cb4b2a0e6bd4db24"
+            "sourceSha256": "7fb32c15cca548760eee9ac8eb64722a0e7925f697f9751f05b5f59bba80444a"
           }
         },
         {
@@ -414,7 +414,7 @@
             "path": "docs-site/translations/ko/helm-gitops-chart-release.md",
             "title": "Chart, release와 desired state",
             "summary": "값이 템플릿에 들어가 최종 YAML이 되고 클러스터 상태와 비교되는 과정을 따라갑니다.",
-            "sourceSha256": "e6fa798ce5a3ae2221714c2518e94d0dfeaad791b6bee0cc2a5903aaba79767a"
+            "sourceSha256": "75fe5dbcb82699ba85f4a866dfdf613161b8999e912877511dacc30dabf35a47"
           }
         },
         {
@@ -448,7 +448,7 @@
             "path": "docs-site/translations/ko/observability-sre-roadmap.md",
             "title": "Observability와 SRE 로드맵",
             "summary": "지표·로그·추적·서비스 목표·알림이 각각 어떤 질문에 답하는지부터 시작합니다.",
-            "sourceSha256": "6d668480683d68b097ddd96afc9de808be131778f8ec04d567c41dafd4f179e5"
+            "sourceSha256": "0909063da0dfc3b9fadb2064569be002d3fedda4e3250b1ed03953a6611348ce"
           }
         },
         {
@@ -460,7 +460,7 @@
             "path": "docs-site/translations/ko/observability-sre-signals.md",
             "title": "Signal, SLO와 incident model",
             "summary": "요청 한 건의 기록을 전체 성공률과 연결하고 언제 사람에게 알려야 하는지 배웁니다.",
-            "sourceSha256": "e7d373b6db119cafedd91539522bbc6f44fe6d8a4e56b56f03112d1b0740d1da"
+            "sourceSha256": "2b86466e287bb214a1143726462b93812b382abf174ed64d1f101c98f239d90c"
           }
         },
         {
@@ -494,7 +494,7 @@
             "path": "docs-site/translations/ko/postgresql-roadmap.md",
             "title": "PostgreSQL 운영 로드맵",
             "summary": "트랜잭션·행·잠금·인덱스·백업의 쉬운 뜻부터 데이터베이스 운영을 시작합니다.",
-            "sourceSha256": "fbda86ee920eb95d85365df5a47cbdb871c2098c02cf19035b1c0a0a97ab23cb"
+            "sourceSha256": "786b111fb1a1cb6af685790f576c167ef912c83e1a324da879ab209279d1ca0a"
           }
         },
         {
@@ -506,7 +506,7 @@
             "path": "docs-site/translations/ko/postgresql-mvcc-wal.md",
             "title": "MVCC, WAL과 query plan",
             "summary": "변경한 데이터가 다른 요청에 보이고 장애 뒤 복구될 수 있게 되는 과정을 따라갑니다.",
-            "sourceSha256": "c8c4d3715519046d2a2971e170c3c31cfbc6ca8fcd091405614c2d00b800b4f7"
+            "sourceSha256": "fed8976ae27ca4fdb32e3ea7d29435c31944b843ebfda7d506e6cee59b15ac47"
           }
         },
         {
@@ -540,7 +540,7 @@
             "path": "docs-site/translations/ko/nosql-roadmap.md",
             "title": "Redis와 DynamoDB 로드맵",
             "summary": "키·값·만료 시간·파티션의 쉬운 뜻과 Redis·DynamoDB가 필요한 서로 다른 상황을 익힙니다.",
-            "sourceSha256": "bdb7f096fa9f28718818e36bc241ee8839e2136448411e20c29d2b9b7fc5c390"
+            "sourceSha256": "85674298f28706b237b9e3b4ef9be77ff4bab228d3853110a50b9b06ea107d2f"
           }
         },
         {
@@ -552,7 +552,7 @@
             "path": "docs-site/translations/ko/nosql-redis-dynamodb.md",
             "title": "Redis와 DynamoDB의 서로 다른 모델",
             "summary": "Redis cache와 DynamoDB 주문 조회를 비교해 데이터가 사라졌을 때의 결과를 구분합니다.",
-            "sourceSha256": "cd0598d4142c2d6c3829e403b6f9f7c4d447aed2da0841b2f6cf9e3c92eaa1f3"
+            "sourceSha256": "f749b9953098ff23fefde51341a67283def41c4439c880d12b683b64581642d0"
           }
         },
         {
@@ -586,7 +586,7 @@
             "path": "docs-site/translations/ko/infrastructure-security-roadmap.md",
             "title": "인프라 보안 로드맵",
             "summary": "신원·인증·인가·정책·비밀 정보의 쉬운 뜻과 보안 확인 순서를 익힙니다.",
-            "sourceSha256": "330e4f231318833c2aaea6f9f6f2b97543c0cb31ea50058c6a264107946ea203"
+            "sourceSha256": "0f4a24ac4b056309a765347c836cc8bc3cc008c9c322304053a9a972a0932758"
           }
         },
         {
@@ -598,7 +598,7 @@
             "path": "docs-site/translations/ko/infrastructure-security-trust.md",
             "title": "Identity, secret과 artifact trust model",
             "summary": "권한 결정, 비밀 정보 교체와 배포 파일의 출처 확인을 각각 나누어 배웁니다.",
-            "sourceSha256": "006443db14406acf9fcf6801188540c43c61bbfa243c5e420fa913f7622b1a50"
+            "sourceSha256": "6a62eb81268eaacf52fdcd25269f9c69cc7bf12458a2a3874bc1521f32cb3c1d"
           }
         },
         {
@@ -632,7 +632,7 @@
             "path": "docs-site/translations/ko/messaging-roadmap.md",
             "title": "메시징과 이벤트 인프라 로드맵",
             "summary": "메시지·생산자·소비자·큐·완료 응답의 쉬운 뜻부터 메시징을 시작합니다.",
-            "sourceSha256": "eb52705951987b32d5c433b713eb0e049456460194a5a75e26584fec02610c0d"
+            "sourceSha256": "c0d2c3aec4665b7832f61bb3d8146fae39e3a1e5e992cceed292483f2a91eb3f"
           }
         },
         {
@@ -644,7 +644,7 @@
             "path": "docs-site/translations/ko/messaging-delivery-replay.md",
             "title": "Delivery, ordering과 replay model",
             "summary": "메시지가 전달된 것과 업무 처리가 끝난 것이 왜 다른지 단계별로 따라갑니다.",
-            "sourceSha256": "009989c123f6f326069dae4534d3e163d9c21eca03b8b7938aaa9e57b5d14617"
+            "sourceSha256": "5624780de660173c5b280aa6bf9517473435f737ee748d6fa4356e54ee90d479"
           }
         },
         {
@@ -678,7 +678,7 @@
             "path": "docs-site/translations/ko/reliability-finops-roadmap.md",
             "title": "신뢰성·DR·FinOps 로드맵",
             "summary": "가용성·장애·RTO·RPO·용량의 쉬운 뜻부터 복구와 비용 판단을 시작합니다.",
-            "sourceSha256": "f714480324b9445a560a4047392c38b5b0c2fc758b3a7ce5535fdd0bcde19c5c"
+            "sourceSha256": "2ea9f4d974d65d319132771aa51c8ab04fd6ef741402641c69b8b686def5627b"
           }
         },
         {
@@ -690,7 +690,7 @@
             "path": "docs-site/translations/ko/reliability-finops-model.md",
             "title": "Reliability, capacity와 cost model",
             "summary": "구체적인 장애를 정하고 복구 시간, 남은 처리 능력과 그에 필요한 비용을 연결합니다.",
-            "sourceSha256": "28eb9465d8ed7ccc4d6ecae9cc88f32646a91483c347eef98fe43e2f86e4ba59"
+            "sourceSha256": "f207bac95e6fd6e2e47919ca8dac83336c61a1e94dfd9e823a96465f1f575623"
           }
         },
         {
@@ -724,7 +724,7 @@
             "path": "docs-site/translations/ko/karpenter-roadmap.md",
             "title": "Karpenter 심화 로드맵",
             "summary": "Pending Pod·Node·스케줄러·NodePool의 뜻부터 Karpenter 심화 과정을 시작합니다.",
-            "sourceSha256": "cfbd259e16583bb8f205d4b25521af7b3bd8c666a4e15d01159c9c2129541fd8"
+            "sourceSha256": "a5ce832456358bf77079aecc44e3dc9b1773b9c49914805c949284c16f39a942"
           }
         },
         {
@@ -736,7 +736,7 @@
             "path": "docs-site/translations/ko/karpenter-provisioning.md",
             "title": "Provisioning과 disruption model",
             "summary": "Pod 요구에서 Node 하나가 만들어지고 교체되기까지 각 Karpenter 자원의 역할을 나눕니다.",
-            "sourceSha256": "a602f1d5af7c507bd36695eee5924e807d80b73325c9152bf85282b37ddb30b4"
+            "sourceSha256": "81c312003d56c3ea19e9ed5097b66bd9bd72c3e947adb7e82418a74456a08b81"
           }
         },
         {
@@ -770,7 +770,7 @@
             "path": "docs-site/translations/ko/traffic-resilience-roadmap.md",
             "title": "트래픽 제어와 서비스 복원력 로드맵",
             "summary": "요청 경로의 소유권과 부하 제한부터 시작해 재시도가 장애를 키우지 않는 설계를 배웁니다.",
-            "sourceSha256": "13f25b8d4a944d5018ce5ad904defc0d2fd8fa07e5fddcc146412e0aebffb776"
+            "sourceSha256": "64f555300c9f8b6d7c585da5a4278e25f4f7db1225139e4e014492241e12b409"
           }
         },
         {
@@ -782,7 +782,7 @@
             "path": "docs-site/translations/ko/traffic-resilience-request-budget.md",
             "title": "Gateway에서 upstream까지의 실패 예산",
             "summary": "전체 deadline 안에서 연결·시도·재시도 예산을 나누고 circuit breaker와 outlier detection의 책임을 구분합니다.",
-            "sourceSha256": "814d3b2115dc61fdf622ae0fa964279a32b4b8691b2575576ed6f4aed8735172"
+            "sourceSha256": "681136eb7d696e76dd36a92e8b2b1bfb0e7830d138c4eb0090f20bf462d58db3"
           }
         },
         {
@@ -816,7 +816,7 @@
             "path": "docs-site/translations/ko/backend-engineering-roadmap.md",
             "title": "운영 가능한 백엔드 엔지니어링 로드맵",
             "summary": "vault의 백엔드 지식 축을 공개 학습 경로로 재구성해 요청·데이터·분산 실패·성능·변경을 기존 DevOps 주제와 연결합니다.",
-            "sourceSha256": "19789a1b642c1478dff975d508f59b506520a77642e1f84e231a18d281e0cedf"
+            "sourceSha256": "03961aceb77f475e4cc1b6e6de9f295d5702180e71471911783c87390b037244"
           }
         },
         {
@@ -828,7 +828,7 @@
             "path": "docs-site/translations/ko/backend-engineering-api-contract.md",
             "title": "요청 의미와 API 계약",
             "summary": "HTTP method·status·오류 형식·idempotency key·비동기 상태를 클라이언트가 안전하게 판단할 수 있는 계약으로 만듭니다.",
-            "sourceSha256": "81bef750ec9e8e422fa3901403bea89e54740679b8cb2d795ec6c5613874f109"
+            "sourceSha256": "c099df1aa3eb2abad2a02523851297d7dcf97458ae357f9bee13092ad95864f0"
           }
         },
         {
@@ -840,7 +840,7 @@
             "path": "docs-site/translations/ko/backend-engineering-domain-transaction.md",
             "title": "도메인 불변식과 데이터 트랜잭션",
             "summary": "업무 규칙의 동시 변경 경계를 정하고 DB constraint·transaction·outbox가 각각 무엇을 보장하는지 구분합니다.",
-            "sourceSha256": "afb59ea4fe531ec014c84b1d9d0f25c22d2757e88f787ad1085c2ba6eca07950"
+            "sourceSha256": "c525b565028ec1cbd6ebb064f2d1cd1af08a7495923e74861d3da28800dfd182"
           }
         },
         {
@@ -852,7 +852,7 @@
             "path": "docs-site/translations/ko/backend-engineering-runtime-capacity.md",
             "title": "동시성·큐·런타임과 용량",
             "summary": "도착률·체류 시간·동시 작업·pool·GC를 연결해 처리량을 늘리기 전에 먼저 고갈되는 자원과 과부하 경계를 찾습니다.",
-            "sourceSha256": "818b485cc149ada0ec9675ef1bd03fbe794b85b53998523c73bc95482b1d14fd"
+            "sourceSha256": "b456f01eb22771187e37a4b9c8e25d5385cc7d3ab5a805242da8d921b962cf5e"
           }
         },
         {
@@ -864,7 +864,7 @@
             "path": "docs-site/translations/ko/backend-engineering-distributed-workflow.md",
             "title": "부분 실패와 분산 워크플로",
             "summary": "중복·순서 변경·결과 불명·stale owner를 전제로 idempotency, outbox, fencing과 보상 상태 머신을 설계합니다.",
-            "sourceSha256": "42c5b604734c58c04c6e07df3f82341fa8690290cb05a5c1bb8ad0f2a5c972d6"
+            "sourceSha256": "e70e99044cd0bf1d8b6bfb8c95aa8d0f6e94d94bbc8318fc41441368d424e6ab"
           }
         },
         {
@@ -876,7 +876,7 @@
             "path": "docs-site/translations/ko/backend-engineering-cache-performance.md",
             "title": "캐시·데이터 흐름과 성능 증거",
             "summary": "cache key·freshness·invalidations와 query·event 경로를 함께 측정해 빠르지만 틀린 시스템을 피합니다.",
-            "sourceSha256": "7d425b7327c9c2832779ab4e394ecb557d04345f9759f397a5ce794e19611936"
+            "sourceSha256": "bf28d6797153f191300923651e24f366f52fd50db01e25999a16fbfd6ea1f0e7"
           }
         },
         {
@@ -888,7 +888,7 @@
             "path": "docs-site/translations/ko/backend-engineering-evolution.md",
             "title": "호환 변경·테스트와 점진적 배포",
             "summary": "구·신 코드와 데이터가 공존하는 기간을 계약 테스트, expand-contract, canary, rollback과 사후 검증으로 닫습니다.",
-            "sourceSha256": "13bb8a8b070c179649f5f32f47155e63fbdd70ab44a8fb23b940991d6432961d"
+            "sourceSha256": "18c520606d14f0ea9648df1737e54972354f199a3b7e1511bfc96f92cc03ceed"
           }
         }
       ]
@@ -910,7 +910,7 @@
             "path": "docs-site/translations/ko/ai-specialist-core-roadmap.md",
             "title": "AI Specialist 전체 모듈 로드맵",
             "summary": "vault의 AI Specialist 5개 모듈과 교차 개념을 빠짐없이 공개 학습 순서로 재구성합니다.",
-            "sourceSha256": "e656abd776fd23fa5a63de6beac937542697565c709118c6cfa0699ff93ef12e"
+            "sourceSha256": "3d5e51c30dad9c108b3c0eca86771a031abb3c68787f6b988ff7094288dd26ca"
           }
         },
         {
@@ -922,7 +922,7 @@
             "path": "docs-site/translations/ko/ai-specialist-core-llm.md",
             "title": "LLM 밑바닥 구조와 효율화",
             "summary": "tokenization·embedding·attention·GPT·학습·LoRA·DPO에서 KV cache·GQA·MoE 같은 추론 효율화까지 연결합니다.",
-            "sourceSha256": "4fa44a8f12a7864e6725874b9560e5210056aa26e25a68debedbb00743c15cf2"
+            "sourceSha256": "f46d583458962c087fadacbbd28dfbb7f83abb4ee2b18d3b9e28978f7b5c9066"
           }
         },
         {
@@ -934,7 +934,7 @@
             "path": "docs-site/translations/ko/ai-specialist-core-vision.md",
             "title": "Vision과 생성 모델 계보",
             "summary": "CNN·ResNet·ViT·DETR·UNet의 표현 구조와 GAN·VAE·VQ-VAE·diffusion·image token 생성을 비교합니다.",
-            "sourceSha256": "fb3ac5c1ea5ec6240014b1c1b3c3bb84908c203f73adf3dbd9726e6970a22acb"
+            "sourceSha256": "5f3727235fd8089edc160be40958e71e086945c3f60150d2edc147676699b906"
           }
         },
         {
@@ -946,7 +946,7 @@
             "path": "docs-site/translations/ko/ai-specialist-core-edge.md",
             "title": "On-device AI와 모델 압축",
             "summary": "pruning·quantization·knowledge distillation을 정확도뿐 아니라 실제 target 지연·메모리·전력·artifact 계약으로 평가합니다.",
-            "sourceSha256": "3583df8d476326ba8a29fe0ccbcc55a5c5bc36b2300f3d78bf22fd75a5510fa6"
+            "sourceSha256": "c364881d7f59386480b3fae99804e1e79897beab5b33c7055e9d42535d5fc3a5"
           }
         },
         {
@@ -958,7 +958,7 @@
             "path": "docs-site/translations/ko/ai-specialist-core-forecast-recommend.md",
             "title": "시계열 예측과 추천 시스템",
             "summary": "시간 누수 없는 예측과 naive baseline, 암묵적 피드백·BPR·NCF·graph recommendation의 평가를 배웁니다.",
-            "sourceSha256": "b5b27384e512ff1c765e357d7fb3ffe1bcdb3152233c123c036e919b0a5578dd"
+            "sourceSha256": "d5c3338f0ee93cec66d74e498d67ef74c1eefae14e1e6c475a8715b9aac67dbc"
           }
         },
         {
@@ -970,7 +970,7 @@
             "path": "docs-site/translations/ko/ai-specialist-core-rag-mcp.md",
             "title": "RAG·GraphRAG·NL2SQL과 MCP",
             "summary": "검색·ANN·reranking에서 graph·SQL 질의와 도구 실행으로 확장하되 retrieval evidence와 action authority를 구분합니다.",
-            "sourceSha256": "09fa4cab29d9012a728866aafdfc1e7149575b9a4dfe8735fdcd72865acf569a"
+            "sourceSha256": "cd057d97dc7c98dcf4e14dda35ef6626b971dbd037420f964b300196347760cc"
           }
         }
       ]
@@ -992,7 +992,7 @@
             "path": "docs-site/translations/ko/ai-transformation-platform-roadmap.md",
             "title": "AI Transformation 전체 필러 로드맵",
             "summary": "vault의 AI Transformation 4개 필러와 에이전트 실행 계약을 운영 가능한 공개 경로로 재구성합니다.",
-            "sourceSha256": "2deb2d922cb5e6d6ae986cc3bf9fc55ed039ce04f566910a21d1f6b28b4dd60d"
+            "sourceSha256": "618d3de2968da42cdcf4d874c93b3c5b218dfcb515ea99d34ba56857304b9913"
           }
         },
         {
@@ -1004,7 +1004,7 @@
             "path": "docs-site/translations/ko/ai-transformation-platform-infrastructure.md",
             "title": "AI 인프라·분산 학습과 LLM 서빙",
             "summary": "GPU memory·interconnect·parallelism·scheduler·KV cache·continuous batching을 workload SLO와 비용 단위로 설계합니다.",
-            "sourceSha256": "d0ccd124ef8e51613491976c1b6a0e7baa4aaf4b47853f0c93498d34d4bd0367"
+            "sourceSha256": "03580e3006c079159868411972ba4535530b365277029891a7bcff9e7b2fa99a"
           }
         },
         {
@@ -1016,7 +1016,7 @@
             "path": "docs-site/translations/ko/ai-transformation-platform-mlops.md",
             "title": "MLOps·LLMOps와 평가 가능한 수명주기",
             "summary": "dataset·run·model·prompt·retrieval index·eval suite·deployment를 하나의 재현 가능한 lineage와 승급 gate로 연결합니다.",
-            "sourceSha256": "9969b39d9eab349b808a5a1ec57998e8efb943f820922a58b4412783687a6a27"
+            "sourceSha256": "7dc87230c207db2ab76c724d112a9f133f99f2a69aae8c3b6e8ac43704d53e88"
           }
         },
         {
@@ -1028,7 +1028,7 @@
             "path": "docs-site/translations/ko/ai-transformation-platform-devops.md",
             "title": "AI DevOps·플랫폼과 FinOps",
             "summary": "IaC·Kubernetes·GitOps·GPU telemetry·quota·autoscaling을 성공한 추론·학습 작업당 비용과 운영 경계로 묶습니다.",
-            "sourceSha256": "ec28ca2cc9342b7352056af3de4044abcd4662045b6fd0b9f132475eeca82069"
+            "sourceSha256": "0fd6dda5ec7100cee1b1ac2eeeeb1369d8ef33fa43dc00103340f24d85e025cf"
           }
         },
         {
@@ -1040,7 +1040,7 @@
             "path": "docs-site/translations/ko/ai-transformation-platform-agents.md",
             "title": "Enterprise AI와 안전한 에이전트 실행",
             "summary": "RAG·LLM gateway·MCP·A2A·memory·durable workflow·sandbox·workload identity·policy를 승인 가능한 operation으로 구성합니다.",
-            "sourceSha256": "130035958201bcbdfb0c92624bb7ad1e107f05e7cb6113599bcedad2bde4db97"
+            "sourceSha256": "07a24e1900befe45773f081f6a6c93f0d0d59dd983db1534c01cf4fdfeb338e2"
           }
         }
       ]
@@ -1062,7 +1062,7 @@
             "path": "docs-site/translations/ko/aiops-foundations-roadmap.md",
             "title": "AIOps 신호와 운영 토폴로지 로드맵",
             "summary": "AIOps가 읽을 데이터 계약과 서비스 관계, 변경 이력, incident label의 기초를 잡습니다.",
-            "sourceSha256": "8d42495e4afa13ef5e3140c1587cd9f269f2367114e5e0c2a0cc260e0080cae1"
+            "sourceSha256": "bb149bab239e61a94d24f6b13504bc2c35cc10005a6d14c92eba115152a3a161"
           }
         },
         {
@@ -1074,7 +1074,7 @@
             "path": "docs-site/translations/ko/aiops-foundations-evidence-graph.md",
             "title": "운영 신호를 incident evidence graph로 연결하기",
             "summary": "사용자 증상에서 service·deployment·resource·trace로 내려가는 식별자와 시간 창을 설계합니다.",
-            "sourceSha256": "13b3a85ffb57ff7b567cbc1d3935111af3db7b4bcf75d62d2c802e6352764342"
+            "sourceSha256": "66c9decee7904504aec2b03ee5f2d1da5f20645aa9e5a703ff29e337351feb1c"
           }
         },
         {
@@ -1108,7 +1108,7 @@
             "path": "docs-site/translations/ko/aiops-diagnosis-roadmap.md",
             "title": "이상 탐지와 장애 진단 로드맵",
             "summary": "증상 탐지, alert grouping, 진단 정보 회수, 원인 후보 평가를 서로 다른 단계로 나눕니다.",
-            "sourceSha256": "3e3bd14ed91056013dc15e440364d16af2946284e45f352ba5bdfb1a2285178d"
+            "sourceSha256": "9845b0be7ce1609e166be465d49a8e4c05308a3b19a51cc4cd46a7baeafc21d9"
           }
         },
         {
@@ -1120,7 +1120,7 @@
             "path": "docs-site/translations/ko/aiops-diagnosis-pipeline.md",
             "title": "탐지 점수에서 근거 있는 원인 후보까지",
             "summary": "사용자 영향과 단순 규칙을 우선하고, 이상 점수·변경 상관·LLM 설명을 검증 가능한 후보로 제한합니다.",
-            "sourceSha256": "2c0a5a6bcea3dae8f7de4f0a0636c9985f7ed9263296d9ad74f06abbdce3435f"
+            "sourceSha256": "a369b733518ca06d17047b80e6367054a4cc9edd4c6c9868b338a6cec9195729"
           }
         },
         {
@@ -1154,7 +1154,7 @@
             "path": "docs-site/translations/ko/aiops-remediation-roadmap.md",
             "title": "승인된 자동 복구와 운영 학습 로드맵",
             "summary": "추천, 사람 승인 실행, 제한된 자동 실행을 구분하고 incident 결과를 규칙과 평가셋으로 되돌립니다.",
-            "sourceSha256": "827b1cfe8c230996d323395e0cf4af02f7d66f0cec6aeb21bb0b0febe9d6a0f8"
+            "sourceSha256": "0da4f8351e1f518c1e026eb06a1942a7a8eb17af0e569000a99b2fea0eaaff0f"
           }
         },
         {
@@ -1166,7 +1166,7 @@
             "path": "docs-site/translations/ko/aiops-remediation-state-machine.md",
             "title": "Remediation을 상태 머신과 안전 계약으로 만들기",
             "summary": "동일 사건 중복 실행, 결과 불명, blast radius 확대를 막는 operation 상태와 증거를 설계합니다.",
-            "sourceSha256": "bb07f82dbd18b17db61d11f1f648c0ff4b18fd7a8d5a719e46b9984e28f9179f"
+            "sourceSha256": "a747645fdb2c15c47b32757004b1f296c80aa63b022064d6b7775bbaee4dc5ef"
           }
         },
         {
@@ -1200,7 +1200,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-roadmap.md",
             "title": "데이터·관측성 엔지니어링: 이벤트에서 신뢰할 수 있는 AI까지",
             "summary": "12개월 계획에 따라 측정 가능한 완료 기준을 갖춘 하나의 플랫폼을 점진적으로 만든다.",
-            "sourceSha256": "5f680bff9d7f1e581e1f54f7531ce99a7c8ecd73346ba0619980a5dfb3a7c78e"
+            "sourceSha256": "c30fa4089ff2c169024b71530f76ca2460b0dd32876de3d8e7dca895d33af219"
           }
         },
         {
@@ -1212,7 +1212,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-stack-and-architecture.md",
             "title": "책임을 기준으로 기술 스택 선택하기",
             "summary": "핵심 스택을 선택하고 CDC·Flink·Trino·카탈로그·텔레메트리 백엔드가 필요한 조건을 익힌다.",
-            "sourceSha256": "1a268e417879d4c9ccad888b4f0ef6a8bc4be223f87511c4140c68cec6f4c1ca"
+            "sourceSha256": "ea61dcac48fe7e5866d33f40a16b963d7e0cdadf060d7cc1713468699580a2ff"
           }
         },
         {
@@ -1224,7 +1224,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-sql-python-foundations.md",
             "title": "SQL과 Python: 확장하기 전에 결과를 입증하기",
             "summary": "실행 가능한 Python·SQL 예제로 행 단위, 조인, 중복 제거, 합계를 검증한다.",
-            "sourceSha256": "ae87b95ba9c3ad081093ec758eff73c1de1276240891d1f6bce267c9301cf414"
+            "sourceSha256": "539e2238b7fbdda6f01b1d74145c2951450a944baecbd0b59ad8e157198abc03"
           }
         },
         {
@@ -1236,7 +1236,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-parquet-object-storage.md",
             "title": "Parquet와 오브젝트 스토리지: 실제로 읽는 데이터 이해하기",
             "summary": "열 선택, 필터링, 파일 배치, 오브젝트 스토리지 동작을 측정한다.",
-            "sourceSha256": "fcd53e36c2638e65d85a7f08c4c686cc5ba6e255f87a9afdfe739297d110a7ef"
+            "sourceSha256": "f5ffa380ee0dd6567bb1a1f3c78db0cde1442b0534eb9c11c5f30127b37542ca"
           }
         },
         {
@@ -1248,7 +1248,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-table-formats.md",
             "title": "Iceberg와 Delta Lake: 파일 집합을 테이블로 만들기",
             "summary": "커밋된 테이블 버전을 추적하고 Iceberg·Delta를 비교하며 복구를 연습한다.",
-            "sourceSha256": "a843ac8704896031de596541050f9fda583b5e77503accb7a466f3c64a0119df"
+            "sourceSha256": "f524cdf83ddcf80f8ffc1cdf7ec02588e851044e90f088a52dbf8215b4c91481"
           }
         },
         {
@@ -1260,7 +1260,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-spark-performance.md",
             "title": "Spark 내부 동작: 근거로 느린 작업 설명하기",
             "summary": "물리 계획·태스크·셔플·데이터 쏠림·스필을 측정한 개선 결과와 연결한다.",
-            "sourceSha256": "57159abe31d9e68a3172024a64678477c95260b9ae3f8b936a99f12a65f455c4"
+            "sourceSha256": "ba4ee552f3971badfc07bc407f135d17b6d8774ff73ab8df39c8b4b3d67e00cb"
           }
         },
         {
@@ -1272,7 +1272,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-kafka-cdc-streaming.md",
             "title": "Kafka·CDC·스트리밍 복구",
             "summary": "CDC, 전달 보장의 경계, 이벤트 시간, 체크포인트, 재생 정확성을 정의한다.",
-            "sourceSha256": "f6cdddddf82526d70bc3f5cac92dac23fecb8a89f263f13d043b530d49ca5ce8"
+            "sourceSha256": "92f175efd8aa8a16016d4f61dc2251a445ed19832acee0675ad082b63f143f15"
           }
         },
         {
@@ -1284,7 +1284,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-modeling-orchestration.md",
             "title": "모델링·dbt·오케스트레이션: 의미 있는 데이터셋 공개하기",
             "summary": "의미 있는 데이터 마트를 만들고 계약과 테스트를 구분하며 명시한 구간을 백필한다.",
-            "sourceSha256": "fc3a2385cee38f889d2c12b41aebc426c50c032f5334abc0e62d9982db3304d3"
+            "sourceSha256": "58159679e41ca1869788f7f4010feeb7f5e70e7ca318fdbcd52653ebbc907652"
           }
         },
         {
@@ -1296,7 +1296,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-quality-contracts-slos.md",
             "title": "데이터 품질·계약·결과 중심 SLO",
             "summary": "유효성·완전성·신선도·누락 실행·공개 결과를 측정한다.",
-            "sourceSha256": "8ff8519638c280fb5aaee1bbd962ab1baff2424399e192df35ed9ba7167bf1f1"
+            "sourceSha256": "e791a744fb99d04bcb3701ee1722bab675ba86e40f2bf97bd2834b4ba3106e49"
           }
         },
         {
@@ -1308,7 +1308,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-opentelemetry.md",
             "title": "OpenTelemetry: 텔레메트리를 통제하며 실행 연결하기",
             "summary": "SDK와 Collector 파이프라인을 연결하고 컨텍스트 전파·샘플링·텔레메트리 유실을 조사한다.",
-            "sourceSha256": "26b5b8a95bd3af21e558ab92738302e5c1f990649de3c074e5e607070c0b79b5"
+            "sourceSha256": "dd484557f6fe61a60abe66f41594e0b973d612d44df060814075e5fc238ce07c"
           }
         },
         {
@@ -1320,7 +1320,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-metrics-logs-traces.md",
             "title": "Prometheus·Grafana·Loki·Tempo: 근거 파이프라인 운영하기",
             "summary": "카운터·히스토그램을 읽고 라벨 범위를 제한하며 데이터셋 경보를 로그·트레이스와 연결한다.",
-            "sourceSha256": "eaafdb3818c1b5048671d43e5d341f8497cc596ab0b217a7c9481bbe595dc77f"
+            "sourceSha256": "0acfddd257eb620f32bf4ef9fe3d9c601d4941cf221fa223a655a4f7b0826af3"
           }
         },
         {
@@ -1332,7 +1332,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-lineage-governance.md",
             "title": "계보·카탈로그·거버넌스: 영향 찾기와 접근 강제하기",
             "summary": "데이터셋·작업·실행을 소유자와 연결하고 실행 시점의 접근 권한을 시험한다.",
-            "sourceSha256": "cbd13c7f342a05b0338029bf56bd650be8da672b30f7dfd7c08bd175d7f94217"
+            "sourceSha256": "8116158ab14777e65eb4c6a2ec1d60a78482a6ac410e01e6b369d3e5618ab1b1"
           }
         },
         {
@@ -1344,7 +1344,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-cloud-platforms.md",
             "title": "Databricks부터 Snowflake까지: 같은 약속 비교하기",
             "summary": "동일한 품질·복구·비용 요구를 기준으로 Databricks와 Snowflake를 비교한다.",
-            "sourceSha256": "a6503b7180087d2df65ef39f0972139c106fe2dee40cc041ddf5a1b7464eaeea"
+            "sourceSha256": "22c87a327c9f27e87eba8efd1841179ea52164eb996d4392ecd785a0c7a21fd0"
           }
         },
         {
@@ -1356,7 +1356,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-ai-ready-data-evaluation.md",
             "title": "AI용 데이터·검색·평가",
             "summary": "검색과 에이전트에 권한이 허용된 근거를 전달하고 재현 가능한 답변 추적 기록을 평가한다.",
-            "sourceSha256": "a1bccc112e322eb29b8d9ea2fd5d1192dd864dc88cab5926bf350fcd7565f93b"
+            "sourceSha256": "500310247bfa06b8f6b79f2a2a1246b9eed19a4c732adf761b186d4585c51212"
           }
         },
         {
@@ -1368,7 +1368,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-platform-operations.md",
             "title": "플랫폼 운영: 릴리스·복구·용량·비용",
             "summary": "호환되는 릴리스, 복원, 용량, 역압, 성공 결과당 비용을 운영한다.",
-            "sourceSha256": "08cae36a3e9e78150e27218d8530ecf7ba777014135b195f5c5705d7cb2c5e88"
+            "sourceSha256": "73c6543be4003466619d83ae5347ed3ee896ed22b498d34e6b56b467b6bf8eb0"
           }
         },
         {

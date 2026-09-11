@@ -4,12 +4,12 @@
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| symptom detector | Rules to directly find user errors, delays, and poor availability | Detect user-facing failure even when infrastructure measurements look normal. |
-| cause hint | Internal signals that narrow down the cause, such as CPU·queue·deployment | Choose the next discriminating check without treating an internal signal as proof of causality. |
-| change correlation | Linking deployment/setting changes before and after symptoms to candidates | Prioritize recent changes for investigation while checking alternative explanations. |
-| topology radius | Impact The scope of determining how many levels of dependency will be explored in the service. | Bound graph exploration so an incident does not pull in every loosely related service. |
-| confidence | Degree to which a candidate is selected within the given evidence and evaluation criteria | Communicate how strongly the available evidence supports a candidate and where uncertainty remains. |
-| counterevidence | If the candidate is the cause, it should be observed, but in fact, there is evidence to the contrary. | Challenge a favored diagnosis before it drives an unnecessary or harmful action. |
+| symptom detector | Rules to directly find user errors, delays, and poor availability | Detect user-facing failure even when infrastructure measurements look normal. **Concrete situation (illustrative):** Nodes look healthy while checkout requests fail. → Trigger on the user-visible symptom. → Verify the detector covers affected requests, not only host status. |
+| cause hint | Internal signals that narrow down the cause, such as CPU·queue·deployment | Choose the next discriminating check without treating an internal signal as proof of causality. **Concrete situation (illustrative):** A queue grows around the time latency increases. → Treat queue depth as a cause hint. → Check whether timing and downstream evidence support the hypothesis. |
+| change correlation | Linking deployment/setting changes before and after symptoms to candidates | Prioritize recent changes for investigation while checking alternative explanations. **Concrete situation (illustrative):** A feature flag changes before an error burst. → Compare changed and unchanged populations. → Check whether outcomes differ beyond the shared timing. |
+| topology radius | Impact The scope of determining how many levels of dependency will be explored in the service. | Bound graph exploration so an incident does not pull in every loosely related service. **Concrete situation (illustrative):** Incident exploration expands to hundreds of loosely connected services. → Limit the topology radius around the affected path. → Widen only when evidence justifies it. |
+| confidence | Degree to which a candidate is selected within the given evidence and evaluation criteria | Communicate how strongly the available evidence supports a candidate and where uncertainty remains. **Concrete situation (illustrative):** A candidate has one weak correlation and no confirming test. → Report limited confidence with the supporting evidence. → Revise after a discriminating check. |
+| counterevidence | If the candidate is the cause, it should be observed, but in fact, there is evidence to the contrary. | Challenge a favored diagnosis before it drives an unnecessary or harmful action. **Concrete situation (illustrative):** The favored cause predicts every region should fail, but one stays healthy. → Inspect that counterevidence. → Revise or reject the explanation before remediation. |
 
 ## Understand the model first
 

@@ -10,12 +10,12 @@ An API contract is not a list of endpoints, but rather a set of semantics that a
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| resource | What the API identifies and represents | Give callers a stable object to identify, read, and change through an API contract. |
-| safe | Method properties that do not require the caller to change state | Distinguish read-intended HTTP methods from requested mutations when designing clients and APIs. |
-| idempotent | Even if the same request is repeated, the intended server effect is the same as once. | Decide when repeating a request can preserve its intended server effect after an uncertain response. |
-| representation | A value that expresses the current state of the resource in a transmittable format. | Let clients read or exchange a resource's state through a defined response format. |
-| problem detail | Common machine-readable error body formats | Give clients consistent machine-readable failure information for handling and diagnosis. |
-| operation | One business task that runs longer than it responds and its state | Expose progress and results for work that outlasts the initial HTTP response. |
+| resource | What the API identifies and represents | Give callers a stable object to identify, read, and change through an API contract. **Concrete situation (illustrative):** Clients cannot reliably identify an order to update. → Define a stable order resource and its API operations. → Check repeated reads address the same order. |
+| safe | Method properties that do not require the caller to change state | Distinguish read-intended HTTP methods from requested mutations when designing clients and APIs. **Concrete situation (illustrative):** A browser prefetches a GET URL. → Keep requested state-changing operations out of safe-method semantics. → Verify prefetching does not trigger a purchase. |
+| idempotent | Even if the same request is repeated, the intended server effect is the same as once. | Decide when repeating a request can preserve its intended server effect after an uncertain response. **Concrete situation (illustrative):** A client repeats PUT after losing the response. → Preserve the method's intended idempotent effect. → Compare resource state after one and repeated requests. |
+| representation | A value that expresses the current state of the resource in a transmittable format. | Let clients read or exchange a resource's state through a defined response format. **Concrete situation (illustrative):** A client needs an order's status without accessing database tables. → Return a documented representation of the order resource. → Test field meaning and compatibility from the client's perspective. |
+| problem detail | Common machine-readable error body formats | Give clients consistent machine-readable failure information for handling and diagnosis. **Concrete situation (illustrative):** Clients parse several incompatible error formats. → Adopt a documented problem-detail contract. → Verify status, type, and actionable fields across failures. |
+| operation | One business task that runs longer than it responds and its state | Expose progress and results for work that outlasts the initial HTTP response. **Concrete situation (illustrative):** A report export takes longer than the initial HTTP request should wait. → Return an operation identity with a documented status endpoint. → Verify progress, completion, failure, and result retrieval behavior. |
 
 1. First, write the user's intention as a resource and method.
 2. Next, connect the success, failure, duplicate, and processing states with client actions.

@@ -10,12 +10,12 @@ AI workload는 CPU service와 같은 Pod 형태로 실행될 수 있지만 병�
 
 | 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
 |---|---|---|
-| HBM / VRAM | GPU가 model·activation·KV cache를 두는 고대역폭 memory | 작업을 받기 전에 가중치·활성값·증가하는 요청 상태에 필요한 가속기 메모리를 계산한다. |
-| data parallel | model 복제본이 다른 batch를 처리하고 gradient를 동기화하는 방식 | 모델이 각 워커 메모리에 들어갈 때 복제된 모델들로 학습을 확장한다. |
-| tensor / pipeline parallel | 한 model의 연산·layer를 여러 device에 나누는 방식 | 장치 하나에 너무 크거나 부담되는 모델을 나누되 통신 비용을 함께 고려한다. |
-| collective | AllReduce·AllGather처럼 여러 GPU가 함께 수행하는 통신 | 워커들이 일관된 학습 갱신을 만들 수 있도록 분산 텐서 교환을 조정한다. |
-| continuous batching | decode step마다 끝난 요청을 빼고 새 요청을 batch에 합류시키는 scheduling | 고정 배치 전체가 끝나기를 기다리지 않고 요청 완료로 비는 서빙 자리를 활용한다. |
-| MFU | 유효 model 계산량을 hardware 최대 계산량과 비교하는 utilization 관점 | 학습 워크로드가 하드웨어 용량을 유효한 모델 계산으로 얼마나 잘 활용하는지 평가한다. |
+| HBM / VRAM | GPU가 model·activation·KV cache를 두는 고대역폭 memory | 작업을 받기 전에 가중치·활성값·증가하는 요청 상태에 필요한 가속기 메모리를 계산한다. **구체적인 상황(가상 예시):** 요청이 길어지자 GPU 메모리 오류가 난다. → 가중치·활성값·KV cache를 계산한다. → 실제로 수용할 최대 부하를 시험한다. |
+| data parallel | model 복제본이 다른 batch를 처리하고 gradient를 동기화하는 방식 | 모델이 각 워커 메모리에 들어갈 때 복제된 모델들로 학습을 확장한다. **구체적인 상황(가상 예시):** 모델은 GPU 하나에 들어가지만 학습이 오래 걸린다. → 갱신을 동기화하는 데이터 병렬 복제본을 검토한다. → 단일 워커와 처리량·수렴을 비교한다. |
+| tensor / pipeline parallel | 한 model의 연산·layer를 여러 device에 나누는 방식 | 장치 하나에 너무 크거나 부담되는 모델을 나누되 통신 비용을 함께 고려한다. **구체적인 상황(가상 예시):** 모델이 장치 하나에 들어가지 않는다. → 지원되는 계산·계층을 여러 장치로 나눈다. → 통신·메모리 균형·학습 정확성을 측정한다. |
+| collective | AllReduce·AllGather처럼 여러 GPU가 함께 수행하는 통신 | 워커들이 일관된 학습 갱신을 만들 수 있도록 분산 텐서 교환을 조정한다. **구체적인 상황(가상 예시):** 분산 학습이 gradient 교환에서 기다린다. → collective 시간과 워커 참여를 조사한다. → 느린 통신 경로나 지연 워커를 찾는다. |
+| continuous batching | decode step마다 끝난 요청을 빼고 새 요청을 batch에 합류시키는 scheduling | 고정 배치 전체가 끝나기를 기다리지 않고 요청 완료로 비는 서빙 자리를 활용한다. **구체적인 상황(가상 예시):** 짧은 생성은 끝났지만 긴 생성 때문에 고정 배치가 점유된다. → continuous batching을 검토한다. → 길이가 섞인 요청의 완료 처리량·지연을 비교한다. |
+| MFU | 유효 model 계산량을 hardware 최대 계산량과 비교하는 utilization 관점 | 학습 워크로드가 하드웨어 용량을 유효한 모델 계산으로 얼마나 잘 활용하는지 평가한다. **구체적인 상황(가상 예시):** 비싼 GPU가 바빠 보이지만 유효 학습 진척은 적다. → 모델의 유효 계산과 하드웨어 용량을 비교한다. → 낮은 MFU 뒤의 통신·입력 정체를 조사한다. |
 
 1. workload의 memory·compute·communication 식을 먼저 적는다.
 2. throughput만이 아니라 queue·TTFT·TPOT·OOM·cost를 함께 측정한다.

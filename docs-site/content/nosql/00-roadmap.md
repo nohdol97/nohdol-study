@@ -6,12 +6,12 @@ All data does not need to be stored in the same format in the same database. Log
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| key | A unique name to use when finding your data again. | Retrieve or update the intended item without scanning unrelated values. |
-| value | Actual data stored by linking to the key | Store the application information that will be retrieved through its key. |
-| TTL | Time remaining until data disappears automatically | Expire short-lived data such as sessions or caches according to an explicit lifetime policy. |
-| memory | Storage space that is very fast but requires separate consideration of how to preserve it after a power failure | Serve frequently accessed data quickly while designing persistence and capacity separately. |
-| partition key | A key used by DynamoDB to determine where to place data. | Distribute DynamoDB access and avoid concentrating a workload on a few placement keys. |
-| Consistency | Guarantees that the latest value is visible when read immediately after writing | Choose the required read visibility when stale data would change the application's decision. |
+| key | A unique name to use when finding your data again. | Retrieve or update the intended item without scanning unrelated values. **Concrete situation (illustrative):** Two users' sessions overwrite each other. → Inspect how session keys are constructed. → Verify distinct identities produce distinct keys. |
+| value | Actual data stored by linking to the key | Store the application information that will be retrieved through its key. **Concrete situation (illustrative):** A cache returns an old customer profile. → Inspect the value stored under that customer's key. → Compare its contents and version with the authoritative profile. |
+| TTL | Time remaining until data disappears automatically | Expire short-lived data such as sessions or caches according to an explicit lifetime policy. **Concrete situation (illustrative):** An expired session still appears in storage. → Check the store's expiration semantics and application validity check. → Reject expired access without assuming immediate physical deletion. |
+| memory | Storage space that is very fast but requires separate consideration of how to preserve it after a power failure | Serve frequently accessed data quickly while designing persistence and capacity separately. **Concrete situation (illustrative):** A cache fits during testing but exceeds production memory. → Measure key and value memory consumption. → Check capacity, eviction, and persistence requirements together. |
+| partition key | A key used by DynamoDB to determine where to place data. | Distribute DynamoDB access and avoid concentrating a workload on a few placement keys. **Concrete situation (illustrative):** One DynamoDB tenant receives most requests. → Inspect the partition-key distribution and access pattern. → Test a design that spreads load without breaking queries. |
+| Consistency | Guarantees that the latest value is visible when read immediately after writing | Choose the required read visibility when stale data would change the application's decision. **Concrete situation (illustrative):** A user reads an earlier value immediately after a write. → Check the selected read-consistency mode and supported operation. → Test visibility against the application's requirement. |
 
 Redis and DynamoDB both use keys, but they are not substitutes for the same product. Learn the difference between Redis' expiring cache and DynamoDB's persistent order inquiry as separate examples.
 

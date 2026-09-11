@@ -6,11 +6,11 @@ A useful platform starts with a consumer promise: for example, validated orders 
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Storage format | How bytes are represented inside a file, such as Parquet | Choose a file representation that fits analytical access, compression, and interoperability needs. |
-| Table format | How files and metadata form a committed table version | Define which files form one accepted table state when readers and writers operate concurrently. |
-| Compute engine | Software that executes a query or transformation | Execute the required transformations while measuring the work caused by the chosen plan. |
-| Control plane | Definitions, permissions, schedules, and metadata that direct execution | Separate definitions and policies that direct work from the data-moving execution itself. |
-| Data plane | Processes and storage that actually move and transform data | Locate the throughput, failure, and access boundaries where data is actually processed. |
+| Storage format | How bytes are represented inside a file, such as Parquet | Choose a file representation that fits analytical access, compression, and interoperability needs. **Concrete situation (illustrative):** A query needs two fields from a wide dataset. → Compare candidate file formats under that access pattern. → Measure bytes read, decoding work, and output correctness. |
+| Table format | How files and metadata form a committed table version | Define which files form one accepted table state when readers and writers operate concurrently. **Concrete situation (illustrative):** Writers add files while readers need a consistent table. → Use the table format's committed-state protocol. → Verify readers resolve one valid version, not a directory guess. |
+| Compute engine | Software that executes a query or transformation | Execute the required transformations while measuring the work caused by the chosen plan. **Concrete situation (illustrative):** A transformation scans data but spends most time on redistribution. → Inspect the compute engine's plan. → Compare a revised plan under equivalent result checks. |
+| Control plane | Definitions, permissions, schedules, and metadata that direct execution | Separate definitions and policies that direct work from the data-moving execution itself. **Concrete situation (illustrative):** A job definition exists but its schedule or permission is wrong. → Inspect control-plane metadata and policy. → Verify the intended execution is authorized and scheduled. |
+| Data plane | Processes and storage that actually move and transform data | Locate the throughput, failure, and access boundaries where data is actually processed. **Concrete situation (illustrative):** Scheduling succeeds while actual data transfer stalls. → Inspect data-plane readers, workers, and storage. → Locate the measured throughput or access bottleneck. |
 
 ## Understand the model first
 

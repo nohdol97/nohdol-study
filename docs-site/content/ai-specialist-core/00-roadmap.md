@@ -11,12 +11,12 @@ The AI ​​Specialist path is not a process of listing model names. It is a si
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| representation | Converting the original input into a numeric structure that the model can calculate | Convert raw inputs into features on which a model can learn useful distinctions. |
-| objective | Loss that the model learns to reduce and business optimization goals | Make the target of learning explicit and check whether it aligns with the business outcome. |
-| inference | The process of calculating the result of a new input with a learned model | Apply a trained model to new inputs under measured latency, capacity, and quality constraints. |
-| baseline | Simple comparison criteria that complex models should actually win | Require a complex model to improve on a simple reference under the same evaluation conditions. |
-| retrieval | The step of finding candidate evidence from external sources before creating an answer | Find relevant external evidence when the answer depends on information beyond model parameters. |
-| evaluation | Measuring correctness, quality, cost, safety, and delay under fixed conditions | Decide whether a candidate meets explicit quality and operational requirements before promotion. |
+| representation | Converting the original input into a numeric structure that the model can calculate | Convert raw inputs into features on which a model can learn useful distinctions. **Concrete situation (illustrative):** A model receives raw customer text it cannot use directly. → Convert inputs through the declared representation pipeline. → Check shape, preprocessing, and training-serving consistency. |
+| objective | Loss that the model learns to reduce and business optimization goals | Make the target of learning explicit and check whether it aligns with the business outcome. **Concrete situation (illustrative):** A recommendation model improves clicks but harms the agreed business outcome. → Review the training objective and evaluation criteria. → Compare the actual target outcome. |
+| inference | The process of calculating the result of a new input with a learned model | Apply a trained model to new inputs under measured latency, capacity, and quality constraints. **Concrete situation (illustrative):** A model passes offline evaluation but misses serving latency requirements. → Measure inference on the target runtime and workload. → Check quality, latency, and capacity together. |
+| baseline | Simple comparison criteria that complex models should actually win | Require a complex model to improve on a simple reference under the same evaluation conditions. **Concrete situation (illustrative):** A complex classifier looks impressive without a reference result. → Evaluate a simple baseline on the same split and metric. → Check whether added complexity produces a meaningful improvement. |
+| retrieval | The step of finding candidate evidence from external sources before creating an answer | Find relevant external evidence when the answer depends on information beyond model parameters. **Concrete situation (illustrative):** An answer requires the current internal return policy. → Retrieve authorized policy passages. → Verify their version and relevance before generating the answer. |
+| evaluation | Measuring correctness, quality, cost, safety, and delay under fixed conditions | Decide whether a candidate meets explicit quality and operational requirements before promotion. **Concrete situation (illustrative):** A candidate improves one demo but might regress other tasks. → Run the fixed evaluation set and operational checks. → Compare failures as well as average scores. |
 
 ```mermaid
 flowchart LR

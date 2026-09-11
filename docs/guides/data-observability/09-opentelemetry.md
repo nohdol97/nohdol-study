@@ -6,12 +6,12 @@ A failed pipeline can leave clues in a scheduler log, an executor metric, and a 
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Span / trace | A recorded operation / related operations connected through trace context | Explain one request's work across operation boundaries and identify where latency accumulated. |
-| Resource | Attributes identifying the entity producing telemetry, such as a service | Attribute telemetry to the producing service or instance when comparing deployments and failures. |
-| Context propagation | Passing execution context across calls and message boundaries | Keep causal execution links intact across HTTP calls or message processing boundaries. |
-| Baggage | Propagated key/value context that can travel with requests | Carry small approved context values across calls when downstream components need them. |
-| OTLP | OpenTelemetry's telemetry transport protocol | Send telemetry through a common protocol instead of writing a separate transport for every backend. |
-| Sampling | Selecting which trace information to retain under a defined policy | Control trace volume and cost while documenting which evidence the selection policy can lose. |
+| Span / trace | A recorded operation / related operations connected through trace context | Explain one request's work across operation boundaries and identify where latency accumulated. **Concrete situation (illustrative):** A slow checkout crosses an API, database, and payment service. → Link timed spans into one distributed trace. → Identify the critical path while checking for missing instrumentation. |
+| Resource | Attributes identifying the entity producing telemetry, such as a service | Attribute telemetry to the producing service or instance when comparing deployments and failures. **Concrete situation (illustrative):** Metrics from staging and production appear under the same service label. → Attach stable resource attributes that identify service and environment. → Verify queries separate the intended deployments consistently. |
+| Context propagation | Passing execution context across calls and message boundaries | Keep causal execution links intact across HTTP calls or message processing boundaries. **Concrete situation (illustrative):** A trace stops at an outgoing HTTP call. → Inject and extract supported trace context across the boundary. → Confirm the downstream span belongs to the same intended trace. |
+| Baggage | Propagated key/value context that can travel with requests | Carry small approved context values across calls when downstream components need them. **Concrete situation (illustrative):** A request needs a non-sensitive routing hint across several services. → Propagate a bounded, allowlisted baggage field where justified. → Check it neither exposes secrets nor grows without limit. |
+| OTLP | OpenTelemetry's telemetry transport protocol | Send telemetry through a common protocol instead of writing a separate transport for every backend. **Concrete situation (illustrative):** Services emit telemetry through different client libraries. → Use compatible OTLP exporters and collector receivers. → Send a controlled signal and verify transport, attributes, and backend arrival. |
+| Sampling | Selecting which trace information to retain under a defined policy | Control trace volume and cost while documenting which evidence the selection policy can lose. **Concrete situation (illustrative):** Keeping every trace exceeds the telemetry budget. → Choose a sampling policy tied to investigation needs. → Measure retained error and latency examples and document what may be missed. |
 
 ## Understand the model first
 

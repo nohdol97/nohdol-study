@@ -9,12 +9,12 @@ Caches reduce slow computations and transfers, but create new state, freshness, 
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| cache key | Identification information to retrieve stored responses or values | Separate cached results by every input that changes their meaning or access scope. |
-| freshness | Period and conditions for reuse without re-burying the original | Decide whether a cached response may be reused or must be checked against its origin. |
-| validator | An ETag-like value that conditionally checks if the stored value is still valid. | Validate cached content conditionally without always transferring the full response again. |
-| invalidation | Removing and updating cache entries that should no longer be reused after changing the original | Stop serving obsolete cached data after the authoritative value changes. |
-| stampede | A phenomenon in which many requests start calculating the original at the same time on the same miss. | Recognize synchronized cache misses and protect the origin from a burst of duplicate recomputation. |
-| benchmark | Before-and-after measurements on a fixed workload and environment | Check whether an optimization improves the intended workload under comparable conditions. |
+| cache key | Identification information to retrieve stored responses or values | Separate cached results by every input that changes their meaning or access scope. **Concrete situation (illustrative):** One tenant sees another tenant's cached report. → Include authorization-relevant scope in the cache key. → Test isolation with otherwise identical requests. |
+| freshness | Period and conditions for reuse without re-burying the original | Decide whether a cached response may be reused or must be checked against its origin. **Concrete situation (illustrative):** A cached price is older than the permitted reuse window. → Revalidate or fetch according to the freshness policy. → Confirm the returned representation meets the age requirement. |
+| validator | An ETag-like value that conditionally checks if the stored value is still valid. | Validate cached content conditionally without always transferring the full response again. **Concrete situation (illustrative):** A large response may be unchanged since the last fetch. → Send a conditional request with its validator. → Check whether reuse is authorized by the response. |
+| invalidation | Removing and updating cache entries that should no longer be reused after changing the original | Stop serving obsolete cached data after the authoritative value changes. **Concrete situation (illustrative):** A profile update leaves an old cached view visible. → Invalidate or refresh affected cache entries. → Read through each consumer path to verify the update. |
+| stampede | A phenomenon in which many requests start calculating the original at the same time on the same miss. | Recognize synchronized cache misses and protect the origin from a burst of duplicate recomputation. **Concrete situation (illustrative):** A popular key expires and hundreds of requests recompute it. → Coordinate or stagger regeneration under a reviewed policy. → Compare origin load and served freshness. |
+| benchmark | Before-and-after measurements on a fixed workload and environment | Check whether an optimization improves the intended workload under comparable conditions. **Concrete situation (illustrative):** An optimization looks faster on a different dataset. → Repeat both versions under the same representative workload. → Report timing and correctness together. |
 
 1. First, determine the source of truth and the allowable stale window.
 2. Then design the cache key, population, invalidation and failure policies.

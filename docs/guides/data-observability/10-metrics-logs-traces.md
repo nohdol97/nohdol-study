@@ -6,12 +6,12 @@ A dashboard should answer a question and lead to a decision. Begin with “Can a
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Counter | A cumulative count that can reset when its producer restarts | Count cumulative events and derive rates over a chosen window with reset-aware queries. |
-| Gauge | A current value that can increase or decrease | Observe current levels such as queue depth or active work that can rise and fall. |
-| Histogram | A representation of an observed value distribution | Inspect distributions and threshold fractions that averages alone would conceal. |
-| Summary | Observations with client-calculated quantiles where configured | Obtain configured per-producer quantiles when their aggregation limitations fit the question. |
-| Label cardinality | The number of distinct label combinations creating time series | Estimate time-series growth before adding labels that would make monitoring costly or unstable. |
-| Burn rate | Observed failure fraction divided by the SLO's allowed failure fraction | Relate current failure intensity to how quickly an SLO's error allowance is being consumed. |
+| Counter | A cumulative count that can reset when its producer restarts | Count cumulative events and derive rates over a chosen window with reset-aware queries. **Concrete situation (illustrative):** An API team wants requests per second across restarts. → Record a monotonically increasing request counter and query an appropriate rate. → Test reset handling instead of subtracting raw totals blindly. |
+| Gauge | A current value that can increase or decrease | Observe current levels such as queue depth or active work that can rise and fall. **Concrete situation (illustrative):** Operators need the current queue depth, which rises and falls. → Record the current value as a gauge. → Compare a known queue change with the reported measurement. |
+| Histogram | A representation of an observed value distribution | Inspect distributions and threshold fractions that averages alone would conceal. **Concrete situation (illustrative):** A latency objective must be evaluated across many service instances. → Record latency distributions with suitable histogram buckets or supported native histograms. → Verify aggregation and threshold resolution match the objective. |
+| Summary | Observations with client-calculated quantiles where configured | Obtain configured per-producer quantiles when their aggregation limitations fit the question. **Concrete situation (illustrative):** A library exposes client-calculated latency quantiles. → Treat summary quantiles according to their local scope. → Avoid averaging instance quantiles and verify the chosen fleet-level method separately. |
+| Label cardinality | The number of distinct label combinations creating time series | Estimate time-series growth before adding labels that would make monitoring costly or unstable. **Concrete situation (illustrative):** A metric adds a user ID label and storage use surges. → Estimate distinct label combinations and replace unbounded dimensions. → Compare active series count and preserve necessary detail in a suitable signal. |
+| Burn rate | Observed failure fraction divided by the SLO's allowed failure fraction | Relate current failure intensity to how quickly an SLO's error allowance is being consumed. **Concrete situation (illustrative):** A short incident consumes the monthly reliability allowance unusually fast. → Calculate error-budget burn over appropriate windows. → Verify alerts distinguish urgent sustained consumption from harmless noise. |
 
 ## Understand the model first
 

@@ -9,12 +9,12 @@ When requests are slow, increasing the number of workers may increase throughput
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| concurrency | Number of tasks started at the same time and not yet finished | Set limits on in-flight work so resource usage and queue growth remain controllable. |
-| throughput | Number of tasks successfully completed per unit of time | Measure completed useful work when comparing capacity or performance changes. |
-| queue | A collection of tasks waiting to be executed | Buffer temporary differences between arrival and processing rates, with a bounded backlog policy. |
-| backpressure | Control that slows or rejects upstream input when downstream is saturated | Keep overload from growing without bound by slowing or rejecting input at a defined boundary. |
-| saturation | A state in which useful throughput does not increase even when a resource receives more work. | Identify when adding work no longer improves throughput and starts increasing delay or failure. |
-| GC pause | The amount of time application progress is affected while the runtime searches for memory to reclaim. | Explain latency spikes that average CPU or throughput measurements can hide. |
+| concurrency | Number of tasks started at the same time and not yet finished | Set limits on in-flight work so resource usage and queue growth remain controllable. **Concrete situation (illustrative):** More simultaneous requests increase waiting rather than completions. → Bound in-flight concurrency. → Compare useful throughput, latency, and queue growth. |
+| throughput | Number of tasks successfully completed per unit of time | Measure completed useful work when comparing capacity or performance changes. **Concrete situation (illustrative):** A new worker configuration reports more attempts per second. → Count successfully completed business operations. → Compare throughput under the same workload and correctness checks. |
+| queue | A collection of tasks waiting to be executed | Buffer temporary differences between arrival and processing rates, with a bounded backlog policy. **Concrete situation (illustrative):** A sale briefly produces work faster than workers can finish it. → Buffer within the queue's capacity policy. → Track oldest-item age and eventual drain. |
+| backpressure | Control that slows or rejects upstream input when downstream is saturated | Keep overload from growing without bound by slowing or rejecting input at a defined boundary. **Concrete situation (illustrative):** Incoming work grows faster than a database can commit. → Slow or reject input at a reviewed boundary. → Observe queue age and database recovery. |
+| saturation | A state in which useful throughput does not increase even when a resource receives more work. | Identify when adding work no longer improves throughput and starts increasing delay or failure. **Concrete situation (illustrative):** Doubling traffic barely changes completed work but increases latency. → Identify the saturated resource or downstream stage. → Test whether reducing input improves stability. |
+| GC pause | The amount of time application progress is affected while the runtime searches for memory to reclaim. | Explain latency spikes that average CPU or throughput measurements can hide. **Concrete situation (illustrative):** Periodic response spikes align with garbage collection. → Compare runtime pause records with request timing. → Check the relationship before changing heap or concurrency settings. |
 
 1. Measure arrival, latency, and in-flight together under normal load.
 2. Decide where to accept and where to reject overload.

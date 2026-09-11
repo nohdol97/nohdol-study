@@ -6,12 +6,12 @@ If you want others to be able to continue to use applications that are only runn
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| account | Largest ownership boundary where AWS resources, costs, and permissions gather | Separate ownership, billing, and permission boundaries for environments or organizations. |
-| Region | Geographic regions served by AWS | Choose geographic placement according to latency, residency, and recovery requirements. |
-| resource | Objects created and managed by AWS, such as servers, networks, and storage. | Choose the exact AWS object whose ownership, cost, and permissions must be managed. |
-| IAM | Permissions structure that determines who can do what AWS tasks | Grant specific AWS actions to the right identities and diagnose denied requests. |
-| VPC | Isolated network that sets addresses and communication rules directly within AWS | Control workload addressing and allowed communication paths inside an AWS network. |
-| role | A bundle of privileges that a person or program temporarily assumes to perform a permitted task. | Delegate task-specific permissions without handing every workload permanent user credentials. |
+| account | Largest ownership boundary where AWS resources, costs, and permissions gather | Separate ownership, billing, and permission boundaries for environments or organizations. **Concrete situation (illustrative):** A test deployment appears in production billing. → Check the active AWS account before changing resources. → Match the intended account with the resource owner. |
+| Region | Geographic regions served by AWS | Choose geographic placement according to latency, residency, and recovery requirements. **Concrete situation (illustrative):** An API is slow for users far from its deployment. → Compare latency and residency requirements across eligible Regions. → Measure the chosen path before moving workloads. |
+| resource | Objects created and managed by AWS, such as servers, networks, and storage. | Choose the exact AWS object whose ownership, cost, and permissions must be managed. **Concrete situation (illustrative):** A shared AWS account contains a bucket with unclear ownership. → Identify the resource and its tags, policy, and dependencies. → Confirm which team owns its access and cost. |
+| IAM | Permissions structure that determines who can do what AWS tasks | Grant specific AWS actions to the right identities and diagnose denied requests. **Concrete situation (illustrative):** A deployment can list a bucket but cannot upload its artifact. → Inspect the denied action and scoped IAM policies. → Test the required upload with the intended identity. |
+| VPC | Isolated network that sets addresses and communication rules directly within AWS | Control workload addressing and allowed communication paths inside an AWS network. **Concrete situation (illustrative):** Two AWS services require private communication. → Place and route them through reviewed VPC networking. → Verify intended connectivity and blocked unwanted paths. |
+| role | A bundle of privileges that a person or program temporarily assumes to perform a permitted task. | Delegate task-specific permissions without handing every workload permanent user credentials. **Concrete situation (illustrative):** A deployment job needs temporary access to one bucket. → Assign a scoped role to the job. → Verify allowed upload and denied unrelated access. |
 
 In the first step, the currently logged in subject and already existing networks are read without creating any resources. Afterwards, separate judgments are made on “who gave permission” and “whether the network path was opened.”
 

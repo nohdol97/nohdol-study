@@ -6,11 +6,11 @@ A distributed engine can multiply an incorrect join very efficiently. Begin by d
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Grain | What a single row represents, such as one order line | Prevent double counting and invalid joins by stating exactly what each row represents. |
-| Cardinality | The number of values or rows; in a join, how many matches each side can produce | Predict join expansion and detect unintended many-to-many matches before trusting totals. |
-| Window function | A calculation across related rows without collapsing them into one aggregate row | Calculate rankings, running totals, or neighboring values while keeping individual rows visible. |
-| Query plan | The engine's steps for obtaining the result | Explain scans, joins, exchanges, and estimates before deciding which query optimization to try. |
-| Idempotence | Repeating the same logical operation preserves the intended outcome | Retry or replay an uncertain operation without changing its intended business result. |
+| Grain | What a single row represents, such as one order line | Prevent double counting and invalid joins by stating exactly what each row represents. **Concrete situation (illustrative):** Joining order headers to line items doubles a reported count. → Declare and preserve the intended grain. → Reconcile totals using the correct row identities. |
+| Cardinality | The number of values or rows; in a join, how many matches each side can produce | Predict join expansion and detect unintended many-to-many matches before trusting totals. **Concrete situation (illustrative):** A supposedly one-to-one join produces extra rows. → Count matches on both join keys. → Detect duplicate keys before trusting aggregates. |
+| Window function | A calculation across related rows without collapsing them into one aggregate row | Calculate rankings, running totals, or neighboring values while keeping individual rows visible. **Concrete situation (illustrative):** An analyst needs each customer's latest order without losing its other columns. → Rank orders within each customer by a deterministic ordering. → Verify one selected row per customer, including timestamp ties. |
+| Query plan | The engine's steps for obtaining the result | Explain scans, joins, exchanges, and estimates before deciding which query optimization to try. **Concrete situation (illustrative):** A report becomes slow after its table grows. → Inspect the query plan for scans, joins, and estimated row counts. → Compare actual work before and after a targeted change. |
+| Idempotence | Repeating the same logical operation preserves the intended outcome | Retry or replay an uncertain operation without changing its intended business result. **Concrete situation (illustrative):** A network timeout causes a payment event to be delivered twice. → Deduplicate using a stable business event identity. → Replay the event and confirm the balance changes only once. |
 
 ## Understand the model first
 

@@ -6,12 +6,12 @@ When a user reports that “the service is slow,” it is impossible to tell whi
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| metric | A number measured repeatedly over time. Example: Requests per second | Track trends and rates across many operations without inspecting every event individually. |
-| log | A record of events that occurred in the program along with time | Inspect what happened during a particular operation when aggregate metrics cannot explain it. |
-| trace | The route a single request takes through multiple services and how long it takes | Locate which service or operation contributed latency or failure to one request. |
-| SLI | How to measure the results your users receive in numbers | Turn a user's success or failure into a consistently measurable operational signal. |
-| SLO | A goal that determines what level the measurement should be | Agree on an acceptable service outcome and prioritize work against that target. |
-| alert | A signal that tells a person that he or she needs to take action | Notify responders when a condition requires timely investigation or action. |
+| metric | A number measured repeatedly over time. Example: Requests per second | Track trends and rates across many operations without inspecting every event individually. **Concrete situation (illustrative):** Support reports more checkout failures this morning. → Compare failure and attempt metrics over matching windows. → Check whether the failure ratio actually increased. |
+| log | A record of events that occurred in the program along with time | Inspect what happened during a particular operation when aggregate metrics cannot explain it. **Concrete situation (illustrative):** One order failed while overall traffic looks healthy. → Find its correlated application logs. → Identify the recorded error without inferring it from averages. |
+| trace | The route a single request takes through multiple services and how long it takes | Locate which service or operation contributed latency or failure to one request. **Concrete situation (illustrative):** Checkout takes three seconds across several services. → Inspect the request trace. → Identify the operation contributing the delay and confirm it with supporting evidence. |
+| SLI | How to measure the results your users receive in numbers | Turn a user's success or failure into a consistently measurable operational signal. **Concrete situation (illustrative):** A dashboard counts HTTP success although orders are rejected. → Define an SLI around accepted order outcomes. → Reconcile its numerator and denominator with request records. |
+| SLO | A goal that determines what level the measurement should be | Agree on an acceptable service outcome and prioritize work against that target. **Concrete situation (illustrative):** Teams disagree whether a slow service is acceptable. → Agree on a measurable outcome and SLO window. → Compare observations with that target. |
+| alert | A signal that tells a person that he or she needs to take action | Notify responders when a condition requires timely investigation or action. **Concrete situation (illustrative):** A noisy threshold wakes responders without user impact. → Review the alert condition and required response. → Test whether actionable failures trigger a clear notification. |
 
 Initially, we send one request and look for the same event in metrics·log·trace. Then, we calculate SLI by combining multiple requests and design alerts that lead to actual actions.
 

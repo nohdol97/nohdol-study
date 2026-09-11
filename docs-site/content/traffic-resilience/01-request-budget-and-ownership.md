@@ -4,12 +4,12 @@
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| control plane | A layer that declares and verifies which listeners, routes, and policies should exist | Review traffic intent separately from request execution and inspect whether configuration was accepted. |
-| data plane | Layer that receives the actual request, forwards it to the backend, and executes timeout, retry, and limit | Observe where the configured routing, timeout, and retry policies actually affect requests. |
-| route attachment | The process where the route and gateway meet each other's conditions and are actually connected | Verify that a declared route is eligible for a Gateway before blaming backend networking. |
-| per-try timeout | Time allowed for one upstream attempt | Stop one slow attempt early enough to preserve the overall request budget. |
-| outer deadline | Total upper limit from receipt of initial request to final response | Ensure all nested attempts and backoff fit within the caller's total time allowance. |
-| retry storm | A phenomenon in which additional attempts during failure increase the load and cause more failures. | Recognize load amplification during an outage and cap or disable unsafe retries. |
+| control plane | A layer that declares and verifies which listeners, routes, and policies should exist | Review traffic intent separately from request execution and inspect whether configuration was accepted. **Concrete situation (illustrative):** A route is declared but never accepted by the controller. → Inspect control-plane status and rejection reasons. → Confirm acceptance before debugging request forwarding. |
+| data plane | Layer that receives the actual request, forwards it to the backend, and executes timeout, retry, and limit | Observe where the configured routing, timeout, and retry policies actually affect requests. **Concrete situation (illustrative):** Configuration is accepted, yet requests still time out. → Inspect the data plane's actual routing and limits. → Verify which policy affects the live request. |
+| route attachment | The process where the route and gateway meet each other's conditions and are actually connected | Verify that a declared route is eligible for a Gateway before blaming backend networking. **Concrete situation (illustrative):** A Route exists but receives no Gateway traffic. → Inspect attachment conditions on both resources. → Verify compatible listeners and allowed attachment scope. |
+| per-try timeout | Time allowed for one upstream attempt | Stop one slow attempt early enough to preserve the overall request budget. **Concrete situation (illustrative):** One slow attempt consumes the entire response budget. → Bound each eligible attempt's duration. → Verify attempts and backoff still fit the total deadline. |
+| outer deadline | Total upper limit from receipt of initial request to final response | Ensure all nested attempts and backoff fit within the caller's total time allowance. **Concrete situation (illustrative):** Three individually valid timeouts exceed the caller's total allowance. → Allocate budgets from the outer deadline inward. → Measure complete request duration. |
+| retry storm | A phenomenon in which additional attempts during failure increase the load and cause more failures. | Recognize load amplification during an outage and cap or disable unsafe retries. **Concrete situation (illustrative):** A dependency slows and every caller retries immediately. → Reduce unsafe retries and add bounded backoff. → Check whether load amplification subsides. |
 
 ## Understand the model first
 

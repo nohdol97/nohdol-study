@@ -6,12 +6,12 @@ To deploy an application in Kubernetes, you need several YAML files such as Depl
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| manifest | YAML document listing what to create in Kubernetes | Declare Kubernetes objects in a form that can be reviewed and reapplied. |
-| chart | Helm package that bundles the manifest template and default values | Package related Kubernetes resources as a configurable installation unit. |
-| template | A document frame where the final YAML is created by entering values. | Reuse a resource structure while varying environment-specific inputs. |
-| values | Inputs such as image and replica number that vary depending on the environment | Vary deployment choices without copying and editing the entire template. |
-| release | A record of installing one chart to a cluster with specific values. | Track which chart and values were installed so upgrades and rollback targets are identifiable. |
-| GitOps | An operating method that continuously compares the actual cluster with the desired state written in Git | Use reviewed Git changes as the operational target and continuously reconcile the cluster. |
+| manifest | YAML document listing what to create in Kubernetes | Declare Kubernetes objects in a form that can be reviewed and reapplied. **Concrete situation (illustrative):** A Deployment is recreated differently after manual deletion. → Keep its reviewed manifest in version control. → Reapply in a test cluster and compare object configuration. |
+| chart | Helm package that bundles the manifest template and default values | Package related Kubernetes resources as a configurable installation unit. **Concrete situation (illustrative):** An application needs several related Kubernetes resources. → Package templates and defaults in a chart. → Render and inspect the full installation together. |
+| template | A document frame where the final YAML is created by entering values. | Reuse a resource structure while varying environment-specific inputs. **Concrete situation (illustrative):** Every environment needs the same Deployment structure. → Put changing inputs into a template. → Compare rendered manifests for accidental structural changes. |
+| values | Inputs such as image and replica number that vary depending on the environment | Vary deployment choices without copying and editing the entire template. **Concrete situation (illustrative):** Staging needs one replica while production needs more. → Set reviewed environment-specific values. → Inspect the rendered replica and image fields. |
+| release | A record of installing one chart to a cluster with specific values. | Track which chart and values were installed so upgrades and rollback targets are identifiable. **Concrete situation (illustrative):** An upgrade fails and the installed configuration is unclear. → Inspect the release's revisions and values. → Identify a compatible recovery revision and verify requests. |
+| GitOps | An operating method that continuously compares the actual cluster with the desired state written in Git | Use reviewed Git changes as the operational target and continuously reconcile the cluster. **Concrete situation (illustrative):** A manual cluster edit repeatedly disappears. → Compare it with the GitOps controller's desired configuration. → Confirm whether reconciliation is restoring the reviewed Git state. |
 
 Helm is a tool that creates and installs YAML, and GitOps is a method of managing whether the actual state remains the same as Git. Rather than memorizing both concepts at once, first visually check the final YAML created by Helm and then learn automatic convergence of GitOps.
 

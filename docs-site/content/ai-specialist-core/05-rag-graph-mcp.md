@@ -10,12 +10,12 @@ RAG is not a technology that adds a lot of documents to the LLM, but a search sy
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| chunk | Units and metadata that divide the source for search | Retrieve manageable evidence passages while retaining source and permission context. |
-| embedding | Vector expression for calculating semantic proximity | Compare candidate meanings in vector space when exact word matching misses relevant evidence. |
-| ANN | Search to quickly find close candidates without comparing all vectors exactly. | Reduce vector-search work at large scale while measuring the recall lost by approximation. |
-| reranker | Steps to reorder the fast candidate set to a more expensive model | Spend a stronger relevance model on a small candidate set instead of the entire corpus. |
-| grounding | The nature of the argument in the answer that is actually supported by the evidence provided | Check that an answer's claims follow from authorized evidence rather than plausible wording alone. |
-| tool | A boundary that is an external function that model can propose to call and requires separate permissions. | Let a model request external information or actions through a controlled permission boundary. |
+| chunk | Units and metadata that divide the source for search | Retrieve manageable evidence passages while retaining source and permission context. **Concrete situation (illustrative):** A retrieved paragraph omits the condition needed to interpret a policy. → Review chunk boundaries and retained metadata. → Check that retrieved evidence contains the complete condition. |
+| embedding | Vector expression for calculating semantic proximity | Compare candidate meanings in vector space when exact word matching misses relevant evidence. **Concrete situation (illustrative):** A search for car insurance misses documents saying vehicle coverage. → Compare semantic embedding candidates. → Evaluate relevant retrieval and authorization on labeled examples. |
+| ANN | Search to quickly find close candidates without comparing all vectors exactly. | Reduce vector-search work at large scale while measuring the recall lost by approximation. **Concrete situation (illustrative):** Exact vector comparison becomes too slow for the corpus. → Test an ANN index on a labeled query set. → Compare recall, latency, and authorization behavior. |
+| reranker | Steps to reorder the fast candidate set to a more expensive model | Spend a stronger relevance model on a small candidate set instead of the entire corpus. **Concrete situation (illustrative):** Initial search finds relevant documents but orders them poorly. → Rerank the authorized candidate set. → Check relevance improvement against added latency. |
+| grounding | The nature of the argument in the answer that is actually supported by the evidence provided | Check that an answer's claims follow from authorized evidence rather than plausible wording alone. **Concrete situation (illustrative):** An answer cites a policy that does not support its exception. → Compare each claim with the supplied passage. → Remove or qualify unsupported claims. |
+| tool | A boundary that is an external function that model can propose to call and requires separate permissions. | Let a model request external information or actions through a controlled permission boundary. **Concrete situation (illustrative):** An assistant proposes changing a ticket status. → Route the request through the tool's permission and validation boundary. → Verify the authorized action and recorded result. |
 
 1. Create corpus·query·relevance and abstention standards before answer.
 2. Separate retrieval failure, generation failure, and action authorization.

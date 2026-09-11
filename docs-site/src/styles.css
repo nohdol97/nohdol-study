@@ -290,6 +290,10 @@ html[lang='ko'] .hero h1 { line-height: 1.15; letter-spacing: -0.05em; }
 .term-dialog h3 { font-size:13px; color:var(--ink-soft); margin:22px 0 8px; }
 .term-dialog p { margin:8px 0; font-size:15px; line-height:1.7; }
 .term-dialog p[lang='ko'] { padding-left:12px; border-left:2px solid var(--line-strong); }
+.term-scenario { padding-left:22px; }
+.term-scenario > li { padding-left:4px; margin:18px 0; }
+.term-scenario > li::marker { color:var(--ink-soft); font-size:13px; }
+.term-scenario > li > strong { font-size:13px; color:var(--green-dark); }
 .term-dialog > a { display:block; margin-top:14px; color:var(--green-dark); }
 
 kbd {

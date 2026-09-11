@@ -8,11 +8,11 @@ There is no need to memorize many commands from the beginning. In this process, 
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| Operating system (OS) | Basic software that divides resources between programs and CPU, memory, and disk | Share hardware among programs through common interfaces and resource controls. |
-| process | One task in which the stored program is actually running | Identify which running program owns resource usage, failures, and termination behavior. |
-| service | A unit named Operation that starts a process and restarts it if it fails. | Start a named workload consistently and manage its restart and shutdown lifecycle. |
-| port | A number that identifies which program will receive the network request | Direct traffic to the intended listener and distinguish network reachability from application readiness. |
-| kernel | A core part of the operating system that connects a process's resource requests with the actual hardware. | Explain how application requests become CPU, memory, filesystem, and network operations. |
+| Operating system (OS) | Basic software that divides resources between programs and CPU, memory, and disk | Share hardware among programs through common interfaces and resource controls. **Concrete situation (illustrative):** Two services compete for the same machine's memory. → Inspect OS resource accounting and process limits. → Check which service is constrained under load. |
+| process | One task in which the stored program is actually running | Identify which running program owns resource usage, failures, and termination behavior. **Concrete situation (illustrative):** The website is slow but the server is reachable. → Find the serving process and measure its resource usage. → Correlate changes with slow requests. |
+| service | A unit named Operation that starts a process and restarts it if it fails. | Start a named workload consistently and manage its restart and shutdown lifecycle. **Concrete situation (illustrative):** An API disappears after a host restart. → Configure and inspect its service lifecycle. → Verify startup, the listener, and an HTTP request after reboot. |
+| port | A number that identifies which program will receive the network request | Direct traffic to the intended listener and distinguish network reachability from application readiness. **Concrete situation (illustrative):** The host responds, but requests to port 8080 fail. → Inspect which process listens on that port. → Check its bound address and connection result. |
+| kernel | A core part of the operating system that connects a process's resource requests with the actual hardware. | Explain how application requests become CPU, memory, filesystem, and network operations. **Concrete situation (illustrative):** Application code shows little CPU work while file writes stall. → Inspect kernel I/O and scheduling evidence. → Check whether storage waits explain the delay. |
 
 The first goal is to connect these five words with actual command output. Then we go into more detailed concepts such as file descriptor, cgroup, and OOM.
 

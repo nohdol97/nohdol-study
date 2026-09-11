@@ -8,12 +8,12 @@ Imagine an order dashboard that returns HTTP 200 while showing yesterday's reven
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| Data product | A dataset with a defined consumer, meaning, owner, and delivery promise | Give consumers a dependable agreement about a dataset's meaning, owner, and delivery. |
-| Pipeline | Steps that ingest, transform, validate, and publish data | Organize ingestion through publication into steps whose failures and outputs can be checked. |
-| Observability | Evidence that helps explain behavior inside a system | Explain failures and changing behavior using evidence from inside the running system. |
-| Data reliability | Delivering correct-enough, complete-enough data within an agreed time and recovery boundary | Align quality and delivery checks with what the data consumer actually needs. |
-| Lineage | Recorded relationships between inputs, processing runs, and outputs | Find upstream inputs and downstream consequences when data changes or a run fails. |
-| SLI / SLO | A measured outcome / the target agreed for that outcome | Express the consumer's service promise as a measurable outcome and agreed target. |
+| Data product | A dataset with a defined consumer, meaning, owner, and delivery promise | Give consumers a dependable agreement about a dataset's meaning, owner, and delivery. **Concrete situation (illustrative):** Finance and operations disagree on the daily orders dataset. → Define its consumers, meaning, owner, and delivery promise. → Check both teams use the same contract. |
+| Pipeline | Steps that ingest, transform, validate, and publish data | Organize ingestion through publication into steps whose failures and outputs can be checked. **Concrete situation (illustrative):** Rows are ingested but the daily report never publishes. → Trace pipeline stages through validation and publication. → Identify the last completed stage and missing output. |
+| Observability | Evidence that helps explain behavior inside a system | Explain failures and changing behavior using evidence from inside the running system. **Concrete situation (illustrative):** A failed job's exit code does not explain the data error. → Connect execution metrics, logs, and data checks. → Build an explanation from matching evidence. |
+| Data reliability | Delivering correct-enough, complete-enough data within an agreed time and recovery boundary | Align quality and delivery checks with what the data consumer actually needs. **Concrete situation (illustrative):** A dataset arrives on time but omits valid source records. → Check completeness as well as delivery timing. → Reject publication when the consumer's contract is unmet. |
+| Lineage | Recorded relationships between inputs, processing runs, and outputs | Find upstream inputs and downstream consequences when data changes or a run fails. **Concrete situation (illustrative):** A source field changes and several reports may be affected. → Follow recorded input-to-output lineage. → Verify which downstream versions require review or rebuild. |
+| SLI / SLO | A measured outcome / the target agreed for that outcome | Express the consumer's service promise as a measurable outcome and agreed target. **Concrete situation (illustrative):** The consumer expects each daily dataset by an agreed time. → Define an outcome SLI and SLO. → Include missed runs when calculating delivery success. |
 
 You should be able to run a shell command, read a small Python program, and write a basic SQL query. If these are new, spend the first month on the foundations chapter. Kafka experience helps, but the progression does not assume an employer, job title, or particular production history.
 

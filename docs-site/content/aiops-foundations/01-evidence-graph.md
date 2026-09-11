@@ -6,12 +6,12 @@
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| symptom node | Errors, delays, and feature failures actually experienced by users | Anchor investigation in user harm before following indirect infrastructure signals. |
-| evidence edge | A connection showing that two records belong to the same request, deployment, resource, or time window. | Make evidence relationships explicit so temporal coincidence is not mistaken for a proven cause. |
-| correlation ID | Stable identifier to find the same execution in different signals | Find matching logs and traces for one execution without guessing from timestamps alone. |
-| observation window | Start and end time range to include in incident analysis | Compare signals over the same incident period and exclude unrelated events. |
-| provenance | Source indicating which collector·query·revision the evidence came from | Trace an operational claim back to the collection method and source revision that support it. |
-| cardinality | Number of different values ​​an attribute can have | Estimate grouping and storage growth before adding high-variation attributes to telemetry. |
+| symptom node | Errors, delays, and feature failures actually experienced by users | Anchor investigation in user harm before following indirect infrastructure signals. **Concrete situation (illustrative):** CPU alarms distract from users failing to submit orders. → Anchor the graph in the observed order failure. → Follow evidence that explains that symptom. |
+| evidence edge | A connection showing that two records belong to the same request, deployment, resource, or time window. | Make evidence relationships explicit so temporal coincidence is not mistaken for a proven cause. **Concrete situation (illustrative):** Two logs share a timestamp but belong to different requests. → Link evidence using validated execution identities. → Reject the unsupported relationship. |
+| correlation ID | Stable identifier to find the same execution in different signals | Find matching logs and traces for one execution without guessing from timestamps alone. **Concrete situation (illustrative):** A failed request crosses three services. → Preserve and search its correlation identity. → Check the matched records belong to that execution. |
+| observation window | Start and end time range to include in incident analysis | Compare signals over the same incident period and exclude unrelated events. **Concrete situation (illustrative):** Metrics and deployment events appear inconsistent because their windows differ. → Align the observation interval and time zones. → Recompare the relevant signals. |
+| provenance | Source indicating which collector·query·revision the evidence came from | Trace an operational claim back to the collection method and source revision that support it. **Concrete situation (illustrative):** A diagnosis cites a metric without its collection source. → Record the collector, query, and revision. → Re-run the query to assess the supporting evidence. |
+| cardinality | Number of different values ​​an attribute can have | Estimate grouping and storage growth before adding high-variation attributes to telemetry. **Concrete situation (illustrative):** Adding a unique request ID sharply increases telemetry groups. → Estimate attribute cardinality before labeling metrics. → Keep high-variation detail in an appropriate diagnostic signal. |
 
 ## Understand the model first
 

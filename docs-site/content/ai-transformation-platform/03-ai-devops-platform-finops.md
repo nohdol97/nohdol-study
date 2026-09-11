@@ -12,12 +12,12 @@ AI platform is not a collection of installations that manages the GPU cluster on
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| platform contract | Common input of resource·identity·artifact·SLO that workload must declare | Require workloads to declare the resources, identity, and service promises the platform must enforce. |
-| quota | Limits on resources and priorities that a team/project can occupy | Limit one tenant's consumption so other teams retain their allocated capacity. |
-| gang scheduling | Coordinating admission or placement for the required worker group so partial allocation does not strand the job | Avoid occupying scarce resources with a distributed job that cannot start its required worker group. |
-| autoscaling | Control to adjust the number of workload·nodes according to observed demand | Adapt capacity to changing demand while checking startup delay and downstream bottlenecks. |
-| chargeback / showback | How to bill or visualize the cost spent to the team | Expose or allocate shared costs so teams can make accountable usage decisions. |
-| unit economics | The true cost of creating one successful unit of work | Compare designs by the cost of successful work rather than raw hardware utilization alone. |
+| platform contract | Common input of resource·identity·artifact·SLO that workload must declare | Require workloads to declare the resources, identity, and service promises the platform must enforce. **Concrete situation (illustrative):** A workload requests GPUs without declaring its identity or service objective. → Require the platform contract fields. → Reject incomplete submissions before allocating resources. |
+| quota | Limits on resources and priorities that a team/project can occupy | Limit one tenant's consumption so other teams retain their allocated capacity. **Concrete situation (illustrative):** One team's jobs occupy the entire shared GPU pool. → Enforce reviewed team quotas. → Check admission and progress for other eligible teams. |
+| gang scheduling | Coordinating admission or placement for the required worker group so partial allocation does not strand the job | Avoid occupying scarce resources with a distributed job that cannot start its required worker group. **Concrete situation (illustrative):** A distributed job holds two GPUs but needs four workers to start. → Coordinate group admission or placement. → Verify incomplete allocation does not strand shared capacity. |
+| autoscaling | Control to adjust the number of workload·nodes according to observed demand | Adapt capacity to changing demand while checking startup delay and downstream bottlenecks. **Concrete situation (illustrative):** Morning demand rises faster than new replicas become ready. → Include startup time in scaling policy. → Measure queue growth and recovery during the ramp. |
+| chargeback / showback | How to bill or visualize the cost spent to the team | Expose or allocate shared costs so teams can make accountable usage decisions. **Concrete situation (illustrative):** A shared platform's bill has no accountable owner. → Allocate or display costs by reviewed ownership rules. → Reconcile team totals with the common bill. |
+| unit economics | The true cost of creating one successful unit of work | Compare designs by the cost of successful work rather than raw hardware utilization alone. **Concrete situation (illustrative):** A cheaper serving setup rejects many useful requests. → Compare cost per successfully completed task. → Include failed attempts and quality gates in the accounting. |
 
 1. Define the self-service API and guardrail first.
 2. Connect infrastructure costs with verified output.

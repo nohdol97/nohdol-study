@@ -6,12 +6,12 @@ Suppose the application responds, “I reduced the account balance by 10,000 won
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| database | A system that stores structured data and coordinates reading and writing of multiple programs | Keep shared data durable and coordinate concurrent access under defined rules. |
-| transaction | A unit of work that either succeeds or cancels multiple data changes. | Keep related data changes together so a partially completed business operation is not accepted. |
-| row | One line of data representing one object in a table | Declare the unit represented by a record before designing keys, joins, and totals. |
-| lock | A device that makes some operations wait so that conflicting changes do not complete at the same time. | Serialize conflicting operations when simultaneous completion would break data rules. |
-| index | Separate structures to help you quickly find the data you want without having to read every row | Reduce work for selective lookups, while accounting for extra storage and write maintenance. |
-| backup | A copy of your data set aside for recovery if the original disappears | Retain a recoverable copy when deletion, corruption, or infrastructure loss affects the original. |
+| database | A system that stores structured data and coordinates reading and writing of multiple programs | Keep shared data durable and coordinate concurrent access under defined rules. **Concrete situation (illustrative):** Two API replicas must read and update the same orders. → Store shared records under database constraints. → Test concurrent updates and retained committed results. |
+| transaction | A unit of work that either succeeds or cancels multiple data changes. | Keep related data changes together so a partially completed business operation is not accepted. **Concrete situation (illustrative):** A transfer debits one account but the second update fails. → Execute related updates within a transaction. → Verify partial balances are not committed. |
+| row | One line of data representing one object in a table | Declare the unit represented by a record before designing keys, joins, and totals. **Concrete situation (illustrative):** A report counts order lines as if each were a complete order. → Declare what one row represents. → Compare order counts using the appropriate identifiers. |
+| lock | A device that makes some operations wait so that conflicting changes do not complete at the same time. | Serialize conflicting operations when simultaneous completion would break data rules. **Concrete situation (illustrative):** Two workers attempt to update the same account. → Inspect the conflicting locks and transaction boundaries. → Verify the final balance and waiting behavior. |
+| index | Separate structures to help you quickly find the data you want without having to read every row | Reduce work for selective lookups, while accounting for extra storage and write maintenance. **Concrete situation (illustrative):** Looking up one customer scans a large table. → Evaluate an index matching the query pattern. → Compare the plan, reads, and write overhead. |
+| backup | A copy of your data set aside for recovery if the original disappears | Retain a recoverable copy when deletion, corruption, or infrastructure loss affects the original. **Concrete situation (illustrative):** A test table is accidentally deleted. → Restore a verified backup into an isolated database. → Check required rows and recovery-point age. |
 
 Terms like MVCC, WAL, and VACUUM are internal methods to solve the above problem. First, we directly observe transactions and locks, and then connect the time when data is seen and the process of safely remaining on disk.
 

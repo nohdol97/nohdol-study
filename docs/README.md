@@ -31,7 +31,7 @@ This directory is a MOC (Map of Content) that connects nohdol-study's decisions 
 | specs | situation | Target |
 |---|---|---|
 | [Documentation language switch](specs/2026-09-11-document-language-switch.md) | implemented; extended | Korean/English interface and persistence; article scope extended by bilingual reading |
-| [Bilingual reading and terminology](specs/2026-09-11-bilingual-reading.md) | implemented | All 94 paired articles, three reading modes, bilingual search, definitions with reasons and use situations, and translation publication gates |
+| [Bilingual reading and terminology](specs/2026-09-11-bilingual-reading.md) | implemented | All 94 paired articles, three reading modes, bilingual search, definitions with purpose and situation/application/check examples, and translation publication gates |
 | [Data course technical depth](specs/2026-09-10-data-course-depth.md) | implemented | Per-mechanism explanations, source coverage map, worked examples, local SDK/SQL/dbt verification, and managed-platform exercises |
 | [Documentation review specification](specs/2026-09-10-documentation-review.md) | implemented | Whole-catalog review, labeled results, regression checks, and historical status clarification |
 | [2026-09-10-data-observability-learning-path](specs/2026-09-10-data-observability-learning-path.md) | implemented | Seventeen source-reviewed chapters in docs/, third public path, executable fixtures, browser checks, and Pages deployment |

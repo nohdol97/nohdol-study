@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { marked, Renderer } from 'marked';
 import { createHash } from 'node:crypto';
-import { renderParallel, articleTerms, validateTermPurposes } from './bilingual.mjs';
+import { renderParallel, articleTerms, validateTermPurposes, validateTermScenarios } from './bilingual.mjs';
 import { CORE_TERMS } from './src/terms.js';
 
 const SITE_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -202,6 +202,7 @@ export async function buildSite({
 } = {}) {
   const catalog = await loadCatalog({ catalogPath, repositoryRoot, requireTracked });
   validateTermPurposes(CORE_TERMS, 'core glossary');
+  validateTermScenarios(CORE_TERMS, 'core glossary');
   const repositoryReal = await realpath(repositoryRoot);
   const topicPathById = new Map();
   for (const learningPath of catalog.paths) {
@@ -238,6 +239,7 @@ export async function buildSite({
       const text = plainText(source);
       const terms = articleTerms(source, korean);
       validateTermPurposes(terms, document.id);
+      validateTermScenarios(terms, document.id);
       documents.push({
         ...document,
         topicId: topic.id,

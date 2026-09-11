@@ -4,12 +4,12 @@
 
 | word | Meaning in this chapter | Why it matters / when to use it |
 |---|---|---|
-| operation | Records representing a remediation request and its execution/verification results | Track approval, execution, and verification of one remediation request across retries. |
-| plan | Change plan that fixes the execution target, expected diff, and precondition | Review targets, differences, and assumptions before authorizing a state-changing operation. |
-| commit | Steps to convert an approved plan into an actual status change | Separate reviewing an action from producing its approved real-world effects. |
-| reconciliation | The process of converging the operation by rereading the desired state and the actual state | Recover from uncertain acknowledgments by checking actual state before repeating or repairing work. |
-| lease | Timed ownership to limit executors changing the same target simultaneously | Coordinate temporary ownership among executors; use fencing when stale writes must be rejected. |
-| verification receipt | A record of what queries and criteria were used to determine success or failure after an action. | Retain the measurements and criteria needed to audit a recovery verdict later. |
+| operation | Records representing a remediation request and its execution/verification results | Track approval, execution, and verification of one remediation request across retries. **Concrete situation (illustrative):** A timed-out remediation request may already have executed. → Look up its durable operation record. → Decide whether to resume, verify, or stop without duplicating effects. |
+| plan | Change plan that fixes the execution target, expected diff, and precondition | Review targets, differences, and assumptions before authorizing a state-changing operation. **Concrete situation (illustrative):** A change intended to add capacity also proposes deletion. → Review the plan's exact targets and differences. → Resolve the unexpected deletion before approval. |
+| commit | Steps to convert an approved plan into an actual status change | Separate reviewing an action from producing its approved real-world effects. **Concrete situation (illustrative):** A remediation proposal is approved but has not executed. → Recheck its target and preconditions before commit. → Record actual effects and verification afterward. |
+| reconciliation | The process of converging the operation by rereading the desired state and the actual state | Recover from uncertain acknowledgments by checking actual state before repeating or repairing work. **Concrete situation (illustrative):** A controller loses the response to a successful update. → Reread desired and actual state. → Repeat only the work still needed for convergence. |
+| lease | Timed ownership to limit executors changing the same target simultaneously | Coordinate temporary ownership among executors; use fencing when stale writes must be rejected. **Concrete situation (illustrative):** Two workers may attempt the same maintenance target. → Coordinate ownership with a lease and required fencing. → Test expiry and rejection of stale-owner writes. |
+| verification receipt | A record of what queries and criteria were used to determine success or failure after an action. | Retain the measurements and criteria needed to audit a recovery verdict later. **Concrete situation (illustrative):** An incident report says recovered without showing its checks. → Attach a verification receipt with queries and criteria. → Reproduce the verdict from the retained observations. |
 
 ## Understand the model first
 

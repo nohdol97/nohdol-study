@@ -6,12 +6,12 @@ The platform owner cannot decide alone what “good data” means. A domain owne
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Validity | Whether values meet declared type, range, or format rules | Reject values that violate the accepted schema or domain before publishing data. |
-| Completeness | Whether expected records or fields are present | Detect absent expected inputs that cannot be found by testing only the rows that arrived. |
-| Accuracy | Agreement with the real-world fact or an authoritative reference | Check truth against a trusted reference when syntactically valid data may still be wrong. |
-| Freshness | How current the data is under a specified clock and delivery model | Detect stale delivery using the clock and consumer expectations defined for the dataset. |
-| Contract | A versioned agreement covering meaning, ownership, structure, and service expectations | Give producers and consumers a reviewable agreement for meaning, changes, and service obligations. |
-| Error budget | The amount of failure allowed by an SLO over its defined window | Prioritize reliability and release decisions according to the failure allowance that remains. |
+| Validity | Whether values meet declared type, range, or format rules | Reject values that violate the accepted schema or domain before publishing data. **Concrete situation (illustrative):** A feed contains impossible negative quantities under its business rules. → Validate values against the declared domain constraints. → Quarantine or reject invalid rows and report their count. |
+| Completeness | Whether expected records or fields are present | Detect absent expected inputs that cannot be found by testing only the rows that arrived. **Concrete situation (illustrative):** A daily report looks normal, but one region's file never arrived. → Check expected partitions and required-field coverage. → Flag the missing region even when received rows pass value checks. |
+| Accuracy | Agreement with the real-world fact or an authoritative reference | Check truth against a trusted reference when syntactically valid data may still be wrong. **Concrete situation (illustrative):** A dataset passes format checks but lists the wrong delivery addresses. → Compare a justified sample with an authoritative reference. → Record disagreement rather than treating valid formatting as correctness. |
+| Freshness | How current the data is under a specified clock and delivery model | Detect stale delivery using the clock and consumer expectations defined for the dataset. **Concrete situation (illustrative):** A dashboard responds quickly but still displays yesterday's orders. → Track the latest usable source and processed timestamps against a target. → Alert on stale data even when the query endpoint is healthy. |
+| Contract | A versioned agreement covering meaning, ownership, structure, and service expectations | Give producers and consumers a reviewable agreement for meaning, changes, and service obligations. **Concrete situation (illustrative):** A producer renames a field that several downstream models require. → Define schema, semantics, ownership, and compatibility expectations in a data contract. → Test the change against consumers before rollout. |
+| Error budget | The amount of failure allowed by an SLO over its defined window | Prioritize reliability and release decisions according to the failure allowance that remains. **Concrete situation (illustrative):** Repeated pipeline delays threaten an agreed freshness objective. → Calculate consumed error budget over the defined window. → Use the remaining allowance to prioritize reliability work and release decisions. |
 
 ## Understand the model first
 

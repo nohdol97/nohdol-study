@@ -47,14 +47,20 @@ export function articleTerms(english, korean) {
   const en = marked.lexer(english).filter((token) => token.type === 'table');
   const ko = marked.lexer(korean).filter((token) => token.type === 'table');
   const clean = (value) => value.replaceAll('`', '').replace(/\*\*([^*]+)\*\*/g, '$1').trim();
+  const purposeAndExample = (enText, koText) => {
+    const [whyEn, exampleEn] = enText.split(' **Concrete situation (illustrative):** ');
+    const [whyKo, exampleKo] = koText.split(' **구체적인 상황(가상 예시):** ');
+    return {whyEn: clean(whyEn), whyKo: clean(whyKo),
+      ...(exampleEn !== undefined || exampleKo !== undefined ? {exampleEn: clean(exampleEn ?? ''), exampleKo: clean(exampleKo ?? '')} : {}),
+    };
+  };
   const tables = en.flatMap((table, index) => {
     if (!/^(?:term|new term|concept|word)$/i.test(clean(table.header[0]?.text ?? ''))) return [];
     return table.rows.filter((row) => row.length === 2 || clean(table.header[2]?.text ?? '') === 'Why it matters / when to use it').map((row, n) => ({
       term: clean(row[0].text), english: clean(row[1].text),
       korean: clean(ko[index].rows[n][1].text),
-      ...(clean(table.header[2]?.text ?? '') === 'Why it matters / when to use it' ? {
-        whyEn: clean(row[2]?.text ?? ''), whyKo: clean(ko[index].rows[n][2]?.text ?? ''),
-      } : {}),
+      ...(clean(table.header[2]?.text ?? '') === 'Why it matters / when to use it'
+        ? purposeAndExample(row[2]?.text ?? '', ko[index].rows[n][2]?.text ?? '') : {}),
     }));
   });
   const enBlocks = meaningful(marked.lexer(english)), koBlocks = meaningful(marked.lexer(korean));
@@ -71,7 +77,7 @@ export function articleTerms(english, korean) {
         const [enMeaning, whyEn] = a[2].split(' **Why it matters / when to use it:** ');
         const [koMeaning, whyKo] = b[2].split(' **왜 필요한가요 · 언제 쓰나요:** ');
         lists.push({term: clean(a[1]), english: clean(enMeaning), korean: clean(koMeaning),
-          ...(whyEn !== undefined || whyKo !== undefined ? {whyEn: clean(whyEn ?? ''), whyKo: clean(whyKo ?? '')} : {}),
+          ...(whyEn !== undefined || whyKo !== undefined ? purposeAndExample(whyEn ?? '', whyKo ?? '') : {}),
         });
       }
     }
@@ -84,6 +90,17 @@ export function validateTermPurposes(terms, location) {
     if (typeof term.whyEn !== 'string' || term.whyEn.trim().length < 20 || !/[A-Za-z]/.test(term.whyEn)
       || typeof term.whyKo !== 'string' || term.whyKo.trim().length < 20 || !/[가-힣]/u.test(term.whyKo)) {
       throw new Error(`missing bilingual term purpose: ${location}: ${term.term}`);
+    }
+  }
+}
+
+export function validateTermScenarios(terms, location) {
+  for (const term of terms) {
+    for (const [field, alphabet] of [['exampleEn', /[A-Za-z]/], ['exampleKo', /[가-힣]/u]]) {
+      const steps = typeof term[field] === 'string' ? term[field].split(' → ') : [];
+      if (steps.length !== 3 || steps.some((step) => step.trim().length < 10 || !alphabet.test(step))) {
+        throw new Error(`missing bilingual term scenario (situation → apply → check): ${location}: ${term.term}: ${field}`);
+      }
     }
   }
 }

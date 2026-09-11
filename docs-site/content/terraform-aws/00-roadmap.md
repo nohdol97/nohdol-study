@@ -6,12 +6,12 @@ You can create servers and networks by directly clicking them on the AWS screen.
 
 | New term | Plain-language meaning | Why it matters / when to use it |
 |---|---|---|
-| configuration | A file containing the code you want to create | Review, version, and reproduce infrastructure intent instead of relying on remembered manual steps. |
-| resource | Objects that Terraform creates, searches, and changes as a unit | Declare a manageable infrastructure unit so Terraform can plan its creation and changes. |
-| provider | Plugin to forward Terraform requests to external service APIs such as AWS | Translate declared resources into the target platform's API operations. |
-| state | A record to remember that the resources in your code and the actual AWS resources are the same thing. | Match configuration addresses to existing objects so changes update the intended resources. |
-| plan | A proposal that shows what will be created, changed, or deleted if applied now. | Review targets, differences, and assumptions before authorizing a state-changing operation. |
-| Apply | Steps to request the reviewed plan from an actual external service | Execute a reviewed infrastructure change after checking its account and scope. |
+| configuration | A file containing the code you want to create | Review, version, and reproduce infrastructure intent instead of relying on remembered manual steps. **Concrete situation (illustrative):** A manually configured server cannot be recreated consistently. → Record its intended infrastructure configuration. → Compare a fresh plan with the reviewed design. |
+| resource | Objects that Terraform creates, searches, and changes as a unit | Declare a manageable infrastructure unit so Terraform can plan its creation and changes. **Concrete situation (illustrative):** An environment needs a managed storage bucket. → Declare the bucket as a Terraform resource and review its plan. → Confirm the resulting object and state match the intended configuration. |
+| provider | Plugin to forward Terraform requests to external service APIs such as AWS | Translate declared resources into the target platform's API operations. **Concrete situation (illustrative):** Terraform reaches the wrong API endpoint. → Inspect the selected provider configuration. → Verify the account, Region, and planned target before applying. |
+| state | A record to remember that the resources in your code and the actual AWS resources are the same thing. | Match configuration addresses to existing objects so changes update the intended resources. **Concrete situation (illustrative):** An existing object is proposed for creation again. → Inspect its configuration-to-state mapping. → Reconcile the binding before accepting a duplicate creation. |
+| plan | A proposal that shows what will be created, changed, or deleted if applied now. | Review targets, differences, and assumptions before authorizing a state-changing operation. **Concrete situation (illustrative):** A change intended to add capacity also proposes deletion. → Review the plan's exact targets and differences. → Resolve the unexpected deletion before approval. |
+| Apply | Steps to request the reviewed plan from an actual external service | Execute a reviewed infrastructure change after checking its account and scope. **Concrete situation (illustrative):** A reviewed plan is ready for an isolated test environment. → Apply it under the intended identity. → Compare actual resources and the subsequent plan with expectations. |
 
 The first lab does not create AWS resources. After learning the `write → validate → inspect the plan` flow with small local resources, you first learn the habit of checking accounts and scope of changes in AWS.
 
