@@ -1,6 +1,17 @@
 export const LANGUAGES = ['en', 'ko'];
 
 const korean = {
+  'Article reading mode': '본문 읽기 모드',
+  'Read in': '본문',
+  'Hide Korean explanations': '한국어 설명 접기',
+  'Show Korean explanations': '한국어 설명 펼치기',
+  'Terms in this chapter': '먼저 알아둘 용어',
+  'Select an underlined term to read its explanation.': '밑줄이 있는 용어를 누르면 설명을 확인할 수 있습니다.',
+  'Meaning': '무엇인가요?',
+  'Small example': '작은 예시',
+  'Do not confuse with': '헷갈리지 마세요',
+  'Official documentation': '공식 문서',
+  'Read the explanation in context': '본문에서 이어 읽기',
   'Skip to content': '본문으로 건너뛰기',
   'Go to the documentation gateway': '학습 문서 홈으로',
   'Search docs': '문서 검색',
@@ -72,7 +83,6 @@ const korean = {
   'No matching documents.': '일치하는 문서가 없습니다.',
   'Try different wording or a shorter keyword.': '다른 표현이나 더 짧은 키워드로 검색해 보세요.',
   'Could not load the documents.': '문서를 불러오지 못했습니다.',
-  'The language switch changes the site interface. Document text and code remain in English.': '언어 버튼은 사이트 메뉴를 전환합니다. 문서 본문과 코드는 영어 원문으로 제공됩니다.',
 };
 
 const pathCopy = {

@@ -3,6 +3,8 @@ import { mkdir, readFile, rm, writeFile, copyFile, realpath } from 'node:fs/prom
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { marked, Renderer } from 'marked';
+import { createHash } from 'node:crypto';
+import { renderParallel, articleTerms } from './bilingual.mjs';
 
 const SITE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPOSITORY_ROOT = path.resolve(SITE_ROOT, '..');
@@ -159,6 +161,15 @@ export async function loadCatalog({
       }
       documentIds.add(document.id);
       documentPaths.add(document.path);
+      const translation = document.translation;
+      invariant(translation && typeof translation === 'object', `missing Korean translation: ${document.id}`);
+      translation.path = normalizeRepositoryPath(translation.path);
+      invariant(!documentPaths.has(translation.path), `duplicate translation path: ${translation.path}`);
+      invariant(typeof translation.title === 'string' && translation.title.trim(), `missing Korean title: ${document.id}`);
+      invariant(typeof translation.summary === 'string' && translation.summary.trim(), `missing Korean summary: ${document.id}`);
+      invariant(/^[a-f0-9]{64}$/.test(translation.sourceSha256), `invalid translation source hash: ${document.id}`);
+      if (requireTracked) invariant(trackedByGit(translation.path, repositoryRoot), `translation is not tracked by Git: ${translation.path}`);
+      documentPaths.add(translation.path);
     }
   }
 
@@ -196,7 +207,10 @@ export async function buildSite({
   }
   const documentIdByPath = new Map();
   for (const topic of catalog.topics) {
-    for (const document of topic.documents) documentIdByPath.set(document.path, document.id);
+    for (const document of topic.documents) {
+      documentIdByPath.set(document.path, document.id);
+      documentIdByPath.set(document.translation.path, document.id);
+    }
   }
 
   const documents = [];
@@ -208,7 +222,17 @@ export async function buildSite({
         sourceReal === repositoryReal || sourceReal.startsWith(`${repositoryReal}${path.sep}`),
         `document resolves outside repository: ${document.path}`,
       );
+      const sourceTarget = normalizeRepositoryPath(path.relative(repositoryReal, sourceReal));
+      if (requireTracked && sourceTarget !== document.path) invariant(trackedByGit(sourceTarget, repositoryRoot), `source target is not tracked by Git: ${sourceTarget}`);
       const source = await readFile(sourceReal, 'utf8');
+      const translation = document.translation;
+      const translationReal = await realpath(path.resolve(repositoryRoot, translation.path));
+      invariant(translationReal.startsWith(`${repositoryReal}${path.sep}`), `translation resolves outside repository: ${translation.path}`);
+      const translationTarget = normalizeRepositoryPath(path.relative(repositoryReal, translationReal));
+      if (requireTracked && translationTarget !== translation.path) invariant(trackedByGit(translationTarget, repositoryRoot), `translation target is not tracked by Git: ${translationTarget}`);
+      invariant(createHash('sha256').update(source).digest('hex') === translation.sourceSha256, `stale Korean translation: ${document.id}`);
+      const korean = await readFile(translationReal, 'utf8');
+      invariant(korean.startsWith(`# ${translation.title}\n`), `Korean title mismatch: ${document.id}`);
       const text = plainText(source);
       documents.push({
         ...document,
@@ -216,6 +240,11 @@ export async function buildSite({
         pathId: topicPathById.get(topic.id),
         readingMinutes: readingMinutes(text),
         searchText: text,
+        koreanSearchText: plainText(korean),
+        terms: articleTerms(source, korean),
+        parallelHtml: renderParallel(source, korean,
+          (block) => renderMarkdown(block, document.path, documentIdByPath, catalog.site.repository),
+          (block) => renderMarkdown(block, translation.path, documentIdByPath, catalog.site.repository), document.id),
         html: renderMarkdown(source, document.path, documentIdByPath, catalog.site.repository),
       });
     }
@@ -240,6 +269,8 @@ export async function buildSite({
       copyFile(path.join(SITE_ROOT, 'src', 'styles.css'), path.join(outputPath, 'assets', 'styles.css')),
       copyFile(path.join(SITE_ROOT, 'src', 'app.js'), path.join(outputPath, 'assets', 'app.js')),
       copyFile(path.join(SITE_ROOT, 'src', 'i18n.js'), path.join(outputPath, 'assets', 'i18n.js')),
+      copyFile(path.join(SITE_ROOT, 'src', 'reading.js'), path.join(outputPath, 'assets', 'reading.js')),
+      copyFile(path.join(SITE_ROOT, 'src', 'terms.js'), path.join(outputPath, 'assets', 'terms.js')),
       copyFile(
         path.join(SITE_ROOT, 'node_modules', 'mermaid', 'dist', 'mermaid.min.js'),
         path.join(outputPath, 'assets', 'mermaid.min.js'),

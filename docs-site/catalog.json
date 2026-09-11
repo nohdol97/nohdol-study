@@ -71,67 +71,133 @@
           "id": "kubernetes-roadmap",
           "title": "Complete learning roadmap",
           "summary": "Start with containers, images, clusters, Nodes, and Pods, then map out the learning sequence.",
-          "path": "docs-site/content/kubernetes/00-roadmap.md"
+          "path": "docs-site/content/kubernetes/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-roadmap.md",
+            "title": "쿠버네티스 전체 학습 로드맵",
+            "summary": "컨테이너·이미지·클러스터·Node·Pod의 쉬운 뜻부터 전체 학습 순서를 잡습니다.",
+            "sourceSha256": "68964550a433acdd75cd58b58c109000dc3e6a381cb34cde63ceca174947540d"
+          }
         },
         {
           "id": "kubernetes-first-cluster",
           "title": "01. Why Kubernetes and the first cluster",
           "summary": "Create a small local cluster, deploy a web server, introduce a failure, and recover.",
-          "path": "docs-site/content/kubernetes/01-why-and-first-cluster.md"
+          "path": "docs-site/content/kubernetes/01-why-and-first-cluster.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-first-cluster.md",
+            "title": "01. 왜 Kubernetes인가와 첫 클러스터",
+            "summary": "내 컴퓨터에 작은 클러스터를 만들고 웹 서버를 배포한 뒤 일부러 고장 내고 복구합니다.",
+            "sourceSha256": "d365ea66169dcc27cc489b62d3b49ccb82810e272d8ed58ac9e6a97c97a9d4aa"
+          }
         },
         {
           "id": "kubernetes-api-objects",
           "title": "02. API and objects",
           "summary": "Follow a YAML declaration into the API and learn how Namespaces scope names, queries, and policies.",
-          "path": "docs-site/content/kubernetes/02-api-and-objects.md"
+          "path": "docs-site/content/kubernetes/02-api-and-objects.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-api-objects.md",
+            "title": "02. API와 오브젝트",
+            "summary": "YAML의 목표가 API에 저장되는 과정과 Namespace로 이름·조회·정책 범위를 나누는 방법을 배웁니다.",
+            "sourceSha256": "0542f7c1d166f202f3c71aae7afd0ea36b6062a4dfbafe19cfc8a05fa6a58714"
+          }
         },
         {
           "id": "kubernetes-architecture",
           "title": "03. Cluster architecture and control loops",
           "summary": "Trace the components responsible for storing, scheduling, and executing a deployment request.",
-          "path": "docs-site/content/kubernetes/03-cluster-architecture.md"
+          "path": "docs-site/content/kubernetes/03-cluster-architecture.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-architecture.md",
+            "title": "03. 클러스터 아키텍처와 제어 루프",
+            "summary": "배포 요청을 받은 뒤 어떤 구성 요소가 저장·배치·실행을 담당하는지 따라갑니다.",
+            "sourceSha256": "4d8237120c8839e61da118bbc65375080fe78cbec4067d1517f28225b6d62506"
+          }
         },
         {
           "id": "kubernetes-workloads",
           "title": "04. Pods and workloads",
           "summary": "Choose controllers for long-running apps, stateful workloads, tasks on every Node, and one-time jobs.",
-          "path": "docs-site/content/kubernetes/04-pods-and-workloads.md"
+          "path": "docs-site/content/kubernetes/04-pods-and-workloads.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-workloads.md",
+            "title": "04. Pod와 워크로드",
+            "summary": "계속 실행할 앱, 데이터를 가진 앱, 모든 Node의 작업과 일회성 작업을 구분합니다.",
+            "sourceSha256": "56ce7d98d489ef26a84700577afab9dcb68c0077325b79005fb59249c66d8c3b"
+          }
         },
         {
           "id": "kubernetes-networking",
           "title": "05. Services and networking",
           "summary": "Learn the process of reliably sending requests to Pods whose addresses change and connecting external users.",
-          "path": "docs-site/content/kubernetes/05-services-and-networking.md"
+          "path": "docs-site/content/kubernetes/05-services-and-networking.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-networking.md",
+            "title": "05. Service와 네트워킹",
+            "summary": "주소가 바뀌는 Pod에 안정적으로 요청을 보내고 외부 사용자를 연결하는 과정을 배웁니다.",
+            "sourceSha256": "5a82a1b78971a684d61b85a1d5ff4c97a84efb75bdf13234419c7a415713367c"
+          }
         },
         {
           "id": "kubernetes-storage-config",
           "title": "06. Storage and application configuration",
           "summary": "Separate persistent data from ordinary configuration and secrets as containers are replaced.",
-          "path": "docs-site/content/kubernetes/06-storage-and-configuration.md"
+          "path": "docs-site/content/kubernetes/06-storage-and-configuration.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-storage-config.md",
+            "title": "06. 스토리지와 애플리케이션 구성",
+            "summary": "container가 교체돼도 남아야 할 데이터와 일반 설정·비밀 설정의 수명을 나눕니다.",
+            "sourceSha256": "bd490caf42c6c97f634a8ad597dd151ff47b522b841944d281218c58541b59c2"
+          }
         },
         {
           "id": "kubernetes-scheduling-scaling",
           "title": "07. Scheduling, resources, and autoscaling",
           "summary": "Declare CPU and memory needs, understand Pod placement, and learn when workloads scale.",
-          "path": "docs-site/content/kubernetes/07-scheduling-and-autoscaling.md"
+          "path": "docs-site/content/kubernetes/07-scheduling-and-autoscaling.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-scheduling-scaling.md",
+            "title": "07. 스케줄링과 리소스·오토스케일링",
+            "summary": "Pod가 필요한 CPU·메모리를 선언하고 어느 Node에 배치되며 언제 늘어나는지 배웁니다.",
+            "sourceSha256": "bcae783fa321ffbf681722c51b4b28c341ef407be79f1eeaa51e42cda66db0af"
+          }
         },
         {
           "id": "kubernetes-security",
           "title": "08. Security and policy",
           "summary": "Check the permissions of people and programs, Pod execution limits, and communication allowances with small policies.",
-          "path": "docs-site/content/kubernetes/08-security-and-policy.md"
+          "path": "docs-site/content/kubernetes/08-security-and-policy.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-security.md",
+            "title": "08. 보안과 정책",
+            "summary": "사람과 프로그램의 권한, Pod 실행 제한과 통신 허용 범위를 작은 정책으로 확인합니다.",
+            "sourceSha256": "4339d18f6da2ac4917684e5508163b56a4fedd30ff5e48ea0eebf07284f303e9"
+          }
         },
         {
           "id": "kubernetes-operations",
           "title": "09. Observability and troubleshooting",
           "summary": "Narrow down the cause of failure by sequentially reading the status, event, and log of Pods that are not running.",
-          "path": "docs-site/content/kubernetes/09-observability-and-troubleshooting.md"
+          "path": "docs-site/content/kubernetes/09-observability-and-troubleshooting.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-operations.md",
+            "title": "09. 관측과 트러블슈팅",
+            "summary": "실행되지 않는 Pod의 상태·사건·로그를 순서대로 읽어 실패 원인을 좁힙니다.",
+            "sourceSha256": "112c1b0dc2775ab51c89a4b52a3b8d08dc55ce6d9579f42842a51d970174b8c8"
+          }
         },
         {
           "id": "kubernetes-production-extension",
           "title": "10. Production operations and extensions",
           "summary": "Review upgrades, backups, and extensions safely and verify behavior against the API reference.",
-          "path": "docs-site/content/kubernetes/10-production-and-extension.md"
+          "path": "docs-site/content/kubernetes/10-production-and-extension.md",
+          "translation": {
+            "path": "docs-site/translations/ko/kubernetes-production-extension.md",
+            "title": "10. 프로덕션 운영과 확장",
+            "summary": "업그레이드·백업·확장 기능을 안전하게 검토하고 공식 API 문서를 확인하는 방법을 배웁니다.",
+            "sourceSha256": "38f30cead171027ab019ab2b78640462181208a620559522d91ba8ce271f10c2"
+          }
         }
       ]
     },
@@ -147,19 +213,37 @@
           "id": "linux-roadmap",
           "title": "Linux system operation roadmap",
           "summary": "Learn what programs, processes, services, and ports are and make your first Linux diagnosis.",
-          "path": "docs-site/content/linux/00-roadmap.md"
+          "path": "docs-site/content/linux/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/linux-roadmap.md",
+            "title": "Linux 시스템 운영 로드맵",
+            "summary": "프로그램·프로세스·서비스·포트가 무엇인지 익히고 첫 Linux 진단 순서를 잡습니다.",
+            "sourceSha256": "826e54b66543153a145210b8a5a5a4d44678eaa0f8c60fcd571cd2e6a5048470"
+          }
         },
         {
           "id": "linux-process-resources",
           "title": "Connect services to processes and resources",
           "summary": "From the service name, you can find the actual process, open files/ports, and resources in use.",
-          "path": "docs-site/content/linux/01-process-and-resource-model.md"
+          "path": "docs-site/content/linux/01-process-and-resource-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/linux-process-resources.md",
+            "title": "Process와 resource의 연결",
+            "summary": "서비스 이름에서 실제 프로세스와 열린 파일·포트, 사용 중인 자원을 찾아갑니다.",
+            "sourceSha256": "7598725bbd2001e107d986fb3a87816c78016928de02a62e51ce8c54ea3d929e"
+          }
         },
         {
           "id": "linux-service-failure",
           "title": "Web server port conflict diagnosis lab",
           "summary": "Create a port conflict on a small web server and compare status, log, and connection information to find the cause.",
-          "path": "docs-site/content/linux/02-service-failure-lab.md"
+          "path": "docs-site/content/linux/02-service-failure-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/linux-service-failure.md",
+            "title": "Service 장애 진단 실습",
+            "summary": "작은 웹 서버에 포트 충돌을 만들고 상태·로그·연결 정보를 비교해 원인을 찾습니다.",
+            "sourceSha256": "1ad701db8b3fe68d5840efb355b67c5316d450969a064184ac4e3d479a9cc5d4"
+          }
         }
       ]
     },
@@ -175,19 +259,37 @@
           "id": "networking-roadmap",
           "title": "Network Learning Roadmap",
           "summary": "Starting with the host name, IP address, and port, divide ‘I can’t connect’ into small problems.",
-          "path": "docs-site/content/networking/00-roadmap.md"
+          "path": "docs-site/content/networking/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/networking-roadmap.md",
+            "title": "네트워크와 요청 경로 로드맵",
+            "summary": "호스트 이름·IP 주소·포트부터 시작해 ‘접속이 안 된다’를 작은 문제로 나눕니다.",
+            "sourceSha256": "aa267823dbe38c8e9dc1542726614a25ed61caddf3d777cbf5c4da89401fa1be"
+          }
         },
         {
           "id": "networking-request-path",
           "title": "How a web request arrives at the server",
           "summary": "It follows the DNS result through a TCP connection, TLS confirmation, and HTTP response in one request.",
-          "path": "docs-site/content/networking/01-request-path-model.md"
+          "path": "docs-site/content/networking/01-request-path-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/networking-request-path.md",
+            "title": "DNS부터 backend까지",
+            "summary": "DNS 결과가 TCP 연결과 TLS 확인, HTTP 응답으로 이어지는 과정을 한 요청으로 따라갑니다.",
+            "sourceSha256": "0951269a30d5a3ebd575e3895bbf598affbdf0186bb6b3b1f83133570a3ddab0"
+          }
         },
         {
           "id": "networking-diagnosis-lab",
           "title": "Request diagnosis lab by layer",
           "summary": "Compare the normal address with the address that intentionally fails to find out at which stage it stopped.",
-          "path": "docs-site/content/networking/02-layered-diagnosis-lab.md"
+          "path": "docs-site/content/networking/02-layered-diagnosis-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/networking-diagnosis-lab.md",
+            "title": "계층별 장애 분리 실습",
+            "summary": "정상 주소와 일부러 실패하는 주소를 비교해 어느 단계에서 멈췄는지 찾습니다.",
+            "sourceSha256": "cd79014baba75eef0e5eb018cf2eda00288cbaaedaf3e6c0216b484bbc4f37b3"
+          }
         }
       ]
     },
@@ -203,19 +305,37 @@
           "id": "aws-foundations-roadmap",
           "title": "AWS infrastructure foundations roadmap",
           "summary": "Learn the simple meaning of account, region, IAM, and VPC and the order of safely exploring AWS.",
-          "path": "docs-site/content/aws-foundations/00-roadmap.md"
+          "path": "docs-site/content/aws-foundations/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aws-foundations-roadmap.md",
+            "title": "AWS 인프라 기반 로드맵",
+            "summary": "계정·리전·IAM·VPC의 쉬운 뜻과 AWS를 안전하게 살펴보는 순서를 익힙니다.",
+            "sourceSha256": "8393346b28282ec2ae80fc7517675d895af8d580679e81bf6303275fdcbf7ad1"
+          }
         },
         {
           "id": "aws-foundations-identity-network",
           "title": "Permissions and network paths in AWS requests",
           "summary": "Learn why both operation permissions and network paths are required for an AWS request to succeed.",
-          "path": "docs-site/content/aws-foundations/01-identity-network-resource-model.md"
+          "path": "docs-site/content/aws-foundations/01-identity-network-resource-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aws-foundations-identity-network.md",
+            "title": "Account, identity와 network boundary",
+            "summary": "한 AWS 요청이 성공하려면 작업 권한과 네트워크 경로가 모두 필요한 이유를 배웁니다.",
+            "sourceSha256": "aadfbdb2913c7b7f935cd9d1df2c18768ca09ed413124e9de74ccd20ceb28777"
+          }
         },
         {
           "id": "aws-foundations-diagnosis-lab",
           "title": "Verify AWS account and path without changes",
           "summary": "Without changing resources, it queries the currently logged in identity and VPC path and reads the results.",
-          "path": "docs-site/content/aws-foundations/02-read-only-diagnosis-lab.md"
+          "path": "docs-site/content/aws-foundations/02-read-only-diagnosis-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aws-foundations-diagnosis-lab.md",
+            "title": "Read-only AWS 진단 실습",
+            "summary": "자원을 바꾸지 않고 현재 로그인한 신원과 VPC 경로를 조회해 결과를 읽습니다.",
+            "sourceSha256": "b3524ddffb883fc3884aceee29de24a106b8c6de86e0175c8624d53be15f530b"
+          }
         }
       ]
     },
@@ -231,19 +351,37 @@
           "id": "terraform-aws-roadmap",
           "title": "Terraform on AWS Roadmap",
           "summary": "We start with how Terraform code, state records, and actual AWS resources connect to each other.",
-          "path": "docs-site/content/terraform-aws/00-roadmap.md"
+          "path": "docs-site/content/terraform-aws/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/terraform-aws-roadmap.md",
+            "title": "Terraform on AWS 로드맵",
+            "summary": "Terraform 코드, 상태 기록과 실제 AWS 자원이 서로 어떻게 연결되는지부터 시작합니다.",
+            "sourceSha256": "083b63f7bcebb9af8aec1bad3c1bc5b8a14ba1bb3d369cae63995ce2ec07a157"
+          }
         },
         {
           "id": "terraform-aws-resource-state",
           "title": "Code, state, and actual resources",
           "summary": "Learn why ordering occurs between resources and how multiple people can safely handle the same state.",
-          "path": "docs-site/content/terraform-aws/01-resource-graph-and-state.md"
+          "path": "docs-site/content/terraform-aws/01-resource-graph-and-state.md",
+          "translation": {
+            "path": "docs-site/translations/ko/terraform-aws-resource-state.md",
+            "title": "Resource graph와 state",
+            "summary": "자원 사이의 순서가 생기는 이유와 여러 사람이 같은 상태를 안전하게 다루는 방법을 배웁니다.",
+            "sourceSha256": "5f24a3ec6802ada308bb05a4ef4c1745eeaa919535ab207012a4f02782ebab3f"
+          }
         },
         {
           "id": "terraform-aws-plan-drift",
           "title": "Inspect plans and drift: a guided lab",
           "summary": "Run checks and plan commands and read for unexpected changes without creating AWS resources.",
-          "path": "docs-site/content/terraform-aws/02-plan-drift-import-lab.md"
+          "path": "docs-site/content/terraform-aws/02-plan-drift-import-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/terraform-aws-plan-drift.md",
+            "title": "Plan, drift와 import 실습",
+            "summary": "AWS 자원을 만들지 않고 검사와 계획 명령을 실행하고 예상하지 못한 변경을 읽습니다.",
+            "sourceSha256": "08d86dcdc7f0b4d6d723204d207b4dce17bd9a711ee016cee6feacc2cd5e822a"
+          }
         }
       ]
     },
@@ -259,19 +397,37 @@
           "id": "helm-gitops-roadmap",
           "title": "Helm and GitOps roadmap",
           "summary": "Learn what charts, values, final YAML, and releases are, and divide the roles of Helm and GitOps.",
-          "path": "docs-site/content/helm-gitops/00-roadmap.md"
+          "path": "docs-site/content/helm-gitops/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/helm-gitops-roadmap.md",
+            "title": "Helm Charts와 GitOps 로드맵",
+            "summary": "차트·값·최종 YAML·릴리스가 무엇인지 익히고 Helm과 GitOps의 역할을 나눕니다.",
+            "sourceSha256": "5779a0fb17d44c2918c7603dfeede97d3a53ffd8f4c3495ea5f1d12f886f3727"
+          }
         },
         {
           "id": "helm-gitops-chart-release",
           "title": "From chart values to deployed state",
           "summary": "The values ​​are fed into the template, made into the final YAML, and compared against the cluster state.",
-          "path": "docs-site/content/helm-gitops/01-chart-release-gitops-model.md"
+          "path": "docs-site/content/helm-gitops/01-chart-release-gitops-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/helm-gitops-chart-release.md",
+            "title": "Chart, release와 desired state",
+            "summary": "값이 템플릿에 들어가 최종 YAML이 되고 클러스터 상태와 비교되는 과정을 따라갑니다.",
+            "sourceSha256": "30ecaa3b1ee723d04c017cbc8bc4ecc1ad4cbc914eb81d046f91ca21a4442120"
+          }
         },
         {
           "id": "helm-gitops-render-upgrade",
           "title": "Validate, install, upgrade, and roll back a chart",
           "summary": "After inspecting and installing the chart, see for yourself how to change values ​​and revert to a previous version.",
-          "path": "docs-site/content/helm-gitops/02-render-upgrade-drift-lab.md"
+          "path": "docs-site/content/helm-gitops/02-render-upgrade-drift-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/helm-gitops-render-upgrade.md",
+            "title": "Render, upgrade와 drift 실습",
+            "summary": "차트를 검사하고 설치한 뒤 값을 바꾸고 이전 버전으로 되돌리는 과정을 직접 확인합니다.",
+            "sourceSha256": "f0f906e8c11e6bb3797cf484a6c907303f690fde53698ad3bf4bb7a33ccbb3a4"
+          }
         }
       ]
     },
@@ -287,19 +443,37 @@
           "id": "observability-sre-roadmap",
           "title": "Observability and SRE Roadmap",
           "summary": "We start with what questions each indicator, log, tracking, service goal, and notification answer.",
-          "path": "docs-site/content/observability-sre/00-roadmap.md"
+          "path": "docs-site/content/observability-sre/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/observability-sre-roadmap.md",
+            "title": "Observability와 SRE 로드맵",
+            "summary": "지표·로그·추적·서비스 목표·알림이 각각 어떤 질문에 답하는지부터 시작합니다.",
+            "sourceSha256": "acd939675ec52c715a37e701b2d60710159f6854dfa56564fad732b0802d05eb"
+          }
         },
         {
           "id": "observability-sre-signals",
           "title": "From failed requests to service goals",
           "summary": "Tie the history of a single request to the overall success rate and learn when to notify people.",
-          "path": "docs-site/content/observability-sre/01-signals-slo-incident-model.md"
+          "path": "docs-site/content/observability-sre/01-signals-slo-incident-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/observability-sre-signals.md",
+            "title": "Signal, SLO와 incident model",
+            "summary": "요청 한 건의 기록을 전체 성공률과 연결하고 언제 사람에게 알려야 하는지 배웁니다.",
+            "sourceSha256": "cc8a40f7268a76df02088f753f6a49f6db3bb0fa4afcb8fa76d0cb6365343ba2"
+          }
         },
         {
           "id": "observability-sre-correlation-lab",
           "title": "Connect failures through metrics, logs, and traces",
           "summary": "Find the same request in indicators, logs, and traces and arrange it in chronological order from failure occurrence to recovery.",
-          "path": "docs-site/content/observability-sre/02-correlation-and-alert-lab.md"
+          "path": "docs-site/content/observability-sre/02-correlation-and-alert-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/observability-sre-correlation-lab.md",
+            "title": "Signal 상관관계와 SLO alert 실습",
+            "summary": "같은 요청을 지표·로그·추적에서 찾아 장애 발생부터 회복까지 시간순으로 맞춥니다.",
+            "sourceSha256": "526a9a71efb10c461a561cee1db752979351aa4534be6a3f7c0c9e8e7680f81e"
+          }
         }
       ]
     },
@@ -315,19 +489,37 @@
           "id": "postgresql-roadmap",
           "title": "PostgreSQL Operations Roadmap",
           "summary": "We begin database operation with the simple meaning of transactions, rows, locks, indexes, and backups.",
-          "path": "docs-site/content/postgresql/00-roadmap.md"
+          "path": "docs-site/content/postgresql/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/postgresql-roadmap.md",
+            "title": "PostgreSQL 운영 로드맵",
+            "summary": "트랜잭션·행·잠금·인덱스·백업의 쉬운 뜻부터 데이터베이스 운영을 시작합니다.",
+            "sourceSha256": "2b1429a440d2cb59348240088c4620b269c5c4133ccbb813b996e11df693087a"
+          }
         },
         {
           "id": "postgresql-mvcc-wal",
           "title": "How data changes become visible and durable",
           "summary": "It follows the process by which changed data becomes visible to other requests and can be recovered after a failure.",
-          "path": "docs-site/content/postgresql/01-mvcc-wal-query-model.md"
+          "path": "docs-site/content/postgresql/01-mvcc-wal-query-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/postgresql-mvcc-wal.md",
+            "title": "MVCC, WAL과 query plan",
+            "summary": "변경한 데이터가 다른 요청에 보이고 장애 뒤 복구될 수 있게 되는 과정을 따라갑니다.",
+            "sourceSha256": "1d66067469587eae38e6023fbd6b215a6b8c4c77d537e0d4cec8c0f4e75b8c81"
+          }
         },
         {
           "id": "postgresql-lock-restore",
           "title": "Diagnose lock waits and restore a backup",
           "summary": "After finding out what caused the two changes to conflict on purpose and causing the wait, restore the backup to a separate DB.",
-          "path": "docs-site/content/postgresql/02-lock-backup-restore-lab.md"
+          "path": "docs-site/content/postgresql/02-lock-backup-restore-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/postgresql-lock-restore.md",
+            "title": "Lock, backup과 restore 실습",
+            "summary": "일부러 두 변경을 충돌시키고 기다리게 한 원인을 찾은 뒤 백업을 별도 DB에 복원합니다.",
+            "sourceSha256": "f44eadda0edbd963ec1c6265870a2569f833ee2611cc5240a263e1e3d4f4d485"
+          }
         }
       ]
     },
@@ -343,19 +535,37 @@
           "id": "nosql-roadmap",
           "title": "Redis and DynamoDB Roadmap",
           "summary": "Learn the simple meaning of key, value, expiration time, and partition and the different situations that require Redis and DynamoDB.",
-          "path": "docs-site/content/nosql/00-roadmap.md"
+          "path": "docs-site/content/nosql/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/nosql-roadmap.md",
+            "title": "Redis와 DynamoDB 로드맵",
+            "summary": "키·값·만료 시간·파티션의 쉬운 뜻과 Redis·DynamoDB가 필요한 서로 다른 상황을 익힙니다.",
+            "sourceSha256": "abfe2b076fb2dda3beac5568404b7493ba55a80c2a83867dd15885b02316b848"
+          }
         },
         {
           "id": "nosql-redis-dynamodb",
           "title": "Different storage models",
           "summary": "Compare Redis cache and DynamoDB order lookups to distinguish the consequences when data disappears.",
-          "path": "docs-site/content/nosql/01-redis-dynamodb-models.md"
+          "path": "docs-site/content/nosql/01-redis-dynamodb-models.md",
+          "translation": {
+            "path": "docs-site/translations/ko/nosql-redis-dynamodb.md",
+            "title": "Redis와 DynamoDB의 서로 다른 모델",
+            "summary": "Redis cache와 DynamoDB 주문 조회를 비교해 데이터가 사라졌을 때의 결과를 구분합니다.",
+            "sourceSha256": "fa8c9bb2700a30efdc28ac52c2ac2c79bac0413bc2303fe9f7ea7d4eba430643"
+          }
         },
         {
           "id": "nosql-ttl-hot-key",
           "title": "Expiration and hot-key lab",
           "summary": "Check whether Redis data actually expires and design a situation where DynamoDB requests are concentrated on one key.",
-          "path": "docs-site/content/nosql/02-ttl-hot-key-lab.md"
+          "path": "docs-site/content/nosql/02-ttl-hot-key-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/nosql-ttl-hot-key.md",
+            "title": "TTL, eviction과 hot key 실습",
+            "summary": "Redis 데이터가 실제로 만료되는지 보고 DynamoDB 요청이 한 key에 몰리는 상황을 설계합니다.",
+            "sourceSha256": "bd4dcc708f461c2b93659515dc2b4a199a60f4da126477694d51e0b4d7ea3006"
+          }
         }
       ]
     },
@@ -371,19 +581,37 @@
           "id": "infrastructure-security-roadmap",
           "title": "Infrastructure Security Roadmap",
           "summary": "Learn the simple meaning of identity, authentication, authorization, policy, and confidential information and the security confirmation sequence.",
-          "path": "docs-site/content/infrastructure-security/00-roadmap.md"
+          "path": "docs-site/content/infrastructure-security/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/infrastructure-security-roadmap.md",
+            "title": "인프라 보안 로드맵",
+            "summary": "신원·인증·인가·정책·비밀 정보의 쉬운 뜻과 보안 확인 순서를 익힙니다.",
+            "sourceSha256": "dda6b6d85be686d22c87ee6982b6a6f0a641f4c13fd93c9c5fbd7adfa1a379a7"
+          }
         },
         {
           "id": "infrastructure-security-trust",
           "title": "Identity, secrets, and artifact lifecycles",
           "summary": "You will learn about determining permissions, replacing secret information, and checking the source of deployment files.",
-          "path": "docs-site/content/infrastructure-security/01-identity-secret-artifact-model.md"
+          "path": "docs-site/content/infrastructure-security/01-identity-secret-artifact-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/infrastructure-security-trust.md",
+            "title": "Identity, secret과 artifact trust model",
+            "summary": "권한 결정, 비밀 정보 교체와 배포 파일의 출처 확인을 각각 나누어 배웁니다.",
+            "sourceSha256": "0a8b29e79e9c933f072f1775e4c59466262ffc4b39af4506bc49531cc03b3382"
+          }
         },
         {
           "id": "infrastructure-security-allow-deny",
           "title": "Check what actions to allow and what to deny",
           "summary": "Pairwise checks are made to ensure that the reads to be allowed succeed and the writes to be prohibited fail.",
-          "path": "docs-site/content/infrastructure-security/02-allow-deny-lifecycle-lab.md"
+          "path": "docs-site/content/infrastructure-security/02-allow-deny-lifecycle-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/infrastructure-security-allow-deny.md",
+            "title": "Allow·deny와 artifact 수명주기 실습",
+            "summary": "허용할 읽기는 성공하고 금지할 쓰기는 실패하는지 한 쌍으로 확인합니다.",
+            "sourceSha256": "30df2d820f7963957cb905574bddeef3b2cf17a3c2ee294b3c7084d2dccb1a9c"
+          }
         }
       ]
     },
@@ -399,19 +627,37 @@
           "id": "messaging-roadmap",
           "title": "Messaging and Events Roadmap",
           "summary": "We start messaging with the simple meaning of message, producer, consumer, queue, and completion response.",
-          "path": "docs-site/content/messaging/00-roadmap.md"
+          "path": "docs-site/content/messaging/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/messaging-roadmap.md",
+            "title": "메시징과 이벤트 인프라 로드맵",
+            "summary": "메시지·생산자·소비자·큐·완료 응답의 쉬운 뜻부터 메시징을 시작합니다.",
+            "sourceSha256": "ab932ec8a45278126811d315aa702911bca1bc2e94dcaa71d6f7e3e2b0652607"
+          }
         },
         {
           "id": "messaging-delivery-replay",
           "title": "From delivering messages to completing tasks",
           "summary": "It follows step by step why the message is delivered and the work done is different.",
-          "path": "docs-site/content/messaging/01-delivery-ordering-replay-model.md"
+          "path": "docs-site/content/messaging/01-delivery-ordering-replay-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/messaging-delivery-replay.md",
+            "title": "Delivery, ordering과 replay model",
+            "summary": "메시지가 전달된 것과 업무 처리가 끝난 것이 왜 다른지 단계별로 따라갑니다.",
+            "sourceSha256": "29e0cb4eb13c8eda2e1bba69f4ae4a41da1cfac98e9182ba360eb2e4a39d2b1e"
+          }
         },
         {
           "id": "messaging-duplicate-dlq",
           "title": "Duplicate and repeated failure message processing lab",
           "summary": "Processing the same message twice only changes the result once and reprocesses failed messages.",
-          "path": "docs-site/content/messaging/02-duplicate-dlq-replay-lab.md"
+          "path": "docs-site/content/messaging/02-duplicate-dlq-replay-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/messaging-duplicate-dlq.md",
+            "title": "Duplicate, DLQ와 replay 실습",
+            "summary": "같은 메시지를 두 번 처리해도 결과가 한 번만 바뀌게 만들고 실패 메시지를 다시 처리합니다.",
+            "sourceSha256": "dd3488056ccd47f307d56f9e67dc66574d3ba152ba997a0d18cf62a37965f0b9"
+          }
         }
       ]
     },
@@ -427,19 +673,37 @@
           "id": "reliability-finops-roadmap",
           "title": "Reliability·DR·FinOps roadmap",
           "summary": "Recovery and cost judgments begin with the simple meaning of availability, failure, RTO, RPO, and capacity.",
-          "path": "docs-site/content/reliability-finops/00-roadmap.md"
+          "path": "docs-site/content/reliability-finops/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/reliability-finops-roadmap.md",
+            "title": "신뢰성·DR·FinOps 로드맵",
+            "summary": "가용성·장애·RTO·RPO·용량의 쉬운 뜻부터 복구와 비용 판단을 시작합니다.",
+            "sourceSha256": "d427ca1b237cf867d24f1d734f4a04de5409bc3c76f566c705d5912a5b5c5e07"
+          }
         },
         {
           "id": "reliability-finops-model",
           "title": "Connecting recovery goals, processing capacity, and costs",
           "summary": "Define a specific failure and associate recovery time, remaining processing power, and associated costs.",
-          "path": "docs-site/content/reliability-finops/01-reliability-capacity-cost-model.md"
+          "path": "docs-site/content/reliability-finops/01-reliability-capacity-cost-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/reliability-finops-model.md",
+            "title": "Reliability, capacity와 cost model",
+            "summary": "구체적인 장애를 정하고 복구 시간, 남은 처리 능력과 그에 필요한 비용을 연결합니다.",
+            "sourceSha256": "7909b530744a1040b0c1ac14e1d76c6ef8739df8a5e6459d94cafb45eaed385a"
+          }
         },
         {
           "id": "reliability-finops-capstone",
           "title": "DevOps integration capstone",
           "summary": "By connecting the previously learned technology to one small service, we leave evidence from failure occurrence to recovery.",
-          "path": "docs-site/content/reliability-finops/02-integrated-capstone.md"
+          "path": "docs-site/content/reliability-finops/02-integrated-capstone.md",
+          "translation": {
+            "path": "docs-site/translations/ko/reliability-finops-capstone.md",
+            "title": "DevOps 통합 capstone",
+            "summary": "앞서 배운 기술을 작은 서비스 하나에 연결해 장애 발생부터 복구까지 증거를 남깁니다.",
+            "sourceSha256": "5fd9b1c8aec007f7c10b6b7149130ebad503b26b619d64431721eee3f9016ccb"
+          }
         }
       ]
     },
@@ -455,19 +719,37 @@
           "id": "karpenter-roadmap",
           "title": "Karpenter Advanced Roadmap",
           "summary": "We begin the Karpenter in-depth course with the meaning of Pending Pod·Node·Scheduler·NodePool.",
-          "path": "docs-site/content/karpenter/00-roadmap.md"
+          "path": "docs-site/content/karpenter/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/karpenter-roadmap.md",
+            "title": "Karpenter 심화 로드맵",
+            "summary": "Pending Pod·Node·스케줄러·NodePool의 뜻부터 Karpenter 심화 과정을 시작합니다.",
+            "sourceSha256": "342b5d67597fe14549818345a14fb6402bb1a9d91dff4d79b60f2939a75537c9"
+          }
         },
         {
           "id": "karpenter-provisioning",
           "title": "How nodes are provisioned and removed",
           "summary": "We divide the role of each Karpenter resource from requesting a Pod to creating and replacing a Node.",
-          "path": "docs-site/content/karpenter/01-provisioning-disruption-model.md"
+          "path": "docs-site/content/karpenter/01-provisioning-disruption-model.md",
+          "translation": {
+            "path": "docs-site/translations/ko/karpenter-provisioning.md",
+            "title": "Provisioning과 disruption model",
+            "summary": "Pod 요구에서 Node 하나가 만들어지고 교체되기까지 각 Karpenter 자원의 역할을 나눕니다.",
+            "sourceSha256": "bec2a29a466dc07dab2172825695aa33b01a7e942f2b2e1fd9fa1c5c4216377e"
+          }
         },
         {
           "id": "karpenter-consolidation-lab",
           "title": "Pending Pods and safe node consolidation",
           "summary": "Observe how nodes are created to run pods and when node removal is stopped due to service protection rules.",
-          "path": "docs-site/content/karpenter/02-pending-pod-consolidation-lab.md"
+          "path": "docs-site/content/karpenter/02-pending-pod-consolidation-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/karpenter-consolidation-lab.md",
+            "title": "Pending Pod와 consolidation 실습",
+            "summary": "Pod를 실행할 Node가 생기는 과정과 서비스 보호 규칙 때문에 Node 제거가 멈추는 상황을 관찰합니다.",
+            "sourceSha256": "8cf622787edcb3bb7c4f7f93483ff564e080c818eec11379e53e6a15bdd35e5f"
+          }
         }
       ]
     },
@@ -483,19 +765,37 @@
           "id": "traffic-resilience-roadmap",
           "title": "Traffic Control and Service Resiliency Roadmap",
           "summary": "Starting with request path ownership and load limiting, we learn to design so that retries do not cause failures.",
-          "path": "docs-site/content/traffic-resilience/00-roadmap.md"
+          "path": "docs-site/content/traffic-resilience/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/traffic-resilience-roadmap.md",
+            "title": "트래픽 제어와 서비스 복원력 로드맵",
+            "summary": "요청 경로의 소유권과 부하 제한부터 시작해 재시도가 장애를 키우지 않는 설계를 배웁니다.",
+            "sourceSha256": "6b6ec361487af095104d632afd39bacf709439aca898645a7cb9beeffdecbc12"
+          }
         },
         {
           "id": "traffic-resilience-request-budget",
           "title": "Failure budget from gateway to upstream",
           "summary": "Within the overall deadline, the connection, attempt, and retry budgets are divided, and the responsibilities of circuit breakers and outlier detection are separated.",
-          "path": "docs-site/content/traffic-resilience/01-request-budget-and-ownership.md"
+          "path": "docs-site/content/traffic-resilience/01-request-budget-and-ownership.md",
+          "translation": {
+            "path": "docs-site/translations/ko/traffic-resilience-request-budget.md",
+            "title": "Gateway에서 upstream까지의 실패 예산",
+            "summary": "전체 deadline 안에서 연결·시도·재시도 예산을 나누고 circuit breaker와 outlier detection의 책임을 구분합니다.",
+            "sourceSha256": "13b5a11f5d63b93449d3bf5717035369c42f71414610641652a337ac60e2582d"
+          }
         },
         {
           "id": "traffic-resilience-policy-lab",
           "title": "Route ownership and retry storm review lab",
           "summary": "Read the Gateway API and Envoy settings to check allowed routes, maximum concurrent retries, and recovery decision evidence.",
-          "path": "docs-site/content/traffic-resilience/02-route-and-retry-review-lab.md"
+          "path": "docs-site/content/traffic-resilience/02-route-and-retry-review-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/traffic-resilience-policy-lab.md",
+            "title": "Route 소유권과 retry storm 검토 실습",
+            "summary": "Gateway API와 Envoy 설정을 읽어 허용된 route, 최대 동시 재시도와 복구 판정 증거를 점검합니다.",
+            "sourceSha256": "bd3e11eedeefedb3837e0c04642616fb0fdb57e6953b8fa62785266cae7cda81"
+          }
         }
       ]
     },
@@ -511,43 +811,85 @@
           "id": "backend-engineering-roadmap",
           "title": "Backend engineering for production roadmap",
           "summary": "Reorganize the vault's backend knowledge axis into an open learning path that connects requests, data, distributed failures, performance, and changes to existing DevOps topics.",
-          "path": "docs-site/content/backend-engineering/00-roadmap.md"
+          "path": "docs-site/content/backend-engineering/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/backend-engineering-roadmap.md",
+            "title": "운영 가능한 백엔드 엔지니어링 로드맵",
+            "summary": "vault의 백엔드 지식 축을 공개 학습 경로로 재구성해 요청·데이터·분산 실패·성능·변경을 기존 DevOps 주제와 연결합니다.",
+            "sourceSha256": "0209761fbde0b7ad9fb78743801bc320e269152188580666bba51896e49837bb"
+          }
         },
         {
           "id": "backend-engineering-api-contract",
           "title": "Request semantics and API contract",
           "summary": "HTTP method, status, error type, idempotency key, and asynchronous status are created into a contract that the client can safely determine.",
-          "path": "docs-site/content/backend-engineering/01-request-and-api-contract.md"
+          "path": "docs-site/content/backend-engineering/01-request-and-api-contract.md",
+          "translation": {
+            "path": "docs-site/translations/ko/backend-engineering-api-contract.md",
+            "title": "요청 의미와 API 계약",
+            "summary": "HTTP method·status·오류 형식·idempotency key·비동기 상태를 클라이언트가 안전하게 판단할 수 있는 계약으로 만듭니다.",
+            "sourceSha256": "20d3f424d923a6f7f4e5739f25016a70a300abc4fa0201bb9ac445a57a9db6c6"
+          }
         },
         {
           "id": "backend-engineering-domain-transaction",
           "title": "Domain invariants and data transactions",
           "summary": "Set boundaries for simultaneous changes in business rules and distinguish what DB constraint·transaction·outbox guarantees.",
-          "path": "docs-site/content/backend-engineering/02-domain-data-transaction.md"
+          "path": "docs-site/content/backend-engineering/02-domain-data-transaction.md",
+          "translation": {
+            "path": "docs-site/translations/ko/backend-engineering-domain-transaction.md",
+            "title": "도메인 불변식과 데이터 트랜잭션",
+            "summary": "업무 규칙의 동시 변경 경계를 정하고 DB constraint·transaction·outbox가 각각 무엇을 보장하는지 구분합니다.",
+            "sourceSha256": "a487274e6b8b37c3e77280e64da70ef1b7196e926153aaf4fbebccd1df286ef5"
+          }
         },
         {
           "id": "backend-engineering-runtime-capacity",
           "title": "Concurrency, Queue, Runtime and Capacity",
           "summary": "Before increasing throughput by connecting arrival rate, residence time, concurrent tasks, pool, and GC, we first find depleted resources and overload boundaries.",
-          "path": "docs-site/content/backend-engineering/03-concurrency-capacity-runtime.md"
+          "path": "docs-site/content/backend-engineering/03-concurrency-capacity-runtime.md",
+          "translation": {
+            "path": "docs-site/translations/ko/backend-engineering-runtime-capacity.md",
+            "title": "동시성·큐·런타임과 용량",
+            "summary": "도착률·체류 시간·동시 작업·pool·GC를 연결해 처리량을 늘리기 전에 먼저 고갈되는 자원과 과부하 경계를 찾습니다.",
+            "sourceSha256": "8cde64083befdb8478574d7ad6ecd31d1c9ef83a540cb56e4afe020de534de7a"
+          }
         },
         {
           "id": "backend-engineering-distributed-workflow",
           "title": "Partial failures and distributed workflows",
           "summary": "Design idempotency, outbox, fencing, and reward state machines based on the assumptions of duplication, change of order, unknown outcome, and stale owner.",
-          "path": "docs-site/content/backend-engineering/04-distributed-workflows.md"
+          "path": "docs-site/content/backend-engineering/04-distributed-workflows.md",
+          "translation": {
+            "path": "docs-site/translations/ko/backend-engineering-distributed-workflow.md",
+            "title": "부분 실패와 분산 워크플로",
+            "summary": "중복·순서 변경·결과 불명·stale owner를 전제로 idempotency, outbox, fencing과 보상 상태 머신을 설계합니다.",
+            "sourceSha256": "fefc255d4a838dd944d2e091b2eeeede03cfeed28b2aa044ccb87aba2bd03227"
+          }
         },
         {
           "id": "backend-engineering-cache-performance",
           "title": "Cache/data flow and performance evidence",
           "summary": "It measures cache key·freshness·invalidations and query·event paths together to avoid fast but incorrect systems.",
-          "path": "docs-site/content/backend-engineering/05-cache-performance-dataflow.md"
+          "path": "docs-site/content/backend-engineering/05-cache-performance-dataflow.md",
+          "translation": {
+            "path": "docs-site/translations/ko/backend-engineering-cache-performance.md",
+            "title": "캐시·데이터 흐름과 성능 증거",
+            "summary": "cache key·freshness·invalidations와 query·event 경로를 함께 측정해 빠르지만 틀린 시스템을 피합니다.",
+            "sourceSha256": "b1337332df4ee1205c051b52463b02eddcd174dfe1a12fe32ea9584397d6db7e"
+          }
         },
         {
           "id": "backend-engineering-evolution",
           "title": "Compatible changes, testing and gradual deployment",
           "summary": "The period in which old and new code and data coexist is closed with contract testing, expand-contract, canary, rollback, and post-verification.",
-          "path": "docs-site/content/backend-engineering/06-evolutionary-delivery-and-testing.md"
+          "path": "docs-site/content/backend-engineering/06-evolutionary-delivery-and-testing.md",
+          "translation": {
+            "path": "docs-site/translations/ko/backend-engineering-evolution.md",
+            "title": "호환 변경·테스트와 점진적 배포",
+            "summary": "구·신 코드와 데이터가 공존하는 기간을 계약 테스트, expand-contract, canary, rollback과 사후 검증으로 닫습니다.",
+            "sourceSha256": "4aa4e6342a0a7a5fc3d0b5ede4010897c7025f013b43bd67c398405fc3480091"
+          }
         }
       ]
     },
@@ -563,37 +905,73 @@
           "id": "ai-specialist-core-roadmap",
           "title": "AI Specialist Full Module Roadmap",
           "summary": "Vault's AI Specialist reorganizes all five modules and cross-cutting concepts into an open learning sequence.",
-          "path": "docs-site/content/ai-specialist-core/00-roadmap.md"
+          "path": "docs-site/content/ai-specialist-core/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-specialist-core-roadmap.md",
+            "title": "AI Specialist 전체 모듈 로드맵",
+            "summary": "vault의 AI Specialist 5개 모듈과 교차 개념을 빠짐없이 공개 학습 순서로 재구성합니다.",
+            "sourceSha256": "1fb31623843c44c9688880cff4d550c606d7bcf09a0e3abe553013bf02448968"
+          }
         },
         {
           "id": "ai-specialist-core-llm",
           "title": "LLM foundations and efficiency",
           "summary": "It connects tokenization·embedding·attention·GPT·learning·LoRA·DPO to inference efficiency such as KV cache·GQA·MoE.",
-          "path": "docs-site/content/ai-specialist-core/01-llm-foundations-and-efficiency.md"
+          "path": "docs-site/content/ai-specialist-core/01-llm-foundations-and-efficiency.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-specialist-core-llm.md",
+            "title": "LLM 밑바닥 구조와 효율화",
+            "summary": "tokenization·embedding·attention·GPT·학습·LoRA·DPO에서 KV cache·GQA·MoE 같은 추론 효율화까지 연결합니다.",
+            "sourceSha256": "a6e6f3bbaa645e196a06a1b6e754ac4f22d0e7abee80145f723daf4cb7991335"
+          }
         },
         {
           "id": "ai-specialist-core-vision",
           "title": "Vision and generative model lineage",
           "summary": "We compare the representation structures of CNN·ResNet·ViT·DETR·UNet and GAN·VAE·VQ-VAE·diffusion·image token generation.",
-          "path": "docs-site/content/ai-specialist-core/02-vision-and-generative-models.md"
+          "path": "docs-site/content/ai-specialist-core/02-vision-and-generative-models.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-specialist-core-vision.md",
+            "title": "Vision과 생성 모델 계보",
+            "summary": "CNN·ResNet·ViT·DETR·UNet의 표현 구조와 GAN·VAE·VQ-VAE·diffusion·image token 생성을 비교합니다.",
+            "sourceSha256": "79e0386caf8737c03e9c82d64fb695a4e81b9209a9c015959922d7be3a61e720"
+          }
         },
         {
           "id": "ai-specialist-core-edge",
           "title": "On-device AI and model compression",
           "summary": "Evaluate pruning, quantization, and knowledge distillation not only for accuracy but also for actual target latency, memory, power, and artifact contracts.",
-          "path": "docs-site/content/ai-specialist-core/03-on-device-model-compression.md"
+          "path": "docs-site/content/ai-specialist-core/03-on-device-model-compression.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-specialist-core-edge.md",
+            "title": "On-device AI와 모델 압축",
+            "summary": "pruning·quantization·knowledge distillation을 정확도뿐 아니라 실제 target 지연·메모리·전력·artifact 계약으로 평가합니다.",
+            "sourceSha256": "5023e2642dd820056f7c2bb780004b6ba7c38818f3da248feaf072e701a121d4"
+          }
         },
         {
           "id": "ai-specialist-core-forecast-recommend",
           "title": "Time series prediction and recommendation system",
           "summary": "Learn time leak-free prediction, naive baseline, and evaluation of implicit feedback, BPR, NCF, and graph recommendations.",
-          "path": "docs-site/content/ai-specialist-core/04-time-series-and-recommendation.md"
+          "path": "docs-site/content/ai-specialist-core/04-time-series-and-recommendation.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-specialist-core-forecast-recommend.md",
+            "title": "시계열 예측과 추천 시스템",
+            "summary": "시간 누수 없는 예측과 naive baseline, 암묵적 피드백·BPR·NCF·graph recommendation의 평가를 배웁니다.",
+            "sourceSha256": "90c064b9b1ebab0b650d6eb9e4ef524e8a3e1ed9318065fb271fabdd984905ac"
+          }
         },
         {
           "id": "ai-specialist-core-rag-mcp",
           "title": "RAG·GraphRAG·NL2SQL and MCP",
           "summary": "Expands from search/ANN/reranking to graph/SQL queries and tool execution, but distinguishes between retrieval evidence and action authority.",
-          "path": "docs-site/content/ai-specialist-core/05-rag-graph-mcp.md"
+          "path": "docs-site/content/ai-specialist-core/05-rag-graph-mcp.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-specialist-core-rag-mcp.md",
+            "title": "RAG·GraphRAG·NL2SQL과 MCP",
+            "summary": "검색·ANN·reranking에서 graph·SQL 질의와 도구 실행으로 확장하되 retrieval evidence와 action authority를 구분합니다.",
+            "sourceSha256": "caa66e7bbfd14e43d51cf2405c749b414e0f4dbcc11b47ed4b3dcd2fa45225a6"
+          }
         }
       ]
     },
@@ -609,31 +987,61 @@
           "id": "ai-transformation-platform-roadmap",
           "title": "AI Transformation: the four-pillar roadmap",
           "summary": "Vault's AI Transformation reorganizes the four pillars and agent execution contracts into operable public paths.",
-          "path": "docs-site/content/ai-transformation-platform/00-roadmap.md"
+          "path": "docs-site/content/ai-transformation-platform/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-transformation-platform-roadmap.md",
+            "title": "AI Transformation 전체 필러 로드맵",
+            "summary": "vault의 AI Transformation 4개 필러와 에이전트 실행 계약을 운영 가능한 공개 경로로 재구성합니다.",
+            "sourceSha256": "3704fa6b7b22c56c6a7482cfe8da7dbfaeb095d88499b773005d7bfb1487459a"
+          }
         },
         {
           "id": "ai-transformation-platform-infrastructure",
           "title": "AI infrastructure, distributed training, and LLM serving",
           "summary": "GPU memory·interconnect·parallelism·scheduler·KV cache·continuous batching is designed in terms of workload SLO and cost.",
-          "path": "docs-site/content/ai-transformation-platform/01-ai-infrastructure-serving.md"
+          "path": "docs-site/content/ai-transformation-platform/01-ai-infrastructure-serving.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-transformation-platform-infrastructure.md",
+            "title": "AI 인프라·분산 학습과 LLM 서빙",
+            "summary": "GPU memory·interconnect·parallelism·scheduler·KV cache·continuous batching을 workload SLO와 비용 단위로 설계합니다.",
+            "sourceSha256": "c280a65c53c3c37e22fef9aa5c0f435ee88880346feeb404a9b211a78fb80991"
+          }
         },
         {
           "id": "ai-transformation-platform-mlops",
           "title": "MLOps, LLMOps, and evaluable lifecycles",
           "summary": "Connect dataset·run·model·prompt·retrieval index·eval suite·deployment into one reproducible lineage and promotion gate.",
-          "path": "docs-site/content/ai-transformation-platform/02-mlops-llmops-lifecycle.md"
+          "path": "docs-site/content/ai-transformation-platform/02-mlops-llmops-lifecycle.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-transformation-platform-mlops.md",
+            "title": "MLOps·LLMOps와 평가 가능한 수명주기",
+            "summary": "dataset·run·model·prompt·retrieval index·eval suite·deployment를 하나의 재현 가능한 lineage와 승급 gate로 연결합니다.",
+            "sourceSha256": "7f4d20e21782afc157e28138fedbc7da2b7eb2f7ab948daf5976e349f36f5b2a"
+          }
         },
         {
           "id": "ai-transformation-platform-devops",
           "title": "AI DevOps/Platform and FinOps",
           "summary": "Binds IaC·Kubernetes·GitOps·GPU telemetry·quota·autoscaling to cost per successful inference/training job and operational boundaries.",
-          "path": "docs-site/content/ai-transformation-platform/03-ai-devops-platform-finops.md"
+          "path": "docs-site/content/ai-transformation-platform/03-ai-devops-platform-finops.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-transformation-platform-devops.md",
+            "title": "AI DevOps·플랫폼과 FinOps",
+            "summary": "IaC·Kubernetes·GitOps·GPU telemetry·quota·autoscaling을 성공한 추론·학습 작업당 비용과 운영 경계로 묶습니다.",
+            "sourceSha256": "f303430e49bf547015ac50c3a8933bd75129cad0dab5fdd5b6a255c928f244c3"
+          }
         },
         {
           "id": "ai-transformation-platform-agents",
           "title": "Enterprise AI and secure agent execution",
           "summary": "Configure RAG·LLM gateway·MCP·A2A·memory·durable workflow·sandbox·workload identity·policy as approved operations.",
-          "path": "docs-site/content/ai-transformation-platform/04-enterprise-agent-operations.md"
+          "path": "docs-site/content/ai-transformation-platform/04-enterprise-agent-operations.md",
+          "translation": {
+            "path": "docs-site/translations/ko/ai-transformation-platform-agents.md",
+            "title": "Enterprise AI와 안전한 에이전트 실행",
+            "summary": "RAG·LLM gateway·MCP·A2A·memory·durable workflow·sandbox·workload identity·policy를 승인 가능한 operation으로 구성합니다.",
+            "sourceSha256": "4a6f5683e00cbcac3a18578f52ef31b04a3c46b1ff9288be22b6e4d4d371474c"
+          }
         }
       ]
     },
@@ -649,19 +1057,37 @@
           "id": "aiops-foundations-roadmap",
           "title": "AIOps Signals and Operations Topology Roadmap",
           "summary": "It lays the foundation for data contracts, service relationships, change history, and incident labels that AIOps will read.",
-          "path": "docs-site/content/aiops-foundations/00-roadmap.md"
+          "path": "docs-site/content/aiops-foundations/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-foundations-roadmap.md",
+            "title": "AIOps 신호와 운영 토폴로지 로드맵",
+            "summary": "AIOps가 읽을 데이터 계약과 서비스 관계, 변경 이력, incident label의 기초를 잡습니다.",
+            "sourceSha256": "96c602e7e22344b8271392a4e90343b94d99b7e6e93191027e1c1dd530a367dd"
+          }
         },
         {
           "id": "aiops-foundations-evidence-graph",
           "title": "Connecting operational signals to an incident evidence graph",
           "summary": "Design identifiers and time windows that go down from user symptoms to service·deployment·resource·trace.",
-          "path": "docs-site/content/aiops-foundations/01-evidence-graph.md"
+          "path": "docs-site/content/aiops-foundations/01-evidence-graph.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-foundations-evidence-graph.md",
+            "title": "운영 신호를 incident evidence graph로 연결하기",
+            "summary": "사용자 증상에서 service·deployment·resource·trace로 내려가는 식별자와 시간 창을 설계합니다.",
+            "sourceSha256": "a2254b1f955670c90870eb15461a02e2618c9e75c94695fb4851b2949f4a1587"
+          }
         },
         {
           "id": "aiops-foundations-contract-lab",
           "title": "Incident bundle data contract review lab",
           "summary": "Create a small JSON bundle and see how missing time, service, and change identifiers prevent diagnostics.",
-          "path": "docs-site/content/aiops-foundations/02-incident-bundle-contract-lab.md"
+          "path": "docs-site/content/aiops-foundations/02-incident-bundle-contract-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-foundations-contract-lab.md",
+            "title": "Incident bundle 데이터 계약 검토 실습",
+            "summary": "작은 JSON bundle을 만들고 빠진 시간·서비스·변경 식별자가 진단을 어떻게 막는지 확인합니다.",
+            "sourceSha256": "63417210066b44a829078c638138c943e18cd73925ffe7cd4a0ac9bcc43c9262"
+          }
         }
       ]
     },
@@ -677,19 +1103,37 @@
           "id": "aiops-diagnosis-roadmap",
           "title": "Anomaly detection and fault diagnosis roadmap",
           "summary": "Symptom detection, alert grouping, diagnostic information retrieval, and cause candidate evaluation are divided into different stages.",
-          "path": "docs-site/content/aiops-diagnosis/00-roadmap.md"
+          "path": "docs-site/content/aiops-diagnosis/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-diagnosis-roadmap.md",
+            "title": "이상 탐지와 장애 진단 로드맵",
+            "summary": "증상 탐지, alert grouping, 진단 정보 회수, 원인 후보 평가를 서로 다른 단계로 나눕니다.",
+            "sourceSha256": "97fdebaa7def4fe29b1ed601f1f2cf1842bb6eba9e9af9e5f37a95f005a7b155"
+          }
         },
         {
           "id": "aiops-diagnosis-pipeline",
           "title": "From detection scores to cause candidates with evidence",
           "summary": "Prioritize user influence and simple rules, and limit anomaly scores, change correlations, and LLM explanations to verifiable candidates.",
-          "path": "docs-site/content/aiops-diagnosis/01-detection-correlation-rca.md"
+          "path": "docs-site/content/aiops-diagnosis/01-detection-correlation-rca.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-diagnosis-pipeline.md",
+            "title": "탐지 점수에서 근거 있는 원인 후보까지",
+            "summary": "사용자 영향과 단순 규칙을 우선하고, 이상 점수·변경 상관·LLM 설명을 검증 가능한 후보로 제한합니다.",
+            "sourceSha256": "f8efec47f1ff64162a65ff1e04d74e632d66a050687074bf24349ea09a279a3d"
+          }
         },
         {
           "id": "aiops-diagnosis-triage-lab",
           "title": "Group alerts and select diagnostic evidence",
           "summary": "Multiple alerts from the same failure are grouped into one incident, and only the evidence required for the cause is selected.",
-          "path": "docs-site/content/aiops-diagnosis/02-alert-correlation-triage-lab.md"
+          "path": "docs-site/content/aiops-diagnosis/02-alert-correlation-triage-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-diagnosis-triage-lab.md",
+            "title": "Alert 묶기와 진단 근거 선택 실습",
+            "summary": "같은 장애에서 나온 여러 alert를 incident 하나로 묶고, 원인 후보에 필요한 evidence만 선택합니다.",
+            "sourceSha256": "06b885e8ef38707bd12021ae2ae820e48d4692a5089e95b0fa389a7ed3eca409"
+          }
         }
       ]
     },
@@ -705,19 +1149,37 @@
           "id": "aiops-remediation-roadmap",
           "title": "Approved Automated Recovery and Operational Learning Roadmap",
           "summary": "Distinguish between recommended, human-approved executions, and limited automated executions, and return incident results to rules and evaluation sets.",
-          "path": "docs-site/content/aiops-remediation/00-roadmap.md"
+          "path": "docs-site/content/aiops-remediation/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-remediation-roadmap.md",
+            "title": "승인된 자동 복구와 운영 학습 로드맵",
+            "summary": "추천, 사람 승인 실행, 제한된 자동 실행을 구분하고 incident 결과를 규칙과 평가셋으로 되돌립니다.",
+            "sourceSha256": "6cf1efe480bfd3b2226c981e8c2aefcc4274592b7f63c7397c9b8cbe52795060"
+          }
         },
         {
           "id": "aiops-remediation-state-machine",
           "title": "Remediation state machines and safety contracts",
           "summary": "Design operation states and evidence to prevent duplicate execution of the same event, unknown results, and expansion of the blast radius.",
-          "path": "docs-site/content/aiops-remediation/01-guarded-remediation-state-machine.md"
+          "path": "docs-site/content/aiops-remediation/01-guarded-remediation-state-machine.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-remediation-state-machine.md",
+            "title": "Remediation을 상태 머신과 안전 계약으로 만들기",
+            "summary": "동일 사건 중복 실행, 결과 불명, blast radius 확대를 막는 operation 상태와 증거를 설계합니다.",
+            "sourceSha256": "0fbca30008e37c720e05d2e2df0a1e8fe455ab835d96c28c968ae97c5ce75a96"
+          }
         },
         {
           "id": "aiops-remediation-dry-run-lab",
           "title": "Automatic recovery dry-run and rollback judgment lab",
           "summary": "Review the recovery plan without making any actual changes, and find and supplement any cases where approval, abort, or success judgments are missing.",
-          "path": "docs-site/content/aiops-remediation/02-remediation-dry-run-lab.md"
+          "path": "docs-site/content/aiops-remediation/02-remediation-dry-run-lab.md",
+          "translation": {
+            "path": "docs-site/translations/ko/aiops-remediation-dry-run-lab.md",
+            "title": "자동 복구 dry-run과 rollback 판정 실습",
+            "summary": "실제 변경 없이 복구 계획을 검토하고, 승인·중단·성공 판정이 빠진 경우를 찾아 보완합니다.",
+            "sourceSha256": "f621a00cd53545a80fea4c653cc404d8d9201b459c0e1ebcf0b2706254f48074"
+          }
         }
       ]
     },
@@ -733,103 +1195,205 @@
           "id": "data-observability-engineering-roadmap",
           "title": "Data and Observability Engineering: from events to trusted AI",
           "summary": "Follow a twelve-month plan and build one evolving platform with measurable completion criteria.",
-          "path": "docs/guides/data-observability/00-roadmap.md"
+          "path": "docs/guides/data-observability/00-roadmap.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-roadmap.md",
+            "title": "데이터·관측성 엔지니어링: 이벤트에서 신뢰할 수 있는 AI까지",
+            "summary": "12개월 계획에 따라 측정 가능한 완료 기준을 갖춘 하나의 플랫폼을 점진적으로 만든다.",
+            "sourceSha256": "44984e834315ff12e280b0a582b83cc3bfbbbe77ba3b670b05f3de7ba16f9d4c"
+          }
         },
         {
           "id": "data-observability-engineering-stack-and-architecture",
           "title": "Choose a stack by responsibility",
           "summary": "Select a core stack and learn when CDC, Flink, Trino, catalogs, and telemetry backends earn their place.",
-          "path": "docs/guides/data-observability/01-stack-and-architecture.md"
+          "path": "docs/guides/data-observability/01-stack-and-architecture.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-stack-and-architecture.md",
+            "title": "책임을 기준으로 기술 스택 선택하기",
+            "summary": "핵심 스택을 선택하고 CDC·Flink·Trino·카탈로그·텔레메트리 백엔드가 필요한 조건을 익힌다.",
+            "sourceSha256": "36a22e7af095c1aa4d1f5391916c974e51e33cd29b39c3e55f8dd2c53cca35d2"
+          }
         },
         {
           "id": "data-observability-engineering-sql-python-foundations",
           "title": "SQL and Python: prove the result before scaling it",
           "summary": "Prove row grain, joins, deduplication, and totals with a runnable Python and SQL fixture.",
-          "path": "docs/guides/data-observability/02-sql-python-foundations.md"
+          "path": "docs/guides/data-observability/02-sql-python-foundations.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-sql-python-foundations.md",
+            "title": "SQL과 Python: 확장하기 전에 결과를 입증하기",
+            "summary": "실행 가능한 Python·SQL 예제로 행 단위, 조인, 중복 제거, 합계를 검증한다.",
+            "sourceSha256": "1d8c47a2aeb4f11c83ba9ea5185e38e105d88b7326f49b83eb55e1d62eafe30b"
+          }
         },
         {
           "id": "data-observability-engineering-parquet-object-storage",
           "title": "Parquet and object storage: understand what gets read",
           "summary": "Measure projection, filtering, file layout, and object storage behavior.",
-          "path": "docs/guides/data-observability/03-parquet-object-storage.md"
+          "path": "docs/guides/data-observability/03-parquet-object-storage.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-parquet-object-storage.md",
+            "title": "Parquet와 오브젝트 스토리지: 실제로 읽는 데이터 이해하기",
+            "summary": "열 선택, 필터링, 파일 배치, 오브젝트 스토리지 동작을 측정한다.",
+            "sourceSha256": "afa239b3a0a48d469fb23a8671fa84c643cc98e44d127aae31241e2525bb6260"
+          }
         },
         {
           "id": "data-observability-engineering-table-formats",
           "title": "Iceberg and Delta Lake: make a set of files a table",
           "summary": "Trace committed table versions, compare Iceberg and Delta, and rehearse recovery.",
-          "path": "docs/guides/data-observability/04-table-formats.md"
+          "path": "docs/guides/data-observability/04-table-formats.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-table-formats.md",
+            "title": "Iceberg와 Delta Lake: 파일 집합을 테이블로 만들기",
+            "summary": "커밋된 테이블 버전을 추적하고 Iceberg·Delta를 비교하며 복구를 연습한다.",
+            "sourceSha256": "023d79aba61df27b7939eba89596de28f490f81d25e3ee3bb3ef1918a4f6a3a1"
+          }
         },
         {
           "id": "data-observability-engineering-spark-performance",
           "title": "Spark internals: explain a slow job with evidence",
           "summary": "Connect physical plans, tasks, shuffle, skew, and spill to measured improvements.",
-          "path": "docs/guides/data-observability/05-spark-performance.md"
+          "path": "docs/guides/data-observability/05-spark-performance.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-spark-performance.md",
+            "title": "Spark 내부 동작: 근거로 느린 작업 설명하기",
+            "summary": "물리 계획·태스크·셔플·데이터 쏠림·스필을 측정한 개선 결과와 연결한다.",
+            "sourceSha256": "722560b9a53c28e91f4aded8fa1f575d152b9889b5aa822df40ec65fbe3ca8da"
+          }
         },
         {
           "id": "data-observability-engineering-kafka-cdc-streaming",
           "title": "Kafka, CDC, and streaming recovery",
           "summary": "Define CDC, delivery boundaries, event time, checkpoints, and replay correctness.",
-          "path": "docs/guides/data-observability/06-kafka-cdc-streaming.md"
+          "path": "docs/guides/data-observability/06-kafka-cdc-streaming.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-kafka-cdc-streaming.md",
+            "title": "Kafka·CDC·스트리밍 복구",
+            "summary": "CDC, 전달 보장의 경계, 이벤트 시간, 체크포인트, 재생 정확성을 정의한다.",
+            "sourceSha256": "2adade247c408681f13cec8052c8fd3595540635328783b3f566cfab6781ab0f"
+          }
         },
         {
           "id": "data-observability-engineering-modeling-orchestration",
           "title": "Modeling, dbt, and orchestration: publish a meaningful dataset",
           "summary": "Build meaningful marts, distinguish contracts from tests, and backfill explicit intervals.",
-          "path": "docs/guides/data-observability/07-modeling-orchestration.md"
+          "path": "docs/guides/data-observability/07-modeling-orchestration.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-modeling-orchestration.md",
+            "title": "모델링·dbt·오케스트레이션: 의미 있는 데이터셋 공개하기",
+            "summary": "의미 있는 데이터 마트를 만들고 계약과 테스트를 구분하며 명시한 구간을 백필한다.",
+            "sourceSha256": "c9c65071a17a4853779c8239567181cc90eab49a016302d72b30ca9e95510723"
+          }
         },
         {
           "id": "data-observability-engineering-quality-contracts-slos",
           "title": "Data quality, contracts, and outcome-based SLOs",
           "summary": "Measure validity, completeness, freshness, missed runs, and publication outcomes.",
-          "path": "docs/guides/data-observability/08-quality-contracts-slos.md"
+          "path": "docs/guides/data-observability/08-quality-contracts-slos.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-quality-contracts-slos.md",
+            "title": "데이터 품질·계약·결과 중심 SLO",
+            "summary": "유효성·완전성·신선도·누락 실행·공개 결과를 측정한다.",
+            "sourceSha256": "ac4c024ea9df948cc1e8f3f6ae8588c8100c319e4b1d78e615da9531a598ab17"
+          }
         },
         {
           "id": "data-observability-engineering-opentelemetry",
           "title": "OpenTelemetry: connect executions without losing control of telemetry",
           "summary": "Connect SDKs and Collector pipelines; investigate propagation, sampling, and telemetry loss.",
-          "path": "docs/guides/data-observability/09-opentelemetry.md"
+          "path": "docs/guides/data-observability/09-opentelemetry.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-opentelemetry.md",
+            "title": "OpenTelemetry: 텔레메트리를 통제하며 실행 연결하기",
+            "summary": "SDK와 Collector 파이프라인을 연결하고 컨텍스트 전파·샘플링·텔레메트리 유실을 조사한다.",
+            "sourceSha256": "0209c126ee395d76cf481771bfe1848b4f2dd1e75ec72b56f0f0eb085a0d8928"
+          }
         },
         {
           "id": "data-observability-engineering-metrics-logs-traces",
           "title": "Prometheus, Grafana, Loki, and Tempo: operate the evidence pipeline",
           "summary": "Read counters and histograms, bound labels, and connect dataset alerts to logs and traces.",
-          "path": "docs/guides/data-observability/10-metrics-logs-traces.md"
+          "path": "docs/guides/data-observability/10-metrics-logs-traces.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-metrics-logs-traces.md",
+            "title": "Prometheus·Grafana·Loki·Tempo: 근거 파이프라인 운영하기",
+            "summary": "카운터·히스토그램을 읽고 라벨 범위를 제한하며 데이터셋 경보를 로그·트레이스와 연결한다.",
+            "sourceSha256": "16fbba89308a7e7b13d48c02f6615213b05ca0d9136f6301b74e6d742b64238d"
+          }
         },
         {
           "id": "data-observability-engineering-lineage-governance",
           "title": "Lineage, catalog, and governance: find impact and enforce access",
           "summary": "Connect datasets, jobs, and runs to owners while testing execution-time access.",
-          "path": "docs/guides/data-observability/11-lineage-governance.md"
+          "path": "docs/guides/data-observability/11-lineage-governance.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-lineage-governance.md",
+            "title": "계보·카탈로그·거버넌스: 영향 찾기와 접근 강제하기",
+            "summary": "데이터셋·작업·실행을 소유자와 연결하고 실행 시점의 접근 권한을 시험한다.",
+            "sourceSha256": "59609f9099c7367d9cecc303a1bd2dfdfed1f1671a78b34eb9d07c550f27bc30"
+          }
         },
         {
           "id": "data-observability-engineering-cloud-platforms",
           "title": "Databricks first, Snowflake second: compare the same promises",
           "summary": "Compare Databricks and Snowflake against identical quality, recovery, and cost requirements.",
-          "path": "docs/guides/data-observability/12-cloud-platforms.md"
+          "path": "docs/guides/data-observability/12-cloud-platforms.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-cloud-platforms.md",
+            "title": "Databricks부터 Snowflake까지: 같은 약속 비교하기",
+            "summary": "동일한 품질·복구·비용 요구를 기준으로 Databricks와 Snowflake를 비교한다.",
+            "sourceSha256": "34603d68370a9a1bf7bf40d7eb517d95f7588295f4ea6b9009602e6a3239bee9"
+          }
         },
         {
           "id": "data-observability-engineering-ai-ready-data-evaluation",
           "title": "AI-ready data, retrieval, and evaluation",
           "summary": "Deliver authorized evidence to retrieval and agents and evaluate reproducible answer traces.",
-          "path": "docs/guides/data-observability/13-ai-ready-data-evaluation.md"
+          "path": "docs/guides/data-observability/13-ai-ready-data-evaluation.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-ai-ready-data-evaluation.md",
+            "title": "AI용 데이터·검색·평가",
+            "summary": "검색과 에이전트에 권한이 허용된 근거를 전달하고 재현 가능한 답변 추적 기록을 평가한다.",
+            "sourceSha256": "ea56d048cd88032978cd6a679d68ad03ca84f359db1976e97b0c96bcc14624e9"
+          }
         },
         {
           "id": "data-observability-engineering-platform-operations",
           "title": "Platform operations: releases, recovery, capacity, and cost",
           "summary": "Operate compatible releases, restores, capacity, backpressure, and cost per successful outcome.",
-          "path": "docs/guides/data-observability/14-platform-operations.md"
+          "path": "docs/guides/data-observability/14-platform-operations.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-platform-operations.md",
+            "title": "플랫폼 운영: 릴리스·복구·용량·비용",
+            "summary": "호환되는 릴리스, 복원, 용량, 역압, 성공 결과당 비용을 운영한다.",
+            "sourceSha256": "60cbccd1c4635777b5e46d8c0f42d822065bc160eff0b76f79fb47d34c6b11e1"
+          }
         },
         {
           "id": "data-observability-engineering-capstone",
           "title": "Capstone: one evolving data and observability platform",
           "summary": "Grow one synthetic project through six phases, a runnable oracle, and a failure matrix.",
-          "path": "docs/guides/data-observability/15-capstone.md"
+          "path": "docs/guides/data-observability/15-capstone.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-capstone.md",
+            "title": "종합 프로젝트: 함께 발전하는 데이터·관측성 플랫폼",
+            "summary": "하나의 가상 프로젝트를 여섯 단계로 발전시키고 실행 가능한 정답 판정기와 실패 행렬을 만든다.",
+            "sourceSha256": "e302075a0c80bc21148eddebdd12eeadba5a95f6b7596574426b918932024bf7"
+          }
         },
         {
           "id": "data-observability-engineering-source-review",
           "title": "Source review, extensions, and implementation boundaries",
           "summary": "Inspect official sources, curriculum extensions, and version boundaries.",
-          "path": "docs/guides/data-observability/16-source-review.md"
+          "path": "docs/guides/data-observability/16-source-review.md",
+          "translation": {
+            "path": "docs-site/translations/ko/data-observability-engineering-source-review.md",
+            "title": "출처 검토·확장·구현 경계",
+            "summary": "공식 출처, 커리큘럼 확장, 버전별 경계를 검토한다.",
+            "sourceSha256": "8c48bcc6a18336df88a4c54d819abe84a94e5d56112750ada811a2e82d4b90ed"
+          }
         }
       ]
     }

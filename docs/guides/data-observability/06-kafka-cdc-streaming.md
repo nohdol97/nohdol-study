@@ -1,5 +1,9 @@
 # Kafka, CDC, and streaming recovery
 
+CDC stands for **Change Data Capture**: collecting a database's inserts, updates, and deletes so another system can follow its changes. Imagine an order changing from pending to paid. An analytical copy needs that update; copying every order repeatedly becomes wasteful as the table grows. CDC carries the change, but the consumer still decides how it affects the analytical table.
+
+Debezium implements CDC with database connectors. Kafka stores and distributes the resulting event records, and a stream processor can transform them. These are separate roles: a changed row is not automatically a new business sale, and storing its event does not calculate revenue. In the next chapter, dbt transforms data after it has been loaded.
+
 Streaming correctness becomes visible when a process stops between reading an event and committing its output. Design for that interruption before optimizing throughput.
 
 ## Terms introduced in this chapter

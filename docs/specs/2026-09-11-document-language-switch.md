@@ -1,6 +1,8 @@
 # Public documentation language switch
 
-Status: implemented
+Status: implemented; article scope extended by [bilingual reading](2026-09-11-bilingual-reading.md).
+
+The following records the original interface-only delivery. The later bilingual specification replaces its English-only article, title, summary, and search boundaries.
 
 The header offers Korean and English interface buttons. English remains the default and the canonical article language. Korean covers navigation, search controls and results labels, learning-path and topic introductions, reading stages, and diagram controls. Article titles, summaries, bodies, code, and diagrams retain their English source text; the Korean reader explicitly states that boundary. Translation runs locally from a bundled dictionary without an external service.
 

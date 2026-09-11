@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node build.mjs",
     "check": "node build.mjs --check",
-    "test": "node --check src/app.js && node --check src/i18n.js && node --test build.test.mjs i18n.test.mjs",
+    "test": "node --check src/app.js && node --check src/i18n.js && node --check src/reading.js && node --check src/terms.js && node --test build.test.mjs i18n.test.mjs bilingual.test.mjs",
     "preview": "python3 -m http.server 4174 -d dist"
   },
   "dependencies": {

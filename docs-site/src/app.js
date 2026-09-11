@@ -1,3 +1,5 @@
+import {initializeReading} from './reading.js';
+import {configureTerms} from './terms.js';
 import { message, savedLanguage, rememberLanguage, localizeCatalog, LANGUAGES } from './i18n.js';
 
 const main = document.querySelector('#main-content');
@@ -96,13 +98,16 @@ function pathTopics(learningPath) {
   return learningPath.topicIds.map((id) => topicsById.get(id)).filter(Boolean);
 }
 
+function docTitle(item) { return language === 'ko' ? item.translation.title : item.title; }
+function docSummary(item) { return language === 'ko' ? item.translation.summary : item.summary; }
+
 function documentCard(document, index) {
   return `
     <a class="document-card" href="#doc=${encodeURIComponent(document.id)}">
       <span class="document-index">${String(index + 1).padStart(2, '0')}</span>
-      <span class="document-card-copy" lang="en">
-        <strong>${escapeHtml(document.title)}</strong>
-        <span>${escapeHtml(document.summary)}</span>
+      <span class="document-card-copy" lang="${language}">
+        <strong>${escapeHtml(docTitle(document))}</strong>
+        <span>${escapeHtml(docSummary(document))}</span>
       </span>
       <span class="reading-time">${t('{count} min', {count: document.readingMinutes})}</span>
       <span class="arrow" aria-hidden="true">↗</span>
@@ -278,20 +283,20 @@ function renderDocument(currentDocument) {
   const currentIndex = documents.findIndex((item) => item.id === currentDocument.id);
   const previous = documents[currentIndex - 1];
   const next = documents[currentIndex + 1];
-  document.title = `${currentDocument.title} — ${content.site.title}`;
+  document.title = `${docTitle(currentDocument)} — ${content.site.title}`;
 
   main.innerHTML = `
     <div class="reader-shell shell">
       <aside class="reader-sidebar" aria-label="${t('{title} documents', {title: escapeHtml(topic.title)})}">
         <a class="back-link" href="#topic=${encodeURIComponent(topic.id)}"><span aria-hidden="true">←</span> ${escapeHtml(topic.title)}</a>
         <p class="reader-sidebar-label">${escapeHtml(topic.number)} / ${escapeHtml(topic.label)}</p>
-        <nav lang="en">
+        <nav lang="${language}">
           ${documents
             .map(
               (item, index) => `
               <a href="#doc=${encodeURIComponent(item.id)}" ${item.id === currentDocument.id ? 'aria-current="page"' : ''}>
                 <span>${String(index + 1).padStart(2, '0')}</span>
-                ${escapeHtml(item.title)}
+                ${escapeHtml(docTitle(item))}
               </a>`,
             )
             .join('')}
@@ -300,25 +305,26 @@ function renderDocument(currentDocument) {
       <article class="reader-article">
         <header class="article-header">
           <p class="article-kicker">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</p>
-          <h1 lang="en">${escapeHtml(currentDocument.title)}</h1>
-          <p class="article-summary" lang="en">${escapeHtml(currentDocument.summary)}</p>
+          <h1><span class="reading-en" lang="en">${escapeHtml(currentDocument.title)}</span><span class="reading-ko" lang="ko">${escapeHtml(currentDocument.translation.title)}</span></h1>
+          <p class="article-summary reading-en" lang="en">${escapeHtml(currentDocument.summary)}</p><p class="article-summary reading-ko" lang="ko">${escapeHtml(currentDocument.translation.summary)}</p>
           <div class="article-meta">
             <span>${t('About {count} min', {count: currentDocument.readingMinutes})}</span>
             <span>${escapeHtml(currentDocument.path)}</span>
             <a href="${escapeHtml(content.site.repository)}/blob/main/${encodeURI(currentDocument.path)}">${t('Markdown source ↗')}</a>
           </div>
         </header>
-        ${language === 'ko' ? `<p class="document-language-note">${t('The language switch changes the site interface. Document text and code remain in English.')}</p>` : ''}
-        <div class="markdown-body" lang="en">${currentDocument.html}</div>
+        <div data-reading-controls></div>
+        <div data-term-primer></div>
+        <div class="markdown-body">${currentDocument.parallelHtml}</div>
         <nav class="article-pagination" aria-label="${t('Previous and next documents')}">
           ${
             previous
-              ? `<a class="previous" href="#doc=${encodeURIComponent(previous.id)}"><span>${t('Previous document')}</span><strong lang="en">← ${escapeHtml(previous.title)}</strong></a>`
+              ? `<a class="previous" href="#doc=${encodeURIComponent(previous.id)}"><span>${t('Previous document')}</span><strong lang="${language}">← ${escapeHtml(docTitle(previous))}</strong></a>`
               : '<span></span>'
           }
           ${
             next
-              ? `<a class="next" href="#doc=${encodeURIComponent(next.id)}"><span>${t('Next document')}</span><strong lang="en">${escapeHtml(next.title)} →</strong></a>`
+              ? `<a class="next" href="#doc=${encodeURIComponent(next.id)}"><span>${t('Next document')}</span><strong lang="${language}">${escapeHtml(docTitle(next))} →</strong></a>`
               : '<span></span>'
           }
         </nav>
@@ -330,6 +336,7 @@ function renderDocument(currentDocument) {
     link.rel = 'noreferrer';
   });
 
+  initializeReading(document.querySelector('.reader-article'), currentDocument, {language, t});
   renderMermaidDiagrams(document.querySelector('.markdown-body'));
 }
 
@@ -420,9 +427,9 @@ function searchDocuments(query) {
   if (!terms.length) return [];
   return content.documents
     .map((document) => {
-      const title = document.title.toLocaleLowerCase('en');
-      const summary = document.summary.toLocaleLowerCase('en');
-      const body = document.searchText.toLocaleLowerCase('en');
+      const title = `${document.title} ${document.translation.title}`.toLocaleLowerCase('en');
+      const summary = `${document.summary} ${document.translation.summary}`.toLocaleLowerCase('en');
+      const body = `${document.searchText} ${document.koreanSearchText}`.toLocaleLowerCase('en');
       if (!terms.every((term) => title.includes(term) || summary.includes(term) || body.includes(term))) return null;
       const score = terms.reduce(
         (total, term) => total + (title.includes(term) ? 4 : 0) + (summary.includes(term) ? 2 : 0) + (body.includes(term) ? 1 : 0),
@@ -456,8 +463,8 @@ function renderSearch(query) {
                   return `
                     <a class="search-result" href="#doc=${encodeURIComponent(document.id)}">
                       <span class="search-result-topic">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</span>
-                      <strong lang="en">${escapeHtml(document.title)}</strong>
-                      <p lang="en">${escapeHtml(document.summary)}</p>
+                      <strong lang="${language}">${escapeHtml(docTitle(document))}</strong>
+                      <p lang="${language}">${escapeHtml(docSummary(document))}</p>
                       <span class="reading-time">${t('About {count} min', {count: document.readingMinutes})}</span>
                     </a>`;
                 })
@@ -551,6 +558,7 @@ async function initialize() {
     const response = await fetch('./content.json');
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     originalContent = await response.json();
+    configureTerms(originalContent.documents);
     updateContentLanguage();
     document.querySelectorAll('[data-repository-link]').forEach((link) => {
       link.href = content.site.repository;

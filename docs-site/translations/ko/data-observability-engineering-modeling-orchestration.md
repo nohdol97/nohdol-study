@@ -1,0 +1,218 @@
+# 모델링·dbt·오케스트레이션: 의미 있는 데이터셋 공개하기
+
+**dbt**는 주로 SQL로 작성한 데이터 변환을 연결·실행·검사·문서화하는 도구다. dbt 모델은 분석용 테이블이나 뷰를 만드는 변환을 정의한다. 예를 들어 주문을 적재한 뒤 정제 주문을 만들고, 일일 매출을 계산하고, 주문 ID가 중복되지 않는지 검사할 수 있다. 모델 파일에 변환을 담으면 검토하고 재사용하기 쉬워진다.
+
+행을 보관하고 SQL을 실행하는 것은 데이터베이스나 데이터 웨어하우스다. CDC는 원본 변경을 수집하고, dbt는 이미 적재한 행을 변환하며, Airflow나 Dagster는 의존하는 작업들의 실행 시점을 조정한다. **오케스트레이션**(Orchestration)은 이런 작업과 의존성을 조정하는 일이다. 작업 성공만으로 매출 정의가 맞다고 입증되지는 않으므로 이 장에서는 변환을 업무 규칙 검사·공개 절차와 연결한다.
+
+사용자가 행 단위, 이력, 정의, 전달을 믿을 수 있어야 원시 레코드가 제품이 된다. 스케줄러 성공만으로 이 속성들이 입증되지는 않는다.
+
+## 이 장에서 처음 쓰는 말
+
+| 용어 | 의미 |
+|---|---|
+| 사실 / 차원 | 측정값·이벤트 / 해석에 필요한 설명 맥락 |
+| 스타 스키마(star schema) | 정의된 키로 사실과 설명 차원을 연결한 구조 |
+| SCD Type 1 / Type 2 | 이전 설명값 덮어쓰기 / 유효 기간 이력 보존 |
+| 증분 모델(incremental model) | 매번 전체를 만들지 않고 선택한 변경 집합을 처리하는 모델 |
+| 백필(backfill) | 정의한 과거 구간을 다시 처리하는 것 |
+| 데이터 구간(data interval) | 예약 계산이 책임지는 시간 범위 |
+
+## 먼저 이해하기
+
+1. 소스 식별자를 포함한 원시 표현을 보존한다.
+2. staging에서 타입·타임스탬프·단위·이벤트 버전을 표준화한다.
+3. 중간 모델에 재사용 가능한 변환을 만든다.
+4. 명시적 사용자 정의를 갖춘 사실·차원·마트를 공개한다.
+5. 검사를 공개 조건으로 삼고 입력 버전과 출력 식별자를 기록한다.
+
+Bronze·silver·gold는 조직 관례다. 디렉터리 이름만으로 품질이 강제되지 않는다. 보존·거부 대상, 과거 수정의 전파 방식, 읽을 수 있는 주체를 경계마다 정의한다.
+
+## 이력을 의도적으로 설계하기
+
+주문 항목 단위 사실은 품목 매출에 답할 수 있지만 일별 집계로 각 주문을 반드시 복원할 수는 없다. 열 추가 전에 행 단위를 선언한다. Type 2 차원은 사실의 이벤트 시간을 겹치지 않는 유효 구간과 조인하며 보통 반개구간을 사용한다. 보고서가 과거 귀속과 현재 분류 중 무엇을 반영할지 정한다.
+
+고객이 화요일에 지역을 옮겼다면 월요일 주문은 과거 보고서에서 월요일 지역, 현재 계정 화면에서는 오늘 지역에 속할 수 있다. 둘 다 유용하지만 문서화되지 않은 조인 하나로 두 정의를 안전하게 대신할 수는 없다.
+
+## 사실 행 단위·차원·SCD 이력
+
+주문 항목 사실에는 수량·항목 금액, 고객 차원에는 설명 속성이 들어간다. 스타 스키마는 선언한 키로 연결한다. 가산 측정값은 유효한 차원으로 합산할 수 있지만 계정 잔액은 일반적으로 시간축 합산이 안 되며 평균 가격도 가중치 없이 부분 평균을 평균내면 안 된다. 비율은 의미 계약에 분자·분모를 정의한다.
+
+SCD Type 1은 속성을 덮어써 과거 사실도 현재 차원과 조인하면 오늘 분류를 따른다. Type 2는 대리 식별자와 유효 구간을 가진 새 차원 버전을 만든다. 반개구간 `[valid_from, valid_to)`을 쓰면 변경 시각과 정확히 같은 이벤트는 새 버전에만 대응한다. 중첩을 금지하고 최초 알려진 버전 이전의 사실 처리도 정한다.
+
+다음 실행 가능한 SQLite 예제로 차이를 확인한다. 작은 정수 시각은 순서 있는 가상 시점이다. 실제 모델은 시간대가 명시된 타임스탬프와 동률을 푸는 소스 순번을 사용해야 한다.
+
+<!-- executable: scd-history -->
+```python
+import sqlite3
+
+with sqlite3.connect(':memory:') as db:
+    db.executescript("""
+    CREATE TABLE dim_customer(customer TEXT, region TEXT, start_at INT, end_at INT);
+    INSERT INTO dim_customer VALUES ('c1','KR',0,20),('c1','US',20,100);
+    CREATE TABLE facts(event TEXT, customer TEXT, event_at INT, cents INT);
+    INSERT INTO facts VALUES ('e1','c1',10,100),('e2','c1',20,250);
+    """)
+    naive = db.execute('SELECT SUM(cents) FROM facts JOIN dim_customer USING(customer)').fetchone()[0]
+    historical = db.execute("""
+      SELECT region, SUM(cents) FROM facts f JOIN dim_customer d
+      ON f.customer=d.customer AND f.event_at>=d.start_at AND f.event_at<d.end_at
+      GROUP BY region ORDER BY region
+    """).fetchall()
+    current = db.execute("""
+      SELECT region, SUM(cents) FROM facts f JOIN dim_customer d
+      ON f.customer=d.customer AND d.end_at=100 GROUP BY region
+    """).fetchall()
+    assert naive == 700
+    assert historical == [('KR',100),('US',250)]
+    assert current == [('US',350)]
+    print('naive_total:', naive)
+    print('type_2_attribution:', historical)
+    print('current_attribution:', current)
+```
+
+예상 출력:
+
+```text
+naive_total: 700
+type_2_attribution: [('KR', 100), ('US', 250)]
+current_attribution: [('US', 350)]
+```
+
+시각 20의 이벤트는 US에 속한다. `< end_at`를 `<= end_at`로 바꾸면 경계에서 두 번 대응하며 일반 NOT NULL 검사로는 못 잡는다. 차원의 늦은 수정은 현재 차원 행뿐 아니라 과거 사실 귀속까지 다시 계산해야 할 수 있다.
+
+## dbt의 역할
+
+`ref`는 모델 의존성과 관계 이름을 연결하고 `source`는 외부 입력을 식별한다. 모델은 변환을, 매크로는 SQL 생성 로직 재사용을, 스냅샷은 변경 이력 절차를 맡고 문서는 의미를 설명한다. 가능한 실체화·제약은 어댑터와 웨어하우스 동작에 달려 있다.
+
+모델 계약은 출력 형태와 지원 제약을 설명한다. 데이터 테스트는 관계가 만들어진 뒤 내용을 평가하고 실패 레코드를 보고한다. 웨어하우스에서 기본 키를 선언해도 유일성이 반드시 강제되지는 않는다. 어댑터·플랫폼 동작을 확인하고 필요하면 명시적 유일성 테스트를 유지한다.
+
+다음 dbt 모델 속성 파일은 예시다. 해당 열을 가진 기존 `fct_orders` 모델과 호환 dbt·어댑터를 가정하며 완전한 프로젝트는 아니다.
+
+```yaml
+version: 2
+models:
+  - name: fct_orders
+    description: One accepted current record per order event.
+    columns:
+      - name: event_id
+        data_tests:
+          - not_null
+          - unique
+      - name: amount_cents
+        data_tests:
+          - not_null
+```
+
+이 검사는 통화, 매출 정의, 상위 이벤트 누락, 갱신 이력을 검증하지 않는다. 예시 입력 기반 업무 테스트, 소스 대사, 전달 검사를 추가한다.
+
+## 모델·ref·source·매크로
+
+dbt SQL 모델은 SELECT를 설명하고 실체화 방식이 view·table·incremental 관계나 어댑터 지원 오브젝트 중 무엇이 될지 정한다. `ref('stg_orders')`는 환경별 상위 관계를 해석하면서 그래프 의존성을 선언한다. `source('commerce','orders')`는 속성에 등록된 외부 적재 관계를 해석할 뿐 수집하지 않는다. 운영 스키마 하드코딩은 이 환경·의존성 이점을 우회한다.
+
+매크로는 컴파일 시 SQL을 생성하며 웨어하우스에서 행마다 실행하는 Python 함수가 아니다. 이름에 단위를 담아 재사용해도 의미가 유지되게 한다. 예를 들어 dbt 프로젝트의 `macros/cents_to_units.sql`에 다음을 저장한다.
+
+```sql
+{% macro cents_to_units(column_name) -%}
+  cast({{ column_name }} as decimal(18,2)) / 100
+{%- endmacro %}
+```
+
+이후 `{{ cents_to_units('amount_cents') }}`는 모델 안의 식을 만든다. 인자는 신뢰한 프로젝트 코드이며 임의 사용자 SQL이 아니다. 다른 자릿수가 필요한 통화에는 다른 규칙을 사용한다. 편리한 매크로가 모든 금액에 소수 두 자리를 조용히 강요해서는 안 된다.
+
+## 증분 모델: 변경 선택과 키 교체
+
+증분 모델에는 관련 변경을 모두 선택하는 일과 기존 출력에 올바르게 적용하는 별도 책임이 있다. `is_incremental()`은 대상 존재, 전체 갱신 아님 등 문서화된 증분 조건에서만 참이다. `unique_key` 설정은 지원 전략의 대응 방법이며 입력 키의 유일성·NOT NULL을 보장하지 않는다.
+
+이 모델은 `delete+insert`를 지원하는 dbt 어댑터용 DuckDB/PostgreSQL 계열 SQL 예시다. `stg_orders(event_id, amount_cents, updated_at, source_seq)`가 있는 기존 프로젝트의 `models/fct_orders.sql`에 저장한다. staging은 같은 이벤트·순번의 충돌을 거부하고 권위 있는 순번을 유지해야 한다. 이틀 lookback은 예제 정책이며 보편적인 지연 보장이 아니다.
+
+```sql
+{{ config(materialized='incremental', unique_key='event_id',
+          incremental_strategy='delete+insert') }}
+
+with candidates as (
+  select * from {{ ref('stg_orders') }}
+  {% if is_incremental() %}
+  where updated_at >= (
+    select coalesce(max(updated_at), timestamp '1900-01-01') from {{ this }}
+  ) - interval '2 days'
+  {% endif %}
+), ranked as (
+  select *, row_number() over (
+    partition by event_id order by source_seq desc
+  ) as position
+  from candidates
+)
+select event_id, amount_cents, updated_at, source_seq
+from ranked where position=1
+```
+
+어댑터가 같은 기존 키를 선택된 현재 레코드로 교체한다. 처음 e1=100·e2=250이면 350센트이고 새 e1=120이면 다음 빌드는 370, 같은 빌드 반복도 370이다. 교체 대신 추가하면 470이다. 소스 `updated_at`이 lookback 밖인 수정은 놓치므로 소스가 변경 탐지 시계를 보장하거나 CDC·제어 위치 대안을 제공해야 한다. tombstone은 명시적 삭제 처리가 필요하다. 삭제 행을 SELECT에서 제외하는 것만으로 이미 공개한 대상 행이 지워지지는 않는다.
+
+임시 스키마에서 `dbt run --select +fct_orders`, `dbt test --select fct_orders`를 실행하고 별도 전체 재계산 결과와 키별로 비교한다. 소스 예시, 어댑터·core 버전, 컴파일 SQL을 보존한다. 증분 호출 성공은 과거 삭제나 늦은 갱신을 포함했다는 근거가 아니다.
+
+## 스냅샷·테스트·계약·문서
+
+dbt 스냅샷은 변경 가능한 소스에서 탐지한 변경을 Type 2 이력으로 보존한다. timestamp 전략은 신뢰할 수 있는 updated-at 열을 쓰고 check 전략은 설정한 값들을 비교한다. 일일 스냅샷은 실행 시점 상태만 보므로 실행 사이 중간 변경 둘이 이력에서 빠질 수 있다. 모든 중간 변경이 중요하면 CDC가 필요하다. 소스 계약 없이 스냅샷 관측 시각을 업무 유효 시각이라고 부르지 않는다.
+
+유일성·NULL 여부처럼 재사용할 검사는 generic data test로, 실패 행으로 표현할 업무 불변식은 singular SQL test로 검사한다. 반환 행이 없으면 통과하므로 완전성을 별도로 확인하지 않으면 빈 모델도 성공처럼 보인다. 예를 들어 유효 차원 대응이 0개 또는 여러 개인 사실을 반환하는 검사를 만든다. 해당 dbt 버전·어댑터가 지원하면 단위 예제로 전체 빌드 전에 작은 입력에 대한 변환 로직을 시험한다.
+
+모델 계약은 경계에서 출력 열·타입과 지원 제약을 제한하며 실제 강제는 웨어하우스마다 다르다. 문서는 설명, 행 단위, 단위, 담당자, 검사 의미를 담고 실행을 대신하지 않는다. 매니페스트와 실행 결과를 릴리스와 함께 보관해 계보·검사가 같은 리비전을 참조하게 한다. `dbt build`는 그래프 의존성과 지원되는 테스트 차단 동작을 따르지만 프로젝트 전체를 자동으로 하나의 원자적 공개 트랜잭션으로 만들지 않는다.
+
+## 현재 시각을 추측하지 말고 구간을 조정하기
+
+Airflow는 워크플로와 과거 백필을 재처리·동시성 제어와 함께 지원한다. 자산과 의존성 중심 구성이 좋다면 Dagster를 대안으로 평가한다. 처음에는 하나만 사용한다.
+
+태스크는 변환 내내 현재 시각을 호출하지 말고 명시적 입력 구간을 처리한다. 재시도도 같은 논리 입력을 대상으로 외부 효과 중복을 피해야 한다. 실행 ID와 업무 구간을 나눈다. 같은 구간에 두 시도가 있어도 공개 결과는 명확하게 하나여야 한다.
+
+```mermaid
+flowchart LR
+  I[Interval and source versions] --> B[Build candidate mart]
+  B --> V[Validate grain and totals]
+  V -->|pass| P[Publish version]
+  V -->|fail| Q[Keep candidate isolated]
+  P --> R[Record run and lineage]
+```
+
+### Airflow DAG와 Dagster 자산
+
+Airflow DAG는 태스크 의존성을 표현한다. 논리 날짜·데이터 구간은 작업 기간을 식별하며 실제 시작은 스케줄·자원 경쟁으로 늦을 수 있다. 재시도는 그 구간의 추가 시도다. 변환에 구간 경계·입력 버전을 명시적으로 전달하고 스케줄러 동시성 제어로 백필이 현재 운영 용량을 소진하지 않게 한다. 태스크 성공은 영속 출력 확인 뒤에 와야 한다.
+
+Dagster 자산 모델은 데이터셋·의존성에 이름을 붙이고 날짜 같은 부분을 파티션으로 표현한다. materialization은 자산 갱신을 기록하며 검사가 속성을 평가한다. 태스크 실행만 보는 것보다 어느 파티션이 없는지 묻기 자연스러울 수 있다. 필요한 운영 질문·연동으로 고른다. 어느 모델도 트랜잭션 공개, 데이터 계약, 소스 보존을 없애지는 않는다.
+
+태스크가 웨어하우스 쿼리를 시작하고 시간 초과돼도 쿼리가 계속되면 새 시도가 동시 작성자를 만들 수 있다. 같은 논리 공개를 다시 요청하기 전에 원격 작업 ID를 기록하고 최종 상태를 대사한다. 스케줄러 재시도 정책은 분산 취소 프로토콜이 아니다.
+
+## 과거 구간 재처리 실습
+
+임시 모델·스키마, 가상 3일 주문, 명시적인 시작·종료 시각을 받는 스케줄러나 스크립트가 필요하다. 3일 모두 빌드해 합계를 기록하고 둘째 날 주문 하나를 수정한다. 해당 구간만 후보 출력으로 다시 처리하고 예상 합계와 비교한 뒤 지원되는 방식으로 원자적으로 공개한다.
+
+같은 백필을 반복해도 최종 결과는 같아야 한다. 출력 생성 뒤 스케줄러 성공 표시 전에 실패를 주입하고 재시도 시 출력 식별자를 대사한다. 동시 백필 수를 세고 현재 데이터에 필요한 자원을 보호한다. 과거 복구가 오늘의 기한 실패를 만들면 복구가 끝난 것이 아니다.
+
+`max(event_time)`만으로 증분 필터링하면 과거 타임스탬프의 늦은 수정을 놓칠 수 있다. 제한된 lookback과 결정적 병합, CDC 위치, 소스가 지원하는 다른 변경 탐지 기법을 설계한다. 늦은 갱신·삭제를 포함한 예제로 증분 출력과 전체 재계산을 비교한다.
+
+## 실행 결과 예시
+
+모든 금액이 센트 단위인 3일 장부 예시다.
+
+```text
+baseline: day1=100, day2=250, day3=50
+day2 correction: replace 250 with 270
+after bounded backfill: day1=100, day2=270, day3=50
+after identical retry: day1=100, day2=270, day3=50
+full rebuild comparison: MATCH
+```
+
+둘째 날 520은 덧셈식 재생을 뜻한다. 둘째 날 밖의 설명되지 않은 변경은 복구 범위 위반이다. 전체 재계산 비교에 늦은 삭제를 넣고 스케줄러 승인 실패 후에는 기존 공개 결과를 대사한다.
+
+## 스스로 설명해 보기
+
+모델 빌드 성공이 정확히 무엇을 입증하는가? 행 단위, 구간, 입력 버전, 검사, 공개 경계, 남은 불확실성을 말하고 태스크 재시도와 업무 결과 재공개가 다른 작업인 이유를 설명한다.
+
+다음은 [품질과 SLO](../../../docs/guides/data-observability/08-quality-contracts-slos.md)로 이어간다.
+
+<!-- source: https://docs.getdbt.com/docs/build/data-tests | checked: 2026-09-10 | model data tests -->
+<!-- source: https://docs.getdbt.com/docs/mesh/govern/model-contracts | checked: 2026-09-10 | shape versus data tests and adapter constraint support -->
+<!-- source: https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/backfill.html | checked: 2026-09-10 | Airflow 3.3.1 backfill semantics at review -->
+<!-- source: https://docs.getdbt.com/docs/build/incremental-models | checked: 2026-09-10 | change selection, unique_key and full refresh -->
+<!-- source: https://docs.getdbt.com/docs/build/snapshots | checked: 2026-09-10 | timestamp/check strategies and observed history -->
+<!-- source: https://docs.getdbt.com/docs/build/jinja-macros | checked: 2026-09-10 | SQL generation and macros -->
+<!-- source: https://docs.dagster.io/guides/build/assets | checked: 2026-09-10 | assets, materializations and dependencies -->

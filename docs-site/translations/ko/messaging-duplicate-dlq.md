@@ -1,0 +1,152 @@
+# Duplicate, DLQ와 replay 실습
+
+> 실습 등급: state machine은 **Local**, managed broker 검증은 **AWS optional**이다. 실제 queue·topic을 만들면 과금과 cleanup 가능성을 먼저 확인한다.
+
+## 실습 전에 준비할 것
+
+- **첫 단계**: broker 없이 message 한 건과 처리 기록 table을 사용해 중복 처리 조건을 이해한다.
+- **로컬 데이터베이스**: 임시 PostgreSQL 데이터베이스를 사용한다. 아래 세션 전용 임시 테이블은 세션을 닫으면 사라진다.
+- **업무 결과**: 주문 상태처럼 중복되면 안 되는 row를 하나 정하고 처리 전후 값을 기록한다.
+- **실패 주입**: 같은 `event_id`를 두 번 처리하고, acknowledgement 직전에 process가 종료됐다고 가정한다.
+- **AWS 선택 단계**: SQS source queue와 DLQ를 전용 prefix·tag로 만들고 비용과 삭제 책임자를 정한다.
+- **끝난 상태**: local test row와 선택적으로 만든 queue, DLQ, alarm, IAM policy를 정리한다.
+
+현재 Local 절은 broker 제품의 완성된 실행 예제가 아니라 idempotency 경계를 확인하는 database 실습이다. 실제 delivery·visibility timeout·DLQ 이동을 완료하려면 AWS optional 환경이나 별도 local broker가 필요하다.
+
+## 먼저 이해하기
+
+이 실습에서 duplicate는 예외적인 broker 오작동이 아니라 정상적으로 대비해야 할 delivery 결과다. consumer가 business DB commit에는 성공했지만 acknowledgement 직전에 종료되면 broker는 완료 사실을 알지 못해 같은 event를 다시 보낼 수 있다.
+
+idempotency는 “두 번째 요청을 무시한다”는 문장만으로 완성되지 않는다. 어떤 값을 동일 event의 identity로 볼지, 그 key를 어디에 얼마나 오래 저장할지, business change와 같은 transaction에 기록할 수 있는지를 정해야 한다.
+
+| 설계 | crash가 끼어드는 위치 | 결과 |
+|---|---|---|
+| effect 후 processed key 저장 | 두 작업 사이 | effect 중복 가능 |
+| processed key 저장 후 effect | 두 작업 사이 | effect 누락 가능 |
+| 같은 DB transaction | commit 전·후 | rollback 또는 원자적 완료 |
+| 외부 API side effect | local transaction 밖 | provider idempotency key·reconciliation 필요 |
+
+## 1. Idempotent consumer 계약
+
+message는 immutable event ID를 가진다고 가정한다.
+
+```json
+{
+  "event_id": "evt-00042",
+  "type": "order.accepted",
+  "schema_version": 1,
+  "occurred_at": "2026-09-03T00:00:00Z",
+  "data": { "order_id": "demo-42" }
+}
+```
+
+하나의 `psql` 세션에서 고정된 업무 예시 데이터를 한 번 만든다.
+
+```sql
+CREATE TEMP TABLE processed_events (event_id text PRIMARY KEY);
+CREATE TEMP TABLE effect_counter (id integer PRIMARY KEY, applied integer NOT NULL);
+INSERT INTO effect_counter VALUES (1, 0);
+```
+
+같은 세션에서 다음 트랜잭션을 두 번 실행한다. 반환 ID가 SQL 안에서 업무 효과 발생을 제어하므로 두 번째 전달은 효과를 증가시키지 못한다.
+
+```sql
+BEGIN;
+WITH accepted AS (
+  INSERT INTO processed_events(event_id) VALUES ('evt-00042')
+  ON CONFLICT DO NOTHING
+  RETURNING event_id
+)
+UPDATE effect_counter
+SET applied = applied + 1
+WHERE id = 1 AND EXISTS (SELECT 1 FROM accepted);
+COMMIT;
+```
+
+```sql
+SELECT (SELECT count(*) FROM processed_events) AS processed,
+       (SELECT applied FROM effect_counter WHERE id = 1) AS effects;
+```
+
+두 번 전달한 뒤에도 `(processed, effects) = (1, 1)`이어야 한다. 새 ID로 트랜잭션을 반복하되 COMMIT을 ROLLBACK으로 바꾸면 두 값은 모두 1이어야 한다. 그 새 ID를 COMMIT으로 재시도하면 `(2, 2)`가 된다. 임시 테이블은 원자성만 시연한다. 운영 환경의 중복 제거에는 영속 테이블, 기존 대상 확인, 변경 불가능한 페이로드 식별자, 재생 기간을 포괄하는 보존 정책이 필요하다.
+
+단순 `SELECT 후 INSERT`는 concurrent delivery race를 만들 수 있다. unique constraint 또는 동등한 atomic conditional write를 사용한다.
+
+## 2. 중복과 poison message 주입
+
+동일한 `event_id`를 두 번 보내고 business row가 한 번만 바뀌는지 확인한다. 다음에는 지원하지 않는 `schema_version`을 보내 반복 실패와 DLQ 이동을 관찰한다.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Available
+    Available --> InFlight: receive
+    InFlight --> Deleted: success + ack
+    InFlight --> Available: timeout
+    Available --> DLQ: max receives exceeded
+    DLQ --> Available: controlled redrive
+```
+
+관측 항목은 queue depth, oldest age, receive count, processing latency, duplicate suppression count와 DLQ depth다.
+
+## 3. Controlled redrive
+
+- consumer가 새 schema를 안전하게 거부하거나 처리하도록 수정한다.
+- DLQ snapshot과 message 수를 기록한다.
+- 낮은 rate로 일부를 redrive해 정상 처리와 idempotency를 확인한다.
+- 전체 redrive 뒤 source/DLQ/business record 수를 reconciliation한다.
+
+AWS optional에서는 SQS source queue와 redrive policy, DLQ를 전용 prefix/tag로 만든다. queue URL, ARN과 payload에 민감 정보가 없는지 확인한다. 완료 후 source queue, DLQ, alarm, IAM policy를 inventory 역순으로 삭제한다.
+
+## 실패 판정
+
+- duplicate delivery마다 business side effect가 반복된다.
+- poison message가 hot loop를 만들거나 DLQ 없이 사라진다.
+- redrive 뒤 처리·실패·잔여 합계가 원래 DLQ count와 맞지 않는다.
+- ack 전에 side effect, ack 뒤 state 기록처럼 atomic boundary가 갈라져 있다.
+
+## 실행 결과 예시
+
+고정된 업무 예시 데이터에 대한 예상 PostgreSQL 출력이다.
+
+```text
+# First delivery
+BEGIN
+UPDATE 1
+COMMIT
+# Identical retry
+BEGIN
+UPDATE 0
+COMMIT
+ processed | effects
+-----------+---------
+         1 |       1
+# A new ID followed by ROLLBACK
+ processed | effects
+-----------+---------
+         1 |       1
+# Retry that new ID with COMMIT
+ processed | effects
+-----------+---------
+         2 |       2
+```
+
+통과 조건은 inbox 수뿐 아니라 업무 효과 수다. DLQ 장부 예시에서 메시지 10건은 성공 7 + 재실패 2 + 잔여 1 = 10으로 대사한다. 이 장부 숫자는 워크시트 입력이며 SQL 실습은 브로커나 redrive API를 실행하지 않았다.
+
+## 결과를 이렇게 읽는다
+
+동일 event를 두 번 보낸 뒤 `processed_events`는 한 row, business 결과도 한 번이어야 한다. processed row만 하나인데 business effect가 두 번이면 두 작업의 atomic boundary가 갈라진 것이다. process memory의 set으로 중복을 막았다면 restart 뒤 같은 시험을 반복해 한계를 확인한다.
+
+poison message가 DLQ로 이동하면 main consumer의 hot loop는 멈췄지만 business 처리는 아직 실패 상태다. payload와 schema version, error class를 조사해 consumer를 고친 뒤 제한된 rate로 redrive한다. 원래 DLQ 수는 성공·재실패·잔여 수의 합과 맞아야 한다.
+
+oldest message age가 계속 늘면 새 메시지를 처리하고 있어도 backlog의 앞부분은 회복되지 않는 것이다. queue depth, 처리율, retry와 downstream capacity를 함께 봐야 예상 drain 시간을 계산할 수 있다.
+
+## 스스로 설명해 보기
+
+1. idempotency key를 process memory에만 두면 restart 뒤 어떤 문제가 생기는가?
+2. DLQ message를 수정 없이 바로 redrive하면 왜 장애가 반복되는가?
+3. retry 횟수뿐 아니라 oldest message age가 필요한 이유는 무엇인가?
+
+<!-- source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html | checked: 2026-09-03 -->
+<!-- source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html | checked: 2026-09-03 -->
+<!-- source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html | checked: 2026-09-03 -->
+<!-- source: https://kafka.apache.org/documentation/#semantics | checked: 2026-09-03 -->

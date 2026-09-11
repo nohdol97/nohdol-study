@@ -1,0 +1,164 @@
+# 계보·카탈로그·거버넌스: 영향 찾기와 접근 강제하기
+
+품질 알림은 영향받는 출력·실행·담당자·사용자를 식별해야 조치할 수 있다. 계보 그래프는 조사할 관계를, 카탈로그는 의미·탐색을 제공한다. 실행 정책은 누가 실제 읽거나 바꿀 수 있는지 결정한다.
+
+## 이 장에서 처음 쓰는 말
+
+| 용어 | 의미 |
+|---|---|
+| job / run / dataset | 처리 정의 / 실행 한 번 / 식별된 데이터 집합 |
+| facet | OpenLineage의 확장 가능한 메타데이터 구조 |
+| 열 계보(column lineage) | 입력 열과 출력 열의 관계 |
+| RBAC / ABAC | 역할 기반 접근 / 속성·정책 기반 접근 |
+| 분류(classification) | public·internal·sensitive처럼 취급 규칙에 쓰는 라벨 |
+| 감사(audit) | 접근·관리 작업의 보존 기록 |
+
+## 먼저 이해하기
+
+1. 데이터셋·작업에 안정된 namespace/name 식별자를 준다.
+2. 실행별 실제 입력·출력·상태·버전 정보를 기록한다.
+3. 계보를 소유권·문서·분류·품질 결과와 연결한다.
+4. 관계로 영향 후보를 찾는다.
+5. 질의·저장·제공 경계에서 접근을 확인하고 결과를 감사한다.
+
+OpenLineage 기본 모델은 데이터셋·작업·실행을 구분하고 facet으로 메타데이터를 확장한다. OTel span은 작업을 설명한다. 공통 실행 참조로 두 모델을 연결할 수 있지만 trace를 테이블 버전으로 취급하지 않는다. 실제 계보 관측 범위는 계측 범위에 달려 있다.
+
+## 검토할 최소 이벤트
+
+다음 가상 OpenLineage 이벤트는 완료된 변환을 보여 준다. 완전한 구현은 적절한 수명 주기 이벤트도 보내고 고정 스키마로 검증한다. 예시 producer URL은 실제 발생기의 문서화된 신원으로 바꾼다.
+
+```json
+{
+  "eventType": "COMPLETE",
+  "eventTime": "2026-09-10T01:00:00Z",
+  "run": {"runId": "0c847daa-238e-4eca-8054-5583bb212d29"},
+  "job": {"namespace": "study", "name": "orders.clean"},
+  "inputs": [{"namespace": "study", "name": "orders.raw"}],
+  "outputs": [{"namespace": "study", "name": "orders.accepted"}],
+  "producer": "https://example.org/study-emitter",
+  "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json"
+}
+```
+
+아직 물리 스냅샷, 열 변환, 소유권, 하위 사용자는 식별하지 않는다. 이름 세 개가 전부 담는다고 가정하지 말고 지원 facet·통제된 기록 참조를 추가한다. `COMPLETE` 이벤트도 계약·구현이 연결하지 않으면 품질 관문 통과를 입증하지 않는다.
+
+## 담당자가 있는 카탈로그 메타데이터
+
+| 메타데이터 | 사용자에게 필요한 이유 |
+|---|---|
+| 의미·행 단위·단위·시간 기준 | 문법은 맞지만 의미는 틀린 질의 방지 |
+| 담당자·지원 경로 | 복구 책임자·팀 찾기 |
+| 스키마·계약 버전 | 연동 호환성 확인 |
+| 현재 공개·품질 상태 | 검색 가능한 것과 사용 가능한 데이터 구분 |
+| 분류·사용 정책 | 허용 취급·목적 판단 |
+| 입력·출력 계보와 범위 | 변경 조사와 영향 분석 공백 명시 |
+| 보존·폐기 예정 | 재현·전환·제거 계획 |
+
+소수 데이터셋의 명시적 메타데이터부터 시작한다. 검색, 담당자 절차, 수집 연동, 규모가 서비스를 정당화하면 DataHub·OpenMetadata를 평가한다. Marquez는 OpenLineage 실행 관계 탐색의 대안이다. 기능 개수만 세지 말고 실제 연동·권한 모델로 비교한다.
+
+## 거버넌스는 파생 데이터까지 따라간다
+
+카탈로그 태그는 정책의 입력이지 자동 강제 수단이 아니다. SQL 엔진, 오브젝트 저장소, 내보내기, 캐시, 검색 서비스에서 읽는 신원을 시험한다. 행 필터·열 마스크는 실제 사용자가 쓰는 신원으로 확인한다. 서비스가 호출자 범위를 강제하지 않으면 광범위한 서비스 계정이 신중하게 만든 UI를 우회할 수 있다.
+
+질의 권한과 메타데이터 발견 권한을 분리한다. 테이블 이름·계보도 민감한 업무 구조를 드러낼 수 있다. 허용·거부 읽기, 정책 변경, 내보내기, 담당자 변경을 감사하고 감사 기록 자체의 보존·접근도 설정한다.
+
+데이터 정책으로 원본을 지우면 테이블 이력, 실체화 마트, 응답 캐시, 임베딩, 캡처 프롬프트 등 관련 파생물을 찾는다. 적용 정책에 따라 삭제·만료·보존할 대상을 정한다. 엔지니어링 전파 실습이며 법적 보존 기간을 정하는 과정은 아니다.
+
+## dataset·job·run·facet 식별자
+
+데이터셋 ID는 운영·개발 같은 네임스페이스를 구분해야 한다. 표시 이름만으로는 모호하다. job은 변환 정의, run은 연동 규칙에 따른 실행 시도·수명 주기 인스턴스다. 재시도는 부모·논리 작업 관계를 유지하며 새 run ID를 쓸 수 있다. 같은 테이블 이름과 같은 데이터를 혼동하지 않도록 출력 스냅샷 ID도 함께 둔다.
+
+START와 COMPLETE·FAIL 같은 적절한 수명 이벤트를 낸다. 지연·중복 도착이 가능하므로 백엔드는 식별자·순서를 대사해야 한다. COMPLETE 부재는 실패·실행 중·전송 유실일 수 있다. 원인을 정하기 전에 스케줄러·공개 기록과 비교한다.
+
+facet은 적절한 개체에 타입 있는 메타데이터를 붙인다. 데이터셋 스키마는 데이터셋에, 소스 리비전·실행 세부는 해당 job/run facet에 둔다. 의미가 맞으면 표준 facet을 쓰고 사용자 정의에는 안정된 이름·스키마 참조를 둔다. 임의 JSON을 OpenLineage 봉투에 넣었다고 상호 운용되는 것은 아니다.
+
+### 테이블 계보와 열 계보
+
+`daily_revenue.total`이 `SUM(orders.amount_cents)`라면 열 간선은 기여 필드·변환을 식별한다. 테이블 간선은 daily_revenue가 orders에 의존한다는 것만 말한다. 무관한 소스 열의 이름 변경도 `SELECT *` 사용자에게 영향을 줄 수 있지만 필요한 열만 고른 사용자는 안전할 수 있다. 반대로 이름은 같아도 단위 변경은 그래프 구조 변화 없이 의미를 깨뜨린다.
+
+정적 SQL 분석은 잠재 의존성을, 런타임 계측은 실제 실행을 기록할 수 있다. 동적 SQL, UDF 내부, 파일 내보내기, 수동 복사는 양쪽 모두 공백을 남길 수 있다. 수집 범위를 명시하고 발생한 입력·출력 ID를 알려진 예제 그래프와 비교한다.
+
+## 순환에 안전한 탐색으로 하위 영향 계산하기
+
+다음 Python 예제는 명시적으로 선언한 가상 그래프를 탐색한다. 숨은 사용자를 발견하거나 데이터 진실성을 검증하지 않는다. 순환은 종료를 시험하기 위해 넣었고 정렬 출력으로 재현성을 확보한다.
+
+<!-- executable: lineage-impact -->
+```python
+edges = {
+    'raw': {'accepted'},
+    'accepted': {'daily_revenue'},
+    'daily_revenue': {'retrieval_index'},
+    'retrieval_index': {'accepted'},
+}
+def descendants(start):
+    seen, pending = {start}, [start]
+    while pending:
+        for node in edges.get(pending.pop(), set()):
+            if node not in seen:
+                seen.add(node)
+                pending.append(node)
+    return sorted(seen - {start})
+
+found = descendants('raw')
+assert found == ['accepted','daily_revenue','retrieval_index']
+print('candidate_impact:', ', '.join(found))
+print('coverage: declared edges only')
+```
+
+예상 출력:
+
+```text
+candidate_impact: accepted, daily_revenue, retrieval_index
+coverage: declared edges only
+```
+
+간선을 지워 결과가 줄어도 실제 영향이 줄었다는 증거는 아니다. 결과 노드에 담당자·알려진 사용자를 붙여 예상 파괴 변경을 각 계약으로 검증한다. 계보 서비스는 관련 수집 연동을 마지막으로 관측한 시점도 보고해야 한다.
+
+## RBAC·ABAC·마스킹·행·열 정책 강제
+
+RBAC는 역할로 권한을 부여한다. 변환 역할은 정제 테이블을 쓰고 소비 역할은 승인 뷰를 읽으며 관리 역할은 메타데이터를 관리한다. ABAC는 도메인 소속·분류 등 호출자·자원·맥락 속성을 평가한다. 태그는 입력일 뿐 질의·저장·제공 경계에서 실제 평가해야 한다. 호출자가 보낸 `department=finance`가 스스로 권한을 주면 안 되므로 속성 발급의 신뢰성이 중요하다.
+
+행 수준 보안은 보이는 레코드를, 열 권한은 민감 필드 선택을 제한하며 마스킹은 정책에 따라 표시값을 바꾼다. 같은 역할이 원본 테이블을 읽으면 뷰 마스크의 보호 효과는 작다. 공유 서비스 신원도 사용자 대신 행동할 때 호출자별 강제가 필요하다. 실제 소비자 신원으로 직접 테이블·뷰·내보내기·캐시·검색 엔드포인트를 시험한다.
+
+PostgreSQL에서는 문서화된 조건에서 테이블 소유자·특권 역할이 RLS를 우회할 수 있다. 소유자로만 시험하면 소비자 정책이 입증되지 않는다. 임시 DB에서 비소유 읽기 역할로 허용 지역, 금지 지역, 금지 열 쿼리를 비교한다. 각각 허용 행, 금지 행 0개, 권한 오류가 예상된다. 별도 관리자 예제로 금지 행이 실제 존재함을 확인한다.
+
+## 분류·PII·파생물 감사
+
+분류는 필드·데이터셋의 취급 요구를 정한다. 자동 탐지는 이메일 같은 후보를 제안할 수 있지만 패턴이 업무 목적이나 완전한 민감도 분류를 확정하지 않는다. 안정된 ID의 해시는 여전히 연결 가능할 수 있어 해시됐다고 무제한 공유 가능하다고 보지 않는다. 드러날 수 있는 내용에 따라 집계·추출·임베딩·디버그 캡처에도 취급 결정을 전파한다.
+
+감사 기록에는 주체, 행동, 자원·버전, 정책 결정, 시간, 연관 참조를 남긴다. 성공 읽기뿐 아니라 거부·정책 변경도 기록한다. 감시 대상 신원에서 감사 저장소를 보호하고 관측 경로를 시험한다. 감사는 무엇을 시도·허용했는지 답하며 그 자체로 금지 읽기를 막지는 않는다.
+
+DataHub·OpenMetadata는 탐색, 소유권, 설명, 연동 메타데이터를 조직하고 Marquez는 OpenLineage 실행 그래프에 집중한다. 실제 수집 어댑터와 식별자 대사를 먼저 평가한다. 같은 데이터셋이 열 개로 중복 표현되면 UI 그래프가 풍부해 보여도 영향 분석과 담당자가 분산된다.
+
+## 실패 실습과 해석
+
+문서화한 사용자 둘을 가진 `raw -> accepted -> daily_revenue -> retrieval_index`를 만든다. 금액 단위를 깨뜨리는 변경을 넣고 후손 조회로 영향 후보·담당자를 찾은 뒤 계보 발생기가 실제 변환을 수집했는지 확인한다. 발생기 하나를 끄고 반복하면 누락 간선은 영향 없음이 아니라 관측 공백으로 드러나야 한다.
+
+허용 독자·비허용 독자·파이프라인 작성자의 세 신원을 시험한다. 독자는 허용 행·열만 읽고 비허용 독자는 실행 경계에서 실패하며 작성자는 무관한 데이터셋 권한을 얻지 않아야 한다. 시도별 감사 기록을 확인한다. 원래 정책을 복구하고 허용·거부를 다시 검사한다.
+
+## 실행 결과 예시
+
+영향·접근 검토 예시다.
+
+```text
+changed: raw
+candidate descendants: accepted, daily_revenue, retrieval_index
+documented consumers: 2
+disabled emitter: INCOMPLETE COVERAGE
+authorized reader: allowed permitted rows/columns
+unauthorized reader: denied
+pipeline writer on unrelated dataset: denied
+```
+
+발생기를 끈 후 후손이 줄어도 실제 영향 범위가 작아진 것이 아니다. 정책 실습 통과에는 실제 신원별 실행과 감사 기록이 필요하다. 권한 폐기 뒤 검색·디버그 경로도 재확인한다.
+
+## 스스로 설명해 보기
+
+정확한 계보 간선이 출력 정확성을 입증하는가? 아니다. 파생 관계를 설명할 뿐이다. 그래프로 다른 사용자가 없다고 입증할 수 있는가? 선언하고 검증한 범위 안에서만 가능하다. 하위 영향 주장에 필요한 근거를 설명한다.
+
+다음은 [클라우드 플랫폼 구현](../../../docs/guides/data-observability/12-cloud-platforms.md)으로 이어간다.
+
+<!-- source: https://openlineage.io/docs/spec/object-model/ | checked: 2026-09-10 | datasets, jobs, runs and facets -->
+<!-- source: https://openlineage.io/spec/2-0-2/OpenLineage.json | checked: 2026-09-10 | illustrative event schema -->
+<!-- source: https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-lineage | checked: 2026-09-10 | lineage coverage and permissions are bounded -->
+<!-- source: https://www.postgresql.org/docs/current/ddl-rowsecurity.html | checked: 2026-09-10 | row-policy enforcement and bypass roles -->

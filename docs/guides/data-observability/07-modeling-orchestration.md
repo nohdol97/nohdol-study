@@ -1,5 +1,9 @@
 # Modeling, dbt, and orchestration: publish a meaningful dataset
 
+**dbt** is a tool for organizing, running, testing, and documenting data transformations, commonly written in SQL. A dbt model describes a transformation that produces an analytical table or view. For example, after loading orders, a team can build cleaned orders, calculate daily revenue, and check that order IDs are unique. The model files make these transformations reviewable and reusable.
+
+The database or warehouse holds the rows and executes the SQL. CDC collects source changes; dbt transforms already loaded rows; Airflow or Dagster coordinates when dependent work runs. **Orchestration** means coordinating those tasks and dependencies. A successful task does not prove that the revenue definition is correct, so this chapter connects transformations to business checks and publication.
+
 Raw records become a product when consumers can depend on their grain, history, definitions, and delivery. A scheduler that finishes successfully has not established those properties.
 
 ## Terms introduced in this chapter

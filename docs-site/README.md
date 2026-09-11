@@ -2,10 +2,12 @@
 
 This learning gateway presents DevOps, AIOps, and Data & Observability as separate paths on GitHub Pages. It starts with application developers who can create files and run basic shell commands, then connects terminology, normal behavior, failure, recovery, and operational judgment. The catalog contains 21 topics and 94 documents: 15 DevOps topics with 57 documents, 5 AIOps topics with 20 documents, and one Data & Observability topic with 17 chapters.
 
-The header's Korean/English buttons switch navigation, path and topic introductions, search labels, and diagram controls. The preference survives reload when local storage is available. Articles, titles, summaries, code, and diagram labels remain in English, and search indexes that English text. Interface translations live in `src/i18n.js`; they do not alter source documents or send content to a translation service. See the [language-switch acceptance criteria](../docs/specs/2026-09-11-document-language-switch.md).
+All 94 articles support Korean, English, and paired reading. Paired reading is the default: each English passage precedes a collapsible Korean explanation. Code, commands, output fixtures, and diagrams appear once. Search indexes both languages. The header's interface language remains a separate preference and localizes navigation, titles, summaries, search, and diagram controls. Both preferences survive reload when storage is available and work in memory otherwise. See the [bilingual reading criteria](../docs/specs/2026-09-11-bilingual-reading.md).
+
+Open an underlined term or the chapter's terminology list for bilingual definitions. Chapter definitions are reused within their topic; CDC, dbt, and other core technologies also explain purpose, a small example, and adjacent roles. Context links return to the source chapter, and core entries link to official documentation where available. Explanations are teaching synthesis, not additional evidence.
 
 - Public URL: <https://nohdol97.github.io/nohdol-study/>
-- Public content: `docs-site/content/<topic>/` and the explicitly selected `docs/guides/data-observability/` course
+- Public content: `docs-site/content/<topic>/`, the explicitly selected `docs/guides/data-observability/` course, and `docs-site/translations/ko/<document-id>.md`
 - Catalog: `docs-site/catalog.json`
 
 Only the selected course in `docs/guides/data-observability/` is published from `docs/`. Harness ADRs, specifications, other guides, and the personal `vault/` remain outside the catalog's publication scope. Vault notes may help identify topics, but public articles are written separately under `docs-site/content/` after checking facts against official documentation and primary sources.
@@ -58,7 +60,7 @@ Optional [local lab checks](labs/README.md) reproduce PostgreSQL transaction/res
 
 ## Publication and deployment
 
-The catalog accepts only Git-tracked Markdown within the repository. The build rejects `vault/`, `REGISTRY.md`, `_workspace/`, absolute paths, and parent-directory traversal.
+The catalog accepts only explicitly selected Git-tracked Markdown within the repository, including Korean translations. Each translation records the SHA-256 of its reviewed English source. The build rejects stale bindings, incompatible block structures, changed link destinations, and altered code/output/diagram fences. Review meaning before refreshing a binding; a matching hash is not evidence of translation accuracy. Translate new or revised prose, preserve source-review dates, and update the Korean title and summary when those change. The build also rejects `vault/`, `REGISTRY.md`, `_workspace/`, absolute paths, parent-directory traversal, and realpaths outside the repository.
 
 Changes on `main` trigger `.github/workflows/docs-pages.yml`, which tests and builds the site, then deploys a Pages artifact. The repository's **Settings → Pages → Build and deployment → Source** must be `GitHub Actions`.
 

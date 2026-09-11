@@ -1,4 +1,4 @@
-<!-- Generated summary view. Edit AGENTS.md and refresh this summary. source-sha256: fc6987321127b9cb1e4038cd7485f93150f65b932556303720df0d172c6ed565 -->
+<!-- Generated summary view. Edit AGENTS.md and refresh this summary. source-sha256: 864e1ea70db8895138552214f3b5021c094883bfb1f2576faf898c5daf463ed9 -->
 
 # nohdol-study operating rules summary
 
@@ -21,7 +21,7 @@
 - Optional MCP servers that execute code or transmit data externally, such as Colab MCP, must not be installed or registered on `corporate` installations. On `personal` installations, `study-install` offers an explicit opt-in and records the decision in `REGISTRY.md`. Sending vault content still requires separate approval.
 - Approval prompts ask whether to run a tool; they do not inspect its payload. `.agents/hooks/study-egress-guard.py` runs on every surface and blocks notebook cells containing knowledge-root paths, vault-relative paths, wikilinks, or note frontmatter. Public dataset measurements are allowed. This targeted guard is not proof that all transfers are safe: paraphrased or encoded content still requires judgment.
 - Shared skill originals live only in `.agents/skills/`. Claude uses symlinks; Codex uses native skill discovery and project hooks.
-- Model-read assets and repository documentation are English. Match chat to the user's language and preserve functional Korean trigger aliases and language-specific examples.
+- Model-read assets and repository documentation are English; public learning articles may explicitly select reviewed Korean translations paired with current English sources and shared code and execution fixtures. Match chat to the user's language and preserve functional Korean trigger aliases and language-specific examples.
 - Completed, freshly verified changes may be committed and pushed to `origin/main` under standing user authorization. Inspect status and diff first. Force pushes, history rewrites, destructive Git operations, releases, secrets, other remotes, and other branches require explicit scope.
 - Place reusable user-facing HTML sites under `_workspace/sites/<slug>/`, register them with `examples/workspace_portal/portal.py`, and make them reachable from `_workspace/index.html`. Serve `_workspace` once. Register scratch output, analysis, or tool dashboards only when the user asks to expose them.
 - Put internet-published documentation under `docs-site/`. Publish only explicitly selected, Git-tracked Markdown. The build rejects private paths, traversal, and untracked sources. Keep `docs-site/dist/` untracked and publish it only as a Pages artifact. The local portal and public docs site are separate surfaces.

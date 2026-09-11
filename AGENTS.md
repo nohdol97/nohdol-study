@@ -79,7 +79,7 @@ When evidence is insufficient or conflicting, say so prominently. Do not turn un
 - Claude-specific configuration lives in `.claude/settings.json`.
 - Codex project configuration and inline lifecycle hooks live in `.codex/config.toml`. Project trust and exact hook-definition trust are required before Codex runs project hooks.
 - Keep reusable workflow bodies CLI-neutral. Tool-specific configuration only registers the shared scripts.
-- Model-read harness assets and repository documentation are English. Match user-facing chat to the user's language. Preserve Korean skill-trigger aliases and language-specific examples where they are functional inputs.
+- Model-read harness assets and repository documentation are English, with reviewed Korean translations explicitly selected for public learning articles. Keep article translations paired with their current English sources; code and execution fixtures remain shared. Match user-facing chat to the user's language. Preserve Korean skill-trigger aliases and language-specific examples where they are functional inputs.
 
 ## 7. Working rules
 

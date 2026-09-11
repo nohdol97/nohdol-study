@@ -1,0 +1,129 @@
+# Chart, release와 desired state
+
+## 이 장에서 처음 쓰는 말
+
+- **render**: template에 values를 넣어 Kubernetes가 받을 최종 YAML을 만드는 과정이다.
+- **desired state**: Git이나 설정 파일에 “이렇게 되어야 한다”고 선언한 원하는 상태다.
+- **live state**: 현재 cluster에 실제로 존재하는 resource의 상태다.
+- **sync**: desired state와 live state의 차이를 줄이도록 resource를 생성·변경·삭제하는 동작이다.
+- **drift**: 원하는 상태와 실제 상태가 달라진 현상이다.
+- **CRD**: Kubernetes에 새로운 종류의 resource를 추가하는 정의다.
+
+처음에는 `template + values = manifest`만 직접 확인한다. 그다음 manifest가 cluster에 설치된 기록인 release와, Git을 기준으로 계속 차이를 확인하는 GitOps를 분리해 이해한다.
+
+## 먼저 이해하기
+
+Helm과 GitOps를 함께 쓰면 상태가 최소 네 겹 생긴다. chart template은 Kubernetes object를 만드는 규칙이고 values는 그 규칙에 넣는 입력이다. 둘을 렌더링한 manifest가 실제 API request가 되며, cluster에는 그 결과의 live object가 존재한다. Helm release history나 Git commit은 이 상태를 추적하는 또 다른 기준이다.
+
+| 대상 | 쉬운 질문 | 실패 예 |
+|---|---|---|
+| chart | 어떤 종류의 manifest를 만들 수 있는가? | 잘못된 template 조건 |
+| values | 이번 환경이 무엇을 선택했는가? | type 오류, 누락된 필수 값 |
+| rendered manifest | API server에 무엇을 보낼 것인가? | 잘못된 image·selector·권한 |
+| release | 어떤 revision을 install·upgrade했는가? | hook 실패, partial rollout |
+| Git desired state | controller가 무엇으로 되돌리려 하는가? | stale commit, 잘못된 promotion |
+| live state | cluster에서 실제로 무엇이 실행되는가? | manual drift, admission mutation |
+
+values에서 replica를 2에서 3으로 바꿔도 template이 그 값을 쓰지 않으면 rendered manifest는 달라지지 않는다. 반대로 manifest가 3으로 렌더돼도 admission rejection이나 quota 부족으로 live workload가 바뀌지 않을 수 있다. 각 경계를 따로 관찰해야 한다.
+
+## 값 하나가 배포 상태가 되는 과정을 따라가기
+
+1. chart가 Kubernetes resource의 template과 기본 values를 제공한다.
+2. 사용자가 environment 전용 values나 명령행 값을 추가한다.
+3. Helm이 우선순위에 따라 값을 합치고 template을 최종 manifest로 render한다.
+4. 사람이나 CI가 manifest에 예상한 image, replica와 권한만 있는지 검토한다.
+5. 수명 주기 관리 주체를 정한다. Helm CLI의 install/upgrade는 리소스를 제출하고 Helm 릴리스 리비전을 기록한다. Argo CD의 Helm 연동에서는 Helm이 템플릿만 렌더링하고 Argo CD가 적용과 애플리케이션 수명 주기를 관리한다.
+6. Argo CD는 렌더링한 원하는 리소스와 실제 리소스를 지속적으로 비교한다. Helm을 소스로 쓰는 Argo CD 애플리케이션에 대응하는 항목이 `helm list`나 `helm history`에 반드시 있어야 하는 것은 아니다.
+7. 허용된 정책에 따라 Argo CD가 차이를 보고하거나 동기화한다. 별도 Helm 릴리스와 Argo CD가 같은 리소스의 관리권을 두고 경쟁하게 만들지 않는다.
+
+Helm만 사용하는 경우 6~7단계는 없다. GitOps를 추가했다고 해서 template이 안전한지 검토하는 4단계가 사라지는 것도 아니다.
+
+## Chart는 package, release는 설치 instance
+
+```text
+sample-chart/
+├── Chart.yaml
+├── values.yaml
+├── values.schema.json
+├── charts/
+├── crds/
+└── templates/
+```
+
+Chart API v2에서 `apiVersion`, `name`, `version`은 핵심 metadata다. `version`은 chart package의 SemVer이며 `appVersion`과 같은 의미가 아니다.
+
+```yaml
+apiVersion: v2
+name: sample-api
+description: Minimal study chart
+type: application
+version: 0.1.0
+appVersion: "1.4.2"
+```
+
+release는 chart를 특정 namespace와 values로 설치한 instance다. 같은 chart를 `dev`와 `prod`에 서로 다른 release로 설치할 수 있다.
+
+## Values는 input contract다
+
+default `values.yaml`, 추가 values file과 CLI override가 합쳐져 최종 values가 된다. override 계층이 깊을수록 source만 읽고 결과를 추정하기 어려워지므로 `helm template` 결과를 review한다.
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "replicaCount"],
+  "properties": {
+    "replicaCount": { "type": "integer", "minimum": 1, "maximum": 20 },
+    "image": {
+      "type": "object",
+      "required": ["repository", "digest"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    }
+  }
+}
+```
+
+schema validation은 input shape를 막지만 template이 안전한 object를 만드는지, image가 신뢰할 수 있는지는 별도 검증이다.
+
+## Hook와 CRD는 특별한 수명주기다
+
+hook은 install·upgrade 같은 release lifecycle 지점에 Job 등을 실행한다. weight와 delete policy를 설계하지 않으면 오래된 hook resource가 남거나 다음 release를 막을 수 있다.
+
+`crds/`의 CRD는 일반 template과 같은 upgrade·delete 수명으로 취급하지 않는다. CRD schema migration과 기존 custom resource 호환성을 별도 계획한다.
+
+## GitOps의 compare·sync
+
+Argo CD Application은 source, destination과 project를 연결한다. target state는 Git 등 source가 말하는 원하는 상태이고 live state는 cluster에서 관찰한 실제 상태다.
+
+```mermaid
+sequenceDiagram
+    participant D as Developer
+    participant G as Git
+    participant A as Argo CD
+    participant K as Kubernetes
+    D->>G: chart·values ​​change PR
+    G-->>A: new target revision
+    A->>K: live state query
+    A-->>D: diff and health display
+    D->>A: approved sync
+    A->>K: Apply manifests
+    K-->>A: resource status
+```
+
+auto-sync는 CI가 cluster credential 없이 Git commit만 바꾸게 할 수 있지만, 잘못된 commit도 자동 전파할 수 있다. prune은 Git에서 빠진 resource를 삭제하며 self-heal은 live drift를 target state로 되돌린다. 셋을 하나의 “자동화” toggle로 생각하지 않는다.
+
+## 스스로 설명해 보기
+
+1. values schema가 있어도 rendered manifest review가 필요한 이유는 무엇인가?
+2. hook와 application Deployment의 rollback 완료 조건은 어떻게 다른가?
+3. self-heal이 긴급한 수동 조치를 되돌릴 수 있는 이유는 무엇인가?
+
+<!-- source: https://helm.sh/docs/topics/charts/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 | retrieval-warning: page states it is not yet updated for Helm 4 -->
+<!-- source: https://helm.sh/docs/chart_template_guide/values_files/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
+<!-- source: https://helm.sh/docs/topics/charts_hooks/ | checked: 2026-09-03 | docs-version: Helm 4.2.4 -->
+<!-- source: https://argo-cd.readthedocs.io/en/stable/core_concepts/ | checked: 2026-09-03 -->
+<!-- source: https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/ | checked: 2026-09-03 -->
+<!-- source: https://argo-cd.readthedocs.io/en/stable/user-guide/helm/ | checked: 2026-09-10 -->

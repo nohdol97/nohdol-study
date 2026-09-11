@@ -1,0 +1,111 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {readFile, mkdtemp, writeFile, symlink, mkdir, unlink} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {marked} from 'marked';
+import {buildSite, loadCatalog} from './build.mjs';
+import {renderParallel, articleTerms} from './bilingual.mjs';
+import {savedReadingMode} from './src/reading.js';
+import {CORE_TERMS, configureTerms, termsForDocument} from './src/terms.js';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const parallel = (en, ko) => renderParallel(en, ko, (s) => marked.parse(s), (s) => marked.parse(s));
+
+test('all 94 translations preserve examples, source records and document destinations', async () => {
+  const payload = await buildSite({checkOnly: true});
+  const ids = new Set(payload.documents.map((d) => d.id));
+  configureTerms(payload.documents);
+  for (const doc of payload.documents) {
+    const en = await readFile(path.join(root, doc.path), 'utf8');
+    const ko = await readFile(path.join(root, doc.translation.path), 'utf8');
+    const fences = (s) => [...s.matchAll(/^```[^\n]*\n[\s\S]*?^```/gm)].map((m) => m[0]);
+    const sources = (s) => [...s.matchAll(/<!-- source:[\s\S]*?-->/g)].map((m) => m[0]);
+    assert.deepEqual(fences(ko), fences(en), `${doc.id}: code, output and diagrams`);
+    assert.deepEqual(sources(ko), sources(en), `${doc.id}: source-review history`);
+    assert.match(doc.koreanSearchText, /[가-힣]/u);
+    assert.equal([...doc.parallelHtml.matchAll(/<pre\b/g)].length, [...doc.html.matchAll(/<pre\b/g)].length, `${doc.id}: shared examples appear once`);
+    assert.ok(termsForDocument(doc).length > 0, `${doc.id}: terminology available`);
+    for (const m of doc.parallelHtml.matchAll(/href="#doc=([^"&]+)[^"]*"/g)) assert.ok(ids.has(m[1]), `${doc.id}: ${m[1]}`);
+    assert.doesNotMatch(doc.parallelHtml, /<script\b|<!-- source:/i);
+  }
+  for (const term of CORE_TERMS) {
+    assert.ok(ids.has(term.chapter));
+    for (const field of ['english', 'korean', 'exampleEn', 'exampleKo', 'distinctionEn', 'distinctionKo']) assert.ok(term[field], `${term.term}: ${field}`);
+  }
+});
+
+test('paired lists, headings, tables, and quoted text keep shared code once', () => {
+  const en = '# Title\n\n## Model\n\n1. Read\n2. Run\n\n   ```sh\n   echo PASS\n   ```\n\n> Result\n\n| Term | Meaning |\n|---|---|\n| CDC | Change capture |\n';
+  const ko = '# 제목\n\n## 모델\n\n1. 읽기\n2. 실행\n\n   ```sh\n   echo PASS\n   ```\n\n> 결과\n\n| 용어 | 의미 |\n|---|---|\n| CDC | 변경 수집 |\n';
+  const html = parallel(en, ko);
+  assert.doesNotMatch(html, /<h1>/);
+  assert.match(html, /lang="en"/); assert.match(html, /lang="ko"/);
+  assert.match(html, /<details[^>]+open>/);
+  assert.equal([...html.matchAll(/echo PASS/g)].length, 1);
+  assert.equal([...html.matchAll(/<li>/g)].length, 2);
+  assert.deepEqual(articleTerms(en, ko), [{term: 'CDC', english: 'Change capture', korean: '변경 수집'}]);
+  assert.deepEqual(articleTerms('| Term | Meaning |\n|---|---|\n| `trace_id` | Shares a trace_id |', '| 용어 | 의미 |\n|---|---|\n| `trace_id` | trace_id를 공유한다 |'), [{term: 'trace_id', english: 'Shares a trace_id', korean: 'trace_id를 공유한다'}]);
+});
+
+test('rejects structural drift, changed outputs and changed links', () => {
+  for (const [en, ko] of [
+    ['One\n\nTwo', '하나'], ['## Heading', '### 제목'],
+    ['- One\n- Two', '- 하나'], ['- One', '1. 하나'],
+    ['```text\nPASS\n```', '```text\nFAIL\n```'],
+    ['```sh\necho PASS\n```', '```text\necho PASS\n```'],
+    ['| A | B |\n|---|---|\n| x | y |', '| 가 |\n|---|\n| x |'],
+    ['[Source](https://example.com/a)', '[출처](https://example.com/b)'],
+  ]) assert.throws(() => parallel(en, ko), /translation mismatch/);
+});
+
+test('reading preference defaults to paired and tolerates storage failure', () => {
+  for (const value of ['ko', 'en', 'both']) assert.equal(savedReadingMode({getItem: () => value}), value);
+  for (const value of [null, 'other', '']) assert.equal(savedReadingMode({getItem: () => value}), 'both');
+  assert.equal(savedReadingMode({getItem() {throw Error('blocked');}}), 'both');
+});
+
+test('terminology uses whole terms and preserves chapter-specific definitions', () => {
+  assert.equal(termsForDocument({title: 'notdbt', searchText: 'CDCatalog Sparkle'}, []).length, 0);
+  const terms = termsForDocument({id: 'test', topicId: 'data', title: 'CDC and DBT', searchText: 'grain', terms: [{term: 'CDC', english: 'local', korean: '지역'}]}, [{term: 'grain', english: 'row meaning', korean: '행 의미', topicId: 'data', chapter: 'source'}]);
+  assert.deepEqual(terms.map((t) => t.term), ['CDC', 'dbt', 'grain']);
+  assert.match(terms[0].english, /Change Data Capture/);
+  assert.equal(terms[2].chapter, 'source');
+});
+
+test('translation selection rejects private, untracked, stale and missing sources', async () => {
+  const original = JSON.parse(await readFile(new URL('./catalog.json', import.meta.url), 'utf8'));
+  for (const [mutate, pattern] of [
+    ...['vault/wiki/private.md', '_workspace/private.md', 'REGISTRY.md', '../outside.md', '/tmp/outside.md'].map((value) => [(d) => {d.translation.path = value;}, /forbidden/]),
+    [(d) => {d.translation.path = 'docs-site/translations/ko/untracked.md';}, /not tracked by Git/],
+    [(d) => {d.translation.sourceSha256 = '0'.repeat(64);}, /stale Korean translation/],
+    [(d) => {delete d.translation;}, /translation/],
+  ]) {
+    const dir = await mkdtemp(path.join(tmpdir(), 'bilingual-test-'));
+    const catalog = structuredClone(original); mutate(catalog.topics[0].documents[0]);
+    const catalogPath = path.join(dir, 'catalog.json'); await writeFile(catalogPath, JSON.stringify(catalog));
+    await assert.rejects(() => buildSite({catalogPath, checkOnly: true}), pattern);
+  }
+});
+
+test('translation realpath cannot escape the repository through a symlink', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'bilingual-root-'));
+  const outside = await mkdtemp(path.join(tmpdir(), 'bilingual-outside-'));
+  const catalog = JSON.parse(await readFile(new URL('./catalog.json', import.meta.url), 'utf8'));
+  catalog.paths = [{...catalog.paths[0], topicIds: [catalog.topics[0].id]}];
+  catalog.topics = [{...catalog.topics[0], documents: [catalog.topics[0].documents[0]]}];
+  const doc = catalog.topics[0].documents[0];
+  const source = await readFile(path.join(root, doc.path));
+  doc.path = 'english.md'; doc.translation.path = 'translation.md';
+  await writeFile(path.join(dir, doc.path), source);
+  await writeFile(path.join(outside, 'private.md'), '# Private\n');
+  await symlink(path.join(outside, 'private.md'), path.join(dir, doc.translation.path));
+  const catalogPath = path.join(dir, 'catalog.json'); await writeFile(catalogPath, JSON.stringify(catalog));
+  await assert.rejects(() => buildSite({catalogPath, repositoryRoot: dir, checkOnly: true, requireTracked: false}), /resolves outside repository/);
+  await unlink(path.join(dir, doc.translation.path));
+  await mkdir(path.join(dir, '_workspace'));
+  await writeFile(path.join(dir, '_workspace', 'private.md'), '# Private\n');
+  await symlink(path.join(dir, '_workspace', 'private.md'), path.join(dir, doc.translation.path));
+  await assert.rejects(() => buildSite({catalogPath, repositoryRoot: dir, checkOnly: true, requireTracked: false}), /private or generated path is forbidden/);
+});

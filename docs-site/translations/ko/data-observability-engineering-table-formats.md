@@ -1,0 +1,143 @@
+# Iceberg와 Delta Lake: 파일 집합을 테이블로 만들기
+
+작업이 Parquet 파일 20개를 쓰다가 12개째 후에 죽었다고 하자. 디렉터리 스캔만으로 사용자는 그 12개가 완전한 결과인지 알 수 없다. 테이블 형식은 메타데이터와 커밋 규칙을 추가해 유효한 테이블 상태를 식별하게 한다.
+
+## 이 장에서 처음 쓰는 말
+
+| 용어 | 의미 |
+|---|---|
+| 스냅샷·버전 | 리더가 참조할 수 있도록 식별된 커밋 상태 |
+| 매니페스트(manifest) | 내용 파일의 집합을 설명하는 Iceberg 메타데이터 |
+| 카탈로그(catalog) | 구현에 따라 테이블 위치를 찾고 메타데이터를 조정하는 장치 |
+| 낙관적 동시성(optimistic concurrency) | 변경을 준비하고 사이에 발생한 변경과 대조해 검증한 뒤 커밋하거나 재시도하는 방식 |
+| 파일 병합(compaction) | 의도한 행은 유지하면서 파일 배치를 다시 써 단편화를 줄이는 것 |
+| 보존(retention) | 버전과 그에 필요한 파일을 사용할 수 있게 유지하는 기간 |
+
+## 먼저 이해하기
+
+1. 알려진 테이블 상태를 읽고 그 상태를 기준으로 변경을 계획한다.
+2. 엔진이 지원하는 프로토콜로 새 데이터나 삭제 정보를 쓴다.
+3. 새 상태를 보이게 하는 메타데이터를 검증하고 커밋한다.
+4. 리더가 지원되는 일관된 버전을 사용하게 한다.
+5. 보존 정책과 읽기·복구 요구가 허용한 뒤에만 불필요해진 파일을 회수한다.
+
+Iceberg에서는 테이블 메타데이터가 스냅샷을, 스냅샷이 매니페스트 목록을 참조하고 매니페스트가 데이터·삭제 파일을 설명한다. 스키마는 필드 식별자를 사용하며 파티션 명세는 진화할 수 있다. Delta Lake는 트랜잭션 로그로 커밋된 변경을 추적한다. 문서화된 낙관적 쓰기 순서는 스냅샷 읽기, 변경 준비, 검증·커밋이다. 서로 다른 메타데이터 프로토콜이며 바꿔 쓸 수 있는 디렉터리 이름이 아니다.
+
+## 하나를 선택한 뒤 비교하기
+
+| 질문 | 확인할 내용 |
+|---|---|
+| 어떤 엔진이 읽고 써야 하는가? | 정확한 버전의 커넥터·프로토콜 지원 |
+| 스키마를 안전하게 바꿀 수 있는가? | 타입 호환성, 필드 식별자, 리더 동작, 하위 사용자 계약 |
+| 파티션 배치를 바꿀 수 있는가? | 이전·새 파일을 함께 계획하는 방식 |
+| 갱신·삭제는 어떻게 표현되는가? | 지원 형식 기능, 읽기 증폭, 유지 관리 요구 |
+| 복구에는 무엇이 필요한가? | 카탈로그 상태, 메타데이터·로그, 데이터 파일, 권한, 보존 |
+
+형식 명세에 기능이 있어도 모든 엔진이 구현한 것은 아니다. 고정된 버전 행렬로 여러 엔진의 읽기·쓰기를 시험한다. 여러 엔진 학습이 우선이면 Iceberg, 당장 Spark·Databricks 중심으로 구현한다면 Delta로 시작한다. 이는 학습 선택이며 보편적인 제품 추천은 아니다.
+
+## 카탈로그에서 행까지 Iceberg 스냅샷 따라가기
+
+카탈로그는 테이블 이름을 현재 메타데이터 위치로 해석한다. 메타데이터 JSON에는 스키마·파티션 명세 식별자와 현재 스냅샷이 있다. 스냅샷은 매니페스트 목록을 가리킨다. 목록의 각 항목은 계획에 유용한 파티션 요약을 포함해 매니페스트를 설명한다. 매니페스트는 내용 파일 항목과 메타데이터를 기록한다. 실제 행은 데이터 파일에 있고 적용 가능한 삭제 파일이 반환 행에 영향을 준다.
+
+9월 10일 쿼리는 Parquet 페이지를 읽기 전에 메타데이터로 매니페스트와 파일을 제외할 수 있다. 결과 행이 적어도 파일 100만 개는 계획·유지 작업을 만든다. 카탈로그 조회, 매니페스트 스캔, 오브젝트 읽기, Parquet 해독은 다른 지연 단계이므로 워커 수를 바꾸기 전에 비싼 단계를 찾는다.
+
+스키마 필드 ID는 이름이 바뀐 필드와 과거 이름을 재사용한 새 필드를 구분하게 한다. 파티션 명세 ID로 이전의 일별 파일과 새로운 시간별 파일을 공존시킨다. 명세 변경은 이후 쓰기의 배치를 바꾸며 기존 데이터 전체를 자동 재작성하지 않는다. 리더는 각 파일의 명세로 해석한다. 이름 변경이나 NULL 허용을 애플리케이션이 받아들일지는 여전히 사용자 계약이 정한다.
+
+### JSON을 직접 고치지 말고 실제 메타데이터 확인하기
+
+다음은 `lab`이라는 Iceberg 카탈로그와 쓰기 가능한 임시 `study` 네임스페이스를 설정한 Spark 엔진 실습이다. 호환되는 Iceberg 런타임·카탈로그 설정이 필요하며 일반 Spark 세션용 SQL이 아니다. 새 네임스페이스나 고유 테이블 이름을 사용한다. 클라우드에서 실행했다고 주장하지 않는다.
+
+```sql
+CREATE TABLE lab.study.orders (
+  event_id STRING, event_time TIMESTAMP, amount_cents BIGINT
+) USING iceberg PARTITIONED BY (days(event_time));
+
+INSERT INTO lab.study.orders VALUES
+  ('e1', TIMESTAMP '2026-09-10 01:00:00', 100),
+  ('e2', TIMESTAMP '2026-09-10 02:00:00', 250);
+
+SELECT snapshot_id, parent_id, operation
+FROM lab.study.orders.snapshots ORDER BY committed_at;
+SELECT content, file_path, record_count, file_size_in_bytes
+FROM lab.study.orders.files;
+SELECT partition_spec_id, added_data_files_count, existing_data_files_count
+FROM lab.study.orders.manifests;
+
+INSERT INTO lab.study.orders VALUES
+  ('e3', TIMESTAMP '2026-09-11 01:00:00', 50);
+SELECT COUNT(*), SUM(amount_cents) FROM lab.study.orders;
+```
+
+논리적 예상 결과는 세 행, 400센트다. 실제 스냅샷 ID, 경로, 크기, 파일 수는 런타임에 따라 달라진다. 첫 스냅샷 ID를 지원되는 `VERSION AS OF <snapshot_id>` 쿼리에 넣으면 두 행, 350센트여야 한다. 지원된다면 이전 스냅샷의 메타데이터 뷰도 살핀다. 부모 관계가 이력을 설명하며 파일 이름의 타임스탬프는 권위 있는 버전 식별자가 아니다.
+
+## 커밋 충돌: 두 작성자가 같은 기준 상태를 읽었을 때
+
+작성자 A와 B가 모두 버전 7에서 계획하고 같은 e1 레코드를 수정한다고 하자. A가 버전 8을 커밋하면 B는 그 사이 변경을 검증해야 한다. 선택한 엔진·프로토콜에서 충돌한다면 B는 버전 8이 없었던 것처럼 오래된 후보를 공개할 수 없다. 다시 읽고 계산하거나 실패해야 한다. 서로 겹치지 않는 두 append는 호환될 수 있으므로 모든 동시 작업이 실패해야 하는 것은 아니다.
+
+여기서 ACID의 의미가 구체화된다. 원자성은 불완전한 공개를 숨기고, 일관성은 강제된 형식·애플리케이션 불변식에 달려 있으며, 격리는 동시 리더·라이터가 보는 상태를 제어하고, 내구성은 커밋한 메타데이터와 오브젝트의 유지에 달려 있다. 스냅샷 격리가 임의의 테이블 간 업무 불변식까지 보장하지는 않는다. 엔진이 이벤트 ID 유일성을 강제하지 않으면 별도 구현이 필요하다.
+
+### Delta 트랜잭션 로그와 지원되는 과거 버전 조회
+
+Delta는 논리 파일 추가·제거 같은 동작을 트랜잭션 로그에 기록한다. 현재 테이블 상태에서 파일을 제외하는 것과 물리 오브젝트를 즉시 삭제하는 것은 다르다. 로그 체크포인트는 상태를 요약해 로그 재생 작업을 줄이며 Spark 스트리밍 체크포인트와는 다르다. 읽기·쓰기 프로토콜 역량도 중요하다. 파일이 여전히 Parquet여도 기능 활성화로 이전 클라이언트가 제외될 수 있다.
+
+호환되는 Delta 확장을 설정한 Spark 세션에서, 다음 별도 새 테이블 실습으로 버전 경계를 확인한다.
+
+```sql
+CREATE TABLE study_orders_delta (event_id STRING, amount_cents BIGINT) USING DELTA;
+INSERT INTO study_orders_delta VALUES ('e1',100),('e2',250);
+DESCRIBE HISTORY study_orders_delta;
+INSERT INTO study_orders_delta VALUES ('e3',50);
+SELECT COUNT(*), SUM(amount_cents) FROM study_orders_delta;
+```
+
+`DESCRIBE HISTORY`에서 첫 insert 뒤의 버전을 기록하고 `SELECT COUNT(*), SUM(amount_cents) FROM study_orders_delta VERSION AS OF <recorded_version>`에 사용한다. 현재 결과는 `(3,400)`, 기록한 이전 결과는 `(2,350)`이다. 테이블 생성 자체가 로그 버전을 만들 수 있으므로 첫 insert가 버전 0이라고 가정하지 않는다.
+
+## 삭제·파일 병합·읽기 증폭
+
+Copy-on-write는 영향을 받은 데이터 파일을 다시 써 변경을 표현한다. Merge-on-read 계열은 데이터와 추가 삭제·변경 정보를 유지하고 읽을 때 합친다. Iceberg v2의 위치 삭제는 파일 위치를, 동등 삭제는 일치하는 필드값을 식별한다. 적용 여부에는 순번·스키마 메타데이터도 관여한다. 이후 형식 기능과 엔진 구현의 지원은 다를 수 있다. 갱신 전략을 정할 때 쓰기 지연뿐 아니라 읽기 작업도 측정한다.
+
+Compaction은 작은 파일 여러 개를 더 적은 큰 파일로 다시 쓰며 지원되는 유지 작업으로 누적 삭제 작업도 통합할 수 있다. 수집과 계산 자원을 경쟁하고 동시 재작성과 충돌할 수 있다. 전후 행 수, 키별 값, 합계를 비교한다. 행 수만으로는 금액 변경을 놓친다. 이전 파일을 보존 스냅샷이 참조할 수 있어 병합에 성공해도 저장량이 즉시 줄지 않을 수 있다.
+
+상호 운용 학습에서는 Trino를 두 번째 리더로 사용한다. Iceberg 커넥터가 같은 카탈로그를 해석하고 활성화된 형식 기능을 이해해야 하며 같은 버킷을 가리키는 것만으로는 부족하다. 같은 기록 스냅샷과 사용자 쿼리를 엔진별로 비교한다. 합계가 다르면 부동소수점이나 옵티마이저를 탓하기 전에 스냅샷 선택, 삭제 지원, 타임스탬프 해석, 권한부터 조사한다.
+
+## 커밋과 복구를 단계적으로 조사하기
+
+사전 조건은 임시 테이블 하나, 호환되는 엔진·카탈로그, 그 엔진에서 문서화한 스냅샷·이력 쿼리, 가상 입력이다. 쓰기 전에 테이블 위치, 카탈로그 식별자, 엔진 버전, 활성 형식 기능을 기록한다.
+
+알려진 이벤트 ID 두 개로 테이블을 만들고 버전 A와 행 수를 기록한다. 새 ID 하나를 추가해 버전 B를 기록한다. 지원되는 과거 버전 조회로 A와 B를 읽으면 각각 두 행과 세 행이어야 하며 위 예제와 아래 워크시트에 일치해야 한다. 형식의 메타데이터 뷰로 참조 파일을 설명한다. 메타데이터 JSON이나 로그 파일을 직접 편집하지 않는다.
+
+다음으로 통제된 실습에서 겹치는 갱신 두 개를 시작한다. 선택한 구현에서 두 번째 작업이 충돌·재시도·커밋 중 무엇을 하는지 관찰하고 최종 행 값을 대사한다. 이벤트 버전당 최종 값 하나가 업무 불변식이면 두 명령의 성공만으로는 부족하다.
+
+마지막으로 지원되는 유지 작업으로 compaction을 수행한다. 파일 수, 물리 크기, 쿼리 결과, 스냅샷 이력을 비교한다. 파일 감소는 배치 결과이며 쿼리 가속의 증거가 아니다. 캐시와 동시성이 비슷한 조건에서 대상 쿼리를 측정한다.
+
+## 과거 버전 조회의 복구 범위는 제한된다
+
+참조 오브젝트를 삭제했다면 메타데이터 포인터만 보존해도 쓸모없다. 스냅샷 만료, 로그 보존, 오브젝트 수명 정책, 백업 정책이 일치해야 한다. 최대 예상 사고 발견·대응 시간보다 긴 복구 기간을 확보한 뒤 격리된 위치에 복원해 본다.
+
+과거 버전 조회는 별도 백업이 아니다. 카탈로그·메타데이터·저장소를 실수로 잃으면 현재와 이전 상태를 함께 잃을 수 있다. 읽을 수 있는 테이블을 재구성하는 데 필요한 구성 요소를 복제·백업하고 복원 시험에 접근 권한도 포함한다.
+
+## 실행 결과 예시
+
+제품별 SQL 출력이 아닌 테이블 이력 워크시트 예시다.
+
+```text
+version A: e1=100, e2=250; unique_events=2; total_cents=350
+version B: append e3=50; unique_events=3; total_cents=400
+read version A after B: unique_events=2; total_cents=350
+missing file referenced by A: read/completeness failure
+```
+
+엔진에서 얻은 실제 스냅샷·버전 식별자를 기록한다. 메타데이터만으로 물리적으로 삭제된 참조 파일을 복원할 수 없다. 이 워크시트는 스냅샷 만료나 vacuum을 실행하지 않는다.
+
+## 스스로 설명해 보기
+
+NULL 허용 열을 추가해도 사용자가 깨질 수 있는가? 그렇다. 테이블 프로토콜이 허용해도 사용자는 고정된 열 선택이나 스키마를 가정할 수 있다. 저장 호환성과 사용자 계약의 차이, 동시 쓰기 중 참조되지 않는다고 판단한 파일을 무작정 지우는 위험을 설명해 보자.
+
+다음은 [Spark 성능](../../../docs/guides/data-observability/05-spark-performance.md)으로 이어간다.
+
+<!-- source: https://iceberg.apache.org/spec/ | checked: 2026-09-10 | snapshot and manifest hierarchy -->
+<!-- source: https://iceberg.apache.org/docs/latest/evolution/ | checked: 2026-09-10 | schema and partition evolution -->
+<!-- source: https://docs.delta.io/concurrency-control/ | checked: 2026-09-10 | optimistic write validation -->
+<!-- source: https://iceberg.apache.org/docs/latest/spark-queries/ | checked: 2026-09-10 | metadata tables and time-travel query syntax -->
+<!-- source: https://docs.delta.io/delta-batch/ | checked: 2026-09-10 | versioned reads, schema and log checkpoints -->
+<!-- source: https://trino.io/docs/current/connector/iceberg.html | checked: 2026-09-10 | engine/catalog/format compatibility -->

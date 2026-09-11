@@ -132,7 +132,7 @@ test('builds every catalog document into a relative-path Pages artifact', async 
   assert.match(index, /id="diagram-viewer"/);
   assert.match(index, /<html lang="en">/);
   const styles = await readFile(path.join(outputPath, 'assets', 'styles.css'), 'utf8');
-  assert.doesNotMatch(JSON.stringify(content), /[\u3131-\u318e\uac00-\ud7a3]/u);
+  assert.doesNotMatch(JSON.stringify([content.site, content.paths, content.topics, content.documents.map(({title, summary, html, searchText}) => ({title, summary, html, searchText}))]), /[\u3131-\u318e\uac00-\ud7a3]/u);
   assert.match(index, /data-language="ko"/);
   assert.match(index, /data-language="en"/);
   const i18n = await readFile(path.join(outputPath, 'assets', 'i18n.js'), 'utf8');
