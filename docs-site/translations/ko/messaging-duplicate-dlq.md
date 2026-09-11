@@ -7,7 +7,7 @@
 - **첫 단계**: broker 없이 message 한 건과 처리 기록 table을 사용해 중복 처리 조건을 이해한다.
 - **로컬 데이터베이스**: 임시 PostgreSQL 데이터베이스를 사용한다. 아래 세션 전용 임시 테이블은 세션을 닫으면 사라진다.
 - **업무 결과**: 주문 상태처럼 중복되면 안 되는 row를 하나 정하고 처리 전후 값을 기록한다.
-- **실패 주입**: 같은 `event_id`를 두 번 처리하고, acknowledgement 직전에 process가 종료됐다고 가정한다.
+- **실패 주입**: 같은 `event_id`를 두 번 처리하고, acknowledgement 직전에 프로세스가 종료됐다고 가정한다.
 - **AWS 선택 단계**: SQS source queue와 DLQ를 전용 prefix·tag로 만들고 비용과 삭제 책임자를 정한다.
 - **끝난 상태**: local test row와 선택적으로 만든 queue, DLQ, alarm, IAM policy를 정리한다.
 
@@ -15,7 +15,7 @@
 
 ## 먼저 이해하기
 
-이 실습에서 duplicate는 예외적인 broker 오작동이 아니라 정상적으로 대비해야 할 delivery 결과다. consumer가 business DB commit에는 성공했지만 acknowledgement 직전에 종료되면 broker는 완료 사실을 알지 못해 같은 event를 다시 보낼 수 있다.
+이 실습에서 duplicate는 예외적인 broker 오작동이 아니라 정상적으로 대비해야 할 delivery 결과다. 소비자가 business DB commit에는 성공했지만 acknowledgement 직전에 종료되면 broker는 완료 사실을 알지 못해 같은 event를 다시 보낼 수 있다.
 
 idempotency는 “두 번째 요청을 무시한다”는 문장만으로 완성되지 않는다. 어떤 값을 동일 event의 identity로 볼지, 그 key를 어디에 얼마나 오래 저장할지, business change와 같은 transaction에 기록할 수 있는지를 정해야 한다.
 
@@ -26,7 +26,7 @@ idempotency는 “두 번째 요청을 무시한다”는 문장만으로 완성
 | 같은 DB transaction | commit 전·후 | rollback 또는 원자적 완료 |
 | 외부 API side effect | local transaction 밖 | provider idempotency key·reconciliation 필요 |
 
-## 1. Idempotent consumer 계약
+## 1. Idempotent 소비자 계약
 
 message는 immutable event ID를 가진다고 가정한다.
 
@@ -90,7 +90,7 @@ stateDiagram-v2
 
 ## 3. Controlled redrive
 
-- consumer가 새 schema를 안전하게 거부하거나 처리하도록 수정한다.
+- 소비자가 새 schema를 안전하게 거부하거나 처리하도록 수정한다.
 - DLQ snapshot과 message 수를 기록한다.
 - 낮은 rate로 일부를 redrive해 정상 처리와 idempotency를 확인한다.
 - 전체 redrive 뒤 source/DLQ/business record 수를 reconciliation한다.
@@ -134,15 +134,15 @@ COMMIT
 
 ## 결과를 이렇게 읽는다
 
-동일 event를 두 번 보낸 뒤 `processed_events`는 한 row, business 결과도 한 번이어야 한다. processed row만 하나인데 business effect가 두 번이면 두 작업의 atomic boundary가 갈라진 것이다. process memory의 set으로 중복을 막았다면 restart 뒤 같은 시험을 반복해 한계를 확인한다.
+동일 event를 두 번 보낸 뒤 `processed_events`는 한 row, business 결과도 한 번이어야 한다. processed row만 하나인데 business effect가 두 번이면 두 작업의 atomic boundary가 갈라진 것이다. 프로세스 메모리의 set으로 중복을 막았다면 restart 뒤 같은 시험을 반복해 한계를 확인한다.
 
-poison message가 DLQ로 이동하면 main consumer의 hot loop는 멈췄지만 business 처리는 아직 실패 상태다. payload와 schema version, error class를 조사해 consumer를 고친 뒤 제한된 rate로 redrive한다. 원래 DLQ 수는 성공·재실패·잔여 수의 합과 맞아야 한다.
+poison message가 DLQ로 이동하면 main 소비자의 hot loop는 멈췄지만 business 처리는 아직 실패 상태다. payload와 schema version, error class를 조사해 소비자를 고친 뒤 제한된 rate로 redrive한다. 원래 DLQ 수는 성공·재실패·잔여 수의 합과 맞아야 한다.
 
 oldest message age가 계속 늘면 새 메시지를 처리하고 있어도 backlog의 앞부분은 회복되지 않는 것이다. queue depth, 처리율, retry와 downstream capacity를 함께 봐야 예상 drain 시간을 계산할 수 있다.
 
 ## 스스로 설명해 보기
 
-1. idempotency key를 process memory에만 두면 restart 뒤 어떤 문제가 생기는가?
+1. idempotency key를 프로세스 메모리에만 두면 restart 뒤 어떤 문제가 생기는가?
 2. DLQ message를 수정 없이 바로 redrive하면 왜 장애가 반복되는가?
 3. retry 횟수뿐 아니라 oldest message age가 필요한 이유는 무엇인가?
 

@@ -93,7 +93,7 @@ root module은 environment와 backend, provider wiring을 소유한다. child mo
 - module이 account·region을 몰래 선택하지 않는다.
 - output은 다음 module에 필요한 최소 값만 노출한다.
 - VPC 전체를 하나의 거대한 module로 감춰 plan review가 불가능해지지 않게 한다.
-- module version과 provider lock file을 함께 관리한다.
+- module version과 provider lock 파일을 함께 관리한다.
 
 ## Remote state와 locking
 

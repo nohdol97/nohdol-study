@@ -15,7 +15,7 @@
 
 “항상 켜져 있어야 한다”는 요구는 설계 입력으로 쓰기 어렵다. 어느 사용자 요청을 성공으로 볼지, 얼마 동안의 실패를 허용할지, 장애 뒤 언제까지 서비스를 되살리고 어느 시점까지의 데이터를 복구해야 하는지를 측정 가능한 값으로 바꿔야 한다. 그래야 redundancy와 비용이 필요한 이유를 설명할 수 있다.
 
-예를 들어 주문 API의 30일 availability SLO가 99.9%, RTO가 15분, RPO가 5분이라고 하자. SLO는 평상시 전체 요청 결과를 평가하고, RTO는 특정 disruption 뒤 service level을 되찾는 시간을, RPO는 복구된 data가 장애 직전에서 얼마나 뒤로 물러날 수 있는지를 말한다. 세 값은 관련 있지만 같은 값이 아니다.
+예를 들어 주문 API의 30일 availability SLO가 99.9%, RTO가 15분, RPO가 5분이라고 하자. SLO는 평상시 전체 요청 결과를 평가하고, RTO는 특정 disruption 뒤 서비스 level을 되찾는 시간을, RPO는 복구된 data가 장애 직전에서 얼마나 뒤로 물러날 수 있는지를 말한다. 세 값은 관련 있지만 같은 값이 아니다.
 
 | 목표 | 설계를 바꾸는 질문 | 검증 증거 |
 |---|---|---|
@@ -41,7 +41,7 @@ multi-AZ를 선택하면 비용이 늘지만 모든 장애가 해결되지는 �
 
 ## 목표부터 failure mode로 내려간다
 
-availability target은 architecture 그림이 아니라 측정한 사용자 결과의 목표다. RPO는 복구 시 허용할 수 있는 data loss의 시간 범위, RTO는 disruption 이후 service level을 복원하기까지의 목표 시간이다. 둘 다 시작·종료 event와 측정 책임자가 필요하다.
+availability target은 architecture 그림이 아니라 측정한 사용자 결과의 목표다. RPO는 복구 시 허용할 수 있는 data loss의 시간 범위, RTO는 disruption 이후 서비스 level을 복원하기까지의 목표 시간이다. 둘 다 시작·종료 event와 측정 책임자가 필요하다.
 
 ```mermaid
 flowchart TD
@@ -54,14 +54,14 @@ flowchart TD
     D --> F
 ```
 
-failure domain은 process, node, AZ, region, identity/control plane과 dependency로 나눈다. multi-AZ는 AZ failure 대응에 도움을 주지만 bad deployment, credential revocation, data corruption과 regional dependency를 자동으로 해결하지 않는다.
+failure domain은 프로세스, node, AZ, region, identity/control plane과 dependency로 나눈다. multi-AZ는 AZ failure 대응에 도움을 주지만 bad deployment, credential revocation, data corruption과 regional dependency를 자동으로 해결하지 않는다.
 
 ## Backup과 restore의 계약
 
 backup policy에는 source, frequency, retention, encryption, immutability 또는 deletion guard와 cross-account/region 필요성을 적는다. restore test에서는 다음을 측정한다.
 
 - 마지막 recoverable point와 실제 data gap
-- restore 요청 시각부터 dependency 포함 service readiness까지의 시간
+- restore 요청 시각부터 dependency 포함 서비스 readiness까지의 시간
 - schema·row·object integrity와 representative request
 - owner 승인과 cleanup 또는 promoted environment의 후속 상태
 
@@ -71,17 +71,17 @@ backup policy에는 source, frequency, retention, encryption, immutability 또�
 required capacity = forecast peak × safety margin × failure-mode factor
 ```
 
-이 식은 답이 아니라 가정을 드러내는 틀이다. traffic mix, p95/p99 latency, queue depth, dependency quota와 한 AZ 상실 시 남은 capacity를 load test로 검증한다. autoscaling은 늦게 반응할 수 있으므로 startup·warm-up 시간도 budget에 넣는다.
+이 식은 답이 아니라 가정을 드러내는 틀이다. 트래픽 mix, p95/p99 latency, queue depth, dependency quota와 한 AZ 상실 시 남은 capacity를 load test로 검증한다. autoscaling은 늦게 반응할 수 있으므로 startup·warm-up 시간도 budget에 넣는다.
 
 ## FinOps는 소유권과 단위를 연결한다
 
 | 요소 | 운영 질문 |
 |---|---|
-| allocation | account·tag·cost category로 owner와 workload를 찾을 수 있는가? |
+| allocation | account·tag·cost category로 owner와 워크로드를 찾을 수 있는가? |
 | unit cost | request, tenant, job 또는 GB당 비용이 어떻게 움직이는가? |
 | forecast | growth·seasonality·commitment를 어떤 가정으로 계산했는가? |
 | optimization | rightsizing이 SLO와 recovery margin을 침해하지 않는가? |
-| purchase | On-Demand·commitment·Spot 위험을 workload interruption tolerance와 맞췄는가? |
+| purchase | On-Demand·commitment·Spot 위험을 워크로드 interruption tolerance와 맞췄는가? |
 
 비용 숫자는 region, 시점과 usage에 따라 달라진다. 문서에 고정 가격을 박기보다 공식 pricing 도구와 실제 billing data의 확인 시점을 기록한다.
 

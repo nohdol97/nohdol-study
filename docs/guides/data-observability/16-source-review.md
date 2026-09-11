@@ -1,6 +1,8 @@
 # Source review, extensions, and implementation boundaries
 
-Reviewed on **2026-09-10**. This course uses the user-selected shared conversation as a curriculum brief. It does not use the conversation's AI-generated claims, citation handles, or assumptions about personal experience as independent evidence.
+Reviewed on **2026-09-10**. The user-selected shared conversation tells us which topics this course should cover.
+
+Technical claims need their own supporting sources. The conversation's AI-generated statements, citation handles, and guesses about personal experience are not independent evidence.
 
 ## What the shared conversation contributed
 

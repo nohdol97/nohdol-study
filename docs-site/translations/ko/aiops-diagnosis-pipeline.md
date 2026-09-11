@@ -7,7 +7,7 @@
 | symptom detector | 사용자 오류·지연·가용성 저하를 직접 찾는 규칙 | 인프라 측정이 정상처럼 보일 때도 사용자에게 발생한 실패를 탐지한다. **구체적인 상황(가상 예시):** Node는 정상인데 결제 요청이 실패한다. → 사용자에게 보이는 증상으로 탐지한다. → 호스트 상태뿐 아니라 실패 요청을 탐지하는지 확인한다. |
 | cause hint | CPU·queue·deployment처럼 원인을 좁히는 내부 신호 | 내부 신호를 인과관계의 증명으로 취급하지 않고 다음 구분 검사를 선택한다. **구체적인 상황(가상 예시):** 지연이 증가할 무렵 대기열도 커진다. → 대기열을 원인 단서로 취급한다. → 시점·하위 근거가 가설을 뒷받침하는지 확인한다. |
 | change correlation | symptom 전후의 배포·설정 변경을 후보에 연결하는 것 | 대안 설명도 확인하면서 최근 변경을 조사 우선순위에 올린다. **구체적인 상황(가상 예시):** 기능 플래그 변경 뒤 오류가 몰린다. → 변경·비변경 대상을 비교한다. → 시점 일치 외에도 결과 차이가 있는지 확인한다. |
-| topology radius | 영향 service에서 dependency를 몇 단계까지 탐색할지 정한 범위 | 사고 조사에 느슨하게 관련된 모든 서비스가 포함되지 않도록 그래프 탐색 범위를 제한한다. **구체적인 상황(가상 예시):** 사고 탐색이 느슨하게 연결된 서비스 수백 개로 번진다. → 영향 경로 주변의 탐색 반경을 제한한다. → 근거가 있을 때만 넓힌다. |
+| topology radius | 영향 서비스에서 dependency를 몇 단계까지 탐색할지 정한 범위 | 사고 조사에 느슨하게 관련된 모든 서비스가 포함되지 않도록 그래프 탐색 범위를 제한한다. **구체적인 상황(가상 예시):** 사고 탐색이 느슨하게 연결된 서비스 수백 개로 번진다. → 영향 경로 주변의 탐색 반경을 제한한다. → 근거가 있을 때만 넓힌다. |
 | confidence | 주어진 evidence와 평가 기준 안에서 후보를 선택한 정도 | 가용 근거가 후보를 얼마나 지지하며 어디에 불확실성이 남는지 전달한다. **구체적인 상황(가상 예시):** 후보에 약한 상관 하나만 있고 확인 시험이 없다. → 근거와 함께 제한된 신뢰도를 보고한다. → 구분 검사를 한 뒤 갱신한다. |
 | counterevidence | 그 후보가 원인이라면 관측돼야 하지만 실제로는 반대인 증거 | 선호하는 진단이 불필요하거나 해로운 조치로 이어지기 전에 반대 근거로 검토한다. **구체적인 상황(가상 예시):** 선호하는 원인은 모든 리전의 실패를 예측하지만 한 곳은 정상이다. → 반대 근거를 조사한다. → 복구 조치 전에 설명을 수정·기각한다. |
 
@@ -16,7 +16,7 @@
 탐지와 진단을 하나의 “AI model”로 만들면 실패 위치를 알 수 없다. incident를 놓쳤을 때 입력이 없었는지, anomaly model이 못 찾았는지, grouping이 잘못됐는지, 진단기가 엉뚱한 evidence를 골랐는지 분리해야 개선할 수 있다. 따라서 각 단계는 입력·출력·version·평가 label을 가진 독립 계약이어야 한다.
 
 1. 사용자 symptom detector가 incident 후보를 연다.
-2. alert grouping이 같은 service·region·dependency·시간 창의 신호를 묶는다.
+2. alert grouping이 같은 서비스·region·dependency·시간 창의 신호를 묶는다.
 3. handler가 incident 종류별로 정해진 query와 trace를 회수한다.
 4. topology와 change event가 조사 범위를 제한한다.
 5. rule, 통계 모델 또는 LLM이 root cause category 후보를 순위화한다.
@@ -84,7 +84,7 @@ RCACopilot은 alert type별 handler로 진단 정보를 모으고 root cause cat
 | 단계 | 평가 단위 | 예시 실패 |
 |---|---|---|
 | 탐지 | incident별 detect·miss와 latency | 전체 outage를 늦게 탐지 |
-| grouping | alert pair 또는 incident cluster | 두 incident를 하나로 병합 |
+| grouping | alert pair 또는 incident 클러스터 | 두 incident를 하나로 병합 |
 | 회수 | required evidence coverage | 최근 change event 누락 |
 | 진단 | category top-k, abstain, evidence precision | 맞는 category지만 가짜 evidence 인용 |
 | 운영 | 사람 시간, 완화 시간, 재발·부작용 | 빠른 오진으로 blast radius 확대 |

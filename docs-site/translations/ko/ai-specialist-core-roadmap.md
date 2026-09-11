@@ -30,7 +30,7 @@ flowchart LR
 
 ## 다섯 모듈
 
-1. [LLM 밑바닥 구조와 효율화](#doc=ai-specialist-core-llm): token에서 attention·GPT·학습·정렬·KV cache까지 계산 경로를 잇는다.
+1. [LLM 밑바닥 구조와 효율화](#doc=ai-specialist-core-llm): token에서 attention·GPT·학습·정렬·KV 캐시까지 계산 경로를 잇는다.
 2. [Vision과 생성 모델 계보](#doc=ai-specialist-core-vision): convolution·patch·set prediction·segmentation과 생성 분포 학습을 비교한다.
 3. [On-device AI와 모델 압축](#doc=ai-specialist-core-edge): pruning·quantization·distillation을 target 성능과 함께 검증한다.
 4. [시계열 예측과 추천 시스템](#doc=ai-specialist-core-forecast-recommend): 시간 순서와 사용자 관계를 보존하는 split·baseline·ranking 평가를 배운다.
@@ -43,14 +43,14 @@ vault의 AI Specialist 49개 노트가 다루는 기술 항목을 모듈별 공�
 | 모듈 | 포함한 전체 세부 내용 | 공개 학습 연결 |
 |---|---|---|
 | LLM 밑바닥 구현 | tokenization·embedding, causal attention, GPT block·LayerNorm·GELU·residual, pretraining·cross entropy·perplexity·decoding, classification fine-tuning·LoRA, instruction tuning·DPO | [LLM 구조와 효율화](#doc=ai-specialist-core-llm) |
-| LLM 효율화 | KV cache와 prefill/decode, GQA, MLA 저랭크 KV 압축, sliding-window attention, MoE sparse FFN, Gated DeltaNet과 linear-attention hybrid | [LLM 구조와 효율화](#doc=ai-specialist-core-llm), [AI 인프라·serving](#doc=ai-transformation-platform-infrastructure) |
+| LLM 효율화 | KV 캐시와 prefill/decode, GQA, MLA 저랭크 KV 압축, sliding-window attention, MoE sparse FFN, Gated DeltaNet과 linear-attention hybrid | [LLM 구조와 효율화](#doc=ai-specialist-core-llm), [AI 인프라·serving](#doc=ai-transformation-platform-infrastructure) |
 | Vision | CNN·ResNet, ViT, DETR object detection, UNet segmentation | [Vision과 생성 모델](#doc=ai-specialist-core-vision) |
 | 생성 모델 | GAN, VAE·ELBO·reparameterization, VQ-VAE discrete latent, DDPM, DALL·E image-token autoregression, Stable Diffusion latent diffusion·conditioning | [Vision과 생성 모델](#doc=ai-specialist-core-vision) |
 | On-device AI | CNN pruning, PTQ·QAT quantization, knowledge distillation, LLM pruning·activation-aware sparsity, GPTQ·AWQ와 LLM quantization | [On-device 모델 압축](#doc=ai-specialist-core-edge) |
 | 시계열 | 문제 정의·horizon·leakage, 고전 방법·state-space model, RNN·LSTM·encoder-decoder, 네 model과 naive baseline 비교 | [시계열과 추천](#doc=ai-specialist-core-forecast-recommend) |
 | 추천 시스템 | collaborative filtering·similarity 함정, BPR pairwise ranking, NCF, NGCF·graph collaborative filtering | [시계열과 추천](#doc=ai-specialist-core-forecast-recommend) |
 | RAG·검색 | embedding·BM25·dense retrieval·reranking, HNSW·DiskANN ANN, GraphRAG·knowledge-graph query, CRAG scoring·abstention | [RAG·GraphRAG·MCP](#doc=ai-specialist-core-rag-mcp) |
-| 구조 질의·도구 | NL2SQL·Text2SQL, MCP의 host·client·server 책임, MCP server와 tool 설계·authorization | [RAG·GraphRAG·MCP](#doc=ai-specialist-core-rag-mcp), [Enterprise agent 운영](#doc=ai-transformation-platform-agents) |
+| 구조 질의·도구 | NL2SQL·Text2SQL, MCP의 host·클라이언트·서버 책임, MCP 서버와 tool 설계·authorization | [RAG·GraphRAG·MCP](#doc=ai-specialist-core-rag-mcp), [Enterprise agent 운영](#doc=ai-transformation-platform-agents) |
 
 모듈을 가로지르는 residual·attention·pairwise loss·후보 생성 후 정밀 ranking은 아래 공통 원리에서 다시 연결한다. 같은 수학적 형태가 보여도 dataset, objective와 평가 계약이 다르면 같은 보장을 갖지 않는다.
 

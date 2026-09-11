@@ -13,11 +13,11 @@
 
 ## 먼저 이해하기
 
-배포된 Pod가 S3 object를 읽고 database에 연결하는 흐름을 생각해 보자. Pod는 먼저 자신이 어떤 workload identity인지 증명하고, IAM은 그 identity가 특정 object를 읽어도 되는지 판단한다. application은 secret 값을 전달받아 database에 인증하고, 실행 중인 image는 CI가 만든 바로 그 artifact인지 검증돼야 한다. 이후 누가 어떤 변경과 접근을 했는지 audit trail이 남아야 한다.
+배포된 Pod가 S3 object를 읽고 database에 연결하는 흐름을 생각해 보자. Pod는 먼저 자신이 어떤 워크로드 identity인지 증명하고, IAM은 그 identity가 특정 object를 읽어도 되는지 판단한다. application은 secret 값을 전달받아 database에 인증하고, 실행 중인 image는 CI가 만든 바로 그 artifact인지 검증돼야 한다. 이후 누가 어떤 변경과 접근을 했는지 audit trail이 남아야 한다.
 
 | 질문 | 담당하는 개념 | 실패 시 보이는 현상 |
 |---|---|---|
-| 누구인가? | authentication, role session, workload identity | credential 없음·만료·issuer 불일치 |
+| 누구인가? | authentication, role session, 워크로드 identity | credential 없음·만료·issuer 불일치 |
 | 무엇을 해도 되는가? | authorization와 policy evaluation | explicit/implicit deny |
 | 민감 값은 어떻게 전달되는가? | secret store, encryption, rotation | 오래된 version·과다 노출 |
 | 실행 파일을 믿을 수 있는가? | digest, scan, signature, provenance | 검증되지 않은 artifact 차단 |
@@ -31,7 +31,7 @@
 2. policy engine이 그 principal에게 image 업로드나 배포 action을 허용할지 판단한다.
 3. build가 source로부터 artifact를 만들고 digest와 provenance를 남긴다.
 4. 배포 gate가 허용한 builder의 artifact인지, 취약점·signature 정책을 통과했는지 확인한다.
-5. workload는 실행 중 필요한 secret만 temporary identity로 읽는다.
+5. 워크로드는 실행 중 필요한 secret만 temporary identity로 읽는다.
 6. 배포와 secret 접근 결과가 audit trail에 남는다.
 7. credential·secret·artifact가 만료되거나 교체될 때 이전 대상의 사용을 중단하고 폐기한다.
 
@@ -51,14 +51,14 @@ flowchart TD
     E -->|explicit or implicit deny| X[denied]
 ```
 
-least privilege는 “작은 policy”가 아니라 필요한 action, resource와 condition을 workload의 실제 call로 좁히고 시간이 지나도 검토하는 과정이다. human, CI와 runtime role을 재사용하지 않는다.
+least privilege는 “작은 policy”가 아니라 필요한 action, resource와 condition을 워크로드의 실제 call로 좁히고 시간이 지나도 검토하는 과정이다. human, CI와 runtime role을 재사용하지 않는다.
 
 ## Secret과 key의 경계
 
 - KMS key는 cryptographic operation과 access policy를 제공한다. 애플리케이션 password 자체를 임의로 KMS metadata에 저장하지 않는다.
 - Secrets Manager는 secret value, version과 rotation workflow를 관리한다.
 - Kubernetes Secret은 기본적으로 confidential storage 자체를 보장하는 vault가 아니다. API·etcd encryption, RBAC, external secret delivery와 Pod 노출 경로를 함께 검토한다.
-- rotation은 새 값 생성만이 아니라 consumer 전환, 이전 값 폐기와 실패 rollback까지 포함한다.
+- rotation은 새 값 생성만이 아니라 소비자 전환, 이전 값 폐기와 실패 rollback까지 포함한다.
 
 ## Artifact provenance
 

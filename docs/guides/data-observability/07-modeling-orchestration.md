@@ -1,21 +1,29 @@
 # Modeling, dbt, and orchestration: publish a meaningful dataset
 
-**dbt** is a tool for organizing, running, testing, and documenting data transformations, commonly written in SQL. A dbt model describes a transformation that produces an analytical table or view. For example, after loading orders, a team can build cleaned orders, calculate daily revenue, and check that order IDs are unique. The model files make these transformations reviewable and reusable.
+Finance and sales use the same order data but report different daily revenue. Their SQL may handle duplicates and refunds differently.
 
-The database or warehouse holds the rows and executes the SQL. CDC collects source changes; dbt transforms already loaded rows; Airflow or Dagster coordinates when dependent work runs. **Orchestration** means coordinating those tasks and dependencies. A successful task does not prove that the revenue definition is correct, so this chapter connects transformations to business checks and publication.
+**dbt** helps a team organize, run, test, and document shared data transformations, usually written in SQL. A **dbt model** is a transformation definition that produces an analytical table or view.
 
-Raw records become a product when consumers can depend on their grain, history, definitions, and delivery. A scheduler that finishes successfully has not established those properties.
+For an order report, the workflow might be:
+
+1. Clean the loaded orders and check that order IDs are unique.
+2. Calculate daily revenue using the agreed refund rules.
+3. Check the result before publishing it.
+
+The database stores the rows and executes the SQL. CDC collects source changes; dbt transforms loaded data. Airflow or Dagster coordinates when dependent tasks run. This coordination is called **orchestration**.
+
+A successful run does not prove the revenue figure is right. Check what each row means, how history is handled, and whether consumers received the intended result.
 
 ## Terms introduced in this chapter
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Fact / dimension | A measurement or event / descriptive context used to interpret it | Separate measurable events from descriptive context so aggregation and attribution stay meaningful. **Concrete situation (illustrative):** A sales report needs amounts alongside customer and product attributes. → Model sales events as facts and descriptive entities as dimensions at declared grains. → Check joins preserve the intended event count and totals. |
-| Star schema | Facts connected to descriptive dimensions through defined keys | Give analytical queries explicit fact-to-dimension joins at declared grains. **Concrete situation (illustrative):** Every analyst reconstructs sales joins differently. → Publish a fact table with clearly related dimensions. → Verify common queries use consistent keys and avoid accidental duplication. |
-| SCD Type 1 / Type 2 | Replace prior descriptive values / retain their effective history | Choose whether reports use today's attributes or the attributes valid when an event happened. **Concrete situation (illustrative):** A customer moves regions, and reports disagree about past sales attribution. → Choose overwrite semantics or dated history according to the reporting question. → Test whether old sales use current or historically valid attributes as intended. |
-| Incremental model | A model that processes a selected change set rather than always rebuilding everything | Avoid full recomputation when a correctly bounded change set can update the result. **Concrete situation (illustrative):** A daily transformation rereads the full history despite few changes. → Process new or changed records with an explicit key and late-update strategy. → Compare an incremental run with a full rebuild on a controlled fixture. |
-| Backfill | Reprocessing a defined historical interval | Repair missing or corrected historical intervals without silently changing unrelated periods. **Concrete situation (illustrative):** A corrected business rule must be applied to three months of historical data. → Backfill the selected intervals with controlled load and idempotent writes. → Reconcile each interval and ensure scheduled runs do not conflict. |
-| Data interval | The time range a scheduled computation is responsible for | Make scheduled work's time responsibility explicit so missing intervals and retries can be checked. **Concrete situation (illustrative):** A job triggered today is supposed to compute yesterday's business day. → Use its explicit data interval instead of the current wall clock. → Retry the run and confirm it still reads the same intended interval. |
+| Fact / dimension | Facts store measurements or events such as sales. Dimensions describe them, such as the customer's region or product category. | Separate measurable events from descriptive context so aggregation and attribution stay meaningful. **Concrete situation (illustrative):** A sales report needs amounts alongside customer and product attributes. → Model sales events as facts and descriptive entities as dimensions at declared grains. → Check joins preserve the intended event count and totals. |
+| Star schema | A table design that connects a fact table to its descriptive dimension tables through defined keys. | Give analytical queries explicit fact-to-dimension joins at declared grains. **Concrete situation (illustrative):** Every analyst reconstructs sales joins differently. → Publish a fact table with clearly related dimensions. → Verify common queries use consistent keys and avoid accidental duplication. |
+| SCD Type 1 / Type 2 | Type 1 overwrites an old attribute. Type 2 keeps dated versions so reports can use the attribute that applied at the time. | Choose whether reports use today's attributes or the attributes valid when an event happened. **Concrete situation (illustrative):** A customer moves regions, and reports disagree about past sales attribution. → Choose overwrite semantics or dated history according to the reporting question. → Test whether old sales use current or historically valid attributes as intended. |
+| Incremental model | A transformation that updates the selected new or changed data instead of rebuilding the entire result every time. | Avoid full recomputation when a correctly bounded change set can update the result. **Concrete situation (illustrative):** A daily transformation rereads the full history despite few changes. → Process new or changed records with an explicit key and late-update strategy. → Compare an incremental run with a full rebuild on a controlled fixture. |
+| Backfill | Running a transformation again for a specified past period, for example to repair missing days. | Repair missing or corrected historical intervals without silently changing unrelated periods. **Concrete situation (illustrative):** A corrected business rule must be applied to three months of historical data. → Backfill the selected intervals with controlled load and idempotent writes. → Reconcile each interval and ensure scheduled runs do not conflict. |
+| Data interval | The period a scheduled run must process, which can differ from the time the run actually starts. | Make scheduled work's time responsibility explicit so missing intervals and retries can be checked. **Concrete situation (illustrative):** A job triggered today is supposed to compute yesterday's business day. → Use its explicit data interval instead of the current wall clock. → Retry the run and confirm it still reads the same intended interval. |
 
 ## Understand the model first
 

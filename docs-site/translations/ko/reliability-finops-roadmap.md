@@ -17,7 +17,7 @@
 
 ## 무엇을 해결하는가
 
-가용성, 복구와 비용은 독립 최적화 항목이 아니다. 더 많은 redundancy는 일부 failure를 견디지만 비용과 운영 복잡성을 높이고, 무조건적인 절감은 recovery margin을 없앨 수 있다. 이 과정은 workload마다 목표와 증거를 연결한다.
+가용성, 복구와 비용은 독립 최적화 항목이 아니다. 더 많은 redundancy는 일부 failure를 견디지만 비용과 운영 복잡성을 높이고, 무조건적인 절감은 recovery margin을 없앨 수 있다. 이 과정은 워크로드마다 목표와 증거를 연결한다.
 
 ```mermaid
 flowchart LR

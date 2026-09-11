@@ -25,7 +25,7 @@
 | blocker 종료 | waiter 진행·rollback 완료 | application retry와 일관성 |
 | dump 생성 | exit code·artifact 존재 | artifact 손상·복원 가능성 |
 | restore | 별도 DB에 schema와 data 생성 | application query·RPO·RTO |
-| failover | 새 primary가 write 수락 | client endpoint·old primary 처리 |
+| failover | 새 primary가 write 수락 | 클라이언트 엔드포인트·old primary 처리 |
 
 ## 1. 실습 데이터
 
@@ -90,10 +90,10 @@ PITR에는 연속적인 WAL archive와 그보다 앞선 base backup, recovery ta
 - 마지막 복구 가능한 timestamp와 예상 RPO
 - restore 시작부터 read/write 승인까지 실제 RTO
 - timeline과 target 전후의 marker row
-- application DNS/endpoint 전환과 stale client 처리
-- replica promotion 뒤 원 primary 재합류 절차
+- application DNS/endpoint 전환과 stale 클라이언트 처리
+- 복제본 promotion 뒤 원 primary 재합류 절차
 
-managed service가 backup과 promotion API를 제공해도 application consistency와 client 전환 검증 책임은 사라지지 않는다.
+managed 서비스가 backup과 promotion API를 제공해도 application consistency와 클라이언트 전환 검증 책임은 사라지지 않는다.
 
 ## 정리
 
@@ -130,7 +130,7 @@ session B의 `wait_event_type`이 `Lock`이고 `pg_blocking_pids`가 A를 가리
 
 restore된 `accounts` row가 보이면 dump→restore의 최소 경로는 검증됐다. production 완료 판정에는 owner·privilege, sequence, extension, large object와 application query 같은 실제 사용 요소가 더 필요하다. logical backup은 WAL 기반 PITR과도 다른 복구 방식이다.
 
-RTO는 restore 명령 수행 시간만 재지 않는다. DNS 또는 endpoint 전환, connection pool 갱신, application readiness와 write 승인까지 포함한다. RPO는 backup schedule이 아니라 marker data로 실제 마지막 복구 시점을 확인한다.
+RTO는 restore 명령 수행 시간만 재지 않는다. DNS 또는 엔드포인트 전환, 연결 pool 갱신, application readiness와 write 승인까지 포함한다. RPO는 backup schedule이 아니라 marker data로 실제 마지막 복구 시점을 확인한다.
 
 ## 스스로 설명해 보기
 

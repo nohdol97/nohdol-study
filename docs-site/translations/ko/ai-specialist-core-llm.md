@@ -4,7 +4,7 @@
 <!-- source: https://arxiv.org/abs/2106.09685 | checked: 2026-09-03 -->
 <!-- source: https://arxiv.org/abs/2305.18290 | checked: 2026-09-03 -->
 
-LLM을 운영하려면 prompt API보다 먼저 한 token이 어떤 계산을 거쳐 다음 token 분포가 되는지 알아야 한다. tokenization, embedding, causal attention, residual block, 학습 objective와 decoding을 연결하면 context 길이·KV cache·batching·fine-tuning 선택이 왜 비용과 품질을 바꾸는지 설명할 수 있다.
+LLM을 운영하려면 prompt API보다 먼저 한 token이 어떤 계산을 거쳐 다음 token 분포가 되는지 알아야 한다. tokenization, embedding, causal attention, residual block, 학습 objective와 decoding을 연결하면 context 길이·KV 캐시·batching·fine-tuning 선택이 왜 비용과 품질을 바꾸는지 설명할 수 있다.
 
 ## 이 장에서 처음 쓰는 말
 
@@ -15,14 +15,14 @@ LLM을 운영하려면 prompt API보다 먼저 한 token이 어떤 계산을 거
 | causal mask | 현재 위치가 미래 token을 보지 못하게 하는 제한 | 다음 토큰 학습이 생성 시점에는 볼 수 없는 미래 토큰을 참조하지 못하게 한다. **구체적인 상황(가상 예시):** 학습 중 다음 토큰을 맞히면서 뒤의 텍스트를 몰래 본다. → 의도한 causal mask를 적용한다. → 미래 위치가 해당 예측에 영향을 주지 못하는지 확인한다. |
 | attention | query와 key 관계로 value를 가중 합하는 계산 | 토큰의 표현을 계산할 때 관련 있는 문맥 위치의 정보를 함께 반영한다. **구체적인 상황(가상 예시):** 토큰의 해석이 앞선 문맥에 달려 있다. → attention이 허용된 위치들을 결합하는 방식을 살핀다. → 관련 문맥을 바꿨을 때 동작을 비교한다. |
 | prefill / decode | 입력 token을 한꺼번에 처리하는 단계 / 다음 token을 순차 생성하는 단계 | 지연·서빙 용량을 진단할 때 입력 처리와 순차 생성을 구분한다. **구체적인 상황(가상 예시):** 긴 입력은 첫 토큰을 늦추고 긴 답은 이후 워커를 점유한다. → prefill과 decode를 따로 측정한다. → 실제 지연 병목을 기준으로 조정한다. |
-| KV cache | 이미 계산한 과거 key·value를 decode 동안 재사용하는 memory | 메모리를 사용하는 대신 토큰 생성마다 과거 attention의 키·값을 다시 계산하는 일을 줄인다. **구체적인 상황(가상 예시):** 긴 대화가 서빙 메모리를 소진한다. → 가중치·활성 요청과 함께 KV cache를 계산한다. → 부하에서 수용 한도와 생성 지연을 확인한다. |
+| KV cache | 이미 계산한 과거 key·value를 decode 동안 재사용하는 메모리 | 메모리를 사용하는 대신 토큰 생성마다 과거 attention의 키·값을 다시 계산하는 일을 줄인다. **구체적인 상황(가상 예시):** 긴 대화가 서빙 메모리를 소진한다. → 가중치·활성 요청과 함께 KV 캐시를 계산한다. → 부하에서 수용 한도와 생성 지연을 확인한다. |
 
 1. token ID에서 logit까지 tensor shape를 손으로 따라간다.
-2. 품질 지표와 memory·latency·throughput의 trade-off를 분리해 측정한다.
+2. 품질 지표와 메모리·latency·throughput의 trade-off를 분리해 측정한다.
 
 ## 먼저 이해하기
 
-Transformer는 recurrence 없이 attention과 feed-forward block을 쌓는다. decoder-only LLM은 causal mask 아래에서 다음 token을 예측한다. attention score는 query와 key의 scaled dot product에 softmax를 적용하고 value를 섞는다. 이 구조는 token 사이 관계를 직접 계산하지만 sequence 길이가 커질수록 계산·memory 부담이 증가한다.
+Transformer는 recurrence 없이 attention과 feed-forward block을 쌓는다. decoder-only LLM은 causal mask 아래에서 다음 token을 예측한다. attention score는 query와 key의 scaled dot product에 softmax를 적용하고 value를 섞는다. 이 구조는 token 사이 관계를 직접 계산하지만 sequence 길이가 커질수록 계산·메모리 부담이 증가한다.
 
 ```mermaid
 flowchart LR
@@ -61,14 +61,14 @@ model_bundle:
 
 ## 추론 비용의 두 단계
 
-prefill은 입력 sequence를 병렬로 처리하고, decode는 token을 하나씩 생성한다. decode에서 과거 token의 key·value를 매번 다시 계산하지 않도록 KV cache를 사용한다. 그래서 동시 요청 수, context와 output 길이가 GPU memory를 함께 소비한다.
+prefill은 입력 sequence를 병렬로 처리하고, decode는 token을 하나씩 생성한다. decode에서 과거 token의 key·value를 매번 다시 계산하지 않도록 KV 캐시를 사용한다. 그래서 동시 요청 수, context와 output 길이가 GPU 메모리를 함께 소비한다.
 
 | 손잡이 | 얻는 것 | 잃을 수 있는 것 | 확인할 지표 |
 |---|---|---|---|
 | 더 큰 batch | throughput | queue delay·tail latency | TTFT, tokens/s, p99 |
-| KV cache 압축·GQA | memory 절약 | 품질·kernel 제약 | max concurrency, task eval |
+| KV cache 압축·GQA | 메모리 절약 | 품질·커널 제약 | max concurrency, task eval |
 | sliding window | 긴 입력 비용 제한 | 먼 문맥 정보 | long-context eval |
-| quantization | memory·속도 | task별 정확도 | target latency·quality |
+| quantization | 메모리·속도 | task별 정확도 | target latency·quality |
 | MoE | token당 일부 expert 계산 | routing·통신 복잡성 | load balance·all-to-all |
 | speculative decode | 빠른 생성 후보 | draft mismatch 비용 | acceptance·TPOT |
 
@@ -100,12 +100,12 @@ perplexity, task accuracy, preference와 LLM judge는 서로 다른 질문에 �
 
 - tokenization에서 decoding까지 계산 경로를 연결했다.
 - pretraining·fine-tuning·preference objective를 구분했다.
-- prefill·decode와 KV cache가 capacity에 미치는 영향을 설명했다.
+- prefill·decode와 KV 캐시가 capacity에 미치는 영향을 설명했다.
 - 모델을 tokenizer·adapter·template·runtime·eval과 bundle로 기록했다.
 
 ## 스스로 설명해 보기
 
 - causal mask가 없으면 next-token 학습에서 어떤 정보 누수가 생기는가?
-- KV cache가 compute를 줄이면서 memory 상한을 만드는 이유는 무엇인가?
+- KV 캐시가 compute를 줄이면서 메모리 상한을 만드는 이유는 무엇인가?
 - LoRA adapter만 배포 파일로 보관하면 재현성이 깨지는 이유는 무엇인가?
 - offline judge 점수와 production action safety를 같은 metric으로 볼 수 없는 이유는 무엇인가?

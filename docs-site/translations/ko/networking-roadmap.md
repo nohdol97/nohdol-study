@@ -40,21 +40,21 @@ flowchart LR
 
 | 질문 | 답을 주는 계층 |
 |---|---|
-| 이름이 어느 주소로 풀리는가? | DNS record, resolver와 cache |
+| 이름이 어느 주소로 풀리는가? | DNS record, resolver와 캐시 |
 | packet이 어느 interface·gateway로 나가는가? | route table과 policy routing |
 | 연결을 허용하는가? | security group, NACL, host firewall, NetworkPolicy |
-| server가 port를 받고 있는가? | listening socket과 load balancer listener |
+| server가 port를 받고 있는가? | listening socket과 load balancer 리스너 |
 | 상대가 맞고 암호화됐는가? | TLS certificate, hostname과 trust store |
 | 요청 의미가 맞는가? | HTTP method, host, path, status와 timeout |
 
-AWS VPC와 Kubernetes network는 이 모델을 다른 resource로 구현한다. VPC route table·gateway·security group과 Kubernetes Service·EndpointSlice·Gateway·NetworkPolicy의 이름을 섞지 말고 packet이 지나는 실제 순서로 연결한다.
+AWS VPC와 Kubernetes 네트워크는 이 모델을 다른 resource로 구현한다. VPC route table·gateway·security group과 Kubernetes Service·EndpointSlice·Gateway·NetworkPolicy의 이름을 섞지 말고 packet이 지나는 실제 순서로 연결한다.
 
 ## 완료
 
 이 주제는 한 번 읽고 끝내지 않는다. 먼저 용어 표를 자신의 말로 바꾸고, 개념 장에서 한 요청의 흐름을 따라간다. 실습에서는 정상 상태를 먼저 기록한 뒤 조건 하나만 바꿔 실패를 만들고, 증거로 원인을 설명한 뒤 복구한다. 마지막으로 아래 운영 판단 질문에 답하면서 더 복잡한 환경으로 확장한다.
 
 - 하나의 URL을 DNS answer, destination IP, route, TCP peer, TLS identity, HTTP status와 backend로 분해한다.
-- timeout, connection refused, TLS verification failure와 HTTP 5xx를 서로 다른 실패로 진단한다.
+- timeout, 연결 refused, TLS verification failure와 HTTP 5xx를 서로 다른 실패로 진단한다.
 - [AWS 인프라 기반](../../content/aws-foundations/00-roadmap.md)에서 subnet·route·gateway의 reachability를 설명할 수 있다.
 
 ## 처음 이해했는지 확인
@@ -68,7 +68,7 @@ AWS VPC와 Kubernetes network는 이 모델을 다른 resource로 구현한다. 
 
 1. DNS가 성공했는데 TCP timeout이 날 수 있는 이유는 무엇인가?
 2. load balancer health check 성공과 실제 사용자 요청 성공이 다른 이유는 무엇인가?
-3. 같은 `403`이라도 network policy가 아니라 HTTP 계층 문제라고 볼 근거는 무엇인가?
+3. 같은 `403`이라도 네트워크 policy가 아니라 HTTP 계층 문제라고 볼 근거는 무엇인가?
 
 <!-- source: https://datatracker.ietf.org/doc/html/rfc9293 | checked: 2026-09-03 -->
 <!-- source: https://datatracker.ietf.org/doc/html/rfc8446 | checked: 2026-09-03 -->

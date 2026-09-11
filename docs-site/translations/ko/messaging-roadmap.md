@@ -17,7 +17,7 @@
 
 ## 무엇을 해결하는가
 
-queue와 event stream은 producer와 consumer를 시간적으로 분리하지만, 전달 성공이 business 처리의 exactly-once 결과를 자동으로 보장하지 않는다. 이 과정은 SQS·SNS·EventBridge와 Kafka의 역할을 delivery, ordering, replay와 ownership으로 구분한다.
+queue와 event stream은 생산자와 소비자를 시간적으로 분리하지만, 전달 성공이 business 처리의 exactly-once 결과를 자동으로 보장하지 않는다. 이 과정은 SQS·SNS·EventBridge와 Kafka의 역할을 delivery, ordering, replay와 ownership으로 구분한다.
 
 ```mermaid
 flowchart LR
@@ -34,13 +34,13 @@ flowchart LR
 
 ## 선수 지식
 
-- network timeout과 partial failure
+- 네트워크 timeout과 partial failure
 - transaction boundary와 unique constraint
 - AWS IAM, metric과 incident 대응
 
 ## 학습 순서
 
-1. **Delivery·ordering·replay model**: 각 서비스와 consumer 책임을 분리한다.
+1. **Delivery·ordering·replay model**: 각 서비스와 소비자 책임을 분리한다.
 2. **Duplicate·DLQ 실습**: 중복과 poison message를 만들고 안전한 재처리를 검증한다.
 
 ## 완료
@@ -57,16 +57,16 @@ flowchart LR
 
 ## 처음 이해했는지 확인
 
-1. producer, broker와 consumer는 message 전달에서 각각 무슨 역할을 하는가?
+1. 생산자, broker와 소비자는 message 전달에서 각각 무슨 역할을 하는가?
 2. 같은 message가 두 번 도착할 수 있다면 application은 무엇을 준비해야 하는가?
 
-**확인 기준:** producer가 보내고 broker가 보관·전달하며 consumer가 처리한다고 설명하면 된다. 중복 delivery에도 업무 결과가 한 번과 같도록 idempotency가 필요하다.
+**확인 기준:** 생산자가 보내고 broker가 보관·전달하며 소비자가 처리한다고 설명하면 된다. 중복 delivery에도 업무 결과가 한 번과 같도록 idempotency가 필요하다.
 
 ## 운영 판단으로 확장하기
 
 1. broker가 메시지를 한 번만 전달해도 business side effect가 중복될 수 있는 이유는 무엇인가?
 2. DLQ가 있다는 사실만으로 복구가 자동화되지 않는 이유는 무엇인가?
-3. queue backlog와 consumer lag가 각각 어떤 시간을 나타내는가?
+3. queue backlog와 소비자 lag가 각각 어떤 시간을 나타내는가?
 
 <!-- source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/welcome.html | checked: 2026-09-03 -->
 <!-- source: https://docs.aws.amazon.com/sns/latest/dg/welcome.html | checked: 2026-09-03 -->

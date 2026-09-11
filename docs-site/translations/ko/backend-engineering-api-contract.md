@@ -4,7 +4,7 @@
 <!-- source: https://www.rfc-editor.org/rfc/rfc9457.html | checked: 2026-09-03 -->
 <!-- source: https://spec.openapis.org/oas/v3.1.0.html | checked: 2026-09-03 -->
 
-API 계약은 endpoint 목록이 아니라 호출자가 다음 행동을 안전하게 선택할 수 있게 하는 의미의 집합이다. method, status, representation, 오류 코드, deadline, 중복 요청과 장기 작업 상태가 서로 맞아야 proxy·SDK·재시도 정책도 같은 의도로 동작한다.
+API 계약은 엔드포인트 목록이 아니라 호출자가 다음 행동을 안전하게 선택할 수 있게 하는 의미의 집합이다. method, status, representation, 오류 코드, deadline, 중복 요청과 장기 작업 상태가 서로 맞아야 proxy·SDK·재시도 정책도 같은 의도로 동작한다.
 
 ## 이 장에서 처음 쓰는 말
 
@@ -22,7 +22,7 @@ API 계약은 endpoint 목록이 아니라 호출자가 다음 행동을 안전�
 
 ## 먼저 이해하기
 
-RFC 9110에서 method는 요청의 주된 의미를 전달한다. `GET`이 읽기처럼 보인다는 관습만으로 충분하지 않다. safe method에서 업무 상태를 바꾸게 만들면 crawler, cache와 자동 재시도가 의도하지 않은 효과를 만들 수 있다. idempotent method는 통신이 끊긴 뒤 같은 의도를 다시 보내는 판단에 도움을 주지만, 로그가 한 줄만 생긴다는 뜻도 아니고 모든 `POST`가 자동으로 안전해진다는 뜻도 아니다.
+RFC 9110에서 method는 요청의 주된 의미를 전달한다. `GET`이 읽기처럼 보인다는 관습만으로 충분하지 않다. safe method에서 업무 상태를 바꾸게 만들면 crawler, 캐시와 자동 재시도가 의도하지 않은 효과를 만들 수 있다. idempotent method는 통신이 끊긴 뒤 같은 의도를 다시 보내는 판단에 도움을 주지만, 로그가 한 줄만 생긴다는 뜻도 아니고 모든 `POST`가 자동으로 안전해진다는 뜻도 아니다.
 
 ```mermaid
 sequenceDiagram
@@ -70,17 +70,17 @@ OpenAPI 3.1 문서는 path, operation, parameter, response와 schema를 기계�
 
 | 변경 | schema 검사 | 실제 호환성 질문 |
 |---|---|---|
-| optional field 추가 | 대체로 통과 | 엄격한 consumer가 미지 필드를 거부하는가 |
-| enum 값 추가 | 형식상 가능 | consumer의 exhaustive switch가 실패하는가 |
+| optional field 추가 | 대체로 통과 | 엄격한 소비자가 미지 필드를 거부하는가 |
+| enum 값 추가 | 형식상 가능 | 소비자의 exhaustive switch가 실패하는가 |
 | 숫자 범위 축소 | schema에 표현 가능 | 기존 저장 값과 요청이 거부되는가 |
 | status 변경 | 문서화 가능 | retry·error mapping이 달라지는가 |
 | sync를 `202` 비동기로 변경 | 표현 가능 | operation polling과 timeout 계약이 생겼는가 |
 
-따라서 provider schema diff와 실제 consumer contract test를 함께 둔다. [호환 변경·테스트와 점진적 배포](#doc=backend-engineering-evolution)에서 이 공존 기간을 배포 gate로 확장한다.
+따라서 provider schema diff와 실제 소비자 contract test를 함께 둔다. [호환 변경·테스트와 점진적 배포](#doc=backend-engineering-evolution)에서 이 공존 기간을 배포 gate로 확장한다.
 
 ## 장기 작업과 결과 불명
 
-요청 deadline이 끝났다고 operation을 취소했다고 가정하면 안 된다. server가 commit한 뒤 응답만 잃을 수 있다. 오래 걸리는 작업은 `operationId`, 현재 상태, 생성·갱신 시각, 결과 링크, 취소 가능 상태를 별도 resource로 제공한다.
+요청 deadline이 끝났다고 operation을 취소했다고 가정하면 안 된다. 서버가 commit한 뒤 응답만 잃을 수 있다. 오래 걸리는 작업은 `operationId`, 현재 상태, 생성·갱신 시각, 결과 링크, 취소 가능 상태를 별도 resource로 제공한다.
 
 ```yaml
 operationId: op-0182
@@ -116,5 +116,5 @@ retryable: false
 
 - `PUT`이 idempotent하다는 사실과 업무 중복이 절대로 없다는 주장이 왜 다른가?
 - `503`을 받은 모든 요청을 즉시 재시도하면 어떤 feedback loop가 생기는가?
-- enum 값 하나를 추가하는 변경이 어떤 consumer에서는 breaking change가 되는가?
+- enum 값 하나를 추가하는 변경이 어떤 소비자에서는 breaking change가 되는가?
 - `202 Accepted`가 성공 완료를 뜻하지 않는다면 어떤 상태 resource가 필요한가?

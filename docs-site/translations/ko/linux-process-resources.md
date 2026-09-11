@@ -2,36 +2,36 @@
 
 ## 이 장에서 처음 쓰는 말
 
-- **PID**: 실행 중인 process를 Linux가 구분하기 위해 붙이는 번호다. 재시작하면 보통 달라진다. **왜 필요한가요 · 언제 쓰나요:** 재시작 후에도 측정값·시그널·리스너 소유자를 현재 프로세스와 연결할 때 쓴다. **구체적인 상황(가상 예시):** 운영자가 조사하는 도중 서비스가 재시작된다. → 현재 PID를 다시 찾는다. → 이후 측정이 새 프로세스에 대한 것인지 확인한다.
-- **file descriptor**: process가 열린 file이나 network connection을 가리키는 작은 번호다. **왜 필요한가요 · 언제 쓰나요:** 프로세스가 파일·연결을 열지 못할 때 핸들 누수와 한도 소진을 찾는 데 쓴다. **구체적인 상황(가상 예시):** 열린 파일이 너무 많다는 오류로 요청이 실패한다. → 열린 descriptor 수와 프로세스 한도를 비교한다. → 트래픽이 멈춰도 핸들이 쌓여 남는지 확인한다.
-- **socket**: 두 process가 network로 데이터를 주고받기 위해 사용하는 통신 끝점이다. **왜 필요한가요 · 언제 쓰나요:** 통신의 양 끝을 확인해 리스너 누락이나 멈춘 연결을 찾는 데 쓴다. **구체적인 상황(가상 예시):** 클라이언트가 엉뚱한 로컬 리스너에 연결된다. → 소켓 주소와 소유 프로세스를 조회한다. → 목적지 포트가 의도한 서비스인지 확인한다.
-- **cgroup**: 여러 process를 묶어 CPU·memory 같은 자원의 사용량과 한도를 관리하는 Linux 기능이다. **왜 필요한가요 · 언제 쓰나요:** 워크로드의 자원 소비를 제한해 함께 실행되는 다른 작업의 용량을 보호한다. **구체적인 상황(가상 예시):** 배치 작업이 API에 필요한 자원까지 소비한다. → 시험 환경에서 검토한 cgroup 한도를 적용한다. → API 지연과 배치 제한 상태를 비교한다.
-- **RSS**: process가 현재 실제 memory에 올려 사용 중인 영역의 대략적인 크기다. **왜 필요한가요 · 언제 쓰나요:** 실제 메모리 점유 증가를 관찰해 메모리 부족 장애의 원인을 조사할 때 쓴다. **구체적인 상황(가상 예시):** 요청이 몰릴 때마다 메모리 사용량이 증가한다. → 유휴 시간 전후의 RSS를 기록한다. → 실제 점유가 기준 수준으로 돌아오는지 확인한다.
+- **PID**: 실행 중인 프로세스를 Linux가 구분하기 위해 붙이는 번호다. 재시작하면 보통 달라진다. **왜 필요한가요 · 언제 쓰나요:** 재시작 후에도 측정값·시그널·리스너 소유자를 현재 프로세스와 연결할 때 쓴다. **구체적인 상황(가상 예시):** 운영자가 조사하는 도중 서비스가 재시작된다. → 현재 PID를 다시 찾는다. → 이후 측정이 새 프로세스에 대한 것인지 확인한다.
+- **file descriptor**: 프로세스가 열린 파일이나 네트워크 연결을 가리키는 작은 번호다. **왜 필요한가요 · 언제 쓰나요:** 프로세스가 파일·연결을 열지 못할 때 핸들 누수와 한도 소진을 찾는 데 쓴다. **구체적인 상황(가상 예시):** 열린 파일이 너무 많다는 오류로 요청이 실패한다. → 열린 descriptor 수와 프로세스 한도를 비교한다. → 트래픽이 멈춰도 핸들이 쌓여 남는지 확인한다.
+- **socket**: 두 프로세스가 네트워크로 데이터를 주고받기 위해 사용하는 통신 끝점이다. **왜 필요한가요 · 언제 쓰나요:** 통신의 양 끝을 확인해 리스너 누락이나 멈춘 연결을 찾는 데 쓴다. **구체적인 상황(가상 예시):** 클라이언트가 엉뚱한 로컬 리스너에 연결된다. → 소켓 주소와 소유 프로세스를 조회한다. → 목적지 포트가 의도한 서비스인지 확인한다.
+- **cgroup**: 여러 프로세스를 묶어 CPU·메모리 같은 자원의 사용량과 한도를 관리하는 Linux 기능이다. **왜 필요한가요 · 언제 쓰나요:** 워크로드의 자원 소비를 제한해 함께 실행되는 다른 작업의 용량을 보호한다. **구체적인 상황(가상 예시):** 배치 작업이 API에 필요한 자원까지 소비한다. → 시험 환경에서 검토한 cgroup 한도를 적용한다. → API 지연과 배치 제한 상태를 비교한다.
+- **RSS**: 프로세스가 현재 실제 메모리에 올려 사용 중인 영역의 대략적인 크기다. **왜 필요한가요 · 언제 쓰나요:** 실제 메모리 점유 증가를 관찰해 메모리 부족 장애의 원인을 조사할 때 쓴다. **구체적인 상황(가상 예시):** 요청이 몰릴 때마다 메모리 사용량이 증가한다. → 유휴 시간 전후의 RSS를 기록한다. → 실제 점유가 기준 수준으로 돌아오는지 확인한다.
 
-처음 읽을 때는 “service 이름 → 현재 PID → 그 PID의 socket과 자원” 세 연결만 잡으면 된다. 세부 수치는 뒤의 명령에서 실제 출력과 함께 확인한다.
+처음 읽을 때는 “서비스 이름 → 현재 PID → 그 PID의 socket과 자원” 세 연결만 잡으면 된다. 세부 수치는 뒤의 명령에서 실제 출력과 함께 확인한다.
 
 ## 먼저 이해하기
 
-웹 서버가 느려졌다고 가정하자. 사용자는 “서버가 느리다”고 말하지만 Linux가 실제로 관리하는 대상은 하나의 `server`라는 덩어리가 아니다. 실행 중인 process, 그 process가 연 file descriptor와 socket, 할당받은 CPU 시간과 memory page, filesystem을 거친 I/O가 따로 존재한다. 원인을 찾으려면 서비스 이름을 이 실제 자원으로 번역해야 한다.
+웹 서버가 느려졌다고 가정하자. 사용자는 “서버가 느리다”고 말하지만 Linux가 실제로 관리하는 대상은 하나의 `server`라는 덩어리가 아니다. 실행 중인 프로세스, 그 프로세스가 연 파일 descriptor와 socket, 할당받은 CPU 시간과 메모리 page, 파일 시스템을 거친 I/O가 따로 존재한다. 원인을 찾으려면 서비스 이름을 이 실제 자원으로 번역해야 한다.
 
 | 용어 | 뜻 | 운영할 때 확인할 것 |
 |---|---|---|
 | program | disk에 저장된 실행 파일 | 경로, owner, permission, version |
-| process | program이 실행되어 PID와 자원을 가진 상태 | PID, parent, state, open file, memory |
-| thread | process 안에서 CPU scheduling을 받는 실행 단위 | runnable 수, CPU time, lock wait |
-| service | systemd 같은 manager가 process 수명주기에 붙인 운영 이름 | start 조건, restart policy, main PID |
-| cgroup | process 집합에 CPU·memory·I/O 규칙을 적용하는 경계 | limit, usage, pressure, kill event |
+| process | program이 실행되어 PID와 자원을 가진 상태 | PID, parent, state, open 파일, 메모리 |
+| thread | 프로세스 안에서 CPU scheduling을 받는 실행 단위 | runnable 수, CPU time, lock wait |
+| service | systemd 같은 manager가 프로세스 수명주기에 붙인 운영 이름 | start 조건, restart policy, main PID |
+| cgroup | 프로세스 집합에 CPU·메모리·I/O 규칙을 적용하는 경계 | limit, usage, pressure, kill event |
 
-예를 들어 `api.service`가 `active`여도 main process가 `127.0.0.1`에만 bind했다면 외부 요청은 실패한다. socket은 열려 있어도 cgroup memory limit에 계속 닿으면 process가 재시작될 수 있다. service 상태는 출발점이며 실제 요청 성공과 자원 여유를 대신하지 않는다.
+예를 들어 `api.service`가 `active`여도 main 프로세스가 `127.0.0.1`에만 bind했다면 외부 요청은 실패한다. socket은 열려 있어도 cgroup 메모리 limit에 계속 닿으면 프로세스가 재시작될 수 있다. 서비스 상태는 출발점이며 실제 요청 성공과 자원 여유를 대신하지 않는다.
 
 ## 웹 서버가 실행되는 과정을 한 단계씩 보기
 
-1. 사용자가 `systemctl start`로 service 시작을 요청한다.
-2. systemd가 unit 파일의 실행 명령을 읽고 새 process를 만든다.
-3. Linux가 process에 PID를 붙이고 service의 cgroup에 넣는다.
-4. process가 file을 열고 IP 주소와 port에 socket을 연다.
-5. 요청이 오면 kernel이 socket을 통해 process에 데이터를 전달한다.
-6. process가 종료되면 exit status와 시간이 journal에 남고 systemd가 재시작 정책을 판단한다.
+1. 사용자가 `systemctl start`로 서비스 시작을 요청한다.
+2. systemd가 unit 파일의 실행 명령을 읽고 새 프로세스를 만든다.
+3. Linux가 프로세스에 PID를 붙이고 서비스의 cgroup에 넣는다.
+4. 프로세스가 파일을 열고 IP 주소와 port에 socket을 연다.
+5. 요청이 오면 커널이 socket을 통해 프로세스에 데이터를 전달한다.
+6. 프로세스가 종료되면 exit status와 시간이 journal에 남고 systemd가 재시작 정책을 판단한다.
 
 각 단계는 다른 증거를 남긴다. 그래서 “웹 서버가 안 된다”를 고칠 때 마지막 결과만 보지 않고 어느 단계까지 성공했는지 확인한다.
 
@@ -39,13 +39,13 @@
 
 | 상태 | 대표 질문 | 관찰 위치 |
 |---|---|---|
-| unit | 누가 process를 시작·재시작하는가? | `systemctl`, unit file, journal |
-| process | 어떤 PID와 command가 실행 중인가? | `ps`, `/proc/<pid>/status` |
-| descriptor | 어떤 file·socket을 잡고 있는가? | `/proc/<pid>/fd`, `lsof`, `ss` |
-| resource | CPU·memory·I/O를 얼마나 쓰는가? | `pidstat`, `vmstat`, `iostat`, cgroup files |
-| event | 언제 무엇 때문에 상태가 바뀌었는가? | journal, kernel log, service exit status |
+| unit | 누가 프로세스를 시작·재시작하는가? | `systemctl`, unit 파일, journal |
+| process | 어떤 PID와 명령어가 실행 중인가? | `ps`, `/proc/<pid>/status` |
+| descriptor | 어떤 파일·socket을 잡고 있는가? | `/proc/<pid>/fd`, `lsof`, `ss` |
+| resource | CPU·메모리·I/O를 얼마나 쓰는가? | `pidstat`, `vmstat`, `iostat`, cgroup files |
+| event | 언제 무엇 때문에 상태가 바뀌었는가? | journal, 커널 log, 서비스 exit status |
 
-service 이름과 PID를 같은 것으로 보면 재시작 직후 PID가 바뀌었을 때 추적이 끊긴다. unit은 desired lifecycle을, process는 지금 실행 중인 instance를 나타낸다.
+서비스 이름과 PID를 같은 것으로 보면 재시작 직후 PID가 바뀌었을 때 추적이 끊긴다. unit은 desired lifecycle을, 프로세스는 지금 실행 중인 instance를 나타낸다.
 
 ```mermaid
 sequenceDiagram
@@ -78,7 +78,7 @@ ls -l "/proc/$pid/fd" | sed -n '1,20p'
 
 ## cgroup은 resource 분배 경계다
 
-cgroup v2는 process를 계층으로 조직하고 CPU·memory·I/O 같은 resource를 그 계층에 배분한다. 모든 process는 하나의 cgroup에 속하고 상위 제한을 하위에서 넘어설 수 없다.
+cgroup v2는 프로세스를 계층으로 조직하고 CPU·메모리·I/O 같은 resource를 그 계층에 배분한다. 모든 프로세스는 하나의 cgroup에 속하고 상위 제한을 하위에서 넘어설 수 없다.
 
 ```bash
 cat "/proc/$pid/cgroup"
@@ -86,9 +86,9 @@ systemctl show sshd -p ControlGroup --value
 systemd-cgls --unit sshd
 ```
 
-container가 host와 같은 kernel을 사용해도 cgroup membership과 namespace가 다르면 관찰되는 resource 범위가 달라진다. 따라서 container 안의 `free`와 node 전체 memory를 같은 값으로 비교하면 안 된다.
+컨테이너가 host와 같은 커널을 사용해도 cgroup membership과 namespace가 다르면 관찰되는 resource 범위가 달라진다. 따라서 컨테이너 안의 `free`와 node 전체 메모리를 같은 값으로 비교하면 안 된다.
 
-## CPU, memory, disk를 섞지 않는다
+## CPU, 메모리, disk를 섞지 않는다
 
 ```bash
 uptime
@@ -99,19 +99,19 @@ df -i
 ```
 
 - 높은 load는 CPU 사용률 하나가 아니라 실행을 기다리거나 일부 I/O를 기다리는 task와 함께 해석한다.
-- process RSS가 커지는 것과 host page cache가 커지는 것은 다른 현상이다.
+- 프로세스 RSS가 커지는 것과 host page 캐시가 커지는 것은 다른 현상이다.
 - `df -h`는 block, `df -i`는 inode를 본다. 삭제했지만 열린 파일은 `lsof +L1`로 찾는다.
 
 ## 운영 판단
 
-- limit을 늘리기 전에 실제 병목과 workload의 정상 상한을 측정한다.
+- limit을 늘리기 전에 실제 병목과 워크로드의 정상 상한을 측정한다.
 - restart policy는 원인을 없애지 않는다. restart 횟수와 마지막 exit reason을 함께 alert한다.
 - journal retention과 rotation이 너무 짧으면 장애 직후 증거가 사라지고, 너무 길면 disk pressure를 만든다.
 
 ## 스스로 설명해 보기
 
-1. unit state, process state와 application health가 각각 다를 수 있는 예를 들어 보자.
-2. cgroup 상위 제한이 하위 workload에 미치는 영향을 어떻게 관찰할 것인가?
+1. unit state, 프로세스 state와 application health가 각각 다를 수 있는 예를 들어 보자.
+2. cgroup 상위 제한이 하위 워크로드에 미치는 영향을 어떻게 관찰할 것인가?
 3. `df -h`만 정상일 때도 확인할 disk 관련 증거는 무엇인가?
 
 <!-- source: https://docs.kernel.org/admin-guide/cgroup-v2.html | checked: 2026-09-03 -->

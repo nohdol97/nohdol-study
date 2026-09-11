@@ -1,6 +1,8 @@
 # Capstone: one evolving data and observability platform
 
-Build a synthetic order-data product and an assistant that can answer questions about its published results. Keep the same data contract as you add distributed processing, governance, and AI. Each phase ends with evidence that another engineer can reproduce.
+Build a sales report from synthetic orders, then add an assistant that answers questions about the published results. Keep improving the same system throughout the project.
+
+Add distributed processing, access control, and AI while preserving the agreed data rules. At each stage, leave checks and results that another engineer can reproduce.
 
 ## Lab prerequisites and scope
 

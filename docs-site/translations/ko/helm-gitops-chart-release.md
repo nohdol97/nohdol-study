@@ -4,34 +4,34 @@
 
 - **render**: template에 values를 넣어 Kubernetes가 받을 최종 YAML을 만드는 과정이다. **왜 필요한가요 · 언제 쓰나요:** 설치 전에 최종 매니페스트를 확인해 의도하지 않은 생성 설정을 찾는다. **구체적인 상황(가상 예시):** 차트는 맞아 보이는데 예상과 다른 이미지가 설치된다. → 실제 배포 값으로 렌더링한다. → 설치 전에 생성된 이미지 참조를 확인한다.
 - **desired state**: Git이나 설정 파일에 “이렇게 되어야 한다”고 선언한 원하는 상태다. **왜 필요한가요 · 언제 쓰나요:** 컨트롤러가 목표와 실제 상태를 비교해 차이를 반복해서 복구하게 할 때 쓴다. **구체적인 상황(가상 예시):** Deployment는 복제본 세 개를 요구하지만 두 개만 준비됐다. → 목표와 관측 상태를 비교한다. → 조정 후 정상 복제본 세 개로 복구되는지 본다.
-- **live state**: 현재 cluster에 실제로 존재하는 resource의 상태다. **왜 필요한가요 · 언제 쓰나요:** 배포가 목표 상태에 도달했다고 판단하기 전에 실제 객체와 선언한 의도를 비교한다. **구체적인 상황(가상 예시):** Git은 복제본 네 개를 선언하지만 클러스터에는 두 개가 있다. → 실제 객체와 컨트롤러 조건을 조사한다. → 목표에 도달하지 못한 이유를 설명한다.
+- **live state**: 현재 클러스터에 실제로 존재하는 resource의 상태다. **왜 필요한가요 · 언제 쓰나요:** 배포가 목표 상태에 도달했다고 판단하기 전에 실제 객체와 선언한 의도를 비교한다. **구체적인 상황(가상 예시):** Git은 복제본 네 개를 선언하지만 클러스터에는 두 개가 있다. → 실제 객체와 컨트롤러 조건을 조사한다. → 목표에 도달하지 못한 이유를 설명한다.
 - **sync**: desired state와 live state의 차이를 줄이도록 resource를 생성·변경·삭제하는 동작이다. **왜 필요한가요 · 언제 쓰나요:** 조정 과정의 변경 내용을 확인한 뒤 클러스터를 검토한 설정에 맞출 때 쓴다. **구체적인 상황(가상 예시):** 검토한 설정이 커밋됐지만 활성화되지 않았다. → 동기화 상태와 예상 효과를 조사한다. → 의도한 객체 변경과 정상 요청을 확인한다.
 - **drift**: 원하는 상태와 실제 상태가 달라진 현상이다. **왜 필요한가요 · 언제 쓰나요:** 검토한 Git 의도와 실제 객체의 차이를 발견하고 어떻게 맞출지 판단한다. **구체적인 상황(가상 예시):** Git 설정을 검토한 뒤 누군가 실행 중인 Kubernetes 객체를 수정했다. → 실제 객체와 Git 선언 상태를 비교한다. → 차이를 조정하고 의도한 값이 복구되는지 확인한다.
 - **CRD**: Kubernetes에 새로운 종류의 resource를 추가하는 정의다. **왜 필요한가요 · 언제 쓰나요:** 도메인에 필요한 객체를 Kubernetes 선언형 API와 컨트롤러 흐름으로 관리할 때 쓴다. **구체적인 상황(가상 예시):** 컨트롤러가 회사 고유의 워크로드 유형을 관리해야 한다. → 적절한 CRD를 정의·검사한다. → 수용된 객체가 의도대로 조정되는지 확인한다.
 
-처음에는 `template + values = manifest`만 직접 확인한다. 그다음 manifest가 cluster에 설치된 기록인 release와, Git을 기준으로 계속 차이를 확인하는 GitOps를 분리해 이해한다.
+처음에는 `template + values = manifest`만 직접 확인한다. 그다음 manifest가 클러스터에 설치된 기록인 release와, Git을 기준으로 계속 차이를 확인하는 GitOps를 분리해 이해한다.
 
 ## 먼저 이해하기
 
-Helm과 GitOps를 함께 쓰면 상태가 최소 네 겹 생긴다. chart template은 Kubernetes object를 만드는 규칙이고 values는 그 규칙에 넣는 입력이다. 둘을 렌더링한 manifest가 실제 API request가 되며, cluster에는 그 결과의 live object가 존재한다. Helm release history나 Git commit은 이 상태를 추적하는 또 다른 기준이다.
+Helm과 GitOps를 함께 쓰면 상태가 최소 네 겹 생긴다. chart template은 Kubernetes object를 만드는 규칙이고 values는 그 규칙에 넣는 입력이다. 둘을 렌더링한 manifest가 실제 API request가 되며, 클러스터에는 그 결과의 live object가 존재한다. Helm release history나 Git commit은 이 상태를 추적하는 또 다른 기준이다.
 
 | 대상 | 쉬운 질문 | 실패 예 |
 |---|---|---|
 | chart | 어떤 종류의 manifest를 만들 수 있는가? | 잘못된 template 조건 |
 | values | 이번 환경이 무엇을 선택했는가? | type 오류, 누락된 필수 값 |
-| rendered manifest | API server에 무엇을 보낼 것인가? | 잘못된 image·selector·권한 |
+| rendered manifest | API 서버에 무엇을 보낼 것인가? | 잘못된 image·selector·권한 |
 | release | 어떤 revision을 install·upgrade했는가? | hook 실패, partial rollout |
 | Git desired state | controller가 무엇으로 되돌리려 하는가? | stale commit, 잘못된 promotion |
-| live state | cluster에서 실제로 무엇이 실행되는가? | manual drift, admission mutation |
+| live state | 클러스터에서 실제로 무엇이 실행되는가? | manual drift, admission mutation |
 
-values에서 replica를 2에서 3으로 바꿔도 template이 그 값을 쓰지 않으면 rendered manifest는 달라지지 않는다. 반대로 manifest가 3으로 렌더돼도 admission rejection이나 quota 부족으로 live workload가 바뀌지 않을 수 있다. 각 경계를 따로 관찰해야 한다.
+values에서 복제본을 2에서 3으로 바꿔도 template이 그 값을 쓰지 않으면 rendered manifest는 달라지지 않는다. 반대로 manifest가 3으로 렌더돼도 admission rejection이나 quota 부족으로 live 워크로드가 바뀌지 않을 수 있다. 각 경계를 따로 관찰해야 한다.
 
 ## 값 하나가 배포 상태가 되는 과정을 따라가기
 
 1. chart가 Kubernetes resource의 template과 기본 values를 제공한다.
 2. 사용자가 environment 전용 values나 명령행 값을 추가한다.
 3. Helm이 우선순위에 따라 값을 합치고 template을 최종 manifest로 render한다.
-4. 사람이나 CI가 manifest에 예상한 image, replica와 권한만 있는지 검토한다.
+4. 사람이나 CI가 manifest에 예상한 image, 복제본과 권한만 있는지 검토한다.
 5. 수명 주기 관리 주체를 정한다. Helm CLI의 install/upgrade는 리소스를 제출하고 Helm 릴리스 리비전을 기록한다. Argo CD의 Helm 연동에서는 Helm이 템플릿만 렌더링하고 Argo CD가 적용과 애플리케이션 수명 주기를 관리한다.
 6. Argo CD는 렌더링한 원하는 리소스와 실제 리소스를 지속적으로 비교한다. Helm을 소스로 쓰는 Argo CD 애플리케이션에 대응하는 항목이 `helm list`나 `helm history`에 반드시 있어야 하는 것은 아니다.
 7. 허용된 정책에 따라 Argo CD가 차이를 보고하거나 동기화한다. 별도 Helm 릴리스와 Argo CD가 같은 리소스의 관리권을 두고 경쟁하게 만들지 않는다.
@@ -65,7 +65,7 @@ release는 chart를 특정 namespace와 values로 설치한 instance다. 같은 
 
 ## Values는 input contract다
 
-default `values.yaml`, 추가 values file과 CLI override가 합쳐져 최종 values가 된다. override 계층이 깊을수록 source만 읽고 결과를 추정하기 어려워지므로 `helm template` 결과를 review한다.
+default `values.yaml`, 추가 values 파일과 CLI override가 합쳐져 최종 values가 된다. override 계층이 깊을수록 source만 읽고 결과를 추정하기 어려워지므로 `helm template` 결과를 review한다.
 
 ```json
 {
@@ -96,7 +96,7 @@ hook은 install·upgrade 같은 release lifecycle 지점에 Job 등을 실행한
 
 ## GitOps의 compare·sync
 
-Argo CD Application은 source, destination과 project를 연결한다. target state는 Git 등 source가 말하는 원하는 상태이고 live state는 cluster에서 관찰한 실제 상태다.
+Argo CD Application은 source, destination과 project를 연결한다. target state는 Git 등 source가 말하는 원하는 상태이고 live state는 클러스터에서 관찰한 실제 상태다.
 
 ```mermaid
 sequenceDiagram
@@ -113,7 +113,7 @@ sequenceDiagram
     K-->>A: resource status
 ```
 
-auto-sync는 CI가 cluster credential 없이 Git commit만 바꾸게 할 수 있지만, 잘못된 commit도 자동 전파할 수 있다. prune은 Git에서 빠진 resource를 삭제하며 self-heal은 live drift를 target state로 되돌린다. 셋을 하나의 “자동화” toggle로 생각하지 않는다.
+auto-sync는 CI가 클러스터 credential 없이 Git commit만 바꾸게 할 수 있지만, 잘못된 commit도 자동 전파할 수 있다. prune은 Git에서 빠진 resource를 삭제하며 self-heal은 live drift를 target state로 되돌린다. 셋을 하나의 “자동화” toggle로 생각하지 않는다.
 
 ## 스스로 설명해 보기
 

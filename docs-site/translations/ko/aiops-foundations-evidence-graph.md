@@ -15,11 +15,11 @@
 
 ## 먼저 이해하기
 
-대시보드 여러 장을 캡처한다고 사건이 연결되지는 않는다. 같은 시각에 CPU가 높고 오류율이 올랐더라도 두 값이 같은 service·deployment·request를 설명하는지 확인해야 한다. evidence graph는 graph database 제품 이름이 아니라, **어떤 사실을 어떤 식별자와 시간으로 연결했는지 명시하는 데이터 모델**이다.
+대시보드 여러 장을 캡처한다고 사건이 연결되지는 않는다. 같은 시각에 CPU가 높고 오류율이 올랐더라도 두 값이 같은 서비스·deployment·request를 설명하는지 확인해야 한다. evidence graph는 graph database 제품 이름이 아니라, **어떤 사실을 어떤 식별자와 시간으로 연결했는지 명시하는 데이터 모델**이다.
 
 1. 사용자 symptom을 incident의 시작점으로 둔다.
-2. symptom을 만든 request trace나 workload를 찾는다.
-3. trace의 service·dependency를 deployment revision과 resource에 연결한다.
+2. symptom을 만든 request trace나 워크로드를 찾는다.
+3. trace의 서비스·dependency를 deployment revision과 resource에 연결한다.
 4. incident 시간 창 안의 runtime event와 change event를 붙인다.
 5. 각 edge에 query, timestamp, schema version과 수집 누락 여부를 남긴다.
 6. 원인 후보는 이 graph를 읽지만, graph에 연결됐다는 이유만으로 원인이 되지는 않는다.
@@ -42,19 +42,19 @@ flowchart TB
 
 | 신호 | 주로 답하는 질문 | 핵심 연결 키 | 흔한 누락 |
 |---|---|---|---|
-| SLI·metric | 언제, 얼마나 많은 사용자가 영향을 받았나 | service, region, window | 평균만 보고 tail·cohort 누락 |
-| trace | 실패한 요청이 어떤 dependency를 지났나 | trace_id, span_id, service.name | sampling으로 실패 trace 누락 |
+| SLI·metric | 언제, 얼마나 많은 사용자가 영향을 받았나 | 서비스, region, window | 평균만 보고 tail·cohort 누락 |
+| trace | 실패한 요청이 어떤 dependency를 지났나 | trace_id, span_id, 서비스.name | sampling으로 실패 trace 누락 |
 | log | 그 코드 경로가 어떤 상태와 오류를 기록했나 | trace_id, deployment, resource | 비정형 문자열과 secret 유출 |
-| runtime event | scheduler·controller·kernel에서 무엇이 변했나 | object UID, reason, namespace | 짧은 보존과 clock 차이 |
+| runtime event | scheduler·controller·커널에서 무엇이 변했나 | object UID, reason, namespace | 짧은 보존과 clock 차이 |
 | change event | 누가 어떤 desired state를 바꿨나 | revision, actor, rollout ID | 수동 변경과 flag 변경 누락 |
 
-OpenTelemetry는 공통 signal과 semantic convention을 제공하지만 모든 convention이 같은 안정성 상태인 것은 아니다. consumer인 alert와 feature pipeline은 attribute 이름과 단위를 전제로 하므로 schema version을 기록하고 migration 시 양쪽을 함께 검증해야 한다. 사용자 ID, 원문 prompt, query text처럼 값이 무한히 늘거나 민감한 정보는 metric label에 직접 넣지 않고 접근 통제된 원문 저장소의 reference로 남긴다.
+OpenTelemetry는 공통 signal과 semantic convention을 제공하지만 모든 convention이 같은 안정성 상태인 것은 아니다. 소비자인 alert와 feature pipeline은 attribute 이름과 단위를 전제로 하므로 schema version을 기록하고 migration 시 양쪽을 함께 검증해야 한다. 사용자 ID, 원문 prompt, query text처럼 값이 무한히 늘거나 민감한 정보는 metric label에 직접 넣지 않고 접근 통제된 원문 저장소의 reference로 남긴다.
 
 ## 시간 창은 ticket 시각이 아니다
 
 ticket이 10:07에 만들어졌어도 오류는 10:02에 시작했고 10:01 배포가 선행했을 수 있다. analysis window는 최소한 `pre-change baseline`, `symptom onset`, `mitigation`, `recovery verification`을 포함해야 한다. 서로 다른 source의 clock이 어긋나면 1분 차이가 인과 순서를 뒤집을 수 있으므로 source timestamp와 ingestion timestamp를 구분한다.
 
-event time과 collection time도 다르다. network 단절 뒤 log가 늦게 도착하면 dashboard에서는 복구 뒤 오류가 생긴 것처럼 보일 수 있다. AIOps feature를 만들 때 late arrival, missing interval, sampling policy를 입력 품질로 보존하지 않으면 모델은 누락을 정상값으로 해석한다.
+event time과 collection time도 다르다. 네트워크 단절 뒤 log가 늦게 도착하면 dashboard에서는 복구 뒤 오류가 생긴 것처럼 보일 수 있다. AIOps feature를 만들 때 late arrival, missing interval, sampling policy를 입력 품질로 보존하지 않으면 모델은 누락을 정상값으로 해석한다.
 
 ## 최소 incident bundle
 

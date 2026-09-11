@@ -4,7 +4,7 @@
 <!-- source: https://docs.pytorch.org/tutorials/recipes/quantization.html | checked: 2026-09-03 -->
 <!-- source: https://docs.pytorch.org/tutorials/beginner/knowledge_distillation_tutorial.html | checked: 2026-09-03 -->
 
-모델 압축의 목적은 parameter 수를 줄이는 것이 아니라 선택한 device에서 품질, 지연, memory, 전력과 thermal 조건을 동시에 만족하는 것이다. pruning·quantization·distillation은 서로 다른 것을 바꾸며, file size가 줄었다고 실제 kernel이 빨라지는 것은 아니다.
+모델 압축의 목적은 parameter 수를 줄이는 것이 아니라 선택한 device에서 품질, 지연, 메모리, 전력과 thermal 조건을 동시에 만족하는 것이다. pruning·quantization·distillation은 서로 다른 것을 바꾸며, 파일 size가 줄었다고 실제 커널이 빨라지는 것은 아니다.
 
 ## 이 장에서 처음 쓰는 말
 
@@ -22,7 +22,7 @@
 
 ## 먼저 이해하기
 
-unstructured pruning은 개별 weight를 0으로 만들어 parameter sparsity는 높일 수 있지만 target runtime에 sparse kernel이 없으면 dense 계산 시간이 그대로일 수 있다. structured pruning은 channel·head·block을 줄여 shape 자체를 바꾸기 쉽지만 품질 손실이 더 클 수 있다.
+unstructured pruning은 개별 weight를 0으로 만들어 parameter sparsity는 높일 수 있지만 target runtime에 sparse 커널이 없으면 dense 계산 시간이 그대로일 수 있다. structured pruning은 channel·head·block을 줄여 shape 자체를 바꾸기 쉽지만 품질 손실이 더 클 수 있다.
 
 ```mermaid
 flowchart LR
@@ -64,16 +64,16 @@ edge_bundle:
   fallback: fp16-bundle-88
 ```
 
-LLM은 activation outlier, KV cache와 unsupported operator 때문에 CNN과 다른 sensitivity를 보일 수 있다. weight-only quantization과 activation quantization, prefill과 decode를 따로 측정한다.
+LLM은 activation outlier, KV 캐시와 unsupported operator 때문에 CNN과 다른 sensitivity를 보일 수 있다. weight-only quantization과 activation quantization, prefill과 decode를 따로 측정한다.
 
 ## target gate
 
 | 측정 | 기준선과 비교 | 실패 시 질문 |
 |---|---|---|
 | task quality | class·scenario별 degradation | 특정 rare case만 무너지는가 |
-| p50·p99 latency | cold·warm, batch별 | compile·memory copy가 포함됐는가 |
+| p50·p99 latency | cold·warm, batch별 | compile·메모리 copy가 포함됐는가 |
 | peak memory | model + activation + workspace | 동시 요청에서 OOM인가 |
-| power·temperature | 지속 workload | throttle 뒤 latency가 변하는가 |
+| power·temperature | 지속 워크로드 | throttle 뒤 latency가 변하는가 |
 | artifact size·load | OTA와 startup | 전송 성공과 load 성공이 같은가 |
 | fallback | 같은 input contract | runtime 실패 뒤 안전하게 전환되는가 |
 
@@ -106,13 +106,13 @@ LLM은 activation outlier, KV cache와 unsupported operator 때문에 CNN과 다
 ## 완료
 
 - pruning·quantization·distillation이 바꾸는 대상을 구분했다.
-- parameter·file size와 실제 target speedup을 분리했다.
+- parameter·파일 size와 실제 target speedup을 분리했다.
 - calibration·runtime·device를 model bundle에 넣었다.
-- 품질·지연·memory·전력·fallback을 승급 gate로 만들었다.
+- 품질·지연·메모리·전력·fallback을 승급 gate로 만들었다.
 
 ## 스스로 설명해 보기
 
 - weight가 0인 비율이 높아도 latency가 줄지 않을 수 있는 이유는 무엇인가?
 - calibration dataset이 production 분포를 대표하지 않으면 어떤 quantization 오류가 생기는가?
 - teacher가 틀린 예를 student가 학습할 가능성을 어떻게 측정할 것인가?
-- target artifact의 rollback이 model file 하나를 되돌리는 것보다 넓은 이유는 무엇인가?
+- target artifact의 rollback이 model 파일 하나를 되돌리는 것보다 넓은 이유는 무엇인가?

@@ -102,11 +102,11 @@ spec:
 |---|---|---|
 | `replicas: 1` | Deployment가 유지할 Pod 수 | 실제 Pod 수가 다르면 컨트롤러가 생성·삭제 |
 | `selector.matchLabels` | Deployment가 자기 Pod로 판단할 레이블 | 템플릿 레이블과 다르면 API가 생성을 거부 |
-| `template.metadata.labels` | 새 Pod에 붙는 레이블 | Service selector와 다르면 endpoint가 생기지 않음 |
+| `template.metadata.labels` | 새 Pod에 붙는 레이블 | Service selector와 다르면 엔드포인트가 생기지 않음 |
 | `image` | 런타임이 가져올 컨테이너 이미지 | 이름·태그 오류 시 `ImagePullBackOff` |
 | `containerPort` | 컨테이너가 사용할 포트에 붙인 설명 | 그 자체로 외부에 포트를 공개하지 않음 |
 | Service의 `selector` | 트래픽을 받을 Pod 선택 조건 | 일치하는 Pod가 없으면 Service는 있지만 대상은 없음 |
-| `targetPort: http` | 이름이 `http`인 컨테이너 포트로 전달 | 이름이 맞지 않으면 endpoint port 해석 실패 |
+| `targetPort: http` | 이름이 `http`인 컨테이너 포트로 전달 | 이름이 맞지 않으면 엔드포인트 port 해석 실패 |
 
 ## 적용과 상태 관찰
 
@@ -238,7 +238,7 @@ kubectl rollout status deployment/hello-node
 
 ### `kubectl apply`가 성공했으니 서비스도 정상이다
 
-API 요청이 수락됐다는 사실과 애플리케이션이 준비됐다는 사실은 다르다. Deployment의 available replica, Pod condition, Service endpoint와 실제 요청을 차례로 확인해야 한다.
+API 요청이 수락됐다는 사실과 애플리케이션이 준비됐다는 사실은 다르다. Deployment의 available 복제본, Pod condition, Service 엔드포인트와 실제 요청을 차례로 확인해야 한다.
 
 ### Pod IP를 직접 기억하면 된다
 

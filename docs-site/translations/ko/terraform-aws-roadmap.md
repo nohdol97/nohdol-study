@@ -39,7 +39,7 @@ flowchart LR
 ## 학습 범위
 
 - Terraform 1.16.x 문서 기준 language와 CLI
-- AWS provider version constraint와 lock file
+- AWS provider version constraint와 lock 파일
 - root module과 reusable child module
 - S3 backend, bucket versioning과 `use_lockfile`
 - `fmt → init → validate → test → plan → approval → apply`
@@ -53,7 +53,7 @@ S3 backend의 DynamoDB 기반 locking은 현재 공식 문서에서 deprecated�
 | Terraform이 하는 일 | 별도 책임 |
 |---|---|
 | resource graph와 변경 plan | architecture가 안전한지 판단 |
-| provider API 호출 | AWS quota·service availability |
+| provider API 호출 | AWS quota·서비스 availability |
 | state binding 기록 | state backend IAM·암호화·versioning·복구 |
 | dependency 순서 계산 | application readiness와 data migration |
 | configuration drift 탐지 | out-of-band 변경을 허용할 정책 |

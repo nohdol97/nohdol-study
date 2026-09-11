@@ -13,7 +13,7 @@
 | 파티션 키(partition key) | DynamoDB가 데이터를 어느 저장 구역에 둘지 결정할 때 쓰는 키 | DynamoDB 접근을 분산하고 소수의 배치 키에 부하가 집중되지 않도록 설계할 때 쓴다. **구체적인 상황(가상 예시):** DynamoDB에서 한 테넌트에 요청이 몰린다. → 파티션 키 분포와 접근 방식을 조사한다. → 질의를 깨뜨리지 않고 부하를 나누는 설계를 시험한다. |
 | 일관성(consistency) | 쓰기 직후 읽었을 때 최신 값이 보이는지에 관한 보장 | 오래된 값이 애플리케이션 판단을 바꿀 수 있을 때 필요한 읽기 가시성을 정한다. **구체적인 상황(가상 예시):** 쓰기 직후 사용자가 이전 값을 읽는다. → 선택한 읽기 일관성 방식과 지원 연산을 확인한다. → 애플리케이션 요구에 맞는 가시성을 시험한다. |
 
-Redis와 DynamoDB는 둘 다 key를 사용하지만 같은 제품의 대체재가 아니다. Redis의 만료되는 cache와 DynamoDB의 지속되는 주문 조회를 별도 사례로 따라가며 차이를 배운다.
+Redis와 DynamoDB는 둘 다 key를 사용하지만 같은 제품의 대체재가 아니다. Redis의 만료되는 캐시와 DynamoDB의 지속되는 주문 조회를 별도 사례로 따라가며 차이를 배운다.
 
 ## 먼저 제품이 아니라 access pattern을 고른다
 
@@ -34,7 +34,7 @@ flowchart TD
 
 - key-value, hash와 partition의 기본 개념
 - latency, throughput, durability와 consistency의 차이
-- AWS IAM과 VPC endpoint의 기본 경계
+- AWS IAM과 VPC 엔드포인트의 기본 경계
 
 ## 학습 순서
 
@@ -45,9 +45,9 @@ flowchart TD
 
 이 주제는 한 번 읽고 끝내지 않는다. 먼저 용어 표를 자신의 말로 바꾸고, 개념 장에서 한 요청의 흐름을 따라간다. 실습에서는 정상 상태를 먼저 기록한 뒤 조건 하나만 바꿔 실패를 만들고, 증거로 원인을 설명한 뒤 복구한다. 마지막으로 아래 운영 판단 질문에 답하면서 더 복잡한 환경으로 확장한다.
 
-- cache miss와 durable data loss를 구분한다.
+- 캐시 miss와 durable data loss를 구분한다.
 - DynamoDB access pattern에서 partition key와 index를 먼저 설계한다.
-- hot key가 client retry, capacity와 latency에 미치는 영향을 설명한다.
+- hot key가 클라이언트 retry, capacity와 latency에 미치는 영향을 설명한다.
 
 ## 범위 밖
 
@@ -55,16 +55,16 @@ MongoDB·Cassandra·OpenSearch 운영과 제품별 migration 비교는 포함하
 
 ## 처음 이해했는지 확인
 
-1. cache와 source of truth는 데이터가 사라졌을 때 어떤 차이가 있는가?
+1. 캐시와 source of truth는 데이터가 사라졌을 때 어떤 차이가 있는가?
 2. Redis와 DynamoDB가 모두 key를 사용해도 같은 역할이라고 볼 수 없는 이유는 무엇인가?
 
-**확인 기준:** cache는 원본에서 다시 만들 수 있지만 source of truth 손실은 업무 데이터 손실이 될 수 있다고 구분하면 된다. 두 제품은 저장 위치·지속성·분산 방식과 조회 계약이 다르다.
+**확인 기준:** 캐시는 원본에서 다시 만들 수 있지만 source of truth 손실은 업무 데이터 손실이 될 수 있다고 구분하면 된다. 두 제품은 저장 위치·지속성·분산 방식과 조회 계약이 다르다.
 
 ## 운영 판단으로 확장하기
 
-1. Redis를 cache로 쓰는 경우와 source of truth로 쓰는 경우의 복구 계약은 어떻게 다른가?
+1. Redis를 캐시로 쓰는 경우와 source of truth로 쓰는 경우의 복구 계약은 어떻게 다른가?
 2. DynamoDB에서 임의 ad-hoc query를 나중에 추가하기 어려울 수 있는 이유는 무엇인가?
-3. 평균 traffic이 낮아도 hot partition이 생길 수 있는 이유는 무엇인가?
+3. 평균 트래픽이 낮아도 hot partition이 생길 수 있는 이유는 무엇인가?
 
 <!-- source: https://redis.io/docs/latest/develop/data-types/ | checked: 2026-09-03 -->
 <!-- source: https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/ | checked: 2026-09-03 -->

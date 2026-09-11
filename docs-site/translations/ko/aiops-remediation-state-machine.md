@@ -13,7 +13,7 @@
 
 ## 먼저 이해하기
 
-자동 복구 API가 `200 OK`를 반환했다고 service가 복구된 것은 아니다. executor가 command를 보낸 뒤 network가 끊기면 실제 변경은 적용됐지만 caller는 timeout을 볼 수 있다. 같은 요청을 다시 보내면 rollback이 두 번 실행되거나 traffic weight가 예상보다 더 바뀔 수 있다. 그래서 remediation은 단일 함수 호출이 아니라 operation ID와 상태 전이를 가진다.
+자동 복구 API가 `200 OK`를 반환했다고 서비스가 복구된 것은 아니다. executor가 명령어를 보낸 뒤 네트워크가 끊기면 실제 변경은 적용됐지만 caller는 timeout을 볼 수 있다. 같은 요청을 다시 보내면 rollback이 두 번 실행되거나 트래픽 weight가 예상보다 더 바뀔 수 있다. 그래서 remediation은 단일 함수 호출이 아니라 operation ID와 상태 전이를 가진다.
 
 1. incident와 runbook revision에서 plan을 만든다.
 2. 정책이 target·권한·blast radius와 evidence freshness를 검사한다.
@@ -68,24 +68,24 @@ stateDiagram-v2
 
 Kubernetes Deployment는 이전 revision으로 rollback할 수 있고 rollout status로 progress·complete·failed 상태를 확인할 수 있다. 그러나 Deployment revision은 Pod template 변경에서 만들어지며, rollback도 Pod template 부분을 되돌린다. 외부 database schema, feature flag, Route, secret version이나 downstream side effect까지 함께 되돌아간다는 뜻이 아니다.
 
-따라서 verification에 `rollout_status`만 두면 desired Pod revision이 바뀌고 replica가 available해졌다는 사실은 확인하지만 사용자의 checkout 성공, DB queue 회복, 중복 결제 부재는 확인하지 못한다. 사용자 SLI와 dependency saturation을 별도 gate로 둔다.
+따라서 verification에 `rollout_status`만 두면 desired Pod revision이 바뀌고 복제본이 available해졌다는 사실은 확인하지만 사용자의 checkout 성공, DB queue 회복, 중복 결제 부재는 확인하지 못한다. 사용자 SLI와 dependency saturation을 별도 gate로 둔다.
 
 ## 동시에 고치려는 자동화를 제한하기
 
-scaler는 replica를 늘리고, cost controller는 줄이며, rollout controller는 새 version으로 교체하고, AIOps remediation은 이전 version으로 되돌릴 수 있다. 모두 개별 규칙에는 맞아도 같은 target에서 충돌한다. operation은 target lease, 우선순위와 active controller 목록을 확인해야 한다.
+scaler는 복제본을 늘리고, cost controller는 줄이며, rollout controller는 새 version으로 교체하고, AIOps remediation은 이전 version으로 되돌릴 수 있다. 모두 개별 규칙에는 맞아도 같은 target에서 충돌한다. operation은 target lease, 우선순위와 active controller 목록을 확인해야 한다.
 
 | 충돌 | 위험 | 제한 방법 |
 |---|---|---|
-| autoscaler vs manual scale | manifest apply가 replica를 덮거나 controller가 다시 변경 | field owner와 action 금지 조건 |
+| autoscaler vs manual scale | manifest apply가 복제본을 덮거나 controller가 다시 변경 | field owner와 action 금지 조건 |
 | rollout vs rollback | 새 ReplicaSet 전이가 겹쳐 결과 불명 | 진행 중 rollout 감지와 pause 정책 |
-| traffic switch vs outlier ejection | 남은 capacity로 traffic 집중 | 합성 capacity precondition |
+| traffic switch vs outlier ejection | 남은 capacity로 트래픽 집중 | 합성 capacity precondition |
 | 두 incident의 같은 target | 서로 반대 조치 실행 | target lease와 incident 우선순위 |
 
 ## 안전 계약과 AIOps 진단의 연결
 
 [이상 탐지와 장애 진단](../../content/aiops-diagnosis/01-detection-correlation-rca.md)은 원인 후보와 evidence를 만들고, 이 상태 머신은 실행 가능성을 판단한다. candidate category가 `release_regression`이어도 previous revision이 없거나 database migration이 backward compatible하지 않으면 rollback plan은 거절된다. 진단이 맞다는 것과 해당 action이 안전하다는 것은 별도 평가다.
 
-[트래픽 제어](../../content/traffic-resilience/01-request-budget-and-ownership.md)의 retry 축소나 traffic weight 변경도 같은 계약을 쓴다. target만 Route나 proxy policy로 바뀌며, 최대 변경 폭·남은 capacity·abort condition이 핵심 precondition이 된다.
+[트래픽 제어](../../content/traffic-resilience/01-request-budget-and-ownership.md)의 retry 축소나 트래픽 weight 변경도 같은 계약을 쓴다. target만 Route나 proxy policy로 바뀌며, 최대 변경 폭·남은 capacity·abort condition이 핵심 precondition이 된다.
 
 ## verification receipt
 
@@ -101,7 +101,7 @@ scaler는 replica를 늘리고, cost controller는 줄이며, rollout controller
 
 ## 스스로 설명해 보기
 
-- executor timeout 뒤 같은 command를 즉시 다시 보내면 안 되는 이유는 무엇인가?
+- executor timeout 뒤 같은 명령어를 즉시 다시 보내면 안 되는 이유는 무엇인가?
 - plan digest 승인과 runbook 이름 승인의 차이는 무엇인가?
 - Deployment complete가 사용자 결과 회복을 증명하지 않는 반례를 들어보자.
 - 자동화끼리 충돌하는 상황에서 target lease만으로 충분하지 않을 수 있는 이유는 무엇인가?

@@ -3,8 +3,8 @@ export const LANGUAGES = ['en', 'ko'];
 const korean = {
   'Article reading mode': '본문 읽기 모드',
   'Read in': '본문',
-  'Hide Korean explanations': '한국어 설명 접기',
-  'Show Korean explanations': '한국어 설명 펼치기',
+  'Hide English text': '영어 접기',
+  'Show English text': '영어 펼치기',
   'Terms in this chapter': '먼저 알아둘 용어',
   'Select an underlined term to read its explanation.': '밑줄이 있는 용어를 누르면 설명을 확인할 수 있습니다.',
   'Meaning': '무엇인가요?',

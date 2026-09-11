@@ -1,6 +1,6 @@
 # 07. 스케줄링과 리소스·오토스케일링
 
-스케줄링은 “지금 CPU 사용률이 낮은 노드”를 고르는 단순 문제가 아니다. Pod가 요구한 자원과 제약을 만족하는 노드를 찾고, 장애 도메인·선호도를 반영해 하나를 선택하는 과정이다. 배치 뒤에는 kubelet과 런타임이 limits를 집행하고, HPA 같은 제어 루프가 관측값을 보고 replica 수를 바꾼다.
+스케줄링은 “지금 CPU 사용률이 낮은 노드”를 고르는 단순 문제가 아니다. Pod가 요구한 자원과 제약을 만족하는 노드를 찾고, 장애 도메인·선호도를 반영해 하나를 선택하는 과정이다. 배치 뒤에는 kubelet과 런타임이 limits를 집행하고, HPA 같은 제어 루프가 관측값을 보고 복제본 수를 바꾼다.
 
 ## requests와 limits를 먼저 구분한다
 
@@ -30,7 +30,7 @@ flowchart TD
     N -->|"yes"| E[“Pending and FailedScheduling events”]
 ```
 
-`nodeSelector`와 required node affinity는 반드시 만족해야 하는 조건이다. preferred affinity는 가능하면 따르는 선호다. Pod anti-affinity와 topology spread는 replica를 노드·zone에 분산하지만, 제약이 너무 엄격하면 장애 시 남은 노드에 배치할 수 없다.
+`nodeSelector`와 required node affinity는 반드시 만족해야 하는 조건이다. preferred affinity는 가능하면 따르는 선호다. Pod anti-affinity와 topology spread는 복제본을 노드·zone에 분산하지만, 제약이 너무 엄격하면 장애 시 남은 노드에 배치할 수 없다.
 
 taint는 노드가 Pod를 밀어내는 조건이고 toleration은 그 taint를 **견딜 수 있음**을 나타낸다. toleration만으로 해당 노드를 선택하는 것은 아니므로 affinity나 selector와 함께 써야 전용 노드 배치가 된다.
 
@@ -97,7 +97,7 @@ kubectl describe pod -l app=compute-demo
 kubectl describe nodes
 ```
 
-의도적으로 존재하지 않는 node label을 required 조건에 넣으면 Pod가 Pending이 된다. 이때 container log가 아니라 Pod event의 `FailedScheduling`부터 읽는다.
+의도적으로 존재하지 않는 node label을 required 조건에 넣으면 Pod가 Pending이 된다. 이때 컨테이너 log가 아니라 Pod event의 `FailedScheduling`부터 읽는다.
 
 ## HPA는 지연이 있는 피드백 제어기다
 
@@ -105,7 +105,7 @@ HPA는 주기적으로 metric을 읽고 Deployment나 StatefulSet 같은 target�
 
 `desired replicas = ceil(current replicas × current metric / target metric)`
 
-예를 들어 현재 3개 Pod의 평균 CPU가 request 대비 80%이고 목표가 50%면 `ceil(3 × 80 / 50) = 5`를 제안한다. 실제 계산은 준비되지 않은 Pod, 누락 metric, tolerance, 최소·최대 replica, 안정화 정책 등을 반영해 더 보수적으로 동작할 수 있다.
+예를 들어 현재 3개 Pod의 평균 CPU가 request 대비 80%이고 목표가 50%면 `ceil(3 × 80 / 50) = 5`를 제안한다. 실제 계산은 준비되지 않은 Pod, 누락 metric, tolerance, 최소·최대 복제본, 안정화 정책 등을 반영해 더 보수적으로 동작할 수 있다.
 
 ```mermaid
 sequenceDiagram
@@ -159,7 +159,7 @@ kubectl describe hpa compute-demo
 kubectl top pods -l app=compute-demo
 ```
 
-HPA가 `unknown`을 표시하면 target Pod의 CPU request, metrics API와 selector를 확인한다. HPA가 replica를 관리할 때 Git 매니페스트의 `spec.replicas`를 계속 덮어쓰는 자동화와 충돌하지 않도록 소유권을 정한다.
+HPA가 `unknown`을 표시하면 target Pod의 CPU request, metrics API와 selector를 확인한다. HPA가 복제본을 관리할 때 Git 매니페스트의 `spec.replicas`를 계속 덮어쓰는 자동화와 충돌하지 않도록 소유권을 정한다.
 
 HPA를 덧붙일 때는 `---`로 YAML 문서를 분리한다. 여기에는 부하 발생기가 없으므로 HPA 조회를 실제 확장 시연으로 보면 안 된다. 선택 실습을 완료하려면 지표 비율, 권장 복제본 수, 결과 Ready 복제본, 하위 서비스 지연을 기록하고 선언한 부하 한도에서 중단한다. 이후 `kubectl delete -f schedule.yaml`로 실습 HPA와 Deployment를 삭제한다. 종료 코드 137만으로 알 수 있는 것은 SIGKILL이며 OOM의 증거는 아니다. 컨테이너 종료 사유와 노드 메모리 근거로 확인한다.
 
@@ -167,11 +167,11 @@ HPA를 덧붙일 때는 `---`로 YAML 문서를 분리한다. 여기에는 부�
 
 | 방식 | 조절 대상 | 해결하지 못하는 것 |
 |---|---|---|
-| HPA | Pod replica 수 | 한 Pod만 가능한 workload, downstream 고정 병목 |
-| VPA | Pod request·limit 권고 또는 변경 | replica 수와 노드 자체 부족 |
+| HPA | Pod 복제본 수 | 한 Pod만 가능한 워크로드, downstream 고정 병목 |
+| VPA | Pod request·limit 권고 또는 변경 | 복제본 수와 노드 자체 부족 |
 | node autoscaling | 노드 수나 노드 자원 | 잘못된 Pod 제약, 앱 내부 병목 |
 
-세 제어 루프를 함께 쓰면 관측 창과 변경 충돌을 시험해야 한다. Pod가 늘어도 DB connection limit, queue partition, 외부 API quota가 고정이면 병목이 이동할 뿐이다.
+세 제어 루프를 함께 쓰면 관측 창과 변경 충돌을 시험해야 한다. Pod가 늘어도 DB 연결 limit, queue partition, 외부 API quota가 고정이면 병목이 이동할 뿐이다.
 
 ## 실패를 증상에서 원인으로 좁히기
 
@@ -206,7 +206,7 @@ ceil(3 * 80 / 50) = 5 proposed replicas
 1. 실제 CPU 사용률이 낮은데도 Pod가 `Insufficient cpu`로 Pending일 수 있는 이유는 무엇인가?
 2. toleration을 추가해도 전용 노드에 반드시 배치되지 않는 이유는 무엇인가?
 3. CPU request가 없는 컨테이너가 CPU utilization 기반 HPA에 문제를 만드는 이유는 무엇인가?
-4. HPA가 replica를 늘려도 응답 지연이 개선되지 않는 downstream 병목 예시는 무엇인가?
+4. HPA가 복제본을 늘려도 응답 지연이 개선되지 않는 downstream 병목 예시는 무엇인가?
 
 [← 스토리지와 구성](../../content/kubernetes/06-storage-and-configuration.md) · [보안과 정책 →](../../content/kubernetes/08-security-and-policy.md)
 

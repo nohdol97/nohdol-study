@@ -6,16 +6,16 @@
 <!-- source: https://opentelemetry.io/docs/concepts/observability-primer/ | checked: 2026-09-03 -->
 <!-- source: https://docs.nvidia.com/datacenter/dcgm/latest/gpu-telemetry/dcgm-exporter.html | checked: 2026-09-03 -->
 
-AI platform은 GPU cluster를 대신 관리해 주는 설치 모음이 아니다. 개발자가 dataset·job·serving bundle을 정해진 계약으로 제출하면 quota, scheduler, identity, telemetry와 deployment gate가 반복 가능하게 작동하는 내부 제품이다. FinOps는 GPU 사용률을 높이는 데서 끝나지 않고 성공한 학습·추론·업무 결과당 비용을 보여 줘야 한다.
+AI platform은 GPU 클러스터를 대신 관리해 주는 설치 모음이 아니다. 개발자가 dataset·job·serving bundle을 정해진 계약으로 제출하면 quota, scheduler, identity, telemetry와 deployment gate가 반복 가능하게 작동하는 내부 제품이다. FinOps는 GPU 사용률을 높이는 데서 끝나지 않고 성공한 학습·추론·업무 결과당 비용을 보여 줘야 한다.
 
 ## 이 장에서 처음 쓰는 말
 
 | 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
 |---|---|---|
-| platform contract | workload가 선언해야 할 resource·identity·artifact·SLO의 공통 입력 | 플랫폼이 적용해야 할 자원·신원·서비스 약속을 워크로드가 선언하도록 한다. **구체적인 상황(가상 예시):** 워크로드가 신원·서비스 목표 없이 GPU를 요청한다. → 플랫폼 계약의 필수 항목을 요구한다. → 자원을 주기 전에 불완전한 요청을 거부한다. |
+| platform contract | 워크로드가 선언해야 할 resource·identity·artifact·SLO의 공통 입력 | 플랫폼이 적용해야 할 자원·신원·서비스 약속을 워크로드가 선언하도록 한다. **구체적인 상황(가상 예시):** 워크로드가 신원·서비스 목표 없이 GPU를 요청한다. → 플랫폼 계약의 필수 항목을 요구한다. → 자원을 주기 전에 불완전한 요청을 거부한다. |
 | quota | 팀·project가 점유할 수 있는 자원과 우선순위의 한계 | 한 사용 주체의 소비를 제한해 다른 팀이 할당된 용량을 유지하도록 한다. **구체적인 상황(가상 예시):** 한 팀의 작업이 공유 GPU 풀 전체를 점유한다. → 검토한 팀별 할당량을 적용한다. → 다른 적격 팀의 수용·진행을 확인한다. |
 | gang scheduling | 필요한 워커 집단의 승인·배치를 조정해 일부만 할당받고 작업이 멈춰 있는 상황을 방지하는 것 | 필요한 워커 집합을 시작하지 못하는 분산 작업이 희소 자원을 점유하는 상황을 줄인다. **구체적인 상황(가상 예시):** 분산 작업이 GPU 두 개를 잡았지만 워커 네 개가 있어야 시작한다. → 그룹 단위 수용·배치를 조정한다. → 불완전한 할당이 공유 용량을 묶지 않는지 확인한다. |
-| autoscaling | 관찰한 demand에 따라 workload·node 수를 조정하는 제어 | 시작 지연·하위 병목을 확인하면서 변하는 수요에 맞춰 용량을 조정한다. **구체적인 상황(가상 예시):** 아침 수요가 새 복제본 준비보다 빨리 증가한다. → 시작 시간을 확장 정책에 반영한다. → 증가 구간의 대기열과 회복을 측정한다. |
+| autoscaling | 관찰한 demand에 따라 워크로드·node 수를 조정하는 제어 | 시작 지연·하위 병목을 확인하면서 변하는 수요에 맞춰 용량을 조정한다. **구체적인 상황(가상 예시):** 아침 수요가 새 복제본 준비보다 빨리 증가한다. → 시작 시간을 확장 정책에 반영한다. → 증가 구간의 대기열과 회복을 측정한다. |
 | chargeback / showback | 소비한 비용을 팀에 청구하거나 가시화하는 방식 | 팀이 책임 있는 사용 결정을 내리도록 공유 비용을 보여 주거나 배분한다. **구체적인 상황(가상 예시):** 공유 플랫폼 청구서에 책임 주체가 없다. → 검토한 소유 규칙으로 비용을 배분·표시한다. → 팀별 합계와 전체 청구를 대조한다. |
 | unit economics | 성공한 업무 단위 하나를 만드는 데 든 실제 비용 | 단순 하드웨어 사용률 대신 성공한 업무 단위의 비용으로 설계를 비교한다. **구체적인 상황(가상 예시):** 싼 서빙 설정이 유효 요청을 많이 거부한다. → 성공 완료 과제당 비용을 비교한다. → 실패 시도와 품질 검사를 계산에 포함한다. |
 
@@ -68,14 +68,14 @@ spec:
 
 | 층 | 예시 신호 | 단독 해석의 위험 |
 |---|---|---|
-| hardware | GPU utilization·memory·temperature·ECC | 유용한 model 계산인지 모름 |
+| hardware | GPU utilization·메모리·temperature·ECC | 유용한 model 계산인지 모름 |
 | node·container | allocation·restart·I/O | job step 의미를 모름 |
 | scheduler | pending reason·queue age·preemption | 업무 우선순위를 모름 |
 | training | step time·loss·checkpoint | 품질 개선을 보장하지 않음 |
 | serving | TTFT·TPOT·tokens·queue | 답변 품질을 보장하지 않음 |
 | business | accepted answer·resolved incident | resource 원인을 바로 말하지 않음 |
 
-DCGM exporter 같은 구성 요소는 GPU telemetry를 Prometheus 형식으로 노출할 수 있다. metric 수집 성공이 scheduling·모델 성능 성공은 아니다. workload·bundle·node·GPU·trace ID를 cardinality budget 안에서 연결한다.
+DCGM exporter 같은 구성 요소는 GPU telemetry를 Prometheus 형식으로 노출할 수 있다. metric 수집 성공이 scheduling·모델 성능 성공은 아니다. 워크로드·bundle·node·GPU·trace ID를 cardinality budget 안에서 연결한다.
 
 ```json
 {
@@ -100,23 +100,23 @@ DCGM exporter 같은 구성 요소는 GPU telemetry를 Prometheus 형식으로 �
 | serving replica 증가 | queue age·KV pressure·TTFT | node provisioning delay·budget |
 | node scale-to-zero | 장기 idle·pending 없음 | cold start·availability SLO |
 | spot 사용 | checkpoint 가능한 batch | interruption·restore 검증 |
-| MIG 재구성 | workload profile 수요 변화 | node drain·reboot·rollback |
+| MIG 재구성 | 워크로드 profile 수요 변화 | node drain·reboot·rollback |
 | model fallback | primary saturation | 품질·privacy·contract gate |
 
-CPU만 보고 LLM serving을 scale하면 KV cache pressure와 queue를 놓칠 수 있다. prediction 기반 scaling은 [시계열 예측](#doc=ai-specialist-core-forecast-recommend)의 underprediction cost와 [AIOps remediation](#doc=aiops-remediation-state-machine)의 bounded action을 거친다.
+CPU만 보고 LLM serving을 scale하면 KV 캐시 pressure와 queue를 놓칠 수 있다. prediction 기반 scaling은 [시계열 예측](#doc=ai-specialist-core-forecast-recommend)의 underprediction cost와 [AIOps remediation](#doc=aiops-remediation-state-machine)의 bounded action을 거친다.
 
 ## 기존 DevOps와 역할 분담
 
-1. account·network는 [AWS 인프라 기반](#doc=aws-foundations-roadmap)에 둔다.
+1. account·네트워크는 [AWS 인프라 기반](#doc=aws-foundations-roadmap)에 둔다.
 2. infrastructure code와 drift는 [Terraform on AWS](#doc=terraform-aws-roadmap)에 둔다.
 3. packaging과 desired state는 [Helm과 GitOps](#doc=helm-gitops-roadmap)에 둔다.
-4. workload·node scheduling은 [Kubernetes](#doc=kubernetes-scheduling-scaling)와 [Karpenter](#doc=karpenter-roadmap)에 둔다.
+4. 워크로드·node scheduling은 [Kubernetes](#doc=kubernetes-scheduling-scaling)와 [Karpenter](#doc=karpenter-roadmap)에 둔다.
 5. AI platform은 위 기반 위에 GPU profile·job·bundle·eval·cost contract를 추가한다.
 6. drift·incident는 [AIOps 신호와 토폴로지](#doc=aiops-foundations-roadmap)에 전달한다.
 
 ## 완료
 
-- AI workload self-service contract와 guardrail을 적었다.
+- AI 워크로드 self-service contract와 guardrail을 적었다.
 - GPU·scheduler·model·업무 신호를 한 receipt에 연결했다.
 - quota·preemption·autoscaling을 checkpoint와 SLO에 맞췄다.
 - 비용을 성공한 output과 업무 결과 단위로 계산했다.

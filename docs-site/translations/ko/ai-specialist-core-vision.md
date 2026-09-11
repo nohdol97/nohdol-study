@@ -10,8 +10,8 @@ Vision 모델은 pixel의 지역 구조를 어떻게 보존하고 전역 관계�
 
 | 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
 |---|---|---|
-| convolution | 작은 kernel을 공간 전체에 공유해 지역 pattern을 찾는 연산 | 위치마다 별도 파라미터를 두지 않고 공유 가중치로 지역적인 공간 패턴을 학습한다. **구체적인 상황(가상 예시):** 제품 이미지 어디에나 결함이 나타날 수 있다. → 공유 convolution 커널로 지역 패턴을 학습한다. → 위치가 다양한 별도 시험 이미지로 검증한다. |
-| residual | 입력을 변환 결과에 더해 깊은 network의 학습 경로를 돕는 연결 | 깊은 신경망에서 정보를 보존하고 더 짧은 덧셈 경로로 학습을 돕는다. **구체적인 상황(가상 예시):** 더 깊은 신경망을 최적화하기 어려워진다. → 통제된 구조 비교에서 residual 연결을 검토한다. → 학습 동작과 별도 평가 성능을 비교한다. |
+| convolution | 작은 커널을 공간 전체에 공유해 지역 pattern을 찾는 연산 | 위치마다 별도 파라미터를 두지 않고 공유 가중치로 지역적인 공간 패턴을 학습한다. **구체적인 상황(가상 예시):** 제품 이미지 어디에나 결함이 나타날 수 있다. → 공유 convolution 커널로 지역 패턴을 학습한다. → 위치가 다양한 별도 시험 이미지로 검증한다. |
+| residual | 입력을 변환 결과에 더해 깊은 네트워크의 학습 경로를 돕는 연결 | 깊은 신경망에서 정보를 보존하고 더 짧은 덧셈 경로로 학습을 돕는다. **구체적인 상황(가상 예시):** 더 깊은 신경망을 최적화하기 어려워진다. → 통제된 구조 비교에서 residual 연결을 검토한다. → 학습 동작과 별도 평가 성능을 비교한다. |
 | patch embedding | 이미지를 patch로 나누어 token sequence처럼 바꾸는 표현 | 이미지 영역을 transformer가 처리할 수 있는 시퀀스 입력으로 바꾼다. **구체적인 상황(가상 예시):** vision transformer가 이미지를 시퀀스로 받아야 한다. → 지정된 경로로 patch embedding을 만든다. → 패치 순서·모양·전처리 일관성을 확인한다. |
 | detection | 객체의 class와 위치 집합을 예측하는 문제 | 이미지 전체의 분류만으로 부족하고 개별 물체의 위치가 필요할 때 쓴다. **구체적인 상황(가상 예시):** 로봇에 이미지 분류가 아니라 상자 여러 개의 위치가 필요하다. → 객체 탐지기를 평가한다. → 관련 장면에서 위치 정확도와 누락을 확인한다. |
 | segmentation | 각 pixel 또는 영역의 class를 예측하는 문제 | 경계 상자만으로 필요한 모양을 표현할 수 없을 때 정확한 영역을 구분한다. **구체적인 상황(가상 예시):** 결함의 경계 상자보다 정확한 면적이 중요하다. → segmentation 마스크를 평가한다. → 경계 오류와 필요한 영역의 포함 정도를 비교한다. |
@@ -22,7 +22,7 @@ Vision 모델은 pixel의 지역 구조를 어떻게 보존하고 전역 관계�
 
 ## 먼저 이해하기
 
-CNN은 locality와 translation 관련 구조를 architecture에 넣는다. ResNet은 residual connection으로 깊은 network의 최적화를 돕는다. ViT는 이미지를 patch token으로 만들어 Transformer encoder에 넣으며, convolution의 inductive bias가 줄어든 만큼 dataset·pretraining 조건에 더 민감할 수 있다.
+CNN은 locality와 translation 관련 구조를 architecture에 넣는다. ResNet은 residual 연결로 깊은 네트워크의 최적화를 돕는다. ViT는 이미지를 patch token으로 만들어 Transformer encoder에 넣으며, convolution의 inductive bias가 줄어든 만큼 dataset·pretraining 조건에 더 민감할 수 있다.
 
 ```mermaid
 flowchart TD
@@ -43,7 +43,7 @@ flowchart TD
 |---|---|---|---|
 | classification | class probability | accuracy·F1·calibration | class별 비용·abstention |
 | detection | box와 class 집합 | mAP | 작은 객체·latency·NMS 여부 |
-| segmentation | pixel mask | IoU·Dice | 경계·희소 class·memory |
+| segmentation | pixel mask | IoU·Dice | 경계·희소 class·메모리 |
 | embedding | vector | retrieval recall | drift·index version |
 
 DETR 계열은 object query와 bipartite matching으로 예측 집합을 학습한다. `query 100개` 같은 구현 숫자는 보편 계약이 아니다. scene의 객체 밀도, 학습 schedule과 backbone에 맞춰 검증해야 한다. UNet의 skip은 encoder feature를 decoder에 전달하지만 ResNet residual과 결합 방식·목적이 같지 않다.

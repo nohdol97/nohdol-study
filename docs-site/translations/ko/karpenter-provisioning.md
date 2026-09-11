@@ -2,18 +2,18 @@
 
 ## 이 장에서 처음 쓰는 말
 
-- **provisioning**: workload를 실행할 수 있도록 새 compute resource를 선택하고 준비하는 과정이다. **왜 필요한가요 · 언제 쓰나요:** 실행 조건에 맞는 워크로드가 기존 Node에 들어가지 못할 때 계산 용량을 공급한다. **구체적인 상황(가상 예시):** 새 Pod가 기존 Node에 들어가지 못한다. → 가능한 자원 공급과 시작 지연을 조사한다. → 새 용량으로 Pod가 준비 상태에 도달하는지 확인한다.
+- **provisioning**: 워크로드를 실행할 수 있도록 새 compute resource를 선택하고 준비하는 과정이다. **왜 필요한가요 · 언제 쓰나요:** 실행 조건에 맞는 워크로드가 기존 Node에 들어가지 못할 때 계산 용량을 공급한다. **구체적인 상황(가상 예시):** 새 Pod가 기존 Node에 들어가지 못한다. → 가능한 자원 공급과 시작 지연을 조사한다. → 새 용량으로 Pod가 준비 상태에 도달하는지 확인한다.
 - **requirement**: Pod나 NodePool이 허용하거나 요구하는 CPU architecture, zone, capacity type 같은 조건이다. **왜 필요한가요 · 언제 쓰나요:** 호환되지 않는 하드웨어·가용 영역·구매 옵션에 워크로드가 배치되는 것을 막는다. **구체적인 상황(가상 예시):** 이미지에 필요한 CPU 아키텍처와 사용 가능한 Node가 다르다. → 워크로드·Node 요구를 맞춘다. → 선택한 하드웨어에서 이미지 실행을 확인한다.
 - **capacity type**: EC2를 On-Demand나 Spot 같은 구매 방식으로 구분한 값이다. **왜 필요한가요 · 언제 쓰나요:** 계산 자원을 선택할 때 워크로드의 중단 허용도와 구매 조건을 함께 판단한다. **구체적인 상황(가상 예시):** 배치는 중단을 견디지만 API는 같은 방식의 중단을 견디기 어렵다. → 각 복구 요구에 맞춰 용량 유형을 비교한다. → 중단 처리를 연습한다.
-- **consolidation**: workload를 더 적은 Node로 안전하게 옮길 수 있을 때 불필요한 Node를 줄이는 동작이다. **왜 필요한가요 · 언제 쓰나요:** 남은 배치가 워크로드를 유지할 수 있음을 확인한 뒤 유휴 용량 비용을 줄인다. **구체적인 상황(가상 예시):** 밤마다 여러 Node가 대부분 유휴 상태다. → 배치 제약을 포함해 통합 계획을 검토한다. → 제거 승인 전에 남은 용량과 중단 영향을 확인한다.
+- **consolidation**: 워크로드를 더 적은 Node로 안전하게 옮길 수 있을 때 불필요한 Node를 줄이는 동작이다. **왜 필요한가요 · 언제 쓰나요:** 남은 배치가 워크로드를 유지할 수 있음을 확인한 뒤 유휴 용량 비용을 줄인다. **구체적인 상황(가상 예시):** 밤마다 여러 Node가 대부분 유휴 상태다. → 배치 제약을 포함해 통합 계획을 검토한다. → 제거 승인 전에 남은 용량과 중단 영향을 확인한다.
 - **PDB**: 자발적인 중단 중 동시에 사용할 수 없게 되어도 되는 Pod 수를 제한하는 Kubernetes 정책이다. **왜 필요한가요 · 언제 쓰나요:** 계획된 유지 관리 중 동시 자발적 퇴거를 제한해 워크로드의 가용성 요구를 반영한다. **구체적인 상황(가상 예시):** 유지 관리가 너무 많은 복제본을 함께 퇴거시키려 한다. → PDB와 정상 복제본을 조사한다. → 허용된 자발적 중단이 가용성 요구에 맞는지 확인한다.
-- **graceful termination**: process가 진행 중인 일을 정리할 시간을 주고 종료하는 절차다. **왜 필요한가요 · 언제 쓰나요:** 프로세스를 멈추기 전에 진행 중인 작업을 끝내거나 복구 지점을 남길 시간을 준다. **구체적인 상황(가상 예시):** 배포가 요청 처리 중인 워커를 종료한다. → 새 작업 수신을 멈추고 제한된 시간 동안 마무리한다. → 완료·재시도·중단 요청을 구분해 확인한다.
+- **graceful termination**: 프로세스가 진행 중인 일을 정리할 시간을 주고 종료하는 절차다. **왜 필요한가요 · 언제 쓰나요:** 프로세스를 멈추기 전에 진행 중인 작업을 끝내거나 복구 지점을 남길 시간을 준다. **구체적인 상황(가상 예시):** 배포가 요청 처리 중인 워커를 종료한다. → 새 작업 수신을 멈추고 제한된 시간 동안 마무리한다. → 완료·재시도·중단 요청을 구분해 확인한다.
 
 처음에는 Node를 만드는 경로와 Node를 없애는 경로를 따로 본다. 빠르게 만들 수 있다는 사실만으로 안전하게 줄일 수 있는 것은 아니며 두 경로의 성공 증거도 다르다.
 
 ## 먼저 이해하기
 
-Kubernetes scheduler가 Pod를 놓을 node를 찾지 못하면 Pod는 Pending에 남는다. Karpenter는 그 Pending Pod들의 CPU·memory request, architecture, zone, taint·toleration과 volume topology를 모아 “어떤 새 node라면 이 Pod들을 실행할 수 있는가?”를 계산한다. EC2 capacity를 확보해 node가 cluster에 등록되면 scheduler가 다시 Pod를 배치한다.
+Kubernetes scheduler가 Pod를 놓을 node를 찾지 못하면 Pod는 Pending에 남는다. Karpenter는 그 Pending Pod들의 CPU·메모리 request, architecture, zone, taint·toleration과 volume topology를 모아 “어떤 새 node라면 이 Pod들을 실행할 수 있는가?”를 계산한다. EC2 capacity를 확보해 node가 클러스터에 등록되면 scheduler가 다시 Pod를 배치한다.
 
 여기서 Karpenter가 scheduler를 대신하는 것은 아니다. scheduler는 존재하는 node에 Pod를 bind하고, Karpenter는 요구를 만족할 node capacity가 없을 때 공급한다.
 
@@ -29,12 +29,12 @@ Kubernetes scheduler가 Pod를 놓을 node를 찾지 못하면 Pod는 Pending에
 
 ## 기다리는 Pod가 실행되기까지 한 단계씩 보기
 
-1. scheduler가 기존 Node를 살펴보지만 Pod의 CPU·memory·배치 조건을 모두 만족하는 곳을 찾지 못한다.
+1. scheduler가 기존 Node를 살펴보지만 Pod의 CPU·메모리·배치 조건을 모두 만족하는 곳을 찾지 못한다.
 2. Pod가 Pending 상태로 남고 배치되지 못한 이유가 event에 기록된다.
 3. Karpenter가 Pending Pod의 requirement와 허용된 NodePool 조건의 교집합을 계산한다.
 4. EC2NodeClass의 subnet·security group·AMI·role 조건을 사용해 만들 수 있는 EC2 선택지를 찾는다.
 5. 구체적인 Node 하나의 요청인 NodeClaim을 만들고 EC2 instance 시작을 요청한다.
-6. instance가 cluster에 Node로 등록되고 필요한 startup resource가 준비된다.
+6. instance가 클러스터에 Node로 등록되고 필요한 startup resource가 준비된다.
 7. Kubernetes scheduler가 새 Node에 Pod를 배치한다.
 
 Karpenter는 3~6단계에서 capacity를 준비한다. 마지막 Pod 배치는 Kubernetes scheduler가 하므로 두 구성 요소의 log와 event를 함께 봐야 한다.
@@ -60,7 +60,7 @@ Pod requests가 없거나 실제 사용량보다 지나치게 작으면 Karpente
 
 ## Capacity type과 diversification
 
-Karpenter는 환경과 설정에 따라 reserved, spot, on-demand capacity type requirement를 사용할 수 있다. Spot은 interruption을 수용할 workload와 넓은 instance family·size·zone 선택으로 설계한다. critical stateful workload에 비용 이유만으로 Spot을 강제하지 않는다.
+Karpenter는 환경과 설정에 따라 reserved, spot, on-demand capacity type requirement를 사용할 수 있다. Spot은 interruption을 수용할 워크로드와 넓은 instance family·size·zone 선택으로 설계한다. critical stateful 워크로드에 비용 이유만으로 Spot을 강제하지 않는다.
 
 ## Disruption의 종류
 

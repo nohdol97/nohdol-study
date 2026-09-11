@@ -103,8 +103,8 @@ flowchart LR
 ## 4. Secret rotation 완료 기준
 
 1. 새 secret version을 생성한다.
-2. canary consumer가 새 version으로 인증하는지 확인한다.
-3. 모든 consumer를 전환하고 authentication error를 관측한다.
+2. canary 소비자가 새 version으로 인증하는지 확인한다.
+3. 모든 소비자를 전환하고 authentication error를 관측한다.
 4. 대상 서비스에서 이전 자격 증명을 폐기하고 그 자격 증명으로 인증이 실패하는지 확인한다. Secrets Manager 버전 라벨을 옮기는 것만으로 데이터베이스 비밀번호가 폐기되지는 않는다. 저장된 이전 버전을 권한에 따라 조회할 수 있는지는 별도 정책 문제다.
 5. rollback window와 audit receipt를 닫는다.
 
@@ -132,7 +132,7 @@ expected read가 실패하면 곧바로 wildcard 권한을 붙이지 않는다. 
 
 Cosign 검증 성공은 내려받은 digest가 기대한 identity·issuer의 signature 조건을 만족했다는 뜻이다. image의 취약점이 없거나 runtime 설정이 안전하다는 뜻은 아니다. scan, provenance policy와 admission 결과를 별도 gate로 연결한다.
 
-rotation에서는 새 credential 성공과 이전 credential 실패가 모두 필요하다. 이전 값이 계속 동작하면 노출된 credential의 위험 window가 닫히지 않았고, 일부 consumer가 이전 값을 cache하고 있다면 폐기 순간 장애가 날 수 있다.
+rotation에서는 새 credential 성공과 이전 credential 실패가 모두 필요하다. 이전 값이 계속 동작하면 노출된 credential의 위험 window가 닫히지 않았고, 일부 소비자가 이전 값을 캐시하고 있다면 폐기 순간 장애가 날 수 있다.
 
 ## 스스로 설명해 보기
 

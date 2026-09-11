@@ -10,7 +10,7 @@
 |---|---|---|
 | `get` | 어떤 리소스가 지금 어떤 요약 상태인가? | `kubectl get deploy,rs,pod` |
 | YAML·jsonpath | API가 알고 있는 원본 필드는 무엇인가? | `kubectl get pod -o yaml` |
-| `describe` | condition, container state, 최근 event는 무엇인가? | `kubectl describe pod` |
+| `describe` | condition, 컨테이너 state, 최근 event는 무엇인가? | `kubectl describe pod` |
 | event | scheduler·kubelet·controller가 무엇을 시도했나? | `kubectl get events` |
 | log | 애플리케이션과 컨테이너가 무엇을 기록했나? | `kubectl logs --previous` |
 | metric | 자원과 지연이 언제부터 얼마나 변했나? | `kubectl top`, 관측 시스템 |
@@ -61,11 +61,11 @@ Pod가 scheduler에 의해 노드에 배치되지 못했거나, 배치는 됐지
 
 ### CrashLoopBackOff
 
-컨테이너가 시작된 뒤 종료되고 재시작이 반복된다. 현재 로그만 보면 새 인스턴스의 빈 로그일 수 있으므로 `--previous`, 종료 reason과 code, command·args·환경·mount를 확인한다. OOMKilled면 메모리 limit뿐 아니라 누수, startup peak, tmpfs 사용도 본다.
+컨테이너가 시작된 뒤 종료되고 재시작이 반복된다. 현재 로그만 보면 새 인스턴스의 빈 로그일 수 있으므로 `--previous`, 종료 reason과 code, 명령어·args·환경·mount를 확인한다. OOMKilled면 메모리 limit뿐 아니라 누수, startup peak, tmpfs 사용도 본다.
 
 ### Running이지만 NotReady
 
-프로세스는 실행 중이지만 readiness 조건을 통과하지 못했다. Service endpoint와 사용자 트래픽에서 빠질 수 있다. probe path·port·timeout과 실제 앱 준비 상태를 함께 확인한다.
+프로세스는 실행 중이지만 readiness 조건을 통과하지 못했다. Service 엔드포인트와 사용자 트래픽에서 빠질 수 있다. probe path·port·timeout과 실제 앱 준비 상태를 함께 확인한다.
 
 ## 실행 예제: 실패한 rollout 진단하기
 
@@ -148,11 +148,11 @@ kubectl run netcheck --rm -it --restart=Never --image=curlimages/curl -- \
   curl -v http://<service>:<port>/health
 ```
 
-Service에 endpoint가 없으면 먼저 selector와 readiness다. endpoint는 있는데 timeout이면 targetPort, Pod listener, NetworkPolicy, CNI와 노드 경로로 이동한다. 한 Pod IP로 직접 시험하는 것은 계층을 나누는 진단일 뿐, Service를 우회하는 운영 해법이 아니다.
+Service에 엔드포인트가 없으면 먼저 selector와 readiness다. 엔드포인트는 있는데 timeout이면 targetPort, Pod 리스너, NetworkPolicy, CNI와 노드 경로로 이동한다. 한 Pod IP로 직접 시험하는 것은 계층을 나누는 진단일 뿐, Service를 우회하는 운영 해법이 아니다.
 
 ## distroless 이미지와 `kubectl debug`
 
-운영 이미지에 shell과 패키지 관리자를 억지로 넣지 않아도 된다. 이미지에 도구가 없거나 프로세스가 너무 빨리 crash하면 ephemeral debug container나 복제 Pod를 사용할 수 있다.
+운영 이미지에 shell과 패키지 관리자를 억지로 넣지 않아도 된다. 이미지에 도구가 없거나 프로세스가 너무 빨리 crash하면 ephemeral debug 컨테이너나 복제 Pod를 사용할 수 있다.
 
 ```bash
 kubectl debug -it <pod-name> --image=busybox:1.36 --target=<container-name>
@@ -160,7 +160,7 @@ kubectl debug <pod-name> -it --copy-to=<pod-name>-debug \
   --set-image=<container-name>=busybox:1.36 --container=<container-name> -- sh
 ```
 
-이 기능에는 강한 권한과 민감 데이터 노출 위험이 따를 수 있다. 누가 언제 debug container를 만들 수 있는지 RBAC과 감사 정책으로 제한하고, 만들어진 debug Pod를 정리한다.
+이 기능에는 강한 권한과 민감 데이터 노출 위험이 따를 수 있다. 누가 언제 debug 컨테이너를 만들 수 있는지 RBAC과 감사 정책으로 제한하고, 만들어진 debug Pod를 정리한다.
 
 ## metric, log, trace를 사용자 영향에 연결하기
 

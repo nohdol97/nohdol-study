@@ -5,13 +5,13 @@
 ## 실습 전에 준비할 것
 
 - **도구**: `helm version`과 `kubectl version --client`가 성공해야 한다.
-- **cluster**: install 단계까지 하려면 kind나 minikube 같은 disposable local Kubernetes가 필요하다. cluster가 없으면 render 단계까지만 진행한다.
-- **현재 대상 확인**: `kubectl config current-context`로 운영 cluster가 아닌지 반드시 확인한다.
+- **cluster**: install 단계까지 하려면 kind나 minikube 같은 disposable local Kubernetes가 필요하다. 클러스터가 없으면 render 단계까지만 진행한다.
+- **현재 대상 확인**: `kubectl config current-context`로 운영 클러스터가 아닌지 반드시 확인한다.
 - **디렉터리**: 빈 실습 디렉터리에서 시작해 아래 파일 네 개를 만든다. 이 템플릿은 스캐폴드 헬퍼에 의존하지 않는다.
 - **관찰 순서**: chart 검사 → 최종 YAML 생성 → Kubernetes 형식 검사 → 실제 설치 순서로 진행한다.
 - **정리 대상**: Helm release, `infra-study` namespace, `sample-api/` directory와 `rendered.yaml`이다.
 
-처음에는 `helm lint`와 `helm template`까지만 실행해도 된다. 생성된 YAML에서 image와 replica 수를 직접 찾을 수 있을 때 cluster 설치로 넘어간다.
+처음에는 `helm lint`와 `helm template`까지만 실행해도 된다. 생성된 YAML에서 image와 복제본 수를 직접 찾을 수 있을 때 클러스터 설치로 넘어간다.
 
 ## 먼저 이해하기
 
@@ -20,8 +20,8 @@
 | gate | 성공의 의미 | 아직 모르는 것 |
 |---|---|---|
 | `helm lint` | chart 관례·일부 template 검사 통과 | 특정 values의 모든 결과 |
-| `helm template` | 원하는 YAML 생성 | cluster API·admission 수용 여부 |
-| client dry-run | local schema 처리 가능 | server CRD·policy·quota |
+| `helm template` | 원하는 YAML 생성 | 클러스터 API·admission 수용 여부 |
+| client dry-run | local schema 처리 가능 | 서버 CRD·policy·quota |
 | install/upgrade | release action 완료 | 사용자 요청과 외부 dependency 정상 |
 | rollout check | controller readiness 달성 | SLO와 business 결과 |
 
@@ -115,7 +115,7 @@ helm template sample-api sample-api \
 
 ## 3. Install, upgrade와 rollback
 
-검증한 digest를 넣은 뒤 local cluster에서 실행한다.
+검증한 digest를 넣은 뒤 local 클러스터에서 실행한다.
 
 ```bash
 kubectl create namespace infra-study
@@ -127,7 +127,7 @@ helm history sample-api -n infra-study
 kubectl get deployment,pod,service -n infra-study
 ```
 
-replica 수를 2로 바꾸어 upgrade한 뒤 rollout을 확인한다.
+복제본 수를 2로 바꾸어 upgrade한 뒤 rollout을 확인한다.
 
 ```bash
 helm upgrade sample-api sample-api -n infra-study --set replicaCount=2 --wait=watcher --timeout 3m
@@ -142,7 +142,7 @@ helm rollback sample-api 1 -n infra-study --wait=watcher --timeout 3m
 kubectl rollout status deployment/sample-api -n infra-study
 ```
 
-rollback 성공 판정은 Helm status뿐 아니라 workload readiness와 요청 성공을 포함한다.
+rollback 성공 판정은 Helm status뿐 아니라 워크로드 readiness와 요청 성공을 포함한다.
 
 ## 4. GitOps drift 사고 실험
 
@@ -197,15 +197,15 @@ deployment "sample-api" successfully rolled out
 
 ## 결과를 이렇게 읽는다
 
-`helm template` 결과에서 image, replica, label selector와 Service port를 먼저 찾는다. chart source가 복잡해도 cluster가 받는 것은 이 manifest다. 예상한 value가 보이지 않으면 cluster를 조사하기 전에 values precedence와 template reference를 고친다.
+`helm template` 결과에서 image, 복제본, label selector와 Service port를 먼저 찾는다. chart source가 복잡해도 클러스터가 받는 것은 이 manifest다. 예상한 value가 보이지 않으면 클러스터를 조사하기 전에 values precedence와 template reference를 고친다.
 
 `helm history`에 새 리비전이 생겼다는 것은 CLI가 관리하는 릴리스 기록이 갱신됐다는 뜻이다. `kubectl rollout status`가 실패하면 Pod 이벤트, 이미지 받기, 프로브, 할당량을 확인한다. 자동 롤백 이후에도 워크로드와 요청을 검증하고 외부 마이그레이션이나 훅의 부수 효과를 별도로 확인해야 한다.
 
-Argo CD가 `OutOfSync`를 보이면 compare가 drift를 발견한 것이다. self-heal로 replica가 돌아와도 긴급 변경의 이유가 Git과 incident 기록에 남지 않으면 운영 경로는 닫히지 않았다.
+Argo CD가 `OutOfSync`를 보이면 compare가 drift를 발견한 것이다. self-heal로 복제본이 돌아와도 긴급 변경의 이유가 Git과 incident 기록에 남지 않으면 운영 경로는 닫히지 않았다.
 
 ## 스스로 설명해 보기
 
-1. `helm lint`, client dry-run과 실제 cluster admission이 각각 잡지 못하는 것은 무엇인가?
+1. `helm lint`, 클라이언트 dry-run과 실제 클러스터 admission이 각각 잡지 못하는 것은 무엇인가?
 2. Helm rollback 후에도 외부 DB migration이 남을 수 있는 이유는 무엇인가?
 3. auto-sync, prune과 self-heal을 독립적으로 검토해야 하는 이유는 무엇인가?
 

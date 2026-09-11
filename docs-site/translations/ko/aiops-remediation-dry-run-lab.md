@@ -2,7 +2,7 @@
 
 ## 실습 전에 준비할 것
 
-이 실습은 실제 cluster나 cloud resource를 변경하지 않는 **Plan only** 등급이다. 제공된 remediation proposal을 검토해 실행을 승인할 수 있는지 판정한다. `kubectl`이나 credential은 필요 없다. 실제 업무에서는 dry-run 명령이 있어도 외부 database·traffic·사용자 결과까지 검증하지 못하므로, 실행 전 계획 검토와 실행 후 outcome verification을 모두 설계해야 한다.
+이 실습은 실제 클러스터나 cloud resource를 변경하지 않는 **Plan only** 등급이다. 제공된 remediation proposal을 검토해 실행을 승인할 수 있는지 판정한다. `kubectl`이나 credential은 필요 없다. 실제 업무에서는 dry-run 명령이 있어도 외부 database·트래픽·사용자 결과까지 검증하지 못하므로, 실행 전 계획 검토와 실행 후 outcome verification을 모두 설계해야 한다.
 
 | 준비 항목 | 값 |
 |---|---|
@@ -45,7 +45,7 @@ flowchart TB
 }
 ```
 
-후보는 확정 원인이 아니다. 그래도 사용자 영향이 크고 최근 release와 강한 cohort 차이가 있다면 generic mitigation으로 rollback을 검토할 수 있다. Google SRE incident 사례는 root cause를 완전히 알기 전 recent release rollback이나 region traffic reconfiguration 같은 일반 완화가 사용자 피해를 줄일 수 있지만, blunt instrument라 다른 disruption을 만들 수 있다고 설명한다.
+후보는 확정 원인이 아니다. 그래도 사용자 영향이 크고 최근 release와 강한 cohort 차이가 있다면 generic mitigation으로 rollback을 검토할 수 있다. Google SRE incident 사례는 root cause를 완전히 알기 전 recent release rollback이나 region 트래픽 reconfiguration 같은 일반 완화가 사용자 피해를 줄일 수 있지만, blunt instrument라 다른 disruption을 만들 수 있다고 설명한다.
 
 ## 첫 proposal — 거절해야 하는 계획
 
@@ -101,7 +101,7 @@ verify:
 expiresAt: 2026-09-03T01:20:00Z
 ```
 
-이 proposal은 검토 가능한 수준으로 좋아졌지만 자동 승인이라는 뜻은 아니다. 실제 current state 조회, approval identity와 실행 권한, canary가 정말 5% traffic만 받는지 확인해야 한다. `databaseCompatibilityCheck`의 receipt가 어떤 schema·test를 썼는지도 열어야 한다.
+이 proposal은 검토 가능한 수준으로 좋아졌지만 자동 승인이라는 뜻은 아니다. 실제 current state 조회, approval identity와 실행 권한, canary가 정말 5% 트래픽만 받는지 확인해야 한다. `databaseCompatibilityCheck`의 receipt가 어떤 schema·test를 썼는지도 열어야 한다.
 
 ## 판정 절차
 

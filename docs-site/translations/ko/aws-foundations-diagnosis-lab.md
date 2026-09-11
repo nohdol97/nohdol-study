@@ -17,13 +17,13 @@
 
 이 실습은 AWS 구성을 바꾸지 않고 “내가 지금 어느 계정에서 무엇을 보고 있는가”부터 확인한다. cloud 장애 조사에서 흔한 실수는 이름이 같은 dev/prod resource나 다른 region을 보고도 올바른 대상을 조사한다고 믿는 것이다. 그래서 첫 증거는 VPC가 아니라 caller identity와 region이다.
 
-`public subnet`도 설정 하나로 판정하지 않는다. 인터넷에서 instance에 도달하려면 public address, internet gateway로 향하는 route, 허용하는 security policy, listening process와 return path가 모두 필요하다. `MapPublicIpOnLaunch`는 새 instance에 public address를 자동 할당할지에 관한 subnet 속성일 뿐이다.
+`public subnet`도 설정 하나로 판정하지 않는다. 인터넷에서 instance에 도달하려면 public address, internet gateway로 향하는 route, 허용하는 security policy, listening 프로세스와 return path가 모두 필요하다. `MapPublicIpOnLaunch`는 새 instance에 public address를 자동 할당할지에 관한 subnet 속성일 뿐이다.
 
 | 층 | 수집할 것 | 아직 결론 내리면 안 되는 것 |
 |---|---|---|
 | identity context | account, role session, region | 실제 resource 접근 허용 전체 |
 | declared network | VPC, subnet, route, gateway | packet이 실제로 왕복했다는 사실 |
-| runtime endpoint | address, SG, listener, health | application 내부 정상 여부 |
+| runtime endpoint | address, SG, 리스너, health | application 내부 정상 여부 |
 
 ## 준비
 
@@ -63,7 +63,7 @@ aws ec2 describe-route-tables \
   --output json
 ```
 
-`MapPublicIpOnLaunch=true` 하나로 public reachability를 판정하지 않는다. subnet association, default route의 target, instance address, security group과 실제 listener가 추가로 필요하다.
+`MapPublicIpOnLaunch=true` 하나로 public reachability를 판정하지 않는다. subnet association, default route의 target, instance address, security group과 실제 리스너가 추가로 필요하다.
 
 ```mermaid
 flowchart TD
@@ -91,7 +91,7 @@ IAM 변경이 필요하면 이 read-only 실습 범위를 벗어난다. 관리�
 
 | Subnet | AZ | CIDR | Default route | 분류가 아니라 근거 |
 |---|---|---|---|---|
-| 예시 값 | 예시 값 | 예시 값 | IGW/NAT/없음 | address·route·policy·listener 추가 확인 필요 |
+| 예시 값 | 예시 값 | 예시 값 | IGW/NAT/없음 | address·route·policy·리스너 추가 확인 필요 |
 
 account ID, 실제 resource ID와 내부 CIDR은 조직 정책에 따라 민감할 수 있으므로 공개 학습 기록에는 비식별화한다.
 
@@ -125,11 +125,11 @@ An error occurred (UnauthorizedOperation) when calling the DescribeVpcs operatio
 
 ## 결과를 이렇게 읽는다
 
-route table의 `0.0.0.0/0 → igw-...`는 연결된 subnet traffic의 기본 next hop을 말한다. 모든 destination이 internet gateway로 간다는 뜻도 아니고 instance가 public address를 가진다는 뜻도 아니다. 더 구체적인 prefix route가 있으면 longest-prefix match가 우선하며 security group과 network ACL도 별도로 적용된다.
+route table의 `0.0.0.0/0 → igw-...`는 연결된 subnet 트래픽의 기본 next hop을 말한다. 모든 destination이 internet gateway로 간다는 뜻도 아니고 instance가 public address를 가진다는 뜻도 아니다. 더 구체적인 prefix route가 있으면 longest-prefix match가 우선하며 security group과 네트워크 ACL도 별도로 적용된다.
 
-NAT gateway route는 보통 private address를 가진 resource가 외부로 나가는 경로에 쓰인다. 외부가 그 NAT를 통해 임의로 connection을 시작할 수 있다는 의미는 아니다. VPC endpoint가 있으면 AWS service traffic이 NAT 대신 private path를 사용할 수도 있다.
+NAT gateway route는 보통 private address를 가진 resource가 외부로 나가는 경로에 쓰인다. 외부가 그 NAT를 통해 임의로 연결을 시작할 수 있다는 의미는 아니다. VPC 엔드포인트가 있으면 AWS 서비스 트래픽이 NAT 대신 private path를 사용할 수도 있다.
 
-`describe-*` 성공은 control-plane API를 읽을 권한이 있다는 뜻이다. 그 명령을 실행한 laptop에서 application endpoint까지 data-plane traffic이 성공했다는 증거는 아니다. reachability는 실제 source 위치에서 별도로 확인한다.
+`describe-*` 성공은 control-plane API를 읽을 권한이 있다는 뜻이다. 그 명령을 실행한 laptop에서 application 엔드포인트까지 data-plane 트래픽이 성공했다는 증거는 아니다. reachability는 실제 source 위치에서 별도로 확인한다.
 
 ## 스스로 설명해 보기
 

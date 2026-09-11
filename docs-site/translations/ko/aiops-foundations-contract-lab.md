@@ -14,7 +14,7 @@
 
 ## 먼저 이해하기
 
-스키마 검증은 JSON 문법이 맞는지만 보는 일이 아니다. `incident_id`가 있어도 영향 범위, 시간 창, service revision, evidence provenance가 없으면 진단 결과를 재현할 수 없다. 반대로 모든 log 원문을 넣으면 검색은 쉬워 보여도 개인정보·secret·보존 비용과 입력 크기가 폭발한다. 계약은 필요한 식별자와 누락을 명시하고 원문은 별도 저장소에 둔다.
+스키마 검증은 JSON 문법이 맞는지만 보는 일이 아니다. `incident_id`가 있어도 영향 범위, 시간 창, 서비스 revision, evidence provenance가 없으면 진단 결과를 재현할 수 없다. 반대로 모든 log 원문을 넣으면 검색은 쉬워 보여도 개인정보·secret·보존 비용과 입력 크기가 폭발한다. 계약은 필요한 식별자와 누락을 명시하고 원문은 별도 저장소에 둔다.
 
 ```mermaid
 flowchart LR
@@ -64,7 +64,7 @@ python3 -c 'import json; p="/tmp/aiops-incident-lab/incidents.json"; rows=json.l
 
 1. `window.start < window.end`이고 모든 change·evidence timestamp를 같은 UTC 기준으로 비교할 수 있는가?
 2. `impact.sli`가 dashboard 제목이 아니라 version이 관리되는 query 또는 recording rule을 가리키는가?
-3. `entities`의 service ID가 metric, trace와 deployment에서 같은 값을 쓰는가?
+3. `entities`의 서비스 ID가 metric, trace와 deployment에서 같은 값을 쓰는가?
 4. `changes`에 code deploy만 아니라 configuration·feature flag·route 변경도 들어오는가?
 5. `evidence`가 원문 내용을 복사하지 않고 재조회 가능한 ID·query·schema를 갖는가?
 6. sampling·수집 단절·clock 오차가 `gaps`에 사실대로 남는가?

@@ -64,15 +64,15 @@ kubectl api-resources --namespaced=false
 | 용도 | Namespace가 제공하는 범위 | 함께 필요한 것 |
 |---|---|---|
 | 이름 충돌 방지 | 팀마다 같은 `Deployment/api`나 `Service/api` 이름을 사용할 수 있다. | 일관된 이름·label 규칙 |
-| 작업 대상 구분 | `kubectl -n team-a ...`로 조회와 변경 대상을 좁힌다. | 올바른 cluster·context 확인 |
+| 작업 대상 구분 | `kubectl -n team-a ...`로 조회와 변경 대상을 좁힌다. | 올바른 클러스터·context 확인 |
 | 권한 위임 | RoleBinding으로 한 Namespace 안의 권한을 팀이나 ServiceAccount에 부여한다. | 최소 권한 RBAC |
 | 정책 적용 | NetworkPolicy와 Pod Security Admission 같은 정책을 Namespace 단위로 연결할 수 있다. | [보안과 정책](../../content/kubernetes/08-security-and-policy.md)의 실제 정책 오브젝트와 이를 구현하는 구성 요소 |
-| 자원 분배 | ResourceQuota로 Namespace 전체 사용량을, LimitRange로 개별 Pod·container의 기본값과 범위를 제한한다. | [스케줄링과 리소스](../../content/kubernetes/07-scheduling-and-autoscaling.md)의 request·limit와 용량 계획 |
+| 자원 분배 | ResourceQuota로 Namespace 전체 사용량을, LimitRange로 개별 Pod·컨테이너의 기본값과 범위를 제한한다. | [스케줄링과 리소스](../../content/kubernetes/07-scheduling-and-autoscaling.md)의 request·limit와 용량 계획 |
 | 서비스 발견 | Service DNS 이름에 Namespace가 포함된다. | [Service와 네트워킹](../../content/kubernetes/05-services-and-networking.md)의 교차 Namespace DNS 이름과 통신 정책 |
 
-Namespace **자체만으로는 보안 경계를 완성하지 않는다.** 새 Namespace를 만들었다고 network traffic이 자동 차단되거나 CPU·memory가 자동 할당되고, 그 안의 모든 리소스가 팀 밖에서 보이지 않게 되는 것은 아니다. 실제 분리는 RBAC, NetworkPolicy, Pod Security Admission, ResourceQuota·LimitRange 등을 각각 설정해야 생긴다. 더 강한 장애·관리·보안 경계가 필요하면 별도 cluster나 계정 수준 분리도 비교해야 한다.
+Namespace **자체만으로는 보안 경계를 완성하지 않는다.** 새 Namespace를 만들었다고 네트워크 트래픽이 자동 차단되거나 CPU·메모리가 자동 할당되고, 그 안의 모든 리소스가 팀 밖에서 보이지 않게 되는 것은 아니다. 실제 분리는 RBAC, NetworkPolicy, Pod Security Admission, ResourceQuota·LimitRange 등을 각각 설정해야 생긴다. 더 강한 장애·관리·보안 경계가 필요하면 별도 클러스터나 계정 수준 분리도 비교해야 한다.
 
-여러 팀이나 프로젝트가 한 클러스터를 공유해 서로 다른 권한·정책·quota가 필요할 때 Namespace가 유용하다. 같은 애플리케이션의 버전만 구분하려고 Namespace를 계속 늘리기보다는 label과 workload의 rollout 기능을 먼저 고려한다. 운영 workload는 실수로 `default`에 섞이지 않도록 목적이 드러나는 Namespace를 두는 편이 낫다. `kube-system`, `kube-public`, `kube-node-lease`는 시스템 용도가 있으므로 일반 workload에 사용하지 않고, 새 이름에 예약 접두사 `kube-`를 쓰지 않는다.
+여러 팀이나 프로젝트가 한 클러스터를 공유해 서로 다른 권한·정책·quota가 필요할 때 Namespace가 유용하다. 같은 애플리케이션의 버전만 구분하려고 Namespace를 계속 늘리기보다는 label과 워크로드의 rollout 기능을 먼저 고려한다. 운영 워크로드는 실수로 `default`에 섞이지 않도록 목적이 드러나는 Namespace를 두는 편이 낫다. `kube-system`, `kube-public`, `kube-node-lease`는 시스템 용도가 있으므로 일반 워크로드에 사용하지 않고, 새 이름에 예약 접두사 `kube-`를 쓰지 않는다.
 
 ### 실행 예제: 두 Namespace에서 같은 이름 사용하기
 
@@ -106,7 +106,7 @@ data:
   environment: team-b
 ```
 
-적용 전에는 현재 cluster와 context를 확인한다. 적용 뒤 같은 이름의 ConfigMap이 서로 다른 값을 갖는지 Namespace별 조회와 전체 조회로 비교한다.
+적용 전에는 현재 클러스터와 context를 확인한다. 적용 뒤 같은 이름의 ConfigMap이 서로 다른 값을 갖는지 Namespace별 조회와 전체 조회로 비교한다.
 
 ```bash
 kubectl config current-context
@@ -119,7 +119,7 @@ kubectl get configmap app-config -n namespace-demo-b -o jsonpath='{.data.environ
 kubectl get configmap --all-namespaces --field-selector metadata.name=app-config
 ```
 
-처음 실행할 때는 뒤의 ConfigMap이 참조할 Namespace도 같은 파일에서 만들어진다. 그래서 아직 존재하지 않는 Namespace까지 API server가 문서별로 검증해야 하는 server dry-run 대신, 이 예제의 전체 형태는 client dry-run으로 먼저 검사한다. Namespace를 실제로 만든 뒤에는 `kubectl apply --dry-run=server -f namespace-demo.yaml`로 admission 정책까지 다시 확인할 수 있다.
+처음 실행할 때는 뒤의 ConfigMap이 참조할 Namespace도 같은 파일에서 만들어진다. 그래서 아직 존재하지 않는 Namespace까지 API 서버가 문서별로 검증해야 하는 서버 dry-run 대신, 이 예제의 전체 형태는 클라이언트 dry-run으로 먼저 검사한다. Namespace를 실제로 만든 뒤에는 `kubectl apply --dry-run=server -f namespace-demo.yaml`로 admission 정책까지 다시 확인할 수 있다.
 
 `-n`은 `--namespace`의 짧은 형태이며 **그 요청 하나**의 범위를 정한다. 반복 작업이라면 현재 kubeconfig context의 기본 Namespace를 설정할 수 있지만, 이후 `-n`을 생략한 명령의 대상이 조용히 바뀌므로 설정 직후와 변경 작업 직전에 다시 확인한다.
 
@@ -128,7 +128,7 @@ kubectl config set-context --current --namespace=namespace-demo-a
 kubectl config view --minify -o jsonpath='{..namespace}{"\n"}'
 ```
 
-매니페스트의 `metadata.namespace`, 명령의 `-n`, context의 기본 Namespace가 서로 다르면 어느 값이 실제 요청에 적용되는지 추측하지 말고 server dry-run과 `kubectl get ... -n <name>`으로 확인한다. GitOps에서는 재현성을 위해 namespaced 오브젝트의 `metadata.namespace`를 명시하고, 배포 도구가 별도로 강제하는 Namespace 규칙도 검토한다.
+매니페스트의 `metadata.namespace`, 명령의 `-n`, context의 기본 Namespace가 서로 다르면 어느 값이 실제 요청에 적용되는지 추측하지 말고 서버 dry-run과 `kubectl get ... -n <name>`으로 확인한다. GitOps에서는 재현성을 위해 namespaced 오브젝트의 `metadata.namespace`를 명시하고, 배포 도구가 별도로 강제하는 Namespace 규칙도 검토한다.
 
 실습을 마치면 현재 context의 기본값을 `default`로 되돌린 뒤 두 Namespace를 지운다. **Namespace 삭제는 그 안의 리소스를 함께 제거하는 큰 작업**이므로, 운영 환경에서는 삭제 전에 `kubectl get all -n <name>`만 보지 말고 해당 Namespace의 ConfigMap, Secret, PVC, custom resource까지 inventory와 백업·보존 정책을 확인한다. `all`은 모든 종류를 뜻하지 않는다.
 
@@ -222,7 +222,7 @@ kubectl get pods -l app.kubernetes.io/name=object-demo --show-labels
 kubectl rollout status deployment/object-demo
 ```
 
-`--dry-run=server`는 현재 API server의 기본값·검증·admission을 통과하는지 확인한다. 반면 로컬 검사만으로는 클러스터에 설치된 CRD나 admission 정책까지 알 수 없다.
+`--dry-run=server`는 현재 API 서버의 기본값·검증·admission을 통과하는지 확인한다. 반면 로컬 검사만으로는 클러스터에 설치된 CRD나 admission 정책까지 알 수 없다.
 
 실습이 끝나면 소유 관계를 본 뒤 정리한다.
 
@@ -241,14 +241,14 @@ kubectl delete -f object.yaml
 | `patch` | 자동화가 일부 필드만 바꿀 때 | 패치 종류와 배열 병합 의미를 알아야 한다. |
 | `edit` | 긴급 확인이나 일회성 수정 | 재현 가능한 파일과 쉽게 어긋난다. |
 
-서버 측 적용은 API server가 필드별 관리 주체를 추적한다. 충돌 메시지는 방해물이 아니라 “같은 필드를 둘 이상의 주체가 소유하려 한다”는 중요한 신호다. 무조건 강제하기 전에 어느 자동화가 정본인지 결정한다.
+서버 측 적용은 API 서버가 필드별 관리 주체를 추적한다. 충돌 메시지는 방해물이 아니라 “같은 필드를 둘 이상의 주체가 소유하려 한다”는 중요한 신호다. 무조건 강제하기 전에 어느 자동화가 정본인지 결정한다.
 
 ## 실패를 증상에서 원인으로 좁히기
 
 | 증상 | 먼저 확인 | 흔한 원인 |
 |---|---|---|
 | `no matches for kind` | `kubectl api-resources`, `apiVersion` | API 버전 오타, 필요한 CRD 미설치 |
-| `unknown field` | `kubectl explain`, server dry-run | 다른 버전의 필드 사용 |
+| `unknown field` | `kubectl explain`, 서버 dry-run | 다른 버전의 필드 사용 |
 | selector 관련 거부 | selector와 Pod template label | 두 값 불일치 또는 변경 불가 필드 수정 |
 | 적용 성공, Pod 없음 | Deployment condition과 event | controller·quota·admission 문제 |
 | Service endpoint 없음 | Service selector와 Pod label | 선택 관계 불일치, Pod NotReady |
@@ -279,7 +279,7 @@ Pod          object-demo-<hash>-<suffix>  ReplicaSet
 2. Service가 선택한 Pod는 왜 Service의 자식이 아닌가?
 3. 같은 이름으로 삭제 후 재생성한 Pod를 UID가 구분해야 하는 이유는 무엇인가?
 4. field conflict를 무조건 강제로 덮으면 어떤 자동화 문제가 숨어 있을 수 있는가?
-5. Namespace를 하나 만들기만 해서는 팀 사이의 network·권한·자원 격리가 완성되지 않는 이유는 무엇인가?
+5. Namespace를 하나 만들기만 해서는 팀 사이의 네트워크·권한·자원 격리가 완성되지 않는 이유는 무엇인가?
 6. namespaced 리소스와 클러스터 범위 리소스를 현재 클러스터에서 어떻게 구분할 수 있는가?
 
 [← 첫 클러스터](../../content/kubernetes/01-why-and-first-cluster.md) · [클러스터 아키텍처와 제어 루프 →](../../content/kubernetes/03-cluster-architecture.md)

@@ -26,14 +26,14 @@ flowchart TD
 |---|---|---|
 | init container | 앱 시작 전에 선행 작업이 끝났는가? | 앱 컨테이너 시작이 지연됨 |
 | startup probe | 느린 초기화가 아직 진행 중인가? | 성공 전 liveness/readiness 판단을 미룸 |
-| readiness probe | 지금 새 트래픽을 받아도 되는가? | Service의 준비된 endpoint에서 제외 |
+| readiness probe | 지금 새 트래픽을 받아도 되는가? | Service의 준비된 엔드포인트에서 제외 |
 | liveness probe | 재시작해야만 회복되는가? | 해당 컨테이너 재시작 |
 
 DB가 잠시 느리다는 이유를 liveness에 넣으면 정상 프로세스가 연쇄 재시작할 수 있다. readiness는 트래픽 수락 능력, liveness는 교착처럼 재시작이 필요한 내부 고장만 표현한다.
 
 ## 종료는 트래픽을 빼고 일을 마치는 시간선이다
 
-Pod 삭제가 요청되면 새 요청을 더 받지 않도록 준비 상태와 endpoint가 바뀌고, 컨테이너에는 종료 신호가 전달된다. 애플리케이션은 `terminationGracePeriodSeconds` 안에 listener를 닫고 진행 중 요청·메시지·telemetry를 정리해야 한다. 시간 안에 끝나지 않으면 강제 종료될 수 있다.
+Pod 삭제가 요청되면 새 요청을 더 받지 않도록 준비 상태와 엔드포인트가 바뀌고, 컨테이너에는 종료 신호가 전달된다. 애플리케이션은 `terminationGracePeriodSeconds` 안에 리스너를 닫고 진행 중 요청·메시지·telemetry를 정리해야 한다. 시간 안에 끝나지 않으면 강제 종료될 수 있다.
 
 ```mermaid
 sequenceDiagram
@@ -50,7 +50,7 @@ sequenceDiagram
     K->>A: Shutdown status reporting
 ```
 
-endpoint 전파와 외부 로드밸런서 갱신은 즉시 원자적으로 끝난다고 가정하지 않는다. 애플리케이션 drain, 클라이언트 재시도와 멱등성, 종료 유예 시간을 함께 시험한다.
+엔드포인트 전파와 외부 로드밸런서 갱신은 즉시 원자적으로 끝난다고 가정하지 않는다. 애플리케이션 drain, 클라이언트 재시도와 멱등성, 종료 유예 시간을 함께 시험한다.
 
 ## 워크로드 컨트롤러 선택표
 
@@ -151,12 +151,12 @@ kubectl rollout status deployment/web
 
 | 증상 | 확인할 것 | 해석 |
 |---|---|---|
-| `Init:...`에서 멈춤 | init container 로그·event | 선행 작업이 끝나지 않음 |
+| `Init:...`에서 멈춤 | init 컨테이너 로그·event | 선행 작업이 끝나지 않음 |
 | `ImagePullBackOff` | 이미지 이름, registry 인증, event | 컨테이너 시작 전 이미지 단계 실패 |
 | `CrashLoopBackOff` | `logs --previous`, 종료 코드 | 실행 후 반복 종료와 backoff |
 | Running이지만 `0/1 Ready` | readiness 결과와 앱 로그 | 트래픽 수락 조건 실패 |
 | rollout이 진행되지 않음 | 새 ReplicaSet, Deployment condition | 새 Pod가 Available이 되지 못함 |
-| 종료 때 요청 유실 | endpoint 변화, TERM 처리, grace period | drain 시간선 불일치 |
+| 종료 때 요청 유실 | 엔드포인트 변화, TERM 처리, grace period | drain 시간선 불일치 |
 
 ```bash
 kubectl get pods -l app=web -o wide

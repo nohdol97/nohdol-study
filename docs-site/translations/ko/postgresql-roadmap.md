@@ -32,7 +32,7 @@ flowchart LR
 
 ## 선수 지식
 
-- Linux process·memory·filesystem과 TCP connection
+- Linux 프로세스·메모리·파일 시스템과 TCP 연결
 - transaction, index와 SQL의 기본 개념
 - RPO·RTO는 [신뢰성·DR·FinOps](../../content/reliability-finops/00-roadmap.md)에서 확장한다.
 
@@ -64,7 +64,7 @@ flowchart LR
 
 1. MVCC가 lock을 모두 없애 주지 않는 이유는 무엇인가?
 2. WAL archive만 있고 base backup이 없으면 복구가 불완전할 수 있는 이유는 무엇인가?
-3. connection 수를 늘리는 것이 처리량을 항상 높이지 않는 이유는 무엇인가?
+3. 연결 수를 늘리는 것이 처리량을 항상 높이지 않는 이유는 무엇인가?
 
 <!-- source: https://www.postgresql.org/docs/18/mvcc.html | checked: 2026-09-03 | version: PostgreSQL 18 -->
 <!-- source: https://www.postgresql.org/docs/18/wal-intro.html | checked: 2026-09-03 | version: PostgreSQL 18 -->

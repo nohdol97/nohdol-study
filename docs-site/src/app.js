@@ -305,11 +305,10 @@ function renderDocument(currentDocument) {
       <article class="reader-article">
         <header class="article-header">
           <p class="article-kicker">${escapeHtml(learningPath.title)} · ${escapeHtml(topic.title)}</p>
-          <h1><span class="reading-en" lang="en">${escapeHtml(currentDocument.title)}</span><span class="reading-ko" lang="ko">${escapeHtml(currentDocument.translation.title)}</span></h1>
-          <p class="article-summary reading-en" lang="en">${escapeHtml(currentDocument.summary)}</p><p class="article-summary reading-ko" lang="ko">${escapeHtml(currentDocument.translation.summary)}</p>
+          <h1><span class="reading-ko" lang="ko">${escapeHtml(currentDocument.translation.title)}</span><span class="reading-en" lang="en">${escapeHtml(currentDocument.title)}</span></h1>
+          <p class="article-summary reading-ko" lang="ko">${escapeHtml(currentDocument.translation.summary)}</p><p class="article-summary reading-en" lang="en">${escapeHtml(currentDocument.summary)}</p>
           <div class="article-meta">
             <span>${t('About {count} min', {count: currentDocument.readingMinutes})}</span>
-            <span>${escapeHtml(currentDocument.path)}</span>
             <a href="${escapeHtml(content.site.repository)}/blob/main/${encodeURI(currentDocument.path)}">${t('Markdown source ↗')}</a>
           </div>
         </header>

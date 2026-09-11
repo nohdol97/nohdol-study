@@ -23,7 +23,7 @@ flowchart LR
 1. DNS가 Service 이름을 주소로 바꾸는가?
 2. Service의 `port`와 `targetPort`가 의도한 포트인가?
 3. selector가 Pod label과 일치해 EndpointSlice가 생겼는가?
-4. endpoint가 Ready인가?
+4. 엔드포인트가 Ready인가?
 5. 실제 Pod 프로세스가 target port에서 듣고 있는가?
 6. NetworkPolicy나 노드 dataplane이 흐름을 허용하는가?
 
@@ -62,15 +62,15 @@ EndpointSlice는 데이터 평면이 사용하는 API 메타데이터이며 패�
 | `NodePort` | 각 노드의 고정 포트 | 직접 노출보다 상위 로드밸런서의 기반 |
 | `LoadBalancer` | 구현이 제공하는 외부 로드밸런서 | 외부 L4 진입점 |
 | `ExternalName` | DNS CNAME 방식 | 외부 이름을 Service 이름으로 참조 |
-| headless | ClusterIP 없이 endpoint 직접 발견 | StatefulSet, client-side discovery |
+| headless | ClusterIP 없이 엔드포인트 직접 발견 | StatefulSet, client-side discovery |
 
 `LoadBalancer` 타입을 쓴다고 모든 환경에서 외부 주소가 자동 생성되는 것은 아니다. 클라우드 통합이나 별도 load balancer 구현이 필요하다. `EXTERNAL-IP`가 계속 Pending이면 애플리케이션보다 이 구현 경계를 먼저 확인한다.
 
 ## DNS 이름은 Namespace 경계를 포함한다
 
-같은 Namespace에서는 `web` 같은 짧은 Service 이름을 사용할 수 있다. 다른 Namespace라면 `web.shop`, 완전한 클러스터 이름이 필요하면 `web.shop.svc.cluster.local`과 같은 형태를 사용한다. 실제 cluster domain은 설치 설정에 따라 달라질 수 있다.
+같은 Namespace에서는 `web` 같은 짧은 Service 이름을 사용할 수 있다. 다른 Namespace라면 `web.shop`, 완전한 클러스터 이름이 필요하면 `web.shop.svc.cluster.local`과 같은 형태를 사용한다. 실제 클러스터 domain은 설치 설정에 따라 달라질 수 있다.
 
-DNS가 정상이어도 Service에 endpoint가 없으면 연결은 실패한다. 반대로 Service IP로는 연결되는데 이름만 실패하면 DNS, search domain, Pod의 DNS 정책을 조사한다.
+DNS가 정상이어도 Service에 엔드포인트가 없으면 연결은 실패한다. 반대로 Service IP로는 연결되는데 이름만 실패하면 DNS, search domain, Pod의 DNS 정책을 조사한다.
 
 ## 실행 예제: Service에서 Pod까지 추적하기
 
@@ -125,7 +125,7 @@ kubectl wait --for=condition=Ready pod/netcheck --timeout=90s
 kubectl exec netcheck -- curl --connect-timeout 3 --max-time 5 -fsS http://web:8080/
 ```
 
-여기서 Service는 8080을 받고 Pod의 이름 있는 포트 `http`, 즉 80으로 전달한다. 숫자 대신 포트 이름을 참조하면 새 Pod 버전에서 container port가 달라져도 Service 계약을 유지할 수 있다.
+여기서 Service는 8080을 받고 Pod의 이름 있는 포트 `http`, 즉 80으로 전달한다. 숫자 대신 포트 이름을 참조하면 새 Pod 버전에서 컨테이너 port가 달라져도 Service 계약을 유지할 수 있다.
 
 selector를 일부러 깨뜨려 진단 순서를 연습한다.
 
@@ -166,11 +166,11 @@ curl의 상세 출력으로 클라이언트 이미지에 `nslookup`이 있다고
 | 증상 | 가장 먼저 볼 층 |
 |---|---|
 | 이름을 찾지 못함 | DNS와 Namespace |
-| 이름은 해석되지만 connection refused | targetPort와 Pod listener |
-| timeout | endpoint, NetworkPolicy, CNI와 노드 경로 |
+| 이름은 해석되지만 connection refused | targetPort와 Pod 리스너 |
+| timeout | 엔드포인트, NetworkPolicy, CNI와 노드 경로 |
 | EndpointSlice가 비어 있음 | selector-label과 readiness |
 | 클러스터 내부는 성공, 외부만 실패 | Gateway/Ingress controller, LB, DNS, TLS |
-| 일부 요청만 실패 | endpoint별 readiness·버전·노드 차이 |
+| 일부 요청만 실패 | 엔드포인트별 readiness·버전·노드 차이 |
 
 ## 실행 결과 예시
 

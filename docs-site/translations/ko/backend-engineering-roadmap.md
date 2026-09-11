@@ -34,7 +34,7 @@ flowchart LR
 
 1. [요청 의미와 API 계약](#doc=backend-engineering-api-contract): 클라이언트가 성공, 실패, 재시도와 장기 작업 상태를 어떻게 구분하는가?
 2. [도메인 불변식과 데이터 트랜잭션](#doc=backend-engineering-domain-transaction): 업무 규칙을 코드, DB constraint와 transaction 중 어디에서 지킬 것인가?
-3. [동시성·큐·런타임과 용량](#doc=backend-engineering-runtime-capacity): 요청이 늘 때 thread, connection, heap과 dependency 중 무엇이 먼저 고갈되는가?
+3. [동시성·큐·런타임과 용량](#doc=backend-engineering-runtime-capacity): 요청이 늘 때 thread, 연결, heap과 dependency 중 무엇이 먼저 고갈되는가?
 4. [부분 실패와 분산 워크플로](#doc=backend-engineering-distributed-workflow): 응답을 잃거나 event가 중복되어도 업무 결과를 어떻게 수렴시키는가?
 5. [캐시·데이터 흐름과 성능 증거](#doc=backend-engineering-cache-performance): 더 빠르게 만들면서 정본, freshness와 무효화 책임을 어떻게 보존하는가?
 6. [호환 변경·테스트와 점진적 배포](#doc=backend-engineering-evolution): 구·신 버전 공존 기간과 rollback 가능성을 어떤 증거로 닫는가?
@@ -47,13 +47,13 @@ vault의 백엔드 81개 노트를 공개 문장으로 복사하지 않고, 아�
 |---|---|---|
 | 요청·프로토콜·API | HTTP 의미, DNS·TCP·TLS, HTTP/2·HTTP/3, gRPC·WebSocket·SSE, REST·RPC·GraphQL, cursor pagination, 비동기 operation, webhook | [API 계약](#doc=backend-engineering-api-contract), [네트워크 요청 경로](#doc=networking-request-path) |
 | 도메인·관계형 데이터 | 관계형 모델링·무결성, DDD Aggregate, MVCC·격리, index·실행 계획, WAL·checkpoint·VACUUM, lock 진단, PgBouncer, Patroni 장애조치 | [도메인과 transaction](#doc=backend-engineering-domain-transaction), [PostgreSQL 운영](#doc=postgresql-roadmap) |
-| 런타임·성능·부하 | Linux process·kernel 자원, memory hierarchy·storage latency, runtime 동시성·GC, Little의 법칙, queue·backpressure, profiling·benchmark, eBPF·io_uring·zero-copy, rate limit, 비용·용량 계획 | [동시성·용량](#doc=backend-engineering-runtime-capacity), [Linux 운영](#doc=linux-roadmap), [신뢰성·FinOps](#doc=reliability-finops-roadmap) |
-| cache·저장 엔진 | HTTP cache, 다계층 cache, Redis 내부 구조·transaction·Lua·Sorted Set·Pub/Sub·Streams·big key·hot key·Sentinel·Cluster, B-tree·LSM-tree | [cache와 성능](#doc=backend-engineering-cache-performance), [Redis와 DynamoDB](#doc=nosql-roadmap) |
-| 분산 정확성·event | replication·partition·consistency, quorum·Raft, logical clock·분산 ID, lease·leader election·fencing, Saga, outbox·멱등 consumer, 증분 집계의 삽입 여부 기반 멱등성, Kafka 보증, message queue·event log·DLQ, event schema 진화 | [분산 workflow](#doc=backend-engineering-distributed-workflow), [메시징](#doc=messaging-roadmap) |
+| 런타임·성능·부하 | Linux 프로세스·커널 자원, 메모리 hierarchy·storage latency, runtime 동시성·GC, Little의 법칙, queue·backpressure, profiling·benchmark, eBPF·io_uring·zero-copy, rate limit, 비용·용량 계획 | [동시성·용량](#doc=backend-engineering-runtime-capacity), [Linux 운영](#doc=linux-roadmap), [신뢰성·FinOps](#doc=reliability-finops-roadmap) |
+| cache·저장 엔진 | HTTP 캐시, 다계층 캐시, Redis 내부 구조·transaction·Lua·Sorted Set·Pub/Sub·Streams·big key·hot key·Sentinel·Cluster, B-tree·LSM-tree | [cache와 성능](#doc=backend-engineering-cache-performance), [Redis와 DynamoDB](#doc=nosql-roadmap) |
+| 분산 정확성·event | replication·partition·consistency, quorum·Raft, logical clock·분산 ID, lease·leader election·fencing, Saga, outbox·멱등 소비자, 증분 집계의 삽입 여부 기반 멱등성, Kafka 보증, message queue·event log·DLQ, event schema 진화 | [분산 workflow](#doc=backend-engineering-distributed-workflow), [메시징](#doc=messaging-roadmap) |
 | 데이터 플랫폼 | sharding·online relocation, multi-region consistency·failover, key-value·document·wide-column, 검색 engine, object storage, stream processing·event time·watermark, CDC·CQRS·Event Sourcing, OLTP·OLAP·Parquet·Lakehouse | [분산 workflow](#doc=backend-engineering-distributed-workflow), [PostgreSQL](#doc=postgresql-roadmap), [NoSQL](#doc=nosql-roadmap), [메시징](#doc=messaging-roadmap) |
 | identity·보안·격리 | 인증·인가·API 보안, OAuth·OIDC session·token, Cookie·CORS·CSRF, PKI·mTLS·certificate lifecycle, secret·저장 암호화, tenant 격리, 개인정보 보존·삭제·감사, 집계 인원수의 재식별 위험, SSRF·공급망 위협 | [API 계약](#doc=backend-engineering-api-contract), [인프라 보안](#doc=infrastructure-security-roadmap) |
 | 변경·검증·운영 | schema 호환·무중단 배포, online migration·backfill·shadow read, feature flag·점진 배포, test 계층·성능 검증, property-based·fuzz·mutation test, TLA+·linearizability, chaos·fault injection, backup·RPO·RTO, on-call·Incident Command·postmortem, OpenTelemetry pipeline의 단계별 보증 | [호환 변경과 테스트](#doc=backend-engineering-evolution), [Observability와 SRE](#doc=observability-sre-roadmap) |
-| 구조·실행·traffic | service 경계·분산 비용, modular monolith·Hexagonal Architecture, service discovery·load balancing·health check, container·Kubernetes lifecycle·autoscaling, Gateway API, Envoy circuit breaker·retry, NetworkPolicy·Cilium | [호환 변경과 테스트](#doc=backend-engineering-evolution), [Kubernetes](#doc=kubernetes-roadmap), [트래픽 복원력](#doc=traffic-resilience-roadmap) |
+| 구조·실행·traffic | 서비스 경계·분산 비용, modular monolith·Hexagonal Architecture, 서비스 discovery·load balancing·health check, 컨테이너·Kubernetes lifecycle·autoscaling, Gateway API, Envoy circuit breaker·retry, NetworkPolicy·Cilium | [호환 변경과 테스트](#doc=backend-engineering-evolution), [Kubernetes](#doc=kubernetes-roadmap), [트래픽 복원력](#doc=traffic-resilience-roadmap) |
 | AI·robot 교차 경계 | agent Plan/Commit 승인, offline mission reconciliation, control plane·data plane, fleet device registry와 desired/reported state, end-to-end fault matrix | [분산 workflow](#doc=backend-engineering-distributed-workflow), [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [AIOps 자동 복구](#doc=aiops-remediation-roadmap) |
 
 이 표의 “포함”은 제품별 명령을 모두 외운다는 뜻이 아니다. 각 항목의 정본·소유자·deadline·failure boundary·검증 증거가 어느 공개 장에서 이어지는지를 뜻한다. 예를 들어 TLA+는 [분산 workflow](#doc=backend-engineering-distributed-workflow)의 불변식 검증으로, eBPF는 [동시성·용량](#doc=backend-engineering-runtime-capacity)의 관측 수단으로 들어가며 둘 자체가 운영 결과의 증거가 되지는 않는다.
@@ -84,19 +84,19 @@ flowchart TD
     F -. incident evidence .-> G[AIOps Diagnostics and Recovery]
 ```
 
-각 장의 예시는 하나의 주문 API를 공유한다. `POST /orders`가 요청을 받고 재고를 예약한 뒤 event를 발행하고 조회 cache를 갱신한다고 가정한다. 이렇게 같은 업무 흐름을 반복하면 HTTP, DB, broker, cache와 배포를 따로 외우지 않고 경계 사이의 실패를 볼 수 있다.
+각 장의 예시는 하나의 주문 API를 공유한다. `POST /orders`가 요청을 받고 재고를 예약한 뒤 event를 발행하고 조회 캐시를 갱신한다고 가정한다. 이렇게 같은 업무 흐름을 반복하면 HTTP, DB, broker, 캐시와 배포를 따로 외우지 않고 경계 사이의 실패를 볼 수 있다.
 
 ## 처음 이해했는지 확인
 
 - HTTP 응답을 받지 못했다는 사실만으로 서버가 업무 처리를 하지 않았다고 단정할 수 없는 이유를 설명할 수 있는가?
-- DB commit과 event publish 사이에서 process가 종료되면 어떤 모순이 생기는가?
+- DB commit과 event publish 사이에서 프로세스가 종료되면 어떤 모순이 생기는가?
 - queue가 길어질 때 worker 수를 무조건 늘리면 dependency가 더 나빠질 수 있는 이유는 무엇인가?
-- cache hit ratio가 올랐는데 사용자에게 오래된 값이 보인다면 성공이라고 할 수 있는가?
+- 캐시 hit ratio가 올랐는데 사용자에게 오래된 값이 보인다면 성공이라고 할 수 있는가?
 - Deployment rollout 완료와 업무 성공률 회복이 같은 판정이 아닌 이유는 무엇인가?
 
 ## 완료
 
-- 요청 한 건의 API·transaction·event·cache·telemetry 경로를 그렸다.
+- 요청 한 건의 API·transaction·event·캐시·telemetry 경로를 그렸다.
 - 각 경계의 정본, deadline, 중복 처리와 소유자를 표시했다.
 - 정상 경로뿐 아니라 응답 유실, 중복 event, 과부하와 구·신 버전 공존을 검토했다.
 - 기존 DevOps 및 AIOps 문서 중 다음에 열어야 할 근거를 연결했다.

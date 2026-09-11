@@ -1,23 +1,23 @@
 # Pending Pod와 consolidation 실습
 
-> 실습 등급: **AWS optional**. EKS와 Karpenter가 설치된 격리 환경이 필요하며 EC2·EKS·network·log 비용이 발생할 수 있다. CI에서는 manifest 정적 검증만 수행한다.
+> 실습 등급: **AWS optional**. EKS와 Karpenter가 설치된 격리 환경이 필요하며 EC2·EKS·네트워크·log 비용이 발생할 수 있다. CI에서는 manifest 정적 검증만 수행한다.
 
 ## 실습 전에 준비할 것
 
-이 실습은 Karpenter를 처음 설치하는 안내가 아니다. Kubernetes scheduling, AWS IAM·VPC·EC2와 EKS를 먼저 학습하고, 지워도 되는 test cluster에 공식 설치 절차로 Karpenter를 구성한 뒤 시작한다.
+이 실습은 Karpenter를 처음 설치하는 안내가 아니다. Kubernetes scheduling, AWS IAM·VPC·EC2와 EKS를 먼저 학습하고, 지워도 되는 test 클러스터에 공식 설치 절차로 Karpenter를 구성한 뒤 시작한다.
 
 - **호환성**: 설치된 Kubernetes·EKS·Karpenter version 조합을 공식 문서에서 다시 확인한다.
-- **도구**: `kubectl`, AWS CLI와 현재 cluster의 Karpenter CRD가 필요하다.
+- **도구**: `kubectl`, AWS CLI와 현재 클러스터의 Karpenter CRD가 필요하다.
 - **AWS 신원**: 예상 account·Region의 temporary role인지 확인하고 EC2 생성 비용·quota를 검토한다.
 - **파일**: 완전한 `EC2NodeClass`, `NodePool`, test Deployment와 PDB manifest가 필요하다.
 - **관측**: controller log, Kubernetes event, NodeClaim condition, EC2 instance 목록을 실험 전에 볼 수 있게 준비한다.
 - **중단 조건**: 예상보다 큰 instance, 허용하지 않은 subnet·zone, Pod 가용성 저하가 보이면 즉시 중단한다.
 
-아래 NodePool은 구조 설명용 일부 예시다. 환경별 `EC2NodeClass`와 test Deployment가 없으므로 그대로 복사한 것만으로는 실습이 시작되지 않는다. 누락된 값을 추측하지 말고 공식 설치 결과와 cluster resource를 기준으로 채운다.
+아래 NodePool은 구조 설명용 일부 예시다. 환경별 `EC2NodeClass`와 test Deployment가 없으므로 그대로 복사한 것만으로는 실습이 시작되지 않는다. 누락된 값을 추측하지 말고 공식 설치 결과와 클러스터 resource를 기준으로 채운다.
 
 ## 먼저 이해하기
 
-이 실습에는 두 방향의 수렴이 있다. workload를 늘리면 Pending Pod 요구를 만족하도록 capacity가 생겨야 하고, workload를 없애면 불필요한 capacity가 disruption policy 안에서 줄어야 한다. 빠른 scale-up만 확인하면 비용과 scale-down 안전성은 검증되지 않는다.
+이 실습에는 두 방향의 수렴이 있다. 워크로드를 늘리면 Pending Pod 요구를 만족하도록 capacity가 생겨야 하고, 워크로드를 없애면 불필요한 capacity가 disruption policy 안에서 줄어야 한다. 빠른 scale-up만 확인하면 비용과 scale-down 안전성은 검증되지 않는다.
 
 관찰 대상도 계층별로 다르다. Pod event는 scheduler가 왜 배치하지 못했는지, Karpenter log는 어떤 requirement와 offering을 검토했는지, NodeClaim condition은 launch·register·initialize 진행을, EC2 API는 실제 instance와 purchase option을 보여 준다.
 
@@ -26,7 +26,7 @@
 | Pod Pending | unschedulable 이유 | request·affinity·taint·volume topology |
 | NodeClaim 생성 | 선택된 requirement | NodePool 교집합과 limit |
 | launched | provider ID·instance | EC2 capacity·quota·IAM |
-| registered | Kubernetes Node 등장 | bootstrap·network·security group |
+| registered | Kubernetes Node 등장 | bootstrap·네트워크·security group |
 | initialized | startup resource 준비 | CNI·CSI·DaemonSet readiness |
 | disrupting | taint·eviction·replacement | PDB·budget·grace period |
 | terminated | NodeClaim·Node·EC2 정리 | finalizer와 cloud resource 잔존 |
@@ -71,7 +71,7 @@ spec:
       - nodes: "1"
 ```
 
-API field와 default는 바뀔 수 있으므로 cluster CRD와 작성 시점 문서를 기준으로 server-side dry-run한다.
+API field와 default는 바뀔 수 있으므로 클러스터 CRD와 작성 시점 문서를 기준으로 server-side dry-run한다.
 
 ```bash
 kubectl apply --server-side --dry-run=server -f nodepool.yaml
@@ -108,18 +108,18 @@ sequenceDiagram
 
 ## 4. Consolidation과 blocked disruption
 
-Deployment를 0으로 줄이고 `consolidateAfter` 이후 event, NodeClaim과 EC2 종료를 관찰한다. 그다음 PDB가 eviction을 막는 작은 workload에서 disruption이 blocked되는 이유를 event로 확인한다. production PDB를 수정해 실험하지 않는다.
+Deployment를 0으로 줄이고 `consolidateAfter` 이후 event, NodeClaim과 EC2 종료를 관찰한다. 그다음 PDB가 eviction을 막는 작은 워크로드에서 disruption이 blocked되는 이유를 event로 확인한다. production PDB를 수정해 실험하지 않는다.
 
 성공 판정은 다음과 같다.
 
-- workload가 있는 동안 허용되지 않은 disruption이 발생하지 않는다.
-- workload 제거 후 budget 범위에서 대상 node가 정리된다.
+- 워크로드가 있는 동안 허용되지 않은 disruption이 발생하지 않는다.
+- 워크로드 제거 후 budget 범위에서 대상 node가 정리된다.
 - rescheduled Pod의 readiness와 SLO가 유지된다.
 - Kubernetes node와 NodeClaim 삭제 뒤 EC2 instance·volume이 남지 않는다.
 
 ## 정리
 
-test workload를 먼저 삭제하고 NodePool이 만든 NodeClaim 정리를 관찰한다. 그 뒤 test NodePool·EC2NodeClass와 관련 IAM·network·log artifact를 inventory 역순으로 정리한다. finalizer를 임의 제거하기 전에 controller와 cloud instance 상태를 조사한다.
+test 워크로드를 먼저 삭제하고 NodePool이 만든 NodeClaim 정리를 관찰한다. 그 뒤 test NodePool·EC2NodeClass와 관련 IAM·네트워크·log artifact를 inventory 역순으로 정리한다. finalizer를 임의 제거하기 전에 controller와 cloud instance 상태를 조사한다.
 
 ## 실행 결과 예시
 
@@ -143,7 +143,7 @@ Consolidation은 이전 노드, 중단 자격, Pod 이동, 사용자 결과를 �
 
 Pod가 Pending에서 Running으로 바뀌었다면 end-to-end capacity path의 한 사례가 성공한 것이다. 하지만 NodeClaim이 예상한 zone·capacity type·instance 범위를 벗어났다면 policy 목표에는 실패했다. application request와 SLO도 함께 확인한다.
 
-NodeClaim이 생겼지만 node가 register되지 않으면 scheduler 문제가 아니라 EC2 launch 이후 bootstrap 경계를 조사한다. subnet route, security group, instance role, cluster endpoint reachability와 startup log가 다음 증거다. NodeClaim 자체가 없다면 Pod와 NodePool requirement의 교집합, limit와 controller 권한을 먼저 본다.
+NodeClaim이 생겼지만 node가 register되지 않으면 scheduler 문제가 아니라 EC2 launch 이후 bootstrap 경계를 조사한다. subnet route, security group, instance role, 클러스터 엔드포인트 reachability와 startup log가 다음 증거다. NodeClaim 자체가 없다면 Pod와 NodePool requirement의 교집합, limit와 controller 권한을 먼저 본다.
 
 scale-down 뒤 Kubernetes Node만 사라지고 EC2 instance가 남으면 cleanup은 끝나지 않았다. 반대로 node가 빨리 줄었지만 Pod가 readiness를 잃거나 PDB를 우회했다면 consolidation도 실패다. 비용 감소와 availability guardrail을 동시에 만족해야 한다.
 

@@ -4,16 +4,16 @@
 <!-- source: https://martinfowler.com/articles/practical-test-pyramid.html | checked: 2026-09-03 -->
 <!-- source: https://kubernetes.io/docs/tasks/run-application/update-deployment-rolling/ | checked: 2026-09-03 -->
 
-배포는 새 binary를 실행하는 순간이 아니라 구·신 코드, schema, event와 cache가 공존하는 기간이다. 변경 단위를 작게 만들고 각 단계에서 돌아갈 길과 사용자 결과를 확인해야 한다. unit test 수나 rollout 완료만으로 호환성을 증명할 수 없다.
+배포는 새 binary를 실행하는 순간이 아니라 구·신 코드, schema, event와 캐시가 공존하는 기간이다. 변경 단위를 작게 만들고 각 단계에서 돌아갈 길과 사용자 결과를 확인해야 한다. unit test 수나 rollout 완료만으로 호환성을 증명할 수 없다.
 
 ## 이 장에서 처음 쓰는 말
 
 | 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
 |---|---|---|
 | expand-contract | 먼저 구·신 버전이 함께 쓸 표현을 추가하고 전환 뒤 오래된 표현을 제거하는 순서 | 구버전과 신버전이 공존하는 동안 스키마·API를 단계적으로 바꿀 때 쓴다. **구체적인 상황(가상 예시):** 열 이름 변경이 배포된 구형 클라이언트를 깨뜨린다. → 호환 형태 추가·읽기 이전·이전 형태 제거 순으로 진행한다. → 단계마다 혼합 버전 동작을 확인한다. |
-| contract test | provider와 consumer가 합의한 요청·응답을 실제 구현이 지키는지 확인하는 test | 공급자의 호환되지 않는 변경이 의존 소비자를 고장 내기 전에 발견한다. **구체적인 상황(가상 예시):** 공급자가 필수 응답 필드를 바꾼다. → 릴리스 전에 소비자 계약 검사를 실행한다. → 호환되지 않는 후보가 거부되는지 확인한다. |
+| contract test | provider와 소비자가 합의한 요청·응답을 실제 구현이 지키는지 확인하는 test | 공급자의 호환되지 않는 변경이 의존 소비자를 고장 내기 전에 발견한다. **구체적인 상황(가상 예시):** 공급자가 필수 응답 필드를 바꾼다. → 릴리스 전에 소비자 계약 검사를 실행한다. → 호환되지 않는 후보가 거부되는지 확인한다. |
 | shadow read | 새 경로의 결과를 사용자에게 쓰지 않고 기존 결과와 비교하는 검증 | 사용자 응답에 새 조회 경로를 사용하기 전에 기존 경로와 결과를 비교한다. **구체적인 상황(가상 예시):** 새 데이터베이스 질의로 기존 읽기 경로를 교체하려 한다. → 사용자 출력은 유지하고 shadow 결과를 비교한다. → 트래픽 전환 전에 불일치를 조사한다. |
-| canary | 일부 traffic·tenant·resource에만 새 변경을 노출하는 단계 | 모든 사용자에게 위험을 노출하기 전에 제한된 대상에서 릴리스 동작을 관찰한다. **구체적인 상황(가상 예시):** 새 릴리스가 결제 오류를 늘릴 수 있다. → 제한된 대상에 후보를 노출한다. → 트래픽 확대 전에 조건이 맞는 결과를 비교한다. |
+| canary | 일부 트래픽·tenant·resource에만 새 변경을 노출하는 단계 | 모든 사용자에게 위험을 노출하기 전에 제한된 대상에서 릴리스 동작을 관찰한다. **구체적인 상황(가상 예시):** 새 릴리스가 결제 오류를 늘릴 수 있다. → 제한된 대상에 후보를 노출한다. → 트래픽 확대 전에 조건이 맞는 결과를 비교한다. |
 | rollback | 실행 artifact를 이전 revision으로 되돌리는 작업 | 새 릴리스가 문제를 일으켰고 되돌림이 호환될 때 검증된 배포 리비전으로 복원한다. **구체적인 상황(가상 예시):** 호환되는 스키마는 그대로인데 새 릴리스가 오류를 만든다. → 검토한 이전 아티팩트로 복원한다. → 배포 상태뿐 아니라 사용자 요청을 확인한다. |
 | roll forward | 데이터·외부 효과 때문에 단순 rollback이 위험할 때 수정 버전을 전진 배포하는 것 | 이전 변경을 되돌리면 상태가 악화되는 경우 호환되는 새 버전으로 동작을 수정한다. **구체적인 상황(가상 예시):** 릴리스가 이전 바이너리가 읽지 못하는 형태로 데이터를 바꿨다. → 호환되는 후속 수정을 준비한다. → 데이터 해석과 사용자 복구를 함께 검증한다. |
 
@@ -22,7 +22,7 @@
 
 ## 먼저 이해하기
 
-Kubernetes Deployment는 rolling update와 revision rollback을 제공하지만 application contract나 DB schema 역호환을 판단하지 않는다. Pod가 available이어도 새 응답을 old consumer가 읽지 못하거나 background migration이 업무 데이터를 잘못 바꿀 수 있다.
+Kubernetes Deployment는 rolling update와 revision rollback을 제공하지만 application contract나 DB schema 역호환을 판단하지 않는다. Pod가 available이어도 새 응답을 old 소비자가 읽지 못하거나 background migration이 업무 데이터를 잘못 바꿀 수 있다.
 
 ```mermaid
 flowchart LR
@@ -39,10 +39,10 @@ flowchart LR
 
 | producer / consumer | old consumer | new consumer |
 |---|---|---|
-| old producer | 기준선 | 새 consumer가 old payload를 읽어야 함 |
-| new producer | old consumer가 새 payload를 견뎌야 함 | 목표 조합 |
+| old producer | 기준선 | 새 소비자가 old payload를 읽어야 함 |
+| new producer | old 소비자가 새 payload를 견뎌야 함 | 목표 조합 |
 
-API의 optional field 추가, event enum 확장과 DB column 변경은 서로 다른 호환 규칙을 가진다. OpenAPI schema lint는 문서 구조를 확인하지만 의미 변화와 실제 consumer 행동을 모두 알지 못한다. contract fixture와 consumer test를 CI에서 함께 실행한다.
+API의 optional field 추가, event enum 확장과 DB column 변경은 서로 다른 호환 규칙을 가진다. OpenAPI schema lint는 문서 구조를 확인하지만 의미 변화와 실제 소비자 행동을 모두 알지 못한다. contract fixture와 소비자 test를 CI에서 함께 실행한다.
 
 ```yaml
 change_receipt:
@@ -63,9 +63,9 @@ change_receipt:
 
 | test 층 | 빠르게 찾는 문제 | 찾지 못하는 문제 |
 |---|---|---|
-| unit·property | 함수 규칙과 넓은 입력 반례 | 실제 DB·network 의미 |
-| integration | DB constraint, transaction, serialization | 실제 consumer 계약 전체 |
-| contract | provider와 consumer 표현 불일치 | production 용량과 데이터 분포 |
+| unit·property | 함수 규칙과 넓은 입력 반례 | 실제 DB·네트워크 의미 |
+| integration | DB constraint, transaction, serialization | 실제 소비자 계약 전체 |
+| contract | provider와 소비자 표현 불일치 | production 용량과 데이터 분포 |
 | end-to-end | 핵심 사용자 흐름의 조합 오류 | 모든 fault와 tail behavior |
 | load·soak | saturation, leak와 tail latency | 업무 의미가 맞는지 자체 판단 |
 | fault injection | timeout·duplicate·dependency failure | 선택하지 않은 결함 |
@@ -109,7 +109,7 @@ canary 성공은 자동으로 전체 확장을 뜻하지 않는다. scope 확대
 
 ## 스스로 설명해 보기
 
-- optional field 추가가 모든 consumer에게 자동으로 호환되는 변경이 아닌 이유는 무엇인가?
+- optional field 추가가 모든 소비자에게 자동으로 호환되는 변경이 아닌 이유는 무엇인가?
 - backfill이 끝났다는 사실을 row count 하나로 판정하면 어떤 오류를 놓칠 수 있는가?
 - Pod rollout 성공과 application release 성공이 다른 이유는 무엇인가?
 - DB 변경 때문에 rollback보다 roll forward가 안전할 수 있는 경우는 언제인가?

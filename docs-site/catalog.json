@@ -1200,7 +1200,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-roadmap.md",
             "title": "데이터·관측성 엔지니어링: 이벤트에서 신뢰할 수 있는 AI까지",
             "summary": "12개월 계획에 따라 측정 가능한 완료 기준을 갖춘 하나의 플랫폼을 점진적으로 만든다.",
-            "sourceSha256": "c30fa4089ff2c169024b71530f76ca2460b0dd32876de3d8e7dca895d33af219"
+            "sourceSha256": "18e7c6202d3441b9aab040333d1b587df3d67ed901d1c5a4bd9b6b2a6f625326"
           }
         },
         {
@@ -1212,7 +1212,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-stack-and-architecture.md",
             "title": "책임을 기준으로 기술 스택 선택하기",
             "summary": "핵심 스택을 선택하고 CDC·Flink·Trino·카탈로그·텔레메트리 백엔드가 필요한 조건을 익힌다.",
-            "sourceSha256": "ea61dcac48fe7e5866d33f40a16b963d7e0cdadf060d7cc1713468699580a2ff"
+            "sourceSha256": "54f1d0293a593bc08369171ca07e4d55006e08c6039d7f4d39aa51a16b480112"
           }
         },
         {
@@ -1224,7 +1224,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-sql-python-foundations.md",
             "title": "SQL과 Python: 확장하기 전에 결과를 입증하기",
             "summary": "실행 가능한 Python·SQL 예제로 행 단위, 조인, 중복 제거, 합계를 검증한다.",
-            "sourceSha256": "539e2238b7fbdda6f01b1d74145c2951450a944baecbd0b59ad8e157198abc03"
+            "sourceSha256": "84e50a0e6635cf4fa9e91770d424fe0e7a13f08f85203fcaea45f14400fb237c"
           }
         },
         {
@@ -1236,7 +1236,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-parquet-object-storage.md",
             "title": "Parquet와 오브젝트 스토리지: 실제로 읽는 데이터 이해하기",
             "summary": "열 선택, 필터링, 파일 배치, 오브젝트 스토리지 동작을 측정한다.",
-            "sourceSha256": "f5ffa380ee0dd6567bb1a1f3c78db0cde1442b0534eb9c11c5f30127b37542ca"
+            "sourceSha256": "98977dde03df48a3e184b4bfd9da5c4a5595e50f4d775fd154307ea085cfddb1"
           }
         },
         {
@@ -1248,7 +1248,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-table-formats.md",
             "title": "Iceberg와 Delta Lake: 파일 집합을 테이블로 만들기",
             "summary": "커밋된 테이블 버전을 추적하고 Iceberg·Delta를 비교하며 복구를 연습한다.",
-            "sourceSha256": "f524cdf83ddcf80f8ffc1cdf7ec02588e851044e90f088a52dbf8215b4c91481"
+            "sourceSha256": "4dbc199306c5a896a6a2dc4ea21625b144cd411bd9b84188c965dc9da4506701"
           }
         },
         {
@@ -1260,7 +1260,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-spark-performance.md",
             "title": "Spark 내부 동작: 근거로 느린 작업 설명하기",
             "summary": "물리 계획·태스크·셔플·데이터 쏠림·스필을 측정한 개선 결과와 연결한다.",
-            "sourceSha256": "ba4ee552f3971badfc07bc407f135d17b6d8774ff73ab8df39c8b4b3d67e00cb"
+            "sourceSha256": "ccdbeb1036744d28c1f4f998c968edbc70217dc8225cf5c6b79258c729fe1d22"
           }
         },
         {
@@ -1272,7 +1272,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-kafka-cdc-streaming.md",
             "title": "Kafka·CDC·스트리밍 복구",
             "summary": "CDC, 전달 보장의 경계, 이벤트 시간, 체크포인트, 재생 정확성을 정의한다.",
-            "sourceSha256": "92f175efd8aa8a16016d4f61dc2251a445ed19832acee0675ad082b63f143f15"
+            "sourceSha256": "5c9f731186bca6a7cd3eedcbe52bc332ea63a2b47b6d607342284da5891fed1e"
           }
         },
         {
@@ -1284,7 +1284,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-modeling-orchestration.md",
             "title": "모델링·dbt·오케스트레이션: 의미 있는 데이터셋 공개하기",
             "summary": "의미 있는 데이터 마트를 만들고 계약과 테스트를 구분하며 명시한 구간을 백필한다.",
-            "sourceSha256": "58159679e41ca1869788f7f4010feeb7f5e70e7ca318fdbcd52653ebbc907652"
+            "sourceSha256": "6ad988fd953d0aa5282fbf5ce2ceaa89547f086dd13f4f6c43ca51e8e25d8601"
           }
         },
         {
@@ -1296,7 +1296,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-quality-contracts-slos.md",
             "title": "데이터 품질·계약·결과 중심 SLO",
             "summary": "유효성·완전성·신선도·누락 실행·공개 결과를 측정한다.",
-            "sourceSha256": "e791a744fb99d04bcb3701ee1722bab675ba86e40f2bf97bd2834b4ba3106e49"
+            "sourceSha256": "02910fab51b6ee842d0d526599dcacdc70bc1d66c8c422522346ab0b7518cf19"
           }
         },
         {
@@ -1308,7 +1308,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-opentelemetry.md",
             "title": "OpenTelemetry: 텔레메트리를 통제하며 실행 연결하기",
             "summary": "SDK와 Collector 파이프라인을 연결하고 컨텍스트 전파·샘플링·텔레메트리 유실을 조사한다.",
-            "sourceSha256": "dd484557f6fe61a60abe66f41594e0b973d612d44df060814075e5fc238ce07c"
+            "sourceSha256": "debf646696e99a9862ce7a7081cfb96d02160a45b30a291fced0a5e682319ebd"
           }
         },
         {
@@ -1320,7 +1320,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-metrics-logs-traces.md",
             "title": "Prometheus·Grafana·Loki·Tempo: 근거 파이프라인 운영하기",
             "summary": "카운터·히스토그램을 읽고 라벨 범위를 제한하며 데이터셋 경보를 로그·트레이스와 연결한다.",
-            "sourceSha256": "0acfddd257eb620f32bf4ef9fe3d9c601d4941cf221fa223a655a4f7b0826af3"
+            "sourceSha256": "7fc4ad4d4cf9831b5b5e9c4f3cea5396c7a83d18e52e24e797f3fde329a1d89d"
           }
         },
         {
@@ -1332,7 +1332,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-lineage-governance.md",
             "title": "계보·카탈로그·거버넌스: 영향 찾기와 접근 강제하기",
             "summary": "데이터셋·작업·실행을 소유자와 연결하고 실행 시점의 접근 권한을 시험한다.",
-            "sourceSha256": "8116158ab14777e65eb4c6a2ec1d60a78482a6ac410e01e6b369d3e5618ab1b1"
+            "sourceSha256": "c96c1fa4f97de39dbd9d4f1413d7a3b97c97d6e78d022afa13c6fa05439b6552"
           }
         },
         {
@@ -1344,7 +1344,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-cloud-platforms.md",
             "title": "Databricks부터 Snowflake까지: 같은 약속 비교하기",
             "summary": "동일한 품질·복구·비용 요구를 기준으로 Databricks와 Snowflake를 비교한다.",
-            "sourceSha256": "22c87a327c9f27e87eba8efd1841179ea52164eb996d4392ecd785a0c7a21fd0"
+            "sourceSha256": "2653a58e5a9c8a7f0ba69df3fedb2322c8915f3ac300e8c7c0307a6a52b666fb"
           }
         },
         {
@@ -1356,7 +1356,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-ai-ready-data-evaluation.md",
             "title": "AI용 데이터·검색·평가",
             "summary": "검색과 에이전트에 권한이 허용된 근거를 전달하고 재현 가능한 답변 추적 기록을 평가한다.",
-            "sourceSha256": "500310247bfa06b8f6b79f2a2a1246b9eed19a4c732adf761b186d4585c51212"
+            "sourceSha256": "98b36d061d387f7171df2b55862ff5085c845fd5aade8f6cd7ae0f6d6096f93d"
           }
         },
         {
@@ -1368,7 +1368,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-platform-operations.md",
             "title": "플랫폼 운영: 릴리스·복구·용량·비용",
             "summary": "호환되는 릴리스, 복원, 용량, 역압, 성공 결과당 비용을 운영한다.",
-            "sourceSha256": "73c6543be4003466619d83ae5347ed3ee896ed22b498d34e6b56b467b6bf8eb0"
+            "sourceSha256": "1d79b5560ae2a4b6a49ac871f4cd626cb3fdd34b2ea0f9dd6df2ba4228c5b334"
           }
         },
         {
@@ -1380,7 +1380,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-capstone.md",
             "title": "종합 프로젝트: 함께 발전하는 데이터·관측성 플랫폼",
             "summary": "하나의 가상 프로젝트를 여섯 단계로 발전시키고 실행 가능한 정답 판정기와 실패 행렬을 만든다.",
-            "sourceSha256": "e302075a0c80bc21148eddebdd12eeadba5a95f6b7596574426b918932024bf7"
+            "sourceSha256": "470c4d100a5c8e53073bcd27f2363973ea2bd82040bbee5d0d59444920cace20"
           }
         },
         {
@@ -1392,7 +1392,7 @@
             "path": "docs-site/translations/ko/data-observability-engineering-source-review.md",
             "title": "출처 검토·확장·구현 경계",
             "summary": "공식 출처, 커리큘럼 확장, 버전별 경계를 검토한다.",
-            "sourceSha256": "8c48bcc6a18336df88a4c54d819abe84a94e5d56112750ada811a2e82d4b90ed"
+            "sourceSha256": "471d847cfb3cc8298ba09d91dab53a8d64a13ef0e2f7e5c8e669d943a91357de"
           }
         }
       ]

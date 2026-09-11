@@ -7,11 +7,11 @@
 | 위치 | 컴포넌트 | 핵심 책임 |
 |---|---|---|
 | 컨트롤 플레인 | kube-apiserver | API의 관문, 인증·인가·검증 뒤 상태 제공 |
-| 컨트롤 플레인 | etcd | API server 데이터의 일관된 키-값 저장소 |
+| 컨트롤 플레인 | etcd | API 서버 데이터의 일관된 키-값 저장소 |
 | 컨트롤 플레인 | kube-scheduler | 아직 노드가 정해지지 않은 Pod에 노드 선택 |
 | 컨트롤 플레인 | kube-controller-manager | Deployment, Node 등 제어 루프 실행 |
 | 노드 | kubelet | 자신에게 배정된 Pod의 컨테이너 실행 상태 유지 |
-| 노드 | container runtime | 이미지와 컨테이너의 실제 실행 |
+| 노드 | 컨테이너 runtime | 이미지와 컨테이너의 실제 실행 |
 | 노드 | kube-proxy 또는 대체 dataplane | Service 트래픽을 위한 노드 네트워크 규칙 구현 |
 | 애드온 | DNS, CNI, metrics 등 | 이름 해석·Pod 네트워크·관측 기능 제공 |
 
@@ -57,7 +57,7 @@ sequenceDiagram
     A-->>U: Current status inquiry result
 ```
 
-이 시퀀스에서 컴포넌트들은 서로에게 긴 명령 체인을 직접 넘기기보다 API server를 통해 공유 상태를 본다. 그래서 일부 컴포넌트가 잠시 중단되어도 저장된 의도는 사라지지 않고, 복구 뒤 다시 조정할 수 있다.
+이 시퀀스에서 컴포넌트들은 서로에게 긴 명령 체인을 직접 넘기기보다 API 서버를 통해 공유 상태를 본다. 그래서 일부 컴포넌트가 잠시 중단되어도 저장된 의도는 사라지지 않고, 복구 뒤 다시 조정할 수 있다.
 
 ## 제어 루프: 관찰하고, 비교하고, 행동한다
 
@@ -77,11 +77,11 @@ kubectl get deployment object-demo \
   -o jsonpath='{.spec.replicas}{" desired / "}{.status.availableReplicas}{" available\n"}'
 ```
 
-## API server와 etcd의 경계
+## API 서버와 etcd의 경계
 
-클라이언트와 컨트롤러는 etcd에 직접 쓰지 않는다. API server를 통해 API 계약, 권한, admission을 거쳐야 한다. 따라서 API server의 가용성은 모든 관리 작업의 관문이고, etcd의 일관성과 복구 가능성은 클러스터 상태의 토대다.
+클라이언트와 컨트롤러는 etcd에 직접 쓰지 않는다. API 서버를 통해 API 계약, 권한, admission을 거쳐야 한다. 따라서 API 서버의 가용성은 모든 관리 작업의 관문이고, etcd의 일관성과 복구 가능성은 클러스터 상태의 토대다.
 
-다음 명령은 쓰기 없이 현재 연결과 API 준비 상태를 확인한다. 일부 관리형 클러스터는 상세 endpoint 접근을 제한할 수 있다.
+다음 명령은 쓰기 없이 현재 연결과 API 준비 상태를 확인한다. 일부 관리형 클러스터는 상세 엔드포인트 접근을 제한할 수 있다.
 
 ```bash
 kubectl cluster-info
@@ -90,7 +90,7 @@ kubectl api-resources
 kubectl get --raw='/apis/apps/v1' | head
 ```
 
-`/readyz`가 성공해도 모든 워크로드가 정상이라는 뜻은 아니다. API server가 요청을 받을 준비가 됐다는 범위의 신호다.
+`/readyz`가 성공해도 모든 워크로드가 정상이라는 뜻은 아니다. API 서버가 요청을 받을 준비가 됐다는 범위의 신호다.
 
 ## Scheduler와 kubelet은 다른 질문에 답한다
 
@@ -113,12 +113,12 @@ kubectl get pods -A -o wide --field-selector spec.nodeName=<node-name>
 
 | 관찰 | 우선 조사할 경계 | 다음 증거 |
 |---|---|---|
-| 모든 `kubectl` 요청 실패 | client → API server | kubeconfig, DNS/TLS, API endpoint |
+| 모든 `kubectl` 요청 실패 | 클라이언트 → API 서버 | kubeconfig, DNS/TLS, API 엔드포인트 |
 | API 읽기는 되지만 변경 지연 | controller 또는 admission | controller 로그, condition, event |
 | Pod가 계속 Pending | scheduler 입력 | Pod event, requests, taint, affinity |
 | nodeName은 있으나 ContainerCreating | kubelet/runtime/storage/network | Pod event, kubelet과 runtime 상태 |
 | Node NotReady | node heartbeat 경로 | Node condition, Lease, 노드 시스템 로그 |
-| Service만 연결 실패 | DNS·EndpointSlice·dataplane | Service와 endpoint, CNI·proxy 상태 |
+| Service만 연결 실패 | DNS·EndpointSlice·dataplane | Service와 엔드포인트, CNI·proxy 상태 |
 
 ```mermaid
 flowchart TD
@@ -133,7 +133,7 @@ flowchart TD
 
 ## 고가용성은 복제 수보다 복구 경로다
 
-프로덕션 컨트롤 플레인은 API endpoint, API server, controller와 scheduler, etcd의 장애 도메인을 나눠 설계한다. 그러나 인스턴스를 여러 개 두는 것만으로 충분하지 않다. etcd 백업 복원, 인증서, load balancer, 버전 호환성, quorum 상실 절차를 실제로 연습해야 한다.
+프로덕션 컨트롤 플레인은 API 엔드포인트, API 서버, controller와 scheduler, etcd의 장애 도메인을 나눠 설계한다. 그러나 인스턴스를 여러 개 두는 것만으로 충분하지 않다. etcd 백업 복원, 인증서, load balancer, 버전 호환성, quorum 상실 절차를 실제로 연습해야 한다.
 
 또한 controller와 scheduler는 여러 인스턴스가 실행되더라도 leader election으로 활성 리더를 정할 수 있다. “프로세스가 세 개”와 “동시에 세 번 같은 결정을 수행”은 다르다.
 
@@ -158,7 +158,7 @@ readyz check passed
 
 1. `kubectl apply`가 kubelet에 직접 명령하지 않는 이유는 무엇인가?
 2. Pending Pod에 nodeName이 있는지 확인하면 어떤 경계를 나눌 수 있는가?
-3. API server가 정상이어도 Deployment가 조정되지 않을 수 있는 이유는 무엇인가?
+3. API 서버가 정상이어도 Deployment가 조정되지 않을 수 있는 이유는 무엇인가?
 4. 노드 네트워크가 분리됐을 때 status와 실제 프로세스 상태가 왜 다를 수 있는가?
 
 [← API와 오브젝트](../../content/kubernetes/02-api-and-objects.md) · [Pod와 워크로드 →](../../content/kubernetes/04-pods-and-workloads.md)

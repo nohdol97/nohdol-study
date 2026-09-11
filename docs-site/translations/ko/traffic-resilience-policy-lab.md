@@ -4,7 +4,7 @@
 
 ## 실습 전에 준비할 것
 
-이 실습은 cluster나 proxy 설정을 바꾸지 않는 **Plan only** 검토다. 텍스트 편집기만 있으면 되고, YAML parser가 있으면 문법 확인에 사용할 수 있다. 예시는 실제 hostname이나 credential을 포함하지 않는다. 목표는 “적용이 성공하는가”가 아니라 “누가 무엇을 허용했고, 실패 시 추가 traffic과 중복 작업이 어디까지 늘 수 있는가”를 설명하는 것이다.
+이 실습은 클러스터나 proxy 설정을 바꾸지 않는 **Plan only** 검토다. 텍스트 편집기만 있으면 되고, YAML parser가 있으면 문법 확인에 사용할 수 있다. 예시는 실제 hostname이나 credential을 포함하지 않는다. 목표는 “적용이 성공하는가”가 아니라 “누가 무엇을 허용했고, 실패 시 추가 트래픽과 중복 작업이 어디까지 늘 수 있는가”를 설명하는 것이다.
 
 | 준비 항목 | 값 |
 |---|---|
@@ -16,7 +16,7 @@
 
 ## 먼저 이해하기
 
-Route 검토와 retry 검토는 순서가 있다. 먼저 이 route가 어느 listener에 어떤 권한으로 붙는지 확인해야 한다. 그다음 실제 요청이 실패했을 때 누가 재시도하며, 시도 총시간과 동시 추가 요청량이 상한 안에 있는지 본다. `kubectl apply --dry-run=server`가 통과해도 이 업무 의미와 부하 예산을 증명하지 않는다.
+Route 검토와 retry 검토는 순서가 있다. 먼저 이 route가 어느 리스너에 어떤 권한으로 붙는지 확인해야 한다. 그다음 실제 요청이 실패했을 때 누가 재시도하며, 시도 총시간과 동시 추가 요청량이 상한 안에 있는지 본다. `kubectl apply --dry-run=server`가 통과해도 이 업무 의미와 부하 예산을 증명하지 않는다.
 
 ```mermaid
 flowchart TB
@@ -110,7 +110,7 @@ evidence:
 2. 이 워크시트의 `maxAttempts: 2`는 첫 시도와 재시도 한 번을 뜻한다. 선택한 프록시의 시도·재시도 필드와 명시적으로 대응시킨다. 재시도 횟수를 세는 필드에 2를 복사하면 총 세 번의 시도가 허용된다.
 3. 503이 업무 처리 전 반환된다는 보장이 있는지 확인한다. 결제 side effect 뒤 응답만 유실될 수 있다면 idempotency key 없이 retry하면 안 된다.
 4. 정상 1,000개 진행 요청에서 15% retry budget이 어떤 동시 추가량을 허용하는지 계산한다. static `maxRetries`와 함께 있을 때 어느 설정이 우선하는지도 구현 문서에서 확인한다.
-5. backend 절반이 공통 DB 장애로 5xx를 낼 때 host를 제외하는 것이 해결인지 검토한다. 공통 원인이라면 남은 host에 traffic이 몰릴 수 있다.
+5. backend 절반이 공통 DB 장애로 5xx를 낼 때 host를 제외하는 것이 해결인지 검토한다. 공통 원인이라면 남은 host에 트래픽이 몰릴 수 있다.
 6. `checkout_success_ratio`가 회복되지 않거나 pending request가 상승하면 자동 변경을 중단하고 이전 policy revision으로 돌아가도록 abort condition을 적는다.
 
 ## 실행 결과 예시
@@ -132,13 +132,13 @@ overall_verdict_without_backend_and_certificate_checks: NOT READY
 
 | 관찰 | 의미 | 다음 행동 |
 |---|---|---|
-| Route `Accepted=False` | traffic policy 이전에 attachment 계약이 실패 | status reason과 listener 허용 범위 확인 |
+| Route `Accepted=False` | 트래픽 policy 이전에 attachment 계약이 실패 | status reason과 리스너 허용 범위 확인 |
 | retry는 증가하고 성공률은 그대로 | 추가 시도가 복구 효과 없이 부하만 더함 | retry 축소 또는 차단, 원인 조사 |
 | ejection 뒤 성공률 상승·포화 안정 | 일부 host 실패를 격리했을 가능성 | 제외 host의 실제 원인과 복귀 조건 확인 |
 | ejection 뒤 pending 증가 | 남은 capacity가 부족하거나 공통 원인 | ejection 확대 중단, load shedding 검토 |
 | rollback 명령 성공 | spec이 이전 revision으로 바뀜 | 사용자 결과와 queue 회복은 별도 검증 |
 
-이 표에서 가장 중요한 구분은 **완화 성공과 근본 원인 해결이 다르다**는 점이다. traffic을 되돌려 오류율이 낮아져도 새 release의 어떤 결함이 실패를 만들었는지는 postmortem과 재현 테스트로 남겨야 한다. 반대로 원인 후보를 맞혔더라도 사용자 오류가 계속되면 incident는 끝나지 않았다.
+이 표에서 가장 중요한 구분은 **완화 성공과 근본 원인 해결이 다르다**는 점이다. 트래픽을 되돌려 오류율이 낮아져도 새 release의 어떤 결함이 실패를 만들었는지는 postmortem과 재현 테스트로 남겨야 한다. 반대로 원인 후보를 맞혔더라도 사용자 오류가 계속되면 incident는 끝나지 않았다.
 
 ## 완료와 cleanup
 

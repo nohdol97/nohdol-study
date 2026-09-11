@@ -28,6 +28,7 @@ test('all 94 translations preserve examples, source records and document destina
     assert.match(doc.koreanSearchText, /[가-힣]/u);
     assert.equal([...doc.parallelHtml.matchAll(/<pre\b/g)].length, [...doc.html.matchAll(/<pre\b/g)].length, `${doc.id}: shared examples appear once`);
     assert.ok(termsForDocument(doc).length > 0, `${doc.id}: terminology available`);
+    assert.equal([...doc.parallelHtml.matchAll(/class="term-entry"/g)].length, doc.terms.length, `${doc.id}: every definition has a compact entry`);
     for (const term of termsForDocument(doc)) {
       assert.doesNotThrow(() => validateTermPurposes([term], doc.id));
       assert.doesNotThrow(() => validateTermScenarios([term], doc.id));
@@ -85,6 +86,17 @@ test('table and list scenarios preserve meaning and purpose while enforcing thre
   assert.deepEqual(articleTerms(`| Term | Meaning | Why it matters / when to use it |\n|---|---|---|\n| PID | ${term.english} | ${enTail} |`, `| 용어 | 의미 | 왜 필요한가요 · 언제 쓰나요 |\n|---|---|---|\n| PID | ${term.korean} | ${koTail} |`), [term]);
   assert.deepEqual(articleTerms(`## Terms introduced in this chapter\n\n- **PID**: ${term.english} **Why it matters / when to use it:** ${enTail}`, `## 이 장의 용어\n\n- **PID**: ${term.korean} **왜 필요한가요 · 언제 쓰나요:** ${koTail}`), [term]);
   assert.doesNotThrow(() => validateTermScenarios([term], 'fixture'));
+  for (const [en, ko] of [
+    [`| Term | Meaning | Why it matters / when to use it |\n|---|---|---|\n| PID | ${term.english} | ${enTail} |`, `| 용어 | 의미 | 왜 필요한가요 · 언제 쓰나요 |\n|---|---|---|\n| PID | ${term.korean} | ${koTail} |`],
+    [`## Terms introduced in this chapter\n\n- **PID**: ${term.english} **Why it matters / when to use it:** ${enTail}`, `## 이 장의 용어\n\n- **PID**: ${term.korean} **왜 필요한가요 · 언제 쓰나요:** ${koTail}`],
+  ]) {
+    const html = parallel(en, ko);
+    assert.match(html, /<details class="term-entry"><summary>/);
+    assert.doesNotMatch(html, /<table|term-entry" open| → /);
+    assert.ok(html.indexOf(term.korean) < html.indexOf(term.english), 'Korean meaning precedes English');
+    for (const text of [term.whyEn, term.whyKo, ...term.exampleEn.split(' → '), ...term.exampleKo.split(' → ')]) assert.ok(html.includes(text), text);
+    assert.throws(() => parallel(en.replace(term.english, '[Definition](https://example.com/one)'), ko.replace(term.korean, '[뜻](https://example.com/two)')), /link destinations/);
+  }
   for (const invalid of [
     {exampleEn: undefined}, {exampleKo: undefined}, {exampleEn: ''}, {exampleKo: ''},
     {exampleEn: term.whyEn}, {exampleKo: '상황 → 적용 → 확인'},
@@ -119,6 +131,9 @@ test('paired lists, headings, tables, and quoted text keep shared code once', ()
   assert.doesNotMatch(html, /<h1>/);
   assert.match(html, /lang="en"/); assert.match(html, /lang="ko"/);
   assert.match(html, /<details[^>]+open>/);
+  assert.match(html, /english-explanation/);
+  assert.doesNotMatch(html, /korean-explanation/);
+  assert.ok(html.indexOf('모델') < html.indexOf('Model'), 'Korean heading precedes English');
   assert.equal([...html.matchAll(/echo PASS/g)].length, 1);
   assert.equal([...html.matchAll(/<li>/g)].length, 2);
   assert.deepEqual(articleTerms(en, ko), [{term: 'CDC', english: 'Change capture', korean: '변경 수집'}]);

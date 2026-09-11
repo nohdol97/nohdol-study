@@ -46,8 +46,9 @@ export function attachTerms(article, currentDocument, {t}) {
   const dialog = document.createElement('dialog'); dialog.className = 'term-dialog'; dialog.setAttribute('aria-labelledby', 'term-dialog-title'); article.append(dialog);
   const openTerm = (term) => {
     dialog.replaceChildren();
-    const close = document.createElement('button'); close.type = 'button'; close.className = 'term-close'; close.textContent = t('Close'); close.addEventListener('click', () => dialog.close()); dialog.append(close);
-    const title = document.createElement('h2'); title.id = 'term-dialog-title'; title.textContent = term.term; dialog.append(title);
+    const header = document.createElement('div'); header.className = 'term-dialog-header';
+    const close = document.createElement('button'); close.type = 'button'; close.className = 'term-close'; close.textContent = t('Close'); close.addEventListener('click', () => dialog.close());
+    const title = document.createElement('h2'); title.id = 'term-dialog-title'; title.textContent = term.term; header.append(title, close); dialog.append(header);
     for (const [en, ko, heading] of [[term.english, term.korean, 'Meaning'], [term.whyEn, term.whyKo, 'Why it matters / when to use it'], [term.exampleEn, term.exampleKo, 'Concrete situation (illustrative)'], [term.distinctionEn, term.distinctionKo, 'Do not confuse with']]) {
       if (!en || !ko) continue;
       const section = document.createElement('section'); const h3 = document.createElement('h3'); h3.textContent = t(heading); section.append(h3);
@@ -57,14 +58,14 @@ export function attachTerms(article, currentDocument, {t}) {
         for (const [index, label] of ['Situation', 'Apply', 'Check'].entries()) {
           const step = document.createElement('li'); step.dataset.scenarioStep = label.toLowerCase();
           const title = document.createElement('strong'); title.textContent = t(label); step.append(title);
-          for (const [lang, value] of [['en', enSteps[index]], ['ko', koSteps[index]]]) {
+          for (const [lang, value] of [['ko', koSteps[index]], ['en', enSteps[index]]]) {
             const p = document.createElement('p'); p.lang = lang; p.textContent = value; step.append(p);
           }
           steps.append(step);
         }
         section.append(steps);
       } else {
-        for (const [lang, value] of [['en', en], ['ko', ko]]) {const p = document.createElement('p');p.lang = lang;p.textContent = value;section.append(p);}
+        for (const [lang, value] of [['ko', ko], ['en', en]]) {const p = document.createElement('p');p.lang = lang;p.textContent = value;section.append(p);}
       }
       dialog.append(section);
     }

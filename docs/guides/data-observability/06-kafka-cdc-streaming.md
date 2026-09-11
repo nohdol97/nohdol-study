@@ -1,22 +1,30 @@
 # Kafka, CDC, and streaming recovery
 
-CDC stands for **Change Data Capture**: collecting a database's inserts, updates, and deletes so another system can follow its changes. Imagine an order changing from pending to paid. An analytical copy needs that update; copying every order repeatedly becomes wasteful as the table grows. CDC carries the change, but the consumer still decides how it affects the analytical table.
+An order has been paid, but the sales report still shows it as pending. The analytical copy needs the updated status.
 
-Debezium implements CDC with database connectors. Kafka stores and distributes the resulting event records, and a stream processor can transform them. These are separate roles: a changed row is not automatically a new business sale, and storing its event does not calculate revenue. In the next chapter, dbt transforms data after it has been loaded.
+**CDC** means **Change Data Capture**. It captures database inserts, updates, and deletes so another system can apply them without repeatedly copying every row.
 
-Streaming correctness becomes visible when a process stops between reading an event and committing its output. Design for that interruption before optimizing throughput.
+The tools have different jobs:
+
+- **Debezium** reads supported database changes.
+- **Kafka** stores and distributes the resulting events.
+- A **stream processor** reads those events and updates its output.
+
+Updating an order does not create another sale. The consumer must decide how each change affects the report; the next chapter introduces dbt for transforming loaded data.
+
+Now imagine the processor stops after reading an event but before recording its progress. This chapter explains how to recover without silently losing work or counting it twice.
 
 ## Terms introduced in this chapter
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Partition / offset | An ordered log segment / a position within it | Define ordering scope and record where each consumer can resume after interruption. **Concrete situation (illustrative):** A Kafka consumer must resume after a crash. → Record and recover its position per partition. → Confirm replay and deduplication cover the chosen offset-commit boundary. |
-| Consumer group | Consumers sharing partition consumption responsibility | Share partition processing among workers and rebalance responsibility as group membership changes. **Concrete situation (illustrative):** One consumer cannot keep up with a topic's workload. → Add consumers to the intended group within partition parallelism limits. → Check partition assignment and lag instead of assuming linear scaling. |
-| Rebalance | A change in partition assignments among consumers | Redistribute partitions when consumers join or leave while checking pauses and duplicate work. **Concrete situation (illustrative):** Adding a Kafka consumer briefly changes which process handles each partition. → Observe the group rebalance and handle partition revocation safely. → Verify processing resumes without unhandled duplicates or lost progress. |
-| CDC | Change Data Capture: turning database changes into records for downstream use | Keep downstream copies current using database changes instead of repeatedly copying every source row. **Concrete situation (illustrative):** An order changes from pending to paid, but analytics still shows pending. → Capture the database change and apply it downstream using the order identity. → Check freshness and replay the change to ensure it does not create a second order. |
-| Event time / processing time | When the event occurred / when a processor handled it | Separate when business events happened from arrival delays when building time-based results. **Concrete situation (illustrative):** A phone uploads an event long after it happened offline. → Preserve occurrence time separately from arrival and processing time. → Confirm reports group it according to the intended business-time rule. |
-| Watermark | An event-time progress boundary used by supported stateful operations | Bound eligible state and lateness handling for supported streaming operations under an explicit policy. **Concrete situation (illustrative):** Delayed events keep arriving for an old streaming window. → Define a watermark and explicit late-data policy supported by the engine. → Test events on both sides of the lateness boundary. |
-| Checkpoint | Recorded progress and state needed for a processor to recover | Resume a processor from retained progress and state after a failure, with sink correctness checked separately. **Concrete situation (illustrative):** A stateful streaming job restarts after failure. → Recover its progress and state from the configured checkpoint. → Verify source replay and sink behavior preserve the intended processing contract. |
+| Partition / offset | A partition is an ordered part of a Kafka log. An offset identifies a position within that partition. | Define ordering scope and record where each consumer can resume after interruption. **Concrete situation (illustrative):** A Kafka consumer must resume after a crash. → Record and recover its position per partition. → Confirm replay and deduplication cover the chosen offset-commit boundary. |
+| Consumer group | A group of consumers that divide responsibility for reading a topic's partitions. | Share partition processing among workers and rebalance responsibility as group membership changes. **Concrete situation (illustrative):** One consumer cannot keep up with a topic's workload. → Add consumers to the intended group within partition parallelism limits. → Check partition assignment and lag instead of assuming linear scaling. |
+| Rebalance | Redistributing partition ownership among consumers, for example when a consumer joins or leaves. | Redistribute partitions when consumers join or leave while checking pauses and duplicate work. **Concrete situation (illustrative):** Adding a Kafka consumer briefly changes which process handles each partition. → Observe the group rebalance and handle partition revocation safely. → Verify processing resumes without unhandled duplicates or lost progress. |
+| CDC | Change Data Capture records database inserts, updates, and deletes so other systems can apply those changes. | Keep downstream copies current using database changes instead of repeatedly copying every source row. **Concrete situation (illustrative):** An order changes from pending to paid, but analytics still shows pending. → Capture the database change and apply it downstream using the order identity. → Check freshness and replay the change to ensure it does not create a second order. |
+| Event time / processing time | Event time is when something happened. Processing time is when the system handled its record. | Separate when business events happened from arrival delays when building time-based results. **Concrete situation (illustrative):** A phone uploads an event long after it happened offline. → Preserve occurrence time separately from arrival and processing time. → Confirm reports group it according to the intended business-time rule. |
+| Watermark | A boundary derived from observed event times that supported streaming operations use to manage late data and retained state. | Bound eligible state and lateness handling for supported streaming operations under an explicit policy. **Concrete situation (illustrative):** Delayed events keep arriving for an old streaming window. → Define a watermark and explicit late-data policy supported by the engine. → Test events on both sides of the lateness boundary. |
+| Checkpoint | Saved progress and processing state that a job can use when it restarts after a failure. | Resume a processor from retained progress and state after a failure, with sink correctness checked separately. **Concrete situation (illustrative):** A stateful streaming job restarts after failure. → Recover its progress and state from the configured checkpoint. → Verify source replay and sink behavior preserve the intended processing contract. |
 
 ## Understand the model first
 

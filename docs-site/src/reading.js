@@ -19,7 +19,7 @@ export function initializeReading(article, currentDocument, {language, t}) {
   const applyMode = () => {
     article.dataset.readingMode = mode;
     for (const [value, button] of buttons) button.setAttribute('aria-pressed', String(value === mode));
-    if (mode === 'ko') article.querySelectorAll('.korean-explanation').forEach((node) => {node.open = true;});
+    if (mode === 'en') article.querySelectorAll('.english-explanation').forEach((node) => {node.open = true;});
   };
   for (const value of READING_MODES) {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.readingMode = value;
@@ -31,10 +31,10 @@ export function initializeReading(article, currentDocument, {language, t}) {
     });
     buttons.set(value, button); controls.append(button);
   }
-  for (const [open, text] of [[false, 'Hide Korean explanations'], [true, 'Show Korean explanations']]) {
+  for (const [open, text] of [[false, 'Hide English text'], [true, 'Show English text']]) {
     const button = document.createElement('button'); button.type = 'button'; button.className = 'explanation-action';
     button.textContent = t(text); button.dataset.explanations = open ? 'show' : 'hide';
-    button.addEventListener('click', () => article.querySelectorAll('.korean-explanation').forEach((node) => {node.open = open;}));
+    button.addEventListener('click', () => article.querySelectorAll('.english-explanation').forEach((node) => {node.open = open;}));
     controls.append(button);
   }
   applyMode();

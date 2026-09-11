@@ -5,7 +5,7 @@
 - **commit**: transaction의 변경을 최종 성공으로 확정하는 동작이다. **왜 필요한가요 · 언제 쓰나요:** 트랜잭션의 승인된 변경이 설정한 성공·영속성 경계에 도달했음을 확정할 때 쓴다. **구체적인 상황(가상 예시):** 이체가 양쪽 잔액을 갱신하고 정합성 검사를 통과했다. → 설정한 영속성 정책에 따라 트랜잭션을 커밋한다. → 다른 트랜잭션에서 승인 결과가 보이는지 확인하고 의도한 복구 보장을 시험한다.
 - **rollback**: transaction에서 수행한 변경을 취소하고 시작 전 상태로 돌아가는 동작이다. **왜 필요한가요 · 언제 쓰나요:** 오류나 업무 규칙 검사 실패 뒤 완료되지 않은 트랜잭션의 변경을 취소할 때 쓴다. **구체적인 상황(가상 예시):** 이체 중 출금 후 입금 계좌 검사가 커밋 전에 실패했다. → 완료되지 않은 트랜잭션을 롤백한다. → 일부 잔액 변경만 승인된 DB 상태로 남지 않는지 확인한다.
 - **MVCC**: 동시에 실행되는 transaction이 서로에게 어떤 버전의 row를 보여 줄지 관리하는 방식이다. **왜 필요한가요 · 언제 쓰나요:** 동시 트랜잭션의 읽기를 모두 배타적 쓰기 잠금으로 처리하지 않고 버전 가시성을 정한다. **구체적인 상황(가상 예시):** 동시 트랜잭션 두 개가 주문의 다른 버전을 본다. → 스냅샷과 격리 규칙을 조사한다. → 각 질의에 허용되는 버전 가시성을 재현한다.
-- **WAL**: data file을 바꾸기 전에 변경 내용을 순서대로 남기는 로그다. 장애 복구와 복제의 기반이 된다. **왜 필요한가요 · 언제 쓰나요:** 영속적인 데이터베이스 진행 상태를 복구·복제하는 데 필요한 순서 있는 변경 기록을 남긴다. **구체적인 상황(가상 예시):** 데이터베이스 프로세스가 사라진 뒤 재시작된다. → 설정한 영속성 정책과 보존 WAL을 통한 복구를 조사한다. → 커밋한 시험 기록이 남는지 확인한다.
+- **WAL**: data 파일을 바꾸기 전에 변경 내용을 순서대로 남기는 로그다. 장애 복구와 복제의 기반이 된다. **왜 필요한가요 · 언제 쓰나요:** 영속적인 데이터베이스 진행 상태를 복구·복제하는 데 필요한 순서 있는 변경 기록을 남긴다. **구체적인 상황(가상 예시):** 데이터베이스 프로세스가 사라진 뒤 재시작된다. → 설정한 영속성 정책과 보존 WAL을 통한 복구를 조사한다. → 커밋한 시험 기록이 남는지 확인한다.
 - **VACUUM**: 더 이상 어떤 transaction에도 필요하지 않은 예전 row 공간을 다시 사용할 수 있게 정리하는 작업이다. **왜 필요한가요 · 언제 쓰나요:** 더 이상 필요 없는 행 공간을 재사용하고 PostgreSQL의 트랜잭션 나이 유지 관리 요구를 처리한다. **구체적인 상황(가상 예시):** 반복 갱신으로 테이블에 오래된 버전이 쌓인다. → vacuum 진행과 이를 막는 오래된 트랜잭션을 조사한다. → 재사용 공간과 트랜잭션 나이를 확인한다.
 - **query plan**: PostgreSQL이 SQL을 실행하기 위해 선택한 table 접근 순서와 방법이다. **왜 필요한가요 · 언제 쓰나요:** 인덱스나 SQL을 바꾸기 전에 비싼 스캔·조인·추정 오차를 찾는 데 쓴다. **구체적인 상황(가상 예시):** 데이터 분포가 바뀐 뒤 질의가 느려진다. → 계획의 추정과 실제 작업을 비교한다. → 튜닝 전에 비싼 스캔·조인을 찾는다.
 
@@ -27,18 +27,18 @@
 
 ## 데이터 변경 하나를 한 단계씩 따라가기
 
-1. client가 database connection을 열고 transaction을 시작한다.
+1. 클라이언트가 database 연결을 열고 transaction을 시작한다.
 2. `UPDATE`가 대상 row를 찾고 충돌하는 변경이 있으면 필요한 lock을 기다린다.
 3. PostgreSQL은 기존 row를 바로 모든 reader에게 덮어씌우는 대신 새 row version을 만든다.
 4. 변경을 복구할 수 있도록 관련 WAL record가 만들어진다.
 5. commit이 성공하면 다른 transaction이 isolation 규칙에 따라 새 값을 볼 수 있게 된다.
-6. checkpoint는 변경된 memory page를 data file에 쓰는 작업을 진행하고, VACUUM은 더는 필요 없는 예전 row version을 정리한다.
+6. checkpoint는 변경된 메모리 page를 data 파일에 쓰는 작업을 진행하고, VACUUM은 더는 필요 없는 예전 row version을 정리한다.
 
-“사용자에게 보인다”, “commit이 성공했다”, “data file에 반영됐다”는 같은 순간을 뜻하지 않는다. WAL과 recovery 규칙 때문에 이 차이를 나누어 이해해야 한다.
+“사용자에게 보인다”, “commit이 성공했다”, “data 파일에 반영됐다”는 같은 순간을 뜻하지 않는다. WAL과 recovery 규칙 때문에 이 차이를 나누어 이해해야 한다.
 
 ## 한 변경이 보이고 남는 과정
 
-PostgreSQL은 각 statement가 어떤 row version을 볼 수 있는지 snapshot과 isolation 규칙으로 정한다. 변경된 page가 data file에 기록되기 전에 WAL record가 durable storage에 먼저 기록되는 write-ahead 규칙은 crash recovery의 기반이다.
+PostgreSQL은 각 statement가 어떤 row version을 볼 수 있는지 snapshot과 isolation 규칙으로 정한다. 변경된 page가 data 파일에 기록되기 전에 WAL record가 durable storage에 먼저 기록되는 write-ahead 규칙은 crash recovery의 기반이다.
 
 ```mermaid
 sequenceDiagram
@@ -70,11 +70,11 @@ EXPLAIN SELECT * FROM orders WHERE customer_id = 42;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
 ```
 
-`EXPLAIN ANALYZE`는 query를 실제 실행하므로 변경 query나 큰 workload에서 영향 범위를 먼저 확인한다. estimated rows와 actual rows 차이는 statistics, data skew와 predicate correlation 문제를 드러낼 수 있다. index가 존재해도 selectivity와 I/O cost에 따라 sequential scan이 더 저렴할 수 있다.
+`EXPLAIN ANALYZE`는 query를 실제 실행하므로 변경 query나 큰 워크로드에서 영향 범위를 먼저 확인한다. estimated rows와 actual rows 차이는 statistics, data skew와 predicate correlation 문제를 드러낼 수 있다. index가 존재해도 selectivity와 I/O cost에 따라 sequential scan이 더 저렴할 수 있다.
 
 ## Connection과 lock
 
-각 backend connection은 자원을 소비한다. pool은 connection storm을 완충하지만 transaction을 오래 잡거나 session state를 오용하면 병목을 숨길 수 있다.
+각 backend 연결은 자원을 소비한다. pool은 연결 storm을 완충하지만 transaction을 오래 잡거나 session state를 오용하면 병목을 숨길 수 있다.
 
 ```sql
 SELECT pid, state, wait_event_type, wait_event, xact_start, query_start
@@ -86,9 +86,9 @@ blocking query를 종료하기 전 owner, transaction 내용, rollback 비용과
 
 ## 스스로 설명해 보기
 
-1. COMMIT 응답 시점에 모든 변경 page가 data file에 기록되지 않아도 되는 이유는 무엇인가?
+1. COMMIT 응답 시점에 모든 변경 page가 data 파일에 기록되지 않아도 되는 이유는 무엇인가?
 2. estimated rows와 actual rows 차이가 join 전략에 어떤 영향을 줄 수 있는가?
-3. idle in transaction session이 단순한 idle connection보다 위험할 수 있는 이유는 무엇인가?
+3. idle in transaction session이 단순한 idle 연결보다 위험할 수 있는 이유는 무엇인가?
 
 <!-- source: https://www.postgresql.org/docs/18/mvcc-intro.html | checked: 2026-09-03 | version: PostgreSQL 18 -->
 <!-- source: https://www.postgresql.org/docs/18/wal-intro.html | checked: 2026-09-03 | version: PostgreSQL 18 -->

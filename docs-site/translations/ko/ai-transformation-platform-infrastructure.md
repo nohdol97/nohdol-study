@@ -4,25 +4,25 @@
 <!-- source: https://arxiv.org/abs/2309.06180 | checked: 2026-09-03 -->
 <!-- source: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/gpu-operator-mig.html | checked: 2026-09-03 -->
 
-AI workload는 CPU service와 같은 Pod 형태로 실행될 수 있지만 병목과 실패 단위는 다르다. training은 model state와 collective communication을 여러 GPU에 배치하고, serving은 weight·KV cache·batch scheduler를 latency SLO 안에서 공유한다. GPU 요청 개수만으로 capacity를 설명할 수 없다.
+AI 워크로드는 CPU 서비스와 같은 Pod 형태로 실행될 수 있지만 병목과 실패 단위는 다르다. training은 model state와 collective communication을 여러 GPU에 배치하고, serving은 weight·KV 캐시·batch scheduler를 latency SLO 안에서 공유한다. GPU 요청 개수만으로 capacity를 설명할 수 없다.
 
 ## 이 장에서 처음 쓰는 말
 
 | 말 | 이 장에서의 뜻 | 왜 필요한가요 · 언제 쓰나요 |
 |---|---|---|
-| HBM / VRAM | GPU가 model·activation·KV cache를 두는 고대역폭 memory | 작업을 받기 전에 가중치·활성값·증가하는 요청 상태에 필요한 가속기 메모리를 계산한다. **구체적인 상황(가상 예시):** 요청이 길어지자 GPU 메모리 오류가 난다. → 가중치·활성값·KV cache를 계산한다. → 실제로 수용할 최대 부하를 시험한다. |
+| HBM / VRAM | GPU가 model·activation·KV 캐시를 두는 고대역폭 메모리 | 작업을 받기 전에 가중치·활성값·증가하는 요청 상태에 필요한 가속기 메모리를 계산한다. **구체적인 상황(가상 예시):** 요청이 길어지자 GPU 메모리 오류가 난다. → 가중치·활성값·KV 캐시를 계산한다. → 실제로 수용할 최대 부하를 시험한다. |
 | data parallel | model 복제본이 다른 batch를 처리하고 gradient를 동기화하는 방식 | 모델이 각 워커 메모리에 들어갈 때 복제된 모델들로 학습을 확장한다. **구체적인 상황(가상 예시):** 모델은 GPU 하나에 들어가지만 학습이 오래 걸린다. → 갱신을 동기화하는 데이터 병렬 복제본을 검토한다. → 단일 워커와 처리량·수렴을 비교한다. |
 | tensor / pipeline parallel | 한 model의 연산·layer를 여러 device에 나누는 방식 | 장치 하나에 너무 크거나 부담되는 모델을 나누되 통신 비용을 함께 고려한다. **구체적인 상황(가상 예시):** 모델이 장치 하나에 들어가지 않는다. → 지원되는 계산·계층을 여러 장치로 나눈다. → 통신·메모리 균형·학습 정확성을 측정한다. |
 | collective | AllReduce·AllGather처럼 여러 GPU가 함께 수행하는 통신 | 워커들이 일관된 학습 갱신을 만들 수 있도록 분산 텐서 교환을 조정한다. **구체적인 상황(가상 예시):** 분산 학습이 gradient 교환에서 기다린다. → collective 시간과 워커 참여를 조사한다. → 느린 통신 경로나 지연 워커를 찾는다. |
 | continuous batching | decode step마다 끝난 요청을 빼고 새 요청을 batch에 합류시키는 scheduling | 고정 배치 전체가 끝나기를 기다리지 않고 요청 완료로 비는 서빙 자리를 활용한다. **구체적인 상황(가상 예시):** 짧은 생성은 끝났지만 긴 생성 때문에 고정 배치가 점유된다. → continuous batching을 검토한다. → 길이가 섞인 요청의 완료 처리량·지연을 비교한다. |
 | MFU | 유효 model 계산량을 hardware 최대 계산량과 비교하는 utilization 관점 | 학습 워크로드가 하드웨어 용량을 유효한 모델 계산으로 얼마나 잘 활용하는지 평가한다. **구체적인 상황(가상 예시):** 비싼 GPU가 바빠 보이지만 유효 학습 진척은 적다. → 모델의 유효 계산과 하드웨어 용량을 비교한다. → 낮은 MFU 뒤의 통신·입력 정체를 조사한다. |
 
-1. workload의 memory·compute·communication 식을 먼저 적는다.
+1. 워크로드의 메모리·compute·communication 식을 먼저 적는다.
 2. throughput만이 아니라 queue·TTFT·TPOT·OOM·cost를 함께 측정한다.
 
 ## 먼저 이해하기
 
-training memory에는 parameter뿐 아니라 gradient, optimizer state와 activation이 들어간다. ZeRO 계열은 이 state들을 data-parallel worker 사이에 단계적으로 partition해 중복 memory를 줄인다. 대신 communication, checkpoint와 장애 복구 경계가 달라진다.
+training 메모리에는 parameter뿐 아니라 gradient, optimizer state와 activation이 들어간다. ZeRO 계열은 이 state들을 data-parallel worker 사이에 단계적으로 partition해 중복 메모리를 줄인다. 대신 communication, checkpoint와 장애 복구 경계가 달라진다.
 
 ```mermaid
 flowchart LR
@@ -37,7 +37,7 @@ flowchart LR
 | 병렬화 축 | 나누는 것 | 주된 비용 | 검증 |
 |---|---|---|---|
 | data | batch | gradient synchronization | global batch·convergence |
-| tensor | layer tensor 연산 | 빈번한 collective | topology·kernel efficiency |
+| tensor | layer tensor 연산 | 빈번한 collective | topology·커널 efficiency |
 | pipeline | layer stage | bubble·activation transfer | microbatch schedule |
 | sequence/context | token 축 | attention communication | long-context correctness |
 
@@ -45,7 +45,7 @@ NCCL operation이 빨라도 data loader나 checkpoint storage가 병목일 수 �
 
 ## GPU 공유와 scheduling
 
-NVIDIA MIG는 지원 GPU를 분리된 instance로 partition한다. GPU Operator의 MIG Manager는 node label과 profile에 따라 재구성하며, 과정에서 GPU client 중지나 node reboot가 필요할 수 있다. time-slicing과 MIG는 isolation 보장이 다르다.
+NVIDIA MIG는 지원 GPU를 분리된 instance로 partition한다. GPU Operator의 MIG Manager는 node label과 profile에 따라 재구성하며, 과정에서 GPU 클라이언트 중지나 node reboot가 필요할 수 있다. time-slicing과 MIG는 isolation 보장이 다르다.
 
 ```yaml
 workload_contract:
@@ -79,13 +79,13 @@ sequenceDiagram
     end
 ```
 
-PagedAttention은 KV cache를 block 단위로 관리해 memory 낭비와 공유 문제를 다룬다. 논문의 throughput 개선은 특정 workload·비교 시스템 결과이므로 현재 runtime의 보편 배수로 쓰지 않는다.
+PagedAttention은 KV 캐시를 block 단위로 관리해 메모리 낭비와 공유 문제를 다룬다. 논문의 throughput 개선은 특정 워크로드·비교 시스템 결과이므로 현재 runtime의 보편 배수로 쓰지 않는다.
 
 | 지표 | 사용자 질문 | resource 질문 |
 |---|---|---|
 | TTFT | 첫 응답이 언제 보이는가 | queue·prefill이 포화인가 |
 | TPOT / inter-token latency | stream이 끊기지 않는가 | decode batch가 안정적인가 |
-| tokens/s | 유용한 결과 처리량은? | GPU·memory bandwidth 활용은? |
+| tokens/s | 유용한 결과 처리량은? | GPU·메모리 bandwidth 활용은? |
 | queue age | deadline 안에 시작 가능한가 | admission 상한은? |
 | KV cache occupancy | 긴 context를 감당하는가 | eviction·fragmentation은? |
 | OOM·fallback | 결과가 안전하게 수렴하는가 | bundle·profile이 맞는가 |
@@ -100,14 +100,14 @@ PagedAttention은 KV cache를 block 단위로 관리해 memory 낭비와 공유 
 
 ## 완료
 
-- training memory와 병렬화 축별 communication 비용을 구분했다.
-- GPU share·scheduler·quota를 isolation과 workload 계약으로 적었다.
-- serving의 prefill·decode·KV cache·queue를 SLO와 연결했다.
+- training 메모리와 병렬화 축별 communication 비용을 구분했다.
+- GPU share·scheduler·quota를 isolation과 워크로드 계약으로 적었다.
+- serving의 prefill·decode·KV 캐시·queue를 SLO와 연결했다.
 - 논문 benchmark와 현재 target capacity 측정을 분리했다.
 
 ## 스스로 설명해 보기
 
-- ZeRO가 memory를 줄이면서 communication·checkpoint 설계를 바꾸는 이유는 무엇인가?
+- ZeRO가 메모리를 줄이면서 communication·checkpoint 설계를 바꾸는 이유는 무엇인가?
 - MIG와 time-slicing을 같은 GPU 분할로 취급하면 어떤 isolation 차이를 놓치는가?
 - tokens/s가 높아도 사용자가 느릴 수 있는 이유는 무엇인가?
-- KV cache 상한이 CPU utilization 기반 autoscaling에 잘 보이지 않을 수 있는 이유는 무엇인가?
+- KV 캐시 상한이 CPU utilization 기반 autoscaling에 잘 보이지 않을 수 있는 이유는 무엇인가?

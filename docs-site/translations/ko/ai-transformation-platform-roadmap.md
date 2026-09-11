@@ -12,7 +12,7 @@ AI Transformation은 model API를 도입하는 일이 아니라 data 수집, 학
 
 | 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
 |---|---|---|
-| AI infrastructure | GPU·network·storage·scheduler·serving runtime을 운영하는 기반 | 학습·추론의 신뢰성을 뒷받침하는 공통 실행 용량을 제공한다. **구체적인 상황(가상 예시):** 입력 데이터가 느리게 도착해 GPU 워커가 논다. → 저장소·네트워크·스케줄러 의존성을 조사한다. → 계산 자원 증설 전에 병목을 측정한다. |
+| AI infrastructure | GPU·네트워크·storage·scheduler·serving runtime을 운영하는 기반 | 학습·추론의 신뢰성을 뒷받침하는 공통 실행 용량을 제공한다. **구체적인 상황(가상 예시):** 입력 데이터가 느리게 도착해 GPU 워커가 논다. → 저장소·네트워크·스케줄러 의존성을 조사한다. → 계산 자원 증설 전에 병목을 측정한다. |
 | MLOps / LLMOps | dataset·model·prompt·index·평가와 배포 이력을 재현하는 체계 | 데이터·모델·프롬프트·평가·배포 전반의 변경을 재현하고 통제한다. **구체적인 상황(가상 예시):** 모델 퇴행을 데이터셋·프롬프트 리비전과 연결하지 못한다. → 학습·배포 계보 전체를 기록한다. → 원래 입력으로 후보를 재현한다. |
 | continuous training | 새 data와 기준에 따라 학습 후보를 반복 생성하는 과정 | 데이터가 바뀔 때 새 학습 후보를 만들되 평가·승인 절차를 유지한다. **구체적인 상황(가상 예시):** 매일 새 데이터가 들어와 모델을 개선할 수 있다. → 기존 검증 절차로 학습 후보를 만든다. → 일정만으로 올리지 말고 재현 가능한 평가 후 승인한다. |
 | model serving | 여러 요청이 model inference를 안전한 latency와 capacity로 공유하는 계층 | 명시한 지연·과부하 정책 아래 여러 클라이언트가 추론 용량을 공유하도록 한다. **구체적인 상황(가상 예시):** 동시 생성 요청이 서빙 워커를 소진시킨다. → 측정에 근거한 수용·배치 정책을 적용한다. → 꼬리 지연·성공 완료·거부 동작을 확인한다. |
@@ -31,7 +31,7 @@ flowchart LR
 
 ## 네 필러
 
-1. [AI 인프라·분산 학습과 LLM 서빙](#doc=ai-transformation-platform-infrastructure): GPU memory, topology, scheduling과 inference queue를 SLO에 맞춘다.
+1. [AI 인프라·분산 학습과 LLM 서빙](#doc=ai-transformation-platform-infrastructure): GPU 메모리, topology, scheduling과 inference queue를 SLO에 맞춘다.
 2. [MLOps·LLMOps와 평가 가능한 수명주기](#doc=ai-transformation-platform-mlops): dataset에서 deployment까지 lineage와 gate를 만든다.
 3. [AI DevOps·플랫폼과 FinOps](#doc=ai-transformation-platform-devops): IaC·Kubernetes·GitOps·quota·telemetry를 운영 제품으로 제공한다.
 4. [Enterprise AI와 안전한 에이전트 실행](#doc=ai-transformation-platform-agents): RAG·gateway·MCP·workflow·identity·sandbox·approval을 한 operation으로 묶는다.
@@ -43,14 +43,14 @@ vault의 AI Transformation 허브와 하위 49개 노트가 다루는 기술 항
 | 필러 | 포함한 전체 세부 내용 | 공개 학습 연결 |
 |---|---|---|
 | AI infrastructure·학습 | GPU architecture·HBM·NVLink, GPU 성능 산술·MFU, NCCL collective와 parallelism 배치, DeepSpeed·ZeRO, Ray 분산 compute, Kubernetes GPU Operator·MIG, Kueue quota·gang scheduling, GPU 탄력 확보·반납 | [AI 인프라·serving](#doc=ai-transformation-platform-infrastructure), [AI DevOps·FinOps](#doc=ai-transformation-platform-devops) |
-| LLM serving | vLLM·PagedAttention, KV cache·continuous batching, serving engine 선택, TTFT·TPOT·throughput·queue, LiteLLM gateway·virtual key·사용량 통제, backend streaming·fallback·circuit breaker | [AI 인프라·serving](#doc=ai-transformation-platform-infrastructure), [백엔드 용량](#doc=backend-engineering-runtime-capacity) |
+| LLM serving | vLLM·PagedAttention, KV 캐시·continuous batching, serving engine 선택, TTFT·TPOT·throughput·queue, LiteLLM gateway·virtual key·사용량 통제, backend streaming·fallback·circuit breaker | [AI 인프라·serving](#doc=ai-transformation-platform-infrastructure), [백엔드 용량](#doc=backend-engineering-runtime-capacity) |
 | MLOps | MLflow experiment·model registry, Kubeflow pipeline orchestration, dataset→run→checkpoint→model lineage, continuous training과 promotion | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops) |
 | LLMOps·RAG | hybrid vector search, vector database 운영, prompt registry·Langfuse, LLM trace·OpenTelemetry, evaluation metric·guardrail, golden dataset·eval instrumentation, evaluation gate·CI/CD 차단 | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops), [RAG·MCP](#doc=ai-specialist-core-rag-mcp) |
 | AI DevOps·platform | Terraform·IaC, Helm·Kustomize, Argo CD·ML GitOps, CI/CD/CT pipeline, Prometheus·DCGM GPU monitoring, model·prompt·tool bundle deployment | [AI DevOps·FinOps](#doc=ai-transformation-platform-devops), [DevOps GitOps](#doc=helm-gitops-roadmap) |
-| FinOps·성과 | AI 비용의 계산 단위, GPU 자원 비용 최적화, workload quota·autoscaling, AI project 성과·ROI 기준 | [AI DevOps·FinOps](#doc=ai-transformation-platform-devops), [신뢰성·FinOps](#doc=reliability-finops-roadmap) |
-| Enterprise integration | LLM service backend 통합, Keycloak OIDC realm·identity, MCP agent tool 통합·trust boundary, code 접근 없는 contract 수집·교차 검증 | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [백엔드 API 계약](#doc=backend-engineering-api-contract) |
-| Agent orchestration | LangGraph state graph·memory·session, Temporal durable execution, A2A task lifecycle, tool calling·idempotency, Structured Outputs·JSON Schema | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [분산 workflow](#doc=backend-engineering-distributed-workflow) |
-| Agent security·governance | prompt injection·tool authorization, sandbox·code execution isolation, workload identity·delegated authority, OPA/Rego policy, MCP OAuth, Plan/Commit·물리 작업 승인 | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [인프라 보안](#doc=infrastructure-security-roadmap) |
+| FinOps·성과 | AI 비용의 계산 단위, GPU 자원 비용 최적화, 워크로드 quota·autoscaling, AI project 성과·ROI 기준 | [AI DevOps·FinOps](#doc=ai-transformation-platform-devops), [신뢰성·FinOps](#doc=reliability-finops-roadmap) |
+| Enterprise integration | LLM 서비스 backend 통합, Keycloak OIDC realm·identity, MCP agent tool 통합·trust boundary, code 접근 없는 contract 수집·교차 검증 | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [백엔드 API 계약](#doc=backend-engineering-api-contract) |
+| Agent orchestration | LangGraph state graph·메모리·session, Temporal durable execution, A2A task lifecycle, tool calling·idempotency, Structured Outputs·JSON Schema | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [분산 workflow](#doc=backend-engineering-distributed-workflow) |
+| Agent security·governance | prompt injection·tool authorization, sandbox·code execution isolation, 워크로드 identity·delegated authority, OPA/Rego policy, MCP OAuth, Plan/Commit·물리 작업 승인 | [Enterprise agent 운영](#doc=ai-transformation-platform-agents), [인프라 보안](#doc=infrastructure-security-roadmap) |
 | Agent delivery·evaluation | capability bundle·compatibility gate, repository eval wiring·dispatch, multi-agent integrated eval·deployment block, 검증 가능성·jagged intelligence의 한계 | [MLOps·LLMOps](#doc=ai-transformation-platform-mlops), [AIOps 진단](#doc=aiops-diagnosis-roadmap), [AIOps 복구](#doc=aiops-remediation-roadmap) |
 | Edge·physical AI | robot edge inference runtime·model deployment gate, target별 graph·precision·accelerator bundle과 rollback | [On-device 모델 압축](#doc=ai-specialist-core-edge), [AIOps 복구](#doc=aiops-remediation-state-machine) |
 
@@ -83,9 +83,9 @@ flowchart TD
     E --> F
 ```
 
-- cluster·workload 기초는 [Kubernetes](#doc=kubernetes-roadmap), GPU node의 생성·축소는 [Karpenter](#doc=karpenter-roadmap)에 연결한다.
-- model·tokenizer·KV cache의 계산 전제는 [AI Specialist의 LLM 구조와 효율화](#doc=ai-specialist-core-llm)에서 받는다.
-- deployment 선언과 drift는 [Helm과 GitOps](#doc=helm-gitops-roadmap), identity와 network 경계는 [인프라 보안](#doc=infrastructure-security-roadmap)에서 확인한다.
+- 클러스터·워크로드 기초는 [Kubernetes](#doc=kubernetes-roadmap), GPU node의 생성·축소는 [Karpenter](#doc=karpenter-roadmap)에 연결한다.
+- model·tokenizer·KV 캐시의 계산 전제는 [AI Specialist의 LLM 구조와 효율화](#doc=ai-specialist-core-llm)에서 받는다.
+- deployment 선언과 drift는 [Helm과 GitOps](#doc=helm-gitops-roadmap), identity와 네트워크 경계는 [인프라 보안](#doc=infrastructure-security-roadmap)에서 확인한다.
 - LLM trace는 [Observability와 SRE](#doc=observability-sre-roadmap)의 signal 원칙을 따르고 [AIOps evidence graph](#doc=aiops-foundations-evidence-graph)로 들어간다.
 - 비용은 GPU 할당 시간이 아니라 성공한 training run·validated output·업무 결과 같은 단위로 [신뢰성·FinOps](#doc=reliability-finops-roadmap)와 연결한다.
 

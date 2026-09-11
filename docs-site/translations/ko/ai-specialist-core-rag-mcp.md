@@ -48,7 +48,7 @@ flowchart LR
 | graph traversal | 관계·다단계 경로 | extraction 오류·edge stale | path support |
 | SQL | 집계·필터·정확 schema 질의 | schema linking·권한·비용 | execution accuracy·safety |
 
-HNSW는 proximity graph를 탐색해 ANN 후보를 찾는다. index parameter와 filter가 recall·memory·latency를 바꾼다. 논문 benchmark 값을 그대로 production SLO로 쓰지 않고 corpus 규모, hardware와 query distribution에서 다시 잰다.
+HNSW는 proximity graph를 탐색해 ANN 후보를 찾는다. index parameter와 filter가 recall·메모리·latency를 바꾼다. 논문 benchmark 값을 그대로 production SLO로 쓰지 않고 corpus 규모, hardware와 query distribution에서 다시 잰다.
 
 ```json
 {
@@ -67,7 +67,7 @@ HNSW는 proximity graph를 탐색해 ANN 후보를 찾는다. index parameter와
 
 ## GraphRAG와 NL2SQL
 
-문서 검색만으로 “어느 deploy가 이 service를 바꿨고 같은 DB를 쓰는 다른 service는 무엇인가?” 같은 관계 질의를 안정적으로 풀기 어렵다. graph는 entity·edge와 provenance를 명시하고, SQL은 구조화된 table에서 집계한다. LLM이 생성한 query를 곧바로 넓은 production 권한으로 실행하지 않는다.
+문서 검색만으로 “어느 deploy가 이 서비스를 바꿨고 같은 DB를 쓰는 다른 서비스는 무엇인가?” 같은 관계 질의를 안정적으로 풀기 어렵다. graph는 entity·edge와 provenance를 명시하고, SQL은 구조화된 table에서 집계한다. LLM이 생성한 query를 곧바로 넓은 production 권한으로 실행하지 않는다.
 
 | 질문 | 적합한 경로 | 필요한 보호 조건 |
 |---|---|---|
@@ -78,7 +78,7 @@ HNSW는 proximity graph를 탐색해 ANN 후보를 찾는다. index parameter와
 
 ## MCP의 세 주체와 신뢰 경계
 
-MCP architecture는 host, client와 server 역할을 나눈다. server가 resource·prompt·tool을 노출해도 host가 사용자 data와 action을 자동으로 허용해야 한다는 뜻은 아니다. tool description은 untrusted capability metadata로 보고 실제 input schema, target, credential audience와 authorization을 검증한다.
+MCP architecture는 host, 클라이언트와 서버 역할을 나눈다. 서버가 resource·prompt·tool을 노출해도 host가 사용자 data와 action을 자동으로 허용해야 한다는 뜻은 아니다. tool description은 untrusted capability metadata로 보고 실제 input schema, target, credential audience와 authorization을 검증한다.
 
 ```yaml
 tool_proposal:
@@ -96,7 +96,7 @@ tool_proposal:
   mode: plan-only
 ```
 
-RAG citation은 action permission이 아니다. [Enterprise AI와 안전한 에이전트 실행](#doc=ai-transformation-platform-agents)에서 workload identity·sandbox·durable operation을 연결하고, [AIOps 자동 복구](#doc=aiops-remediation-dry-run-lab)에서 실제 변경 없는 plan 검토를 수행한다.
+RAG citation은 action permission이 아니다. [Enterprise AI와 안전한 에이전트 실행](#doc=ai-transformation-platform-agents)에서 워크로드 identity·sandbox·durable operation을 연결하고, [AIOps 자동 복구](#doc=aiops-remediation-dry-run-lab)에서 실제 변경 없는 plan 검토를 수행한다.
 
 ## 평가 매트릭스
 

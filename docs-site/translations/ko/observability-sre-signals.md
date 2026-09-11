@@ -29,7 +29,7 @@ CPU 사용률은 원인 후보가 될 수 있지만 그 자체는 사용자 성�
 
 ## 실패한 요청 하나가 대응으로 이어지는 과정
 
-1. client가 request ID를 가진 HTTP 요청을 보낸다.
+1. 클라이언트가 request ID를 가진 HTTP 요청을 보낸다.
 2. application이 처리 중 중요한 사건을 log로 남기고 trace에 구간별 시간을 기록한다.
 3. 성공·실패 수와 latency가 metric에 누적된다.
 4. 운영자는 같은 request ID와 시각으로 log와 trace를 연결해 직접 실패 지점을 찾는다.
@@ -69,7 +69,7 @@ good requests / valid requests
 
 성공의 정의, 제외할 요청과 측정 위치가 먼저 정해져야 한다. 30일 SLO가 99.9%라면 error budget은 단순히 `0.1%`라고 외우는 것이 아니라 실제 valid event 수 또는 시간으로 환산해 사용한다.
 
-multi-window burn-rate alert는 짧은 구간의 급격한 소진과 긴 구간의 지속적 소진을 함께 본다. 정확한 threshold와 window는 traffic과 대응 시간에 맞춰 검증해야 한다.
+multi-window burn-rate alert는 짧은 구간의 급격한 소진과 긴 구간의 지속적 소진을 함께 본다. 정확한 threshold와 window는 트래픽과 대응 시간에 맞춰 검증해야 한다.
 
 ## Incident 상태 전이
 

@@ -14,17 +14,17 @@
 | 포트(port) | 네트워크 요청을 어떤 프로그램이 받을지 구분하는 번호 | 트래픽을 원하는 리스너로 보내고 네트워크 도달 여부와 애플리케이션 준비 상태를 구분한다. **구체적인 상황(가상 예시):** 호스트는 응답하지만 8080 포트 요청이 실패한다. → 해당 포트의 리스닝 프로세스를 확인한다. → 바인딩 주소와 연결 결과를 검사한다. |
 | 커널(kernel) | 프로세스의 자원 요청을 실제 하드웨어와 연결하는 운영체제의 핵심 부분 | 애플리케이션 요청이 CPU·메모리·파일시스템·네트워크 작업으로 이어지는 과정을 이해할 때 필요하다. **구체적인 상황(가상 예시):** 애플리케이션 CPU 작업은 적은데 파일 쓰기가 멈춘다. → 커널 입출력·스케줄링 근거를 조사한다. → 저장소 대기가 지연을 설명하는지 확인한다. |
 
-이 다섯 단어를 실제 명령 출력과 연결하는 것이 첫 목표다. 그다음에 file descriptor, cgroup, OOM 같은 더 세밀한 개념으로 들어간다.
+이 다섯 단어를 실제 명령 출력과 연결하는 것이 첫 목표다. 그다음에 파일 descriptor, cgroup, OOM 같은 더 세밀한 개념으로 들어간다.
 
 Linux 운영의 출발점은 명령어 암기가 아니라 **한 workload가 어떤 process로 실행되고 어떤 kernel resource를 소비하는지 연결하는 것**이다. Kubernetes Pod와 AWS EC2도 결국 이 경계 위에서 실행된다.
 
 ## 이 과정이 답하는 질문
 
-- service가 실행되지 않을 때 unit, process, socket 중 어디부터 확인하는가?
+- 서비스가 실행되지 않을 때 unit, 프로세스, socket 중 어디부터 확인하는가?
 - CPU 사용률, load average와 runnable task는 어떻게 다른가?
-- memory 사용량이 늘 때 process RSS, page cache와 cgroup limit을 어떻게 구분하는가?
+- 메모리 사용량이 늘 때 프로세스 RSS, page 캐시와 cgroup limit을 어떻게 구분하는가?
 - disk가 찼을 때 block 여유, inode, 열린 삭제 파일 중 무엇이 원인인가?
-- container resource limit이 Linux cgroup에서 어떤 상태로 보이는가?
+- 컨테이너 resource limit이 Linux cgroup에서 어떤 상태로 보이는가?
 
 ## 한 문장 모델
 
@@ -43,42 +43,42 @@ flowchart LR
 
 ## 읽는 순서
 
-1. [Process와 resource의 연결](../../content/linux/01-process-and-resource-model.md): PID, unit, `/proc`, file descriptor, cgroup의 책임을 연결한다.
+1. [Process와 resource의 연결](../../content/linux/01-process-and-resource-model.md): PID, unit, `/proc`, 파일 descriptor, cgroup의 책임을 연결한다.
 2. [Service 장애 진단 실습](../../content/linux/02-service-failure-lab.md): 정상 기준을 기록한 뒤 start failure, port 충돌과 resource pressure를 증거로 구분한다.
 
 ## Kubernetes와 이어지는 지점
 
 | Linux | Kubernetes |
 |---|---|
-| process와 signal | container process와 Pod 종료 |
+| process와 signal | 컨테이너 프로세스와 Pod 종료 |
 | cgroup CPU·memory | requests·limits와 runtime 격리 |
-| namespace | container가 보는 PID·mount·network 범위 |
+| namespace | 컨테이너가 보는 PID·mount·네트워크 범위 |
 | socket·route | Pod IP, Service와 CNI datapath |
 | filesystem·mount | volume, PV/PVC와 node storage |
 | systemd·journal | kubelet·container runtime node service |
 
-이 과정은 container runtime 내부 구현이나 eBPF 심화를 별도 topic으로 확장하지 않는다. 장애를 kernel 경계까지 추적할 수 있는 운영 기초에 집중한다.
+이 과정은 컨테이너 runtime 내부 구현이나 eBPF 심화를 별도 topic으로 확장하지 않는다. 장애를 커널 경계까지 추적할 수 있는 운영 기초에 집중한다.
 
 ## 완료
 
 이 주제는 한 번 읽고 끝내지 않는다. 먼저 용어 표를 자신의 말로 바꾸고, 개념 장에서 한 요청의 흐름을 따라간다. 실습에서는 정상 상태를 먼저 기록한 뒤 조건 하나만 바꿔 실패를 만들고, 증거로 원인을 설명한 뒤 복구한다. 마지막으로 아래 운영 판단 질문에 답하면서 더 복잡한 환경으로 확장한다.
 
-- service 이름에서 main PID, 열린 socket, cgroup과 최근 log를 찾는다.
-- CPU·memory·disk 증상을 하나의 `top` 출력으로 단정하지 않고 서로 다른 관찰값으로 확인한다.
-- process 종료가 signal, OOM kill, service restart policy 중 무엇 때문인지 증거를 제시한다.
-- 다음 과정인 [네트워크와 요청 경로](../../content/networking/00-roadmap.md)에서 process의 listening socket부터 요청 추적을 시작할 수 있다.
+- 서비스 이름에서 main PID, 열린 socket, cgroup과 최근 log를 찾는다.
+- CPU·메모리·disk 증상을 하나의 `top` 출력으로 단정하지 않고 서로 다른 관찰값으로 확인한다.
+- 프로세스 종료가 signal, OOM kill, 서비스 restart policy 중 무엇 때문인지 증거를 제시한다.
+- 다음 과정인 [네트워크와 요청 경로](../../content/networking/00-roadmap.md)에서 프로세스의 listening socket부터 요청 추적을 시작할 수 있다.
 
 ## 처음 이해했는지 확인
 
-1. 저장돼 있지만 실행되지 않은 program과 지금 실행 중인 process는 어떻게 다른가?
-2. service가 `active`인 것과 사용자의 HTTP 요청이 성공하는 것은 왜 같은 확인이 아닌가?
+1. 저장돼 있지만 실행되지 않은 program과 지금 실행 중인 프로세스는 어떻게 다른가?
+2. 서비스가 `active`인 것과 사용자의 HTTP 요청이 성공하는 것은 왜 같은 확인이 아닌가?
 
-**확인 기준:** process는 실행 중인 instance이고 service는 그 process의 수명을 관리하는 운영 단위라고 설명할 수 있으면 된다. HTTP 성공에는 process뿐 아니라 listening port와 application 응답도 필요하다.
+**확인 기준:** 프로세스는 실행 중인 instance이고 서비스는 그 프로세스의 수명을 관리하는 운영 단위라고 설명할 수 있으면 된다. HTTP 성공에는 프로세스뿐 아니라 listening port와 application 응답도 필요하다.
 
 ## 운영 판단으로 확장하기
 
-1. service가 `active`인데 요청이 실패할 수 있는 이유를 세 가지 말해 보자.
-2. container의 memory limit과 host의 free memory가 서로 다른 질문인 이유는 무엇인가?
+1. 서비스가 `active`인데 요청이 실패할 수 있는 이유를 세 가지 말해 보자.
+2. 컨테이너의 메모리 limit과 host의 free 메모리가 서로 다른 질문인 이유는 무엇인가?
 3. disk 사용률이 100%가 아닌데 새 파일 생성이 실패할 수 있는 이유는 무엇인가?
 
 <!-- source: https://docs.kernel.org/admin-guide/cgroup-v2.html | checked: 2026-09-03 -->

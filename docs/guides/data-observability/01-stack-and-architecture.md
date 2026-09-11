@@ -1,16 +1,18 @@
 # Choose a stack by responsibility
 
-A useful platform starts with a consumer promise: for example, validated orders must reach an analytical table within ten minutes, and every result must be reproducible. Component selection follows that promise and a measured workload.
+Suppose the sales team needs new orders in its report within ten minutes. The report must also pass data checks and be reproducible later.
+
+Write down those requirements before choosing tools. Then assign a component to each job: collecting changes, storing data, calculating results, and checking delivery.
 
 ## Terms introduced in this chapter
 
 | Term | Meaning | Why it matters / when to use it |
 |---|---|---|
-| Storage format | How bytes are represented inside a file, such as Parquet | Choose a file representation that fits analytical access, compression, and interoperability needs. **Concrete situation (illustrative):** A query needs two fields from a wide dataset. → Compare candidate file formats under that access pattern. → Measure bytes read, decoding work, and output correctness. |
-| Table format | How files and metadata form a committed table version | Define which files form one accepted table state when readers and writers operate concurrently. **Concrete situation (illustrative):** Writers add files while readers need a consistent table. → Use the table format's committed-state protocol. → Verify readers resolve one valid version, not a directory guess. |
-| Compute engine | Software that executes a query or transformation | Execute the required transformations while measuring the work caused by the chosen plan. **Concrete situation (illustrative):** A transformation scans data but spends most time on redistribution. → Inspect the compute engine's plan. → Compare a revised plan under equivalent result checks. |
-| Control plane | Definitions, permissions, schedules, and metadata that direct execution | Separate definitions and policies that direct work from the data-moving execution itself. **Concrete situation (illustrative):** A job definition exists but its schedule or permission is wrong. → Inspect control-plane metadata and policy. → Verify the intended execution is authorized and scheduled. |
-| Data plane | Processes and storage that actually move and transform data | Locate the throughput, failure, and access boundaries where data is actually processed. **Concrete situation (illustrative):** Scheduling succeeds while actual data transfer stalls. → Inspect data-plane readers, workers, and storage. → Locate the measured throughput or access bottleneck. |
+| Storage format | The rules for storing data inside a file. Parquet is one example. | Choose a file representation that fits analytical access, compression, and interoperability needs. **Concrete situation (illustrative):** A query needs two fields from a wide dataset. → Compare candidate file formats under that access pattern. → Measure bytes read, decoding work, and output correctness. |
+| Table format | The rules and metadata that identify which files belong to a committed table version. | Define which files form one accepted table state when readers and writers operate concurrently. **Concrete situation (illustrative):** Writers add files while readers need a consistent table. → Use the table format's committed-state protocol. → Verify readers resolve one valid version, not a directory guess. |
+| Compute engine | Software that runs queries or transformations to calculate results from data. | Execute the required transformations while measuring the work caused by the chosen plan. **Concrete situation (illustrative):** A transformation scans data but spends most time on redistribution. → Inspect the compute engine's plan. → Compare a revised plan under equivalent result checks. |
+| Control plane | The part of a platform that defines what runs, when it runs, and which permissions it uses. | Separate definitions and policies that direct work from the data-moving execution itself. **Concrete situation (illustrative):** A job definition exists but its schedule or permission is wrong. → Inspect control-plane metadata and policy. → Verify the intended execution is authorized and scheduled. |
+| Data plane | The workers and storage that actually read, move, and transform the data. | Locate the throughput, failure, and access boundaries where data is actually processed. **Concrete situation (illustrative):** Scheduling succeeds while actual data transfer stalls. → Inspect data-plane readers, workers, and storage. → Locate the measured throughput or access bottleneck. |
 
 ## Understand the model first
 

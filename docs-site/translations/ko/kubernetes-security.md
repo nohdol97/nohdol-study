@@ -27,7 +27,7 @@ flowchart LR
 
 사람 사용자 계정은 외부 identity 체계나 인증서 등으로 인증한다. ServiceAccount는 Namespace에 속하는 Kubernetes API 주체이며 Pod와 자동화가 API를 호출할 때 사용한다.
 
-모든 Pod에 API 접근이 필요한 것은 아니다. 필요하지 않으면 service account token 자동 마운트를 끄고, 필요한 경우 전용 ServiceAccount와 최소 RBAC을 만든다. 장기 정적 토큰을 이미지나 Git에 넣지 않는다.
+모든 Pod에 API 접근이 필요한 것은 아니다. 필요하지 않으면 서비스 account token 자동 마운트를 끄고, 필요한 경우 전용 ServiceAccount와 최소 RBAC을 만든다. 장기 정적 토큰을 이미지나 Git에 넣지 않는다.
 
 ```mermaid
 sequenceDiagram
@@ -115,7 +115,7 @@ kubectl auth can-i get secrets \
 
 ## Pod 실행 권한을 줄이는 securityContext
 
-다음은 일반 애플리케이션 Pod의 출발점 예시다. 이미지가 non-root 실행과 read-only root filesystem을 지원해야 하므로 무조건 복사하지 말고 실행 테스트를 한다.
+다음은 일반 애플리케이션 Pod의 출발점 예시다. 이미지가 non-root 실행과 read-only root 파일 시스템을 지원해야 하므로 무조건 복사하지 말고 실행 테스트를 한다.
 
 ```yaml
 apiVersion: v1
@@ -145,7 +145,7 @@ spec:
       emptyDir: {}
 ```
 
-Pod Security Standards는 Privileged, Baseline, Restricted라는 정책 수준을 정의한다. Pod Security Admission은 Namespace label을 이용해 이 정책을 enforce·audit·warn 모드로 적용할 수 있다. 먼저 audit/warn으로 영향 범위를 보고, 호환되지 않는 workload를 분리·수정한 뒤 enforce로 전환하는 흐름이 안전하다.
+Pod Security Standards는 Privileged, Baseline, Restricted라는 정책 수준을 정의한다. Pod Security Admission은 Namespace label을 이용해 이 정책을 enforce·audit·warn 모드로 적용할 수 있다. 먼저 audit/warn으로 영향 범위를 보고, 호환되지 않는 워크로드를 분리·수정한 뒤 enforce로 전환하는 흐름이 안전하다.
 
 ## NetworkPolicy는 API 권한과 다른 축이다
 
@@ -160,7 +160,7 @@ Secret은 민감 값을 Pod 명세와 이미지에서 분리하지만 base64는 
 - Secret 읽기 RBAC을 최소화하고 list/watch 권한을 함부로 주지 않는다.
 - etcd 저장 데이터 암호화를 구성하고 키 접근과 회전 절차를 분리한다.
 - 필요한 컨테이너에만 volume으로 노출하고 가능하면 환경 변수·명령 인수 노출을 줄인다.
-- 로그, debug endpoint, crash dump, 지원 번들에 값이 포함되지 않는지 검사한다.
+- 로그, debug 엔드포인트, crash dump, 지원 번들에 값이 포함되지 않는지 검사한다.
 - Git에 들어간 비밀은 파일 삭제만으로 해결되지 않으므로 즉시 폐기·회전한다.
 
 ## 실패를 보안 단계별로 좁히기
@@ -170,7 +170,7 @@ Secret은 민감 값을 Pod 명세와 이미지에서 분리하지만 base64는 
 | `Unauthorized` | 인증 | kubeconfig context, 인증서·token 유효성 |
 | `Forbidden` | 인가(authorization) | `kubectl auth can-i`, 바인딩 대상과 범위 |
 | 정책 메시지와 함께 생성 거부 | admission | Namespace 정책 label, webhook과 Pod 필드 |
-| Pod는 생성됐지만 permission denied | runtime | UID/GID, volume 권한, read-only filesystem |
+| Pod는 생성됐지만 permission denied | runtime | UID/GID, volume 권한, read-only 파일 시스템 |
 | 연결 timeout | 네트워크 | 양쪽 NetworkPolicy, DNS egress, CNI 지원 |
 | Secret이 평문으로 노출 | 데이터 경로 | RBAC, etcd encryption, 로그·env·Git 이력 |
 

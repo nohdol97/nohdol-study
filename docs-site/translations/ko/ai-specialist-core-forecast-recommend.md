@@ -99,7 +99,7 @@ recommendation_receipt:
 사용자별 순서뿐 아니라 전체에 적용할 평가 기준 시점도 하나 정한다. 다른 사용자의 미래 상호작용으로 학습한 모델은 과거 예측에 미래의 항목 인기도를 누출할 수 있다. 스케일러, 결측값 처리기, 어휘집, 특성 집계는 학습 구간에서만 맞추고 각 특성의 사용 가능 시점이 예측 시점보다 늦지 않게 한다. 랭킹에서는 Recall/NDCG와 함께 후보 전체 범위와 음성 샘플링 방식을 보고한다. 음성 사례 100개를 샘플링해 측정한 점수는 전체 카탈로그 랭킹과 직접 비교할 수 없다.
 
 1. feature event의 schema·시간·중복 처리는 [메시징과 이벤트](#doc=messaging-roadmap)에 연결한다.
-2. online feature cache와 hot key는 [Redis와 DynamoDB](#doc=nosql-roadmap)에서 검토한다.
+2. online feature 캐시와 hot key는 [Redis와 DynamoDB](#doc=nosql-roadmap)에서 검토한다.
 3. dataset·run·model·policy lineage는 [MLOps·LLMOps](#doc=ai-transformation-platform-mlops)에 남긴다.
 4. drift alert는 사용자·segment 결과와 함께 [AIOps 신호 계약](#doc=aiops-foundations-contract-lab)에 넣는다.
 5. forecast 기반 scaling은 자동 실행 전에 [AIOps 복구 상태 머신](#doc=aiops-remediation-state-machine)의 precondition과 abort를 거친다.

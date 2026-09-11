@@ -34,8 +34,8 @@ flowchart LR
 
 ## 선수 지식
 
-- [Kubernetes 로드맵](../../content/kubernetes/00-roadmap.md)의 workload와 Service
-- Linux process·socket과 네트워크 요청 경로
+- [Kubernetes 로드맵](../../content/kubernetes/00-roadmap.md)의 워크로드와 Service
+- Linux 프로세스·socket과 네트워크 요청 경로
 - 비율, percentile과 시간 구간을 읽는 기본 수학
 
 ## 학습 순서

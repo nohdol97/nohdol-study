@@ -13,7 +13,7 @@
 | 용량 | 현재 실습만 고려 | peak, 장애 여유, quota와 비용 필요 |
 | 버전 | 하나의 도구만 맞으면 됨 | API·컴포넌트·애드온 호환성 계획 필요 |
 
-관리형 Kubernetes는 컨트롤 플레인 일부 운영을 공급자에게 맡기지만 애플리케이션 RBAC, workload 보안, 데이터 백업, CNI·CSI·Ingress 선택, 업그레이드 검증, 비용과 SLO까지 자동으로 책임져 주지는 않는다. 계약서와 실제 서비스 범위로 책임을 명시한다.
+관리형 Kubernetes는 컨트롤 플레인 일부 운영을 공급자에게 맡기지만 애플리케이션 RBAC, 워크로드 보안, 데이터 백업, CNI·CSI·Ingress 선택, 업그레이드 검증, 비용과 SLO까지 자동으로 책임져 주지는 않는다. 계약서와 실제 서비스 범위로 책임을 명시한다.
 
 ## 운영 수명주기를 하나의 루프로 보기
 
@@ -34,14 +34,14 @@ flowchart LR
 
 ### 아키텍처와 장애 도메인
 
-- API endpoint와 컨트롤 플레인의 단일 실패 지점을 식별했다.
+- API 엔드포인트와 컨트롤 플레인의 단일 실패 지점을 식별했다.
 - etcd quorum과 백업 위치가 같은 장애 도메인에 몰리지 않았다.
-- worker를 zone·rack에 분산하고 workload topology 정책을 시험했다.
+- worker를 zone·rack에 분산하고 워크로드 topology 정책을 시험했다.
 - CNI, CSI, DNS, Ingress 또는 Gateway controller의 소유자와 복구 절차가 있다.
 
 ### 보안과 접근
 
-- 사람과 workload identity를 분리하고 일상적으로 cluster-admin을 사용하지 않는다.
+- 사람과 워크로드 identity를 분리하고 일상적으로 cluster-admin을 사용하지 않는다.
 - audit, 비상 접근, 인증서·token·encryption key 회전 절차가 있다.
 - Pod Security, admission, image 정책과 NetworkPolicy를 단계적으로 검증한다.
 - secret이 Git·이미지·로그·지원 번들에 남는 경로를 검사한다.
@@ -62,12 +62,12 @@ flowchart LR
 1. 사용 중인 API와 deprecated API를 inventory한다.
 2. 애드온과 CRD 공급자의 대상 버전 지원을 확인한다.
 3. 백업과 복원 절차를 새로 검증한다.
-4. staging에서 실제 workload와 정책을 시험한다.
+4. staging에서 실제 워크로드와 정책을 시험한다.
 5. 컨트롤 플레인과 노드를 지원되는 순서로 점진 업그레이드한다.
 6. 노드마다 cordon·drain 뒤 업그레이드하고 다시 검증한다.
-7. API, DNS, network, storage, admission과 사용자 경로를 확인한다.
+7. API, DNS, 네트워크, storage, admission과 사용자 경로를 확인한다.
 
-`kubectl drain`은 단순 정지가 아니다. DaemonSet, local storage, PDB, long-running connection, StatefulSet quorum 때문에 중단될 수 있다. 강제 옵션을 먼저 쓰기보다 왜 eviction이 막혔는지 조사한다.
+`kubectl drain`은 단순 정지가 아니다. DaemonSet, local storage, PDB, long-running 연결, StatefulSet quorum 때문에 중단될 수 있다. 강제 옵션을 먼저 쓰기보다 왜 eviction이 막혔는지 조사한다.
 
 ## 백업과 복원에서 반드시 함께 볼 것
 
@@ -206,9 +206,9 @@ kubectl rollout status deployment/prod-study-web
 
 | 변경 | 적용 전 | 적용 중 | 적용 후 |
 |---|---|---|---|
-| 클러스터 업그레이드 | API·애드온 호환, 복원 시험 | control-plane·node 상태, drain | 사용자 경로, DNS·network·storage |
+| 클러스터 업그레이드 | API·애드온 호환, 복원 시험 | control-plane·node 상태, drain | 사용자 경로, DNS·네트워크·storage |
 | CRD 버전 변경 | schema·conversion·백업 | controller error와 webhook | 기존·신규 resource reconcile |
-| Helm/Kustomize 배포 | render·server dry-run·diff | rollout과 event | smoke test, SLO, drift |
+| Helm/Kustomize 배포 | render·서버 dry-run·diff | rollout과 event | smoke test, SLO, drift |
 | 노드 유지보수 | PDB·용량·quorum | eviction과 재배치 | topology와 성능 |
 | secret·인증서 회전 | 신·구 공존과 rollback | 양쪽 버전 관측 | 구 버전 사용 0, 폐기 |
 

@@ -4,12 +4,12 @@
 
 운영 중 평소와 다른 값이 보였다는 사실은 incident도, root cause도 아니다. 사용자가 영향을 받았는지, 같은 사건에서 나온 여러 신호인지, 최근 변경과 어떤 순서로 나타났는지를 확인해야 한다. 이 주제는 AIOps 진단을 **탐지 → 묶기 → evidence 회수 → 원인 후보 → 검증**의 다섯 단계로 나눈다.
 
-선수 주제는 [AIOps 신호와 운영 토폴로지](../../content/aiops-foundations/00-roadmap.md)와 [Observability와 SRE](../../content/observability-sre/00-roadmap.md)다. 시계열 anomaly와 retrieval·LLM 후보는 각각 [AI Specialist의 시계열·추천](../../content/ai-specialist-core/04-time-series-and-recommendation.md)과 [RAG·MCP](../../content/ai-specialist-core/05-rag-graph-mcp.md)의 평가 경계를 따른다. 입력 계약과 SLO 없이 anomaly score만 만들면 정상적인 batch 작업이나 traffic 증가를 장애로 부르고, 여러 서비스의 alert를 잘못 묶는다. 진단 결과는 자동 실행 명령이 아니라 evidence와 반증 조건이 붙은 후보이며, 실제 조치는 [승인된 자동 복구](../../content/aiops-remediation/00-roadmap.md)에서 별도 gate를 거친다.
+선수 주제는 [AIOps 신호와 운영 토폴로지](../../content/aiops-foundations/00-roadmap.md)와 [Observability와 SRE](../../content/observability-sre/00-roadmap.md)다. 시계열 anomaly와 retrieval·LLM 후보는 각각 [AI Specialist의 시계열·추천](../../content/ai-specialist-core/04-time-series-and-recommendation.md)과 [RAG·MCP](../../content/ai-specialist-core/05-rag-graph-mcp.md)의 평가 경계를 따른다. 입력 계약과 SLO 없이 anomaly score만 만들면 정상적인 batch 작업이나 트래픽 증가를 장애로 부르고, 여러 서비스의 alert를 잘못 묶는다. 진단 결과는 자동 실행 명령이 아니라 evidence와 반증 조건이 붙은 후보이며, 실제 조치는 [승인된 자동 복구](../../content/aiops-remediation/00-roadmap.md)에서 별도 gate를 거친다.
 
 | 처음 만나는 말 | 학습용 쉬운 뜻 | 왜 필요한가요 · 언제 쓰나요 |
 |---|---|---|
 | static rule | 사람이 정한 명시적 조건으로 이상을 찾는 규칙 | 검토 가능한 임계값이나 명시적 업무 규칙으로 알려진 실패 조건을 탐지한다. **구체적인 상황(가상 예시):** 필수 공개 구간 누락이 알려진 실패 조건이다. → 예상 전달에 대한 명시적 규칙을 만든다. → 누락·성공 구간을 모두 시험한다. |
-| baseline | 시간·요일·traffic 조건이 비슷한 정상 비교 구간 | 관측을 비정상으로 판단하기 전에 조건이 맞는 정상 기간과 비교한다. **구체적인 상황(가상 예시):** 월요일 트래픽이 일요일과 비교하면 이상해 보인다. → 요일·부하 조건이 맞는 기준을 고른다. → 해당 기준으로 이상 여부를 다시 평가한다. |
+| baseline | 시간·요일·트래픽 조건이 비슷한 정상 비교 구간 | 관측을 비정상으로 판단하기 전에 조건이 맞는 정상 기간과 비교한다. **구체적인 상황(가상 예시):** 월요일 트래픽이 일요일과 비교하면 이상해 보인다. → 요일·부하 조건이 맞는 기준을 고른다. → 해당 기준으로 이상 여부를 다시 평가한다. |
 | anomaly score | 관측값이 기준선에서 얼마나 벗어났는지 나타내는 점수 | 이례적이라는 이유만으로 사고를 확정하지 않고 조사할 관측의 우선순위를 정한다. **구체적인 상황(가상 예시):** 트래픽 급증은 이례적이지만 고객은 성공한다. → 이상 점수와 사용자 결과를 함께 본다. → 점수를 사고로 단정하지 않고 조사 우선순위를 정한다. |
 | alert correlation | 여러 alert가 같은 incident에 속하는지 관계와 시간으로 묶는 과정 | 관련 경보를 묶어 중복 분류를 줄이되 각 경보의 근거는 보존한다. **구체적인 상황(가상 예시):** 백엔드 장애 하나가 수십 경보를 만든다. → 검증한 의존성과 시간으로 묶는다. → 개별 근거를 보존하면서 중복 분류를 줄인다. |
 | root cause candidate | 현재 evidence로 설명력이 있지만 아직 검증해야 하는 원인 후보 | 근거가 진단을 뒷받침할 때까지 여러 설명 후보를 검증 가능한 상태로 유지한다. **구체적인 상황(가상 예시):** 배포와 데이터베이스 지연이 모두 증상을 설명한다. → 두 원인 후보를 명시적으로 남긴다. → 각 예측을 구분하는 검사를 실행한다. |
@@ -53,7 +53,7 @@ Microsoft의 RCACopilot 사례는 alert type에 맞는 handler를 고르고, 중
 
 - anomaly, alert, incident와 root cause를 구분할 수 있다.
 - 사용자 symptom rule과 원인 후보용 anomaly model의 역할을 나눌 수 있다.
-- alert grouping에 시간만 아니라 service dependency와 change ID가 필요한 이유를 설명할 수 있다.
+- alert grouping에 시간만 아니라 서비스 dependency와 change ID가 필요한 이유를 설명할 수 있다.
 - LLM 진단이 읽은 evidence, 후보 category, 반대 증거와 abstain 사유를 남길 수 있다.
 - 사후 확정 label로 detection·grouping·diagnosis를 각각 평가할 수 있다.
 
@@ -66,7 +66,7 @@ Microsoft의 RCACopilot 사례는 alert type에 맞는 handler를 고르고, 중
 ## 운영 판단으로 확장하기
 
 - 정답 label이 없는 incident를 정확도 계산에서 조용히 제외하지 않는가?
-- 새로운 service·revision·traffic pattern이 baseline을 바꿀 때 model version을 갱신하는가?
+- 새로운 서비스·revision·트래픽 pattern이 baseline을 바꿀 때 model version을 갱신하는가?
 - 진단 결과가 특정 팀·제품을 과도하게 원인으로 지목하는 편향을 점검하는가?
 - 사람의 수정 결과가 다음 평가셋으로 들어갈 때 개인정보와 잘못된 label을 검토하는가?
 

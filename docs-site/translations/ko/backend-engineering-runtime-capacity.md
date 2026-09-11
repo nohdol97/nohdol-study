@@ -3,7 +3,7 @@
 <!-- source: https://sre.google/sre-book/addressing-cascading-failures/ | checked: 2026-09-03 -->
 <!-- source: https://docs.oracle.com/en/java/javase/17/gctuning/ | checked: 2026-09-03 -->
 
-요청이 느려졌을 때 worker 수부터 늘리면 처리량이 오를 수도 있지만 DB connection, heap과 downstream을 먼저 소진할 수도 있다. 용량 설계는 CPU 비율 하나가 아니라 도착률, 요청이 머무는 시간, 동시에 진행 중인 작업, queue와 dependency 상한을 하나의 흐름으로 보는 일이다.
+요청이 느려졌을 때 worker 수부터 늘리면 처리량이 오를 수도 있지만 DB 연결, heap과 downstream을 먼저 소진할 수도 있다. 용량 설계는 CPU 비율 하나가 아니라 도착률, 요청이 머무는 시간, 동시에 진행 중인 작업, queue와 dependency 상한을 하나의 흐름으로 보는 일이다.
 
 ## 이 장에서 처음 쓰는 말
 
@@ -43,7 +43,7 @@ flowchart LR
 | DB | connection·transaction time | pool wait, lock wait | query budget·pool cap |
 | dependency | in-flight·retry | timeout, slow-call ratio | circuit breaker·fallback |
 
-worker가 200개인데 DB connection이 20개라면 나머지는 일을 하는 것이 아니라 기다린다. DB pool을 200개로 키워도 DB CPU·lock·I/O가 감당하지 못하면 전체 체류 시간만 늘어난다. `max concurrency`는 각 계층의 가장 작은 안전 상한과 연결해야 한다.
+worker가 200개인데 DB 연결이 20개라면 나머지는 일을 하는 것이 아니라 기다린다. DB pool을 200개로 키워도 DB CPU·lock·I/O가 감당하지 못하면 전체 체류 시간만 늘어난다. `max concurrency`는 각 계층의 가장 작은 안전 상한과 연결해야 한다.
 
 ```yaml
 capacity_contract:
@@ -56,7 +56,7 @@ capacity_contract:
   overload_response: 503
 ```
 
-이 값들은 예시이지 권장 기본값이 아니다. 실제 workload로 포화 지점을 측정하고, [트래픽 실패 예산](#doc=traffic-resilience-request-budget)에서 전체 deadline과 retry attempt를 맞춘다.
+이 값들은 예시이지 권장 기본값이 아니다. 실제 워크로드로 포화 지점을 측정하고, [트래픽 실패 예산](#doc=traffic-resilience-request-budget)에서 전체 deadline과 retry attempt를 맞춘다.
 
 ## queue는 메모리가 아니라 시간 예산이다
 
@@ -71,8 +71,8 @@ Java HotSpot은 요구에 맞는 여러 garbage collector를 제공하며 throug
 | 관찰 | 가능한 해석 | 확인할 반례 |
 |---|---|---|
 | heap 사용량이 톱니처럼 반복 | 정상 회수 주기일 수 있음 | pause와 latency가 함께 증가하는가 |
-| allocation rate 급증 | payload·buffer·logging 변화 | traffic 증가만으로 설명되는가 |
-| 오래된 객체가 계속 증가 | cache·listener·queue retention | workload 종료 뒤에도 남는가 |
+| allocation rate 급증 | payload·buffer·logging 변화 | 트래픽 증가만으로 설명되는가 |
+| 오래된 객체가 계속 증가 | 캐시·리스너·queue retention | 워크로드 종료 뒤에도 남는가 |
 | CPU 100%, throughput 정체 | GC·serialization·busy loop | profile에서 실제 hot path는 무엇인가 |
 | event-loop lag 증가 | blocking call 또는 긴 callback | thread dump·span에서 같은 구간인가 |
 
@@ -82,7 +82,7 @@ GC pause와 thread 수치는 원인이 아니라 후보다. [Observability와 SR
 
 1. 성공한 업무 단위와 latency percentile을 먼저 정의한다.
 2. warm-up 뒤 일정 부하, 단계 증가, burst를 분리해 실행한다.
-3. client timeout과 server deadline을 기록한다.
+3. 클라이언트 timeout과 서버 deadline을 기록한다.
 4. queue age, in-flight, pool wait, GC와 dependency 지표를 함께 수집한다.
 5. 최초 포화 지점과 그 뒤의 실패 형태를 기록한다.
 6. retry를 켠 경우와 끈 경우를 비교해 증폭을 측정한다.
@@ -100,4 +100,4 @@ GC pause와 thread 수치는 원인이 아니라 후보다. [Observability와 SR
 - latency가 두 배가 되면 같은 arrival rate에서 in-flight가 왜 늘어나는가?
 - worker와 DB pool을 같은 크기로 맞추는 것이 항상 정답이 아닌 이유는 무엇인가?
 - queue length가 짧아도 queue age가 위험할 수 있는 경우는 언제인가?
-- GC tuning 전에 workload와 allocation profile을 고정해야 하는 이유는 무엇인가?
+- GC tuning 전에 워크로드와 allocation profile을 고정해야 하는 이유는 무엇인가?

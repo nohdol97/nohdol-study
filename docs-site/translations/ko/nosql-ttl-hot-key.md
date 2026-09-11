@@ -17,13 +17,13 @@ TTL 실습은 기다리는 시간이 포함된다. 처음 `TTL` 결과와 10초 
 
 Redis에서 key가 없어지는 길은 하나가 아니다. TTL이 끝나 논리적으로 만료될 수 있고, `maxmemory`에 도달해 eviction policy가 key를 제거할 수 있으며, persistence 설정과 마지막 저장 시점 때문에 restart 뒤 일부 key가 돌아오지 않을 수도 있다. 원인이 다르면 복구와 예방도 다르다.
 
-DynamoDB의 hot key는 저장 용량 문제가 아니라 request 분포 문제다. table 전체 요청량이 낮아도 하나의 partition key에 traffic이 집중되면 해당 partition에서 latency나 throttling이 나타날 수 있다. key design은 값을 저장하는 형식이면서 동시에 load를 분산하는 규칙이다.
+DynamoDB의 hot key는 저장 용량 문제가 아니라 request 분포 문제다. table 전체 요청량이 낮아도 하나의 partition key에 트래픽이 집중되면 해당 partition에서 latency나 throttling이 나타날 수 있다. key design은 값을 저장하는 형식이면서 동시에 load를 분산하는 규칙이다.
 
 | 현상 | 먼저 확인 | 잘못된 단정 |
 |---|---|---|
 | Redis key 없음 | TTL, eviction counter, write/restart 시점 | 누군가 `DEL`했다 |
-| Redis write 실패 | maxmemory와 policy | network 장애다 |
-| DynamoDB throttling | key별 traffic·index·capacity mode | table 전체 capacity만 부족하다 |
+| Redis write 실패 | maxmemory와 policy | 네트워크 장애다 |
+| DynamoDB throttling | key별 트래픽·index·capacity mode | table 전체 capacity만 부족하다 |
 | query가 Scan 필요 | access pattern과 key/index | NoSQL은 원래 전부 scan한다 |
 
 ## 1. Redis TTL 관찰
@@ -49,7 +49,7 @@ redis-cli INFO memory
 redis-cli INFO stats
 ```
 
-`evicted_keys`, memory, application cache miss와 source-of-truth 부하를 같은 시간축으로 본다. `noeviction`에서는 write가 실패할 수 있으므로 “아무 key도 안 지워진다”와 “서비스가 정상이다”는 같은 말이 아니다.
+`evicted_keys`, 메모리, application 캐시 miss와 source-of-truth 부하를 같은 시간축으로 본다. `noeviction`에서는 write가 실패할 수 있으므로 “아무 key도 안 지워진다”와 “서비스가 정상이다”는 같은 말이 아니다.
 
 ## 3. DynamoDB key worksheet
 
@@ -61,7 +61,7 @@ redis-cli INFO stats
 | 주문 ID 단건 조회 | `ORDER#<id>` | metadata | 두 identity 중복 모델 |
 | 상태별 운영 조회 | GSI partition=`STATUS#<value>` | time | 특정 상태 집중 |
 
-고정된 단일 partition key에 모든 event를 넣는 설계와 충분히 분산되는 synthetic key를 비교한다. AWS optional 실습에서는 table에 공통 tag와 낮은 test traffic을 사용하고 CloudWatch의 throttled requests·latency를 확인한다.
+고정된 단일 partition key에 모든 event를 넣는 설계와 충분히 분산되는 synthetic key를 비교한다. AWS optional 실습에서는 table에 공통 tag와 낮은 test 트래픽을 사용하고 CloudWatch의 throttled requests·latency를 확인한다.
 
 ```mermaid
 flowchart LR
@@ -100,7 +100,7 @@ OK
 
 `TTL`이 양수에서 `-2`로 바뀌면 key가 만료되어 더는 존재하지 않는 최소 흐름을 확인한 것이다. `-1`이라면 key는 있지만 expiration이 설정되지 않았다. 두 음수 값을 구분해야 session이 영구히 남는 설정 누락과 정상 만료를 나눌 수 있다.
 
-`evicted_keys`가 증가하면 memory pressure 때문에 policy가 key를 제거했다는 뜻이다. cache라면 source DB의 miss traffic이 함께 증가할 수 있고 source of truth라면 data loss 사건일 수 있다. 같은 counter라도 workload 역할에 따라 심각도가 다르다.
+`evicted_keys`가 증가하면 메모리 pressure 때문에 policy가 key를 제거했다는 뜻이다. 캐시라면 source DB의 miss 트래픽이 함께 증가할 수 있고 source of truth라면 data loss 사건일 수 있다. 같은 counter라도 워크로드 역할에 따라 심각도가 다르다.
 
 DynamoDB worksheet에서는 각 요구가 `GetItem` 또는 `Query`의 key condition으로 표현되는지 확인한다. 운영 화면 하나를 위해 status 값 하나에 모든 item이 몰리는 GSI를 만들면 새로운 hot partition을 만들 수 있다. 시간 bucket이나 write sharding을 쓰면 read fan-out과 정렬 비용이 생기므로 함께 비교한다.
 

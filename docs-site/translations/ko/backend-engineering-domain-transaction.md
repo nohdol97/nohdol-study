@@ -4,7 +4,7 @@
 <!-- source: https://www.postgresql.org/docs/current/ddl-constraints.html | checked: 2026-09-03 -->
 <!-- source: https://www.postgresql.org/docs/current/sql-insert.html | checked: 2026-09-03 -->
 
-주문 금액은 음수가 아니어야 하고, 같은 쿠폰은 한 주문에 한 번만 적용되며, 재고는 승인된 정책 아래에서만 감소해야 한다. 이런 불변식은 정상 요청 하나가 아니라 동시 요청, process 종료와 재시도에서도 지켜져야 한다. 코드 검증, DB constraint와 transaction은 서로 대체재가 아니라 다른 실패 지점의 방어선이다.
+주문 금액은 음수가 아니어야 하고, 같은 쿠폰은 한 주문에 한 번만 적용되며, 재고는 승인된 정책 아래에서만 감소해야 한다. 이런 불변식은 정상 요청 하나가 아니라 동시 요청, 프로세스 종료와 재시도에서도 지켜져야 한다. 코드 검증, DB constraint와 transaction은 서로 대체재가 아니라 다른 실패 지점의 방어선이다.
 
 ## 이 장에서 처음 쓰는 말
 
@@ -46,8 +46,8 @@ flowchart TD
 | request key는 tenant 안에서 유일 | `UNIQUE (tenant_id, request_key)` | concurrent insert 중 하나만 성공 |
 | 주문은 존재하는 customer를 참조 | foreign key 또는 명시적 lifecycle | 삭제 정책과 lock 영향 검토 |
 | 재고는 정책상 음수가 될 수 없음 | 조건부 `UPDATE`와 affected rows | 읽고 나중에 쓰는 경쟁 방지 |
-| 결제 승인 뒤 상태 전이는 허용 순서만 | current state 조건이 있는 `UPDATE` | stale command 거부 |
-| 주문 commit 뒤 event 누락 금지 | order와 outbox 같은 transaction | relay 중복 허용·consumer 멱등 필요 |
+| 결제 승인 뒤 상태 전이는 허용 순서만 | current state 조건이 있는 `UPDATE` | stale 명령어 거부 |
+| 주문 commit 뒤 event 누락 금지 | order와 outbox 같은 transaction | relay 중복 허용·소비자 멱등 필요 |
 
 ## 읽고 쓰기보다 조건부 쓰기
 
@@ -87,7 +87,7 @@ application은 affected row count가 1인지 확인한다. 0이면 현재 상태
 
 ## transaction 밖으로 나가는 순간
 
-DB transaction 안에서 broker publish나 HTTP 호출을 먼저 수행하면 rollback 뒤 외부 효과만 남을 수 있다. DB commit 뒤 publish하면 process가 그 사이에 죽어 event가 빠질 수 있다. outbox는 업무 row와 event intent를 한 transaction에 기록하고 별도 relay가 publish한다.
+DB transaction 안에서 broker publish나 HTTP 호출을 먼저 수행하면 rollback 뒤 외부 효과만 남을 수 있다. DB commit 뒤 publish하면 프로세스가 그 사이에 죽어 event가 빠질 수 있다. outbox는 업무 row와 event intent를 한 transaction에 기록하고 별도 relay가 publish한다.
 
 ```sql
 BEGIN;
@@ -107,7 +107,7 @@ COMMIT;
 
 이 예시는 `orders.order_id` 기본값과 호환되는 outbox 스키마를 가정한다. `RETURNING`은 실제 생성한 행과 이벤트를 연결한다. 무관한 주문 ID를 하드코딩하면 트랜잭션의 의미가 무너진다. 유일성 충돌 시 두 번째 이벤트를 만들지 말고 기존 테넌트·요청 결과를 찾아 페이로드를 비교해야 한다.
 
-relay는 publish 성공 뒤 mark 과정에서 실패할 수 있으므로 같은 `event_id`를 다시 보낼 수 있다. 따라서 outbox는 event 누락 창을 줄이지만 end-to-end exactly-once를 자동으로 만들지 않는다. [메시징과 이벤트 인프라](#doc=messaging-roadmap)와 [부분 실패와 분산 워크플로](#doc=backend-engineering-distributed-workflow)에서 consumer의 중복 처리까지 닫는다.
+relay는 publish 성공 뒤 mark 과정에서 실패할 수 있으므로 같은 `event_id`를 다시 보낼 수 있다. 따라서 outbox는 event 누락 창을 줄이지만 end-to-end exactly-once를 자동으로 만들지 않는다. [메시징과 이벤트 인프라](#doc=messaging-roadmap)와 [부분 실패와 분산 워크플로](#doc=backend-engineering-distributed-workflow)에서 소비자의 중복 처리까지 닫는다.
 
 ## 실행 결과 예시
 
@@ -142,7 +142,7 @@ WHERE e.payload->>'orderId' = o.order_id::text;
 | affected rows 0 | 현재 상태가 precondition 불충족 | conflict 반환, blind retry 금지 |
 | serialization failure | 동시 실행 순서를 DB가 확정하지 못함 | bounded retry와 전체 transaction 재실행 |
 | order 있음, outbox 없음 | write 경로가 원자적이지 않음 | schema·transaction boundary 수정 |
-| outbox 중복 publish | 예상 가능한 relay 실패 | consumer inbox·dedupe 확인 |
+| outbox 중복 publish | 예상 가능한 relay 실패 | 소비자 inbox·dedupe 확인 |
 | DB commit, 사용자 실패 지속 | 저장 성공과 업무 결과가 다름 | dependency·event·read path 조사 |
 
 ## 설계 검토 순서
@@ -151,7 +151,7 @@ WHERE e.payload->>'orderId' = o.order_id::text;
 2. 두 요청이 동시에 같은 전제조건을 읽는 schedule을 그린다.
 3. 단일 row·table 규칙은 constraint와 조건부 write로 최대한 내린다.
 4. transaction 격리와 abort·retry 동작을 실제 DB에서 검증한다.
-5. 외부 효과는 intent를 commit하고 relay·consumer의 중복을 설계한다.
+5. 외부 효과는 intent를 commit하고 relay·소비자의 중복을 설계한다.
 6. tenant·subject는 [인프라 보안](#doc=infrastructure-security-trust)의 신뢰 경계에서 DB 정책과 audit까지 전달한다.
 7. outcome SLI는 row 수가 아니라 사용자가 받은 주문 결과로 둔다.
 
