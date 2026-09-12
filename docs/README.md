@@ -53,6 +53,7 @@ This directory is a MOC (Map of Content) that connects nohdol-study's decisions 
 
 | Review | Verdict |
 |---|---|
+| [Data and Observability Korean readability](reviews/2026-09-12-data-observability-korean-readability.md) | All 20 relevant translations reviewed; concrete explanations, simpler terminology, and preserved bilingual fixtures |
 | [Full documentation review](reviews/2026-09-10-full-documentation-review.md) | All 94 learning documents and supporting docs; corrections, result examples, and verification limits |
 | [2026-07-25-phase2c-pilot-status](reviews/2026-07-25-phase2c-pilot-status.md) | PaperQA2 not available, basic-memory not adopted | The index does not meet the read-only premise by modifying the note frontmatter. Search is valid, no external transfer |
 | [NotebookLM CLI·Understand Anything Security Review](reviews/2026-07-25-notebooklm-understand-anything-security.md) | Historical exact-version audit; NotebookLM subsequently withdrawn by ADR 004 |

@@ -446,8 +446,8 @@
           "path": "docs-site/content/observability-sre/00-roadmap.md",
           "translation": {
             "path": "docs-site/translations/ko/observability-sre-roadmap.md",
-            "title": "Observability와 SRE 로드맵",
-            "summary": "지표·로그·추적·서비스 목표·알림이 각각 어떤 질문에 답하는지부터 시작합니다.",
+            "title": "관측성과 SRE: 장애를 찾고 복구하는 학습 순서",
+            "summary": "서비스가 느리다는 신고에서 시작해 지표·로그·트레이스를 찾고, 대응할 기준을 정한다.",
             "sourceSha256": "0909063da0dfc3b9fadb2064569be002d3fedda4e3250b1ed03953a6611348ce"
           }
         },
@@ -458,8 +458,8 @@
           "path": "docs-site/content/observability-sre/01-signals-slo-incident-model.md",
           "translation": {
             "path": "docs-site/translations/ko/observability-sre-signals.md",
-            "title": "Signal, SLO와 incident model",
-            "summary": "요청 한 건의 기록을 전체 성공률과 연결하고 언제 사람에게 알려야 하는지 배웁니다.",
+            "title": "지표·로그·트레이스로 장애를 이해하고 SLO로 판단하기",
+            "summary": "결제 실패 한 건을 기록으로 조사하고, 전체 성공률과 목표를 비교해 대응 여부를 판단한다.",
             "sourceSha256": "2b86466e287bb214a1143726462b93812b382abf174ed64d1f101c98f239d90c"
           }
         },
@@ -470,8 +470,8 @@
           "path": "docs-site/content/observability-sre/02-correlation-and-alert-lab.md",
           "translation": {
             "path": "docs-site/translations/ko/observability-sre-correlation-lab.md",
-            "title": "Signal 상관관계와 SLO alert 실습",
-            "summary": "같은 요청을 지표·로그·추적에서 찾아 장애 발생부터 회복까지 시간순으로 맞춥니다.",
+            "title": "같은 요청의 기록을 연결하고 SLO 알림 시험하기",
+            "summary": "같은 요청의 기록을 시간순으로 연결하고, 오류가 지속되거나 회복될 때 알림이 어떻게 바뀌는지 확인한다.",
             "sourceSha256": "526a9a71efb10c461a561cee1db752979351aa4534be6a3f7c0c9e8e7680f81e"
           }
         }
@@ -1199,7 +1199,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-roadmap.md",
             "title": "데이터·관측성 엔지니어링: 이벤트에서 신뢰할 수 있는 AI까지",
-            "summary": "12개월 계획에 따라 측정 가능한 완료 기준을 갖춘 하나의 플랫폼을 점진적으로 만든다.",
+            "summary": "주문 보고서에서 출발해 데이터 처리·모니터링·AI 도우미를 붙이는 12개월 학습 계획이다.",
             "sourceSha256": "18e7c6202d3441b9aab040333d1b587df3d67ed901d1c5a4bd9b6b2a6f625326"
           }
         },
@@ -1211,7 +1211,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-stack-and-architecture.md",
             "title": "책임을 기준으로 기술 스택 선택하기",
-            "summary": "핵심 스택을 선택하고 CDC·Flink·Trino·카탈로그·텔레메트리 백엔드가 필요한 조건을 익힌다.",
+            "summary": "저장·계산·예약 실행·검사를 누가 맡는지 나누고, 작은 구성부터 필요한 도구를 추가한다.",
             "sourceSha256": "54f1d0293a593bc08369171ca07e4d55006e08c6039d7f4d39aa51a16b480112"
           }
         },
@@ -1222,8 +1222,8 @@
           "path": "docs/guides/data-observability/02-sql-python-foundations.md",
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-sql-python-foundations.md",
-            "title": "SQL과 Python: 확장하기 전에 결과를 입증하기",
-            "summary": "실행 가능한 Python·SQL 예제로 행 단위, 조인, 중복 제거, 합계를 검증한다.",
+            "title": "SQL과 Python: 처리 규모를 늘리기 전에 결과 확인하기",
+            "summary": "주문 중복과 누락, 잘못된 조인이 합계를 바꾸는 이유를 작은 Python·SQL 예제로 확인한다.",
             "sourceSha256": "84e50a0e6635cf4fa9e91770d424fe0e7a13f08f85203fcaea45f14400fb237c"
           }
         },
@@ -1235,7 +1235,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-parquet-object-storage.md",
             "title": "Parquet와 오브젝트 스토리지: 실제로 읽는 데이터 이해하기",
-            "summary": "열 선택, 필터링, 파일 배치, 오브젝트 스토리지 동작을 측정한다.",
+            "summary": "필요한 열과 날짜만 읽을 때 파일 배치에 따라 읽는 양이 어떻게 달라지는지 비교한다.",
             "sourceSha256": "98977dde03df48a3e184b4bfd9da5c4a5595e50f4d775fd154307ea085cfddb1"
           }
         },
@@ -1247,7 +1247,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-table-formats.md",
             "title": "Iceberg와 Delta Lake: 파일 집합을 테이블로 만들기",
-            "summary": "커밋된 테이블 버전을 추적하고 Iceberg·Delta를 비교하며 복구를 연습한다.",
+            "summary": "쓰다 만 파일과 완료된 테이블을 구분하고, 이전 버전을 다시 읽어 복구하는 과정을 따라간다.",
             "sourceSha256": "4dbc199306c5a896a6a2dc4ea21625b144cd411bd9b84188c965dc9da4506701"
           }
         },
@@ -1258,8 +1258,8 @@
           "path": "docs/guides/data-observability/05-spark-performance.md",
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-spark-performance.md",
-            "title": "Spark 내부 동작: 근거로 느린 작업 설명하기",
-            "summary": "물리 계획·태스크·셔플·데이터 쏠림·스필을 측정한 개선 결과와 연결한다.",
+            "title": "Spark 내부 동작: 느린 작업의 원인 찾기",
+            "summary": "대부분 끝났는데 일부 태스크만 느린 이유를 실행 계획과 처리 기록으로 찾는다.",
             "sourceSha256": "ccdbeb1036744d28c1f4f998c968edbc70217dc8225cf5c6b79258c729fe1d22"
           }
         },
@@ -1271,7 +1271,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-kafka-cdc-streaming.md",
             "title": "Kafka·CDC·스트리밍 복구",
-            "summary": "CDC, 전달 보장의 경계, 이벤트 시간, 체크포인트, 재생 정확성을 정의한다.",
+            "summary": "DB 변경을 분석 결과에 반영하고, 중간에 멈춰 다시 처리해도 주문이 빠지거나 두 번 세어지지 않는지 확인한다.",
             "sourceSha256": "5c9f731186bca6a7cd3eedcbe52bc332ea63a2b47b6d607342284da5891fed1e"
           }
         },
@@ -1283,7 +1283,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-modeling-orchestration.md",
             "title": "모델링·dbt·오케스트레이션: 의미 있는 데이터셋 공개하기",
-            "summary": "의미 있는 데이터 마트를 만들고 계약과 테스트를 구분하며 명시한 구간을 백필한다.",
+            "summary": "팀이 같은 규칙으로 매출을 계산하게 만들고, 과거 주문을 수정한 뒤 결과를 다시 검증한다.",
             "sourceSha256": "6ad988fd953d0aa5282fbf5ce2ceaa89547f086dd13f4f6c43ca51e8e25d8601"
           }
         },
@@ -1295,7 +1295,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-quality-contracts-slos.md",
             "title": "데이터 품질·계약·결과 중심 SLO",
-            "summary": "유효성·완전성·신선도·누락 실행·공개 결과를 측정한다.",
+            "summary": "값이 맞는지, 입력이 빠졌는지, 기한을 지켰는지를 나눠 검사하고 결과 제공 여부를 정한다.",
             "sourceSha256": "02910fab51b6ee842d0d526599dcacdc70bc1d66c8c422522346ab0b7518cf19"
           }
         },
@@ -1306,8 +1306,8 @@
           "path": "docs/guides/data-observability/09-opentelemetry.md",
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-opentelemetry.md",
-            "title": "OpenTelemetry: 텔레메트리를 통제하며 실행 연결하기",
-            "summary": "SDK와 Collector 파이프라인을 연결하고 컨텍스트 전파·샘플링·텔레메트리 유실을 조사한다.",
+            "title": "OpenTelemetry: 여러 곳에 흩어진 실행 기록 연결하기",
+            "summary": "스케줄러·워커·DB의 기록이 같은 실행에 속하는지 연결하고, 기록이 끊기거나 유실되는 경우를 조사한다.",
             "sourceSha256": "debf646696e99a9862ce7a7081cfb96d02160a45b30a291fced0a5e682319ebd"
           }
         },
@@ -1318,8 +1318,8 @@
           "path": "docs/guides/data-observability/10-metrics-logs-traces.md",
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-metrics-logs-traces.md",
-            "title": "Prometheus·Grafana·Loki·Tempo: 근거 파이프라인 운영하기",
-            "summary": "카운터·히스토그램을 읽고 라벨 범위를 제한하며 데이터셋 경보를 로그·트레이스와 연결한다.",
+            "title": "Prometheus·Grafana·Loki·Tempo로 데이터 상태 조사하기",
+            "summary": "지표에서 데이터 지연을 찾고 로그·트레이스로 원인을 좁힌다. 모니터링 자체가 멈춘 경우도 구분한다.",
             "sourceSha256": "7fc4ad4d4cf9831b5b5e9c4f3cea5396c7a83d18e52e24e797f3fde329a1d89d"
           }
         },
@@ -1330,8 +1330,8 @@
           "path": "docs/guides/data-observability/11-lineage-governance.md",
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-lineage-governance.md",
-            "title": "계보·카탈로그·거버넌스: 영향 찾기와 접근 강제하기",
-            "summary": "데이터셋·작업·실행을 소유자와 연결하고 실행 시점의 접근 권한을 시험한다.",
+            "title": "계보·카탈로그·거버넌스: 변경 영향과 접근 권한 확인하기",
+            "summary": "열 하나가 바뀌면 어떤 보고서가 영향을 받는지 찾고, 실제 계정별 읽기·쓰기 권한을 시험한다.",
             "sourceSha256": "c96c1fa4f97de39dbd9d4f1413d7a3b97c97d6e78d022afa13c6fa05439b6552"
           }
         },
@@ -1343,7 +1343,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-cloud-platforms.md",
             "title": "Databricks부터 Snowflake까지: 같은 약속 비교하기",
-            "summary": "동일한 품질·복구·비용 요구를 기준으로 Databricks와 Snowflake를 비교한다.",
+            "summary": "같은 주문 데이터로 Databricks와 Snowflake의 결과·복구·권한·비용을 비교한다.",
             "sourceSha256": "2653a58e5a9c8a7f0ba69df3fedb2322c8915f3ac300e8c7c0307a6a52b666fb"
           }
         },
@@ -1355,7 +1355,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-ai-ready-data-evaluation.md",
             "title": "AI용 데이터·검색·평가",
-            "summary": "검색과 에이전트에 권한이 허용된 근거를 전달하고 재현 가능한 답변 추적 기록을 평가한다.",
+            "summary": "AI가 읽어도 되는 최신 자료를 찾게 하고, 검색한 근거와 실제 답변이 맞는지 따로 평가한다.",
             "sourceSha256": "98b36d061d387f7171df2b55862ff5085c845fd5aade8f6cd7ae0f6d6096f93d"
           }
         },
@@ -1367,7 +1367,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-platform-operations.md",
             "title": "플랫폼 운영: 릴리스·복구·용량·비용",
-            "summary": "호환되는 릴리스, 복원, 용량, 역압, 성공 결과당 비용을 운영한다.",
+            "summary": "동료가 절차만 보고 복구할 수 있게 배포 기록을 남기고, 밀린 데이터 처리 시간과 비용을 계산한다.",
             "sourceSha256": "1d79b5560ae2a4b6a49ac871f4cd626cb3fdd34b2ea0f9dd6df2ba4228c5b334"
           }
         },
@@ -1379,7 +1379,7 @@
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-capstone.md",
             "title": "종합 프로젝트: 함께 발전하는 데이터·관측성 플랫폼",
-            "summary": "하나의 가상 프로젝트를 여섯 단계로 발전시키고 실행 가능한 정답 판정기와 실패 행렬을 만든다.",
+            "summary": "같은 가상 주문 시스템을 여섯 단계로 확장하며 중복·누락·장애를 만들고 복구 결과를 확인한다.",
             "sourceSha256": "470c4d100a5c8e53073bcd27f2363973ea2bd82040bbee5d0d59444920cace20"
           }
         },
@@ -1390,8 +1390,8 @@
           "path": "docs/guides/data-observability/16-source-review.md",
           "translation": {
             "path": "docs-site/translations/ko/data-observability-engineering-source-review.md",
-            "title": "출처 검토·확장·구현 경계",
-            "summary": "공식 출처, 커리큘럼 확장, 버전별 경계를 검토한다.",
+            "title": "출처 안내: 참고한 자료와 직접 확인할 범위",
+            "summary": "과정의 주제를 정한 공유 대화와 기술적 근거인 공식 문서를 구분하고, 실습에서 확인한 범위를 읽는다.",
             "sourceSha256": "471d847cfb3cc8298ba09d91dab53a8d64a13ef0e2f7e5c8e669d943a91357de"
           }
         }

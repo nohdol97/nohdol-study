@@ -8,6 +8,8 @@ Its [technical depth specification](../../docs/specs/2026-09-10-data-course-dept
 
 Public lab results distinguish local fixtures, expected environment-dependent outputs, and synthetic review receipts. The [documentation review](../../docs/reviews/2026-09-10-full-documentation-review.md) records verification limits; these examples create no new skills and are not knowledge evidence.
 
+All 20 Data and Observability/SRE translations have also received a [Korean explanation review](../../docs/reviews/2026-09-12-data-observability-korean-readability.md), covering definitions, mechanisms, and exercise interpretation. This editorial review does not change skill routing.
+
 ## archify
 
 - **One-line role**: Create architecture, workflow, sequence, data flow, and lifecycle diagrams into **single-executable HTML** with the pinned Archify CLI. This is a one-shot output for presentation and sharing.

@@ -1,4 +1,4 @@
-# 출처 검토·확장·구현 경계
+# 출처 안내: 참고한 자료와 직접 확인할 범위
 
 검토일은 **2026-09-10**이다. 사용자가 고른 공유 대화는 이 과정에서 다룰 주제를 정하는 데 사용했다.
 
@@ -12,7 +12,7 @@
 
 ## 공유 교육 과정의 세부 대응
 
-첫 버전은 많은 주제를 목록·개요로 압축했다. 확장 과정은 기존 장 경로 안에서 개별 원리·계산 예제·실패 경계를 설명한다.
+처음에는 여러 기술을 목록과 짧은 개요로만 소개했다. 지금은 같은 장 안에서 각 기술의 동작 원리, 직접 계산할 예제, 실패했을 때 확인할 내용을 설명한다. 아래 표에서 관심 있는 세부 주제와 해당 장을 찾을 수 있다.
 
 | 소스 주제군 | 세부 내용과 예제 |
 |---|---|
@@ -21,9 +21,9 @@
 | 행 그룹·열 청크·페이지·인코딩·압축·통계·읽기 제외·오브젝트 저장소 | [Parquet](../../../docs/guides/data-observability/03-parquet-object-storage.md): 파일 구조, 네 제거 단계, 같은 데이터의 후보 그룹 1 대 13 실험 |
 | 스냅샷·매니페스트 목록·매니페스트·메타데이터 JSON·ACID·격리·진화·과거 조회·병합·작은 파일 | [테이블](../../../docs/guides/data-observability/04-table-formats.md): 메타데이터 추적, 지원 SQL, 동시 작성자, 삭제 표현·보존 |
 | driver·executor·job·stage·task·논리·물리 계획·Catalyst·Tungsten·파티션·shuffle·join·skew·spill·AQE·UI | [Spark](../../../docs/guides/data-observability/05-spark-performance.md): 실행 원리, 조인 비교, 통제 설정 실험·인과 UI 진단 |
-| 할당·재균형·오프셋·지연·ISR·복제·acks·생산자 멱등성·트랜잭션·전달·순서·역압 | [스트리밍](../../../docs/guides/data-observability/06-kafka-cdc-streaming.md): 복제본 실패 계산, 연속 진척, 트랜잭션 경계·파티션 진단 |
+| 할당·재균형·오프셋·지연·ISR·복제·acks·생산자 멱등성·트랜잭션·전달·순서·역압 | [스트리밍](../../../docs/guides/data-observability/06-kafka-cdc-streaming.md): 복제본 실패 계산, 연속 진행 상태, 트랜잭션 경계·파티션 진단 |
 | Structured Streaming·늦은 이벤트·순서 뒤바뀜·체크포인트·CDC·Flink | [스트리밍](../../../docs/guides/data-observability/06-kafka-cdc-streaming.md): 마이크로 배치, 출력 모드, 워터마크·상태 수명, 스냅샷·WAL·복구 |
-| 사실·차원·스타·SCD 1/2·raw·staging·intermediate·mart | [모델링](../../../docs/guides/data-observability/07-modeling-orchestration.md): 행 단위·가산성, 실행 가능한 과거·현재 귀속과 경계 실패 |
+| 사실·차원·스타·SCD 1/2·raw·staging·intermediate·mart | [모델링](../../../docs/guides/data-observability/07-modeling-orchestration.md): 행 단위·가산성, 실행 가능한 과거·현재 기준의 분류과 경계 실패 |
 | dbt model·ref·source·test·macro·incremental·snapshot·문서·계약, Airflow·Dagster | [모델링](../../../docs/guides/data-observability/07-modeling-orchestration.md): 교체 모델·매크로, 변경 탐지 한계, 스냅샷 의미·구간·자산 운영 |
 | 완전성·정확성·일관성·유일성·유효성·신선도, GX·Soda·데이터 SLO | [품질](../../../docs/guides/data-observability/08-quality-contracts-slos.md): 독립 계산, 공개 상태 머신, 담당자·근거 누락 규칙 |
 | OTel resource·span·trace·context·baggage·metric·attribute·카디널리티·샘플링·Collector | [OTel](../../../docs/guides/data-observability/09-opentelemetry.md): 실제 SDK 전파, link·temporality, head/tail·유한 큐 계산 |
@@ -32,7 +32,7 @@
 | Databricks 구조·Spark·Delta·Unity Catalog·Lakeflow·Jobs·품질·MLflow·제공 | [클라우드](../../../docs/guides/data-observability/12-cloud-platforms.md): 개발 bronze/silver/gold 코드, expectation 정책, Auto Loader, 복구·산출물 승격 |
 | Snowflake SQL·Snowpark·Streams·Tasks·동적 테이블·Openflow·Horizon·계보·DMF·Cortex | [클라우드](../../../docs/guides/data-observability/12-cloud-platforms.md): stream/MERGE 트랜잭션 예제, 갱신 모드, 계산·거버넌스·AI 책임 |
 | 임베딩·벡터·하이브리드·재순위화·RAG·청크·필터·의미 계층·온톨로지·그래프·MCP·도구·에이전트 | [AI 데이터](../../../docs/guides/data-observability/13-ai-ready-data-evaluation.md): 코사인·ANN, 실행 순위 결합, 버전 검색·제한 도구 실행 |
-| 프롬프트·응답·토큰·비용·모델·검색·도구·에이전트 단계·평가, OTel·Langfuse·MLflow | [AI 평가](../../../docs/guides/data-observability/13-ai-ready-data-evaluation.md): 계층 지표, 평가와 사실 근거, trace 묶음·배포 관문 |
+| 프롬프트·응답·토큰·비용·모델·검색·도구·에이전트 단계·평가, OTel·Langfuse·MLflow | [AI 평가](../../../docs/guides/data-observability/13-ai-ready-data-evaluation.md): 계층 지표, 평가와 사실 근거, trace 묶음·배포 전 검사 |
 | Docker·Kubernetes·Terraform·신뢰성·복구·비용·셀프서비스 | [운영](../../../docs/guides/data-observability/14-platform-operations.md): 자원·신원 경계, 승격 묶음, 재생 예산·등록 |
 
 ## 추가한 심화 내용
@@ -50,7 +50,7 @@
 
 ## 근거 표현 방식
 
-기술 장마다 Markdown 주석에 출처 URL·검토일을 보존한다. 공개 렌더러는 주석을 제거하고 이 목록은 읽을 수 있는 일차 출처 링크를 제공한다. 제품 동작이라고 명시하지 않은 설명·예제·그림·임계값·선택 조언은 독립적인 학습 종합이다.
+각 기술 장의 Markdown 주석에는 출처 URL과 검토일을 남겼다. 사이트 화면에서는 주석이 보이지 않으므로 아래 표에서 공식 문서 링크를 모아 볼 수 있다. 제품 동작에 대한 사실 설명과 학습을 위해 구성한 예제·그림·임계값·선택 조언을 구분한다. 학습용 설명은 공식 문서의 직접 인용이 아니다.
 
 출처 검토는 인용 원리를 확인하며 모든 제품의 보편적 호환 배포를 검증하지 않는다. `latest`·`stable`·`current` 링크는 바뀐다. 구현 전 엔진·커넥터·프로토콜·SDK·백엔드 정확 버전과 해당 문서를 기록한다. 일부는 로컬 실행 예제, 나머지는 준비 환경이 필요한 설정 조각·안내 실습으로 표시한다.
 
@@ -62,10 +62,10 @@
 | 파일 | [Parquet file format](https://parquet.apache.org/docs/file-format/), [DuckDB Parquet](https://duckdb.org/docs/current/data/parquet/overview) | 행 그룹·열 청크·페이지·리더 연산 |
 | 테이블 상태 | [Iceberg specification](https://iceberg.apache.org/spec/), [Iceberg evolution](https://iceberg.apache.org/docs/latest/evolution/), [Delta concurrency](https://docs.delta.io/concurrency-control/) | 메타데이터 계층·진화·낙관적 커밋 검증 |
 | Spark | [Cluster overview](https://spark.apache.org/docs/latest/cluster-overview.html), [SQL tuning](https://spark.apache.org/docs/latest/sql-performance-tuning.html), [Structured Streaming](https://spark.apache.org/docs/latest/streaming/apis-on-dataframes-and-datasets.html) | 실행기·계획·shuffle/AQE·출력별 보장·복구 |
-| 스트리밍·CDC | [Kafka 4.1 design](https://kafka.apache.org/41/design/design/), [Debezium PostgreSQL](https://debezium.io/documentation/reference/stable/connectors/postgresql.html), [Flink time](https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/) | 순서·트랜잭션·소스 보존·이벤트 시간 진척 |
+| 스트리밍·CDC | [Kafka 4.1 design](https://kafka.apache.org/41/design/design/), [Debezium PostgreSQL](https://debezium.io/documentation/reference/stable/connectors/postgresql.html), [Flink time](https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/) | 순서·트랜잭션·소스 보존·이벤트 시간 진행 상태 |
 | 질의 접근 | [Trino Iceberg connector](https://trino.io/docs/current/connector/iceberg.html) | 선택 테이블 기능과 엔진·커넥터 호환성 |
 | 모델링·스케줄 | [dbt tests](https://docs.getdbt.com/docs/build/data-tests), [dbt contracts](https://docs.getdbt.com/docs/mesh/govern/model-contracts), [Airflow backfill](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/backfill.html) | 데이터 검사와 형태·제약, 과거 구간 재처리 |
-| 서비스 목표 | [Google SRE: implementing SLOs](https://sre.google/workbook/implementing-slos/), [alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) | 사용자 결과·명시 모집단·예산 소진 |
+| 서비스 목표 | [Google SRE: implementing SLOs](https://sre.google/workbook/implementing-slos/), [alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) | 사용자 결과·명시 측정 대상·예산 소진 |
 | 계측 | [Collector configuration](https://opentelemetry.io/docs/collector/configuration/), [Collector resilience](https://opentelemetry.io/docs/collector/resiliency/), [context propagation](https://opentelemetry.io/docs/concepts/context-propagation/) | 활성 구성·유한 큐·컨텍스트·baggage |
 | 지표·로그 | [Prometheus histograms](https://prometheus.io/docs/practices/histograms/), [PromQL functions](https://prometheus.io/docs/prometheus/latest/querying/functions/), [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/), [Loki labels](https://grafana.com/docs/loki/latest/get-started/labels/) | 분위수 집계·카운터 함수·라우팅·카디널리티 |
 | 계보 | [OpenLineage model](https://openlineage.io/docs/spec/object-model/), [event schema](https://openlineage.io/spec/2-0-2/OpenLineage.json) | dataset·job·run·facet·이벤트 구조 |
@@ -95,7 +95,7 @@
 
 Kafka·Spark가 모든 외부 효과를 정확히 한 번 만들지는 않는다. 스키마 계약은 업무 품질을 입증하지 않는다. 새 행 하나는 완전성의 근거가 아니다. 자동 계보에는 범위 한계가 있다. 카탈로그 태그는 접근 검사가 아니다. 과거 조회에는 메타데이터·데이터 보존이 필요하다. 모델 평가 점수는 답의 진실성을 독립 입증하지 않는다.
 
-이 구분은 구현을 피할 이유가 아니라 엔지니어링 모델의 일부이며 전 과정의 실패 실습을 이끈다.
+각 도구가 보장하는 범위를 알아야 직접 구현하고 검사할 부분을 정할 수 있다. 그래서 실습에서는 단순 실행 성공뿐 아니라 중복, 누락, 권한 위반, 복구 실패를 일부러 만들어 확인한다.
 
 ## 스스로 설명해 보기
 

@@ -9,6 +9,7 @@ Open an underlined term or the chapter's terminology list for bilingual definiti
 In the article body, glossary tables and definition lists become compact entries. The term and meaning are immediately visible; expanding one reveals its purpose and separately laid-out example steps. Both reading languages remain available inside an entry. Comparison tables retain their table structure. Dialogs put Korean first and keep their close button visible while scrolling. Source Markdown retains the full definitions, reasons, and examples.
 
 - Public URL: <https://nohdol97.github.io/nohdol-study/>
+- Korean editorial review: [Data and Observability/SRE readability](../docs/reviews/2026-09-12-data-observability-korean-readability.md), covering all 20 relevant articles beyond their introductions.
 - Public content: `docs-site/content/<topic>/`, the explicitly selected `docs/guides/data-observability/` course, and `docs-site/translations/ko/<document-id>.md`
 - Catalog: `docs-site/catalog.json`
 
